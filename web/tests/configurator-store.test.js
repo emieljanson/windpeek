@@ -108,6 +108,106 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('best_match')
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastLabel).toBe('Demo')
+    expect(store.hasUserSpotIntent).toBe(false)
+    expect(store.nearbyDefaultStatus).toBe('idle')
+  })
+
+  it('applies one nearby default through the existing spot refresh path', async () => {
+    const store = useConfiguratorStore()
+    const forecastFetcher = vi.fn(async (spot) => forecastSet(liveForecast(spot.id)))
+    const tideFetcher = vi.fn(async (spot) => tideFor(spot.id))
+    await store.initializeTide({ fetcher: tideFetcher, storage: memoryStorage() })
+
+    await expect(store.initializeNearbyDefault({
+      locationFetcher: vi.fn().mockResolvedValue({ latitude: 52.5126, longitude: 5.0486 }),
+      fetcher: forecastFetcher,
+      tideFetcher,
+      storage: memoryStorage(),
+    })).resolves.toBe(true)
+
+    expect(store.selectedSpotId).toBe('edam')
+    expect(store.nearbyDefaultStatus).toBe('applied')
+    expect(forecastFetcher).toHaveBeenCalledWith(expect.objectContaining({ id: 'edam' }), {})
+    expect(tideFetcher).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'edam' }), {})
+  })
+
+  it('ignores the initial Brouwersdam tide after the nearby spot loads', async () => {
+    const store = useConfiguratorStore()
+    const initialTide = deferred()
+    const tideFetcher = vi.fn()
+      .mockImplementationOnce(() => initialTide.promise)
+      .mockResolvedValueOnce(tideFor('edam'))
+    const initialTideRequest = store.initializeTide({ fetcher: tideFetcher })
+
+    await store.initializeNearbyDefault({
+      locationFetcher: vi.fn().mockResolvedValue({ latitude: 52.5126, longitude: 5.0486 }),
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('edam'))),
+      tideFetcher,
+    })
+    await vi.waitFor(() => expect(store.tide?.spotId).toBe('edam'))
+
+    initialTide.resolve(tideFor('brouwersdam'))
+    await expect(initialTideRequest).resolves.toBe(false)
+    expect(store.tide.spotId).toBe('edam')
+  })
+
+  it('performs only one nearby lookup when initializers overlap', async () => {
+    const store = useConfiguratorStore()
+    const location = deferred()
+    const locationFetcher = vi.fn(() => location.promise)
+
+    const first = store.initializeNearbyDefault({
+      locationFetcher,
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('edam'))),
+    })
+    const second = store.initializeNearbyDefault({ locationFetcher })
+
+    expect(locationFetcher).toHaveBeenCalledOnce()
+    location.resolve(null)
+    await expect(first).resolves.toBe(false)
+    await expect(second).resolves.toBe(false)
+    expect(locationFetcher).toHaveBeenCalledOnce()
+    expect(store.selectedSpotId).toBe('brouwersdam')
+    expect(store.nearbyDefaultStatus).toBe('ignored')
+  })
+
+  it('does not let a late nearby result override user spot intent', async () => {
+    const store = useConfiguratorStore()
+    const location = deferred()
+    const nearby = store.initializeNearbyDefault({ locationFetcher: vi.fn(() => location.promise) })
+
+    store.markUserSpotIntent()
+    store.selectedSpotId = 'castricum-aan-zee'
+    location.resolve({ latitude: 52.5126, longitude: 5.0486 })
+
+    await expect(nearby).resolves.toBe(false)
+    expect(store.hasUserSpotIntent).toBe(true)
+    expect(store.selectedSpotId).toBe('castricum-aan-zee')
+    expect(store.nearbyDefaultStatus).toBe('ignored')
+  })
+
+  it('does not apply a late nearby result after the default spot changed', async () => {
+    const store = useConfiguratorStore()
+    const location = deferred()
+    const nearby = store.initializeNearbyDefault({ locationFetcher: vi.fn(() => location.promise) })
+
+    store.selectedSpotId = 'castricum-aan-zee'
+    location.resolve({ latitude: 52.5126, longitude: 5.0486 })
+
+    await expect(nearby).resolves.toBe(false)
+    expect(store.hasUserSpotIntent).toBe(false)
+    expect(store.selectedSpotId).toBe('castricum-aan-zee')
+  })
+
+  it('keeps Brouwersdam when the nearby lookup has no usable result', async () => {
+    const store = useConfiguratorStore()
+
+    await expect(store.initializeNearbyDefault({
+      locationFetcher: vi.fn().mockResolvedValue(null),
+    })).resolves.toBe(false)
+
+    expect(store.selectedSpotId).toBe('brouwersdam')
+    expect(store.nearbyDefaultStatus).toBe('ignored')
   })
 
   it('offers a partly different regional model list for each location', () => {

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
@@ -15,7 +15,7 @@ import {
   createMatteScreenFinish,
   createScreenRecessShadow,
   addDeviceRearMarkings,
-  enhanceE1002Surface,
+  enhanceDeviceSurface,
   fitScreenUnderBezel,
 } from '../configurator/deviceSurface'
 import { hideDeviceStand, loadDeviceModel } from '../configurator/modelLoader'
@@ -24,6 +24,7 @@ import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
+  createOrbitRendering,
   createHeroEntranceAnimation,
   createUsbCameraAnimation,
   deviceStageForBoard,
@@ -34,6 +35,8 @@ import { createResourceLifetime } from '../configurator/sceneLifetime'
 import { createScreenTexture } from '../configurator/screenTexture'
 import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
+import { createSceneComposer } from '../configurator/sceneComposer'
+import { createSceneQuality, SCENE_QUALITY, scenePixelRatio } from '../configurator/sceneQuality'
 import { PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
 import { markingGroupForSourceMesh } from '../configurator/markingDebug'
@@ -121,6 +124,7 @@ let outputPass
 let scene
 let camera
 let controls
+let orbitRendering
 let animationFrame
 let resizeObserver
 let settingsPanel
@@ -138,6 +142,8 @@ let heroEntranceAnimation
 let heroEntranceActive = false
 let usbCameraAnimation
 let reduceMotionQuery
+const sceneQuality = createSceneQuality()
+const qualityLevel = ref(sceneQuality.level)
 
 function currentDisplayConfig() {
   return {
@@ -153,7 +159,7 @@ function currentDisplayConfig() {
   }
 }
 let model
-let environmentMap
+let environmentTarget
 let disposeSurface
 let disposeRearMarkings
 let markingBasePositions = new Map()
@@ -186,11 +192,20 @@ function resize() {
   const deviceStage = deviceStageForBoard(props.boardId)
   const nextCompositionMode = panelPlacement === 'side' ? 'wide' : 'compact'
   usbCable?.setCompositionMode(nextCompositionMode)
+  const quality = SCENE_QUALITY[qualityLevel.value]
+  const pixelRatio = scenePixelRatio(qualityLevel.value, width, height, window.devicePixelRatio)
+  if (renderer.getPixelRatio() !== pixelRatio) {
+    renderer.setPixelRatio(pixelRatio)
+    composer?.setPixelRatio(pixelRatio)
+  }
   renderer.setSize(width, height, false)
   composer?.setSize(width, height)
+  gtaoPass?.setSize(Math.round(width * pixelRatio * quality.aoScale), Math.round(height * pixelRatio * quality.aoScale))
+  renderer.shadowMap.needsUpdate = true
   camera.aspect = width / height
   camera.zoom = composition.zoom * deviceStage.heroZoom * (props.captureMode ? 1.35 : 1)
-  if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls && !props.focusUsbConnection) {
+  const cableFocused = props.focusUsbConnection
+  if (controls && (status.value === 'loading' || (compositionMode !== nextCompositionMode && !cableFocused))) {
     heroEntranceAnimation?.finish()
     heroEntranceActive = false
     applyHeroPose(camera, controls, width / height, nextCompositionMode === 'compact')
@@ -229,16 +244,33 @@ function renderFrame(timestamp) {
   heroEntranceActive = heroEntranceAnimating
   const usbCameraAnimating = usbCameraAnimation?.update(timestamp) ?? false
   const cameraAnimating = heroEntranceAnimating || usbCameraAnimating
-  const changed = cameraAnimating ? false : (controls?.update() ?? false)
+  const changed = cameraAnimating ? false : (orbitRendering?.update() ?? false)
   const cableAnimating = usbCableAnimation?.update(timestamp) ?? false
   if (composer) composer.render()
   else renderer?.render(scene, camera)
-  if (changed || cameraAnimating || cableAnimating) requestRender()
+  const active = changed || cameraAnimating || cableAnimating
+  if (sceneQuality.sample(timestamp, active)) {
+    qualityLevel.value = sceneQuality.level
+    const quality = SCENE_QUALITY[qualityLevel.value]
+    gtaoPass.enabled = quality.ao
+    gtaoPass.updateGtaoMaterial({ samples: quality.aoSamples })
+    resize()
+  }
+  if (active) requestRender()
 }
 
 function requestRender() {
-  if (!lifetime.active || animationFrame !== undefined) return
+  if (!lifetime.active || document.hidden || animationFrame !== undefined) return
   animationFrame = requestAnimationFrame(renderFrame)
+}
+
+function handleSceneVisibility() {
+  sceneQuality.pause()
+  if (document.hidden && animationFrame !== undefined) {
+    cancelAnimationFrame(animationFrame)
+    animationFrame = undefined
+  }
+  requestRender()
 }
 
 function startLoadingStatus() {
@@ -253,14 +285,6 @@ function stopLoadingStatus() {
   cancelLoadingStatus()
   cancelLoadingStatus = () => {}
   showLoadingStatus.value = false
-}
-
-function resetView() {
-  if (camera && controls) {
-    const aspect = host.value ? host.value.clientWidth / Math.max(host.value.clientHeight, 1) : 1.5
-    applyHeroPose(camera, controls, aspect, compositionMode === 'compact')
-    requestRender()
-  }
 }
 
 function captureMarkingPositions() {
@@ -373,6 +397,7 @@ function setCableLabCamera(view) {
 }
 
 function handleReducedMotionChange(event) {
+  requestRender()
   if (!event.matches) return
   usbCableAnimation?.finishForReducedMotion()
   heroEntranceAnimation?.finishForReducedMotion()
@@ -511,6 +536,7 @@ async function initialize() {
 
   try {
     const lighting = PRODUCT_LIGHTING
+    RectAreaLightUniformsLib.init()
     scene = new THREE.Scene()
     scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
     camera = new THREE.PerspectiveCamera(29, 1, 0.01, 10)
@@ -530,9 +556,10 @@ async function initialize() {
     renderer.domElement.setAttribute('aria-hidden', 'true')
     host.value.append(renderer.domElement)
 
-    composer = new EffectComposer(renderer)
+    composer = createSceneComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
     gtaoPass = configureAmbientOcclusion(new GTAOPass(scene, camera, 1, 1))
+    gtaoPass.updateGtaoMaterial({ samples: SCENE_QUALITY[qualityLevel.value].aoSamples })
     composer.addPass(gtaoPass)
     smaaPass = new SMAAPass()
     composer.addPass(smaaPass)
@@ -541,7 +568,7 @@ async function initialize() {
 
     controls = new OrbitControls(camera, renderer.domElement)
     configureOrbitControls(controls)
-    controls.addEventListener('change', requestRender)
+    orbitRendering = createOrbitRendering(controls, requestRender)
     settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
     resize()
     usbCameraAnimation = createUsbCameraAnimation({
@@ -559,8 +586,8 @@ async function initialize() {
     })
     updateSceneFocus()
 
-    environmentMap = createProductStudioEnvironment(renderer, lighting.environment)
-    scene.environment = environmentMap
+    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
+    scene.environment = environmentTarget.texture
 
     scene.add(new THREE.HemisphereLight(
       lighting.hemisphere.sky,
@@ -574,7 +601,7 @@ async function initialize() {
     keyLight.decay = lighting.key.decay
     keyLight.distance = lighting.key.distance
     keyLight.castShadow = true
-    keyLight.shadow.mapSize.set(512, 512)
+    keyLight.shadow.mapSize.set(1024, 1024)
     keyLight.shadow.camera.near = 0.08
     keyLight.shadow.camera.far = lighting.key.distance
     keyLight.shadow.bias = -0.00002
@@ -605,15 +632,14 @@ async function initialize() {
     rimLight = new THREE.DirectionalLight(lighting.rim.color, lighting.rim.intensity)
     rimLight.position.set(...lighting.rim.position)
     scene.add(rimLight)
-
     const deviceStage = deviceStageForBoard(props.boardId)
     if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
 
     const loadedModel = await loadDeviceModel(props.boardId)
     if (!lifetime.adopt(loadedModel, disposeObject)) return
     model = loadedModel
-    hideDeviceStand(model, props.boardId)
-    disposeSurface = enhanceE1002Surface(model, renderer)
+    hideDeviceStand(model)
+    disposeSurface = enhanceDeviceSurface(model, renderer)
     disposeRearMarkings = addDeviceRearMarkings(model, props.boardId, requestRender)
     captureMarkingPositions()
     applyMarkingOffsets()
@@ -741,6 +767,7 @@ watch(markingOffsets, applyMarkingOffsets, { deep: true })
 onMounted(() => {
   reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
+  document.addEventListener('visibilitychange', handleSceneVisibility)
   initialize()
 })
 onBeforeUnmount(() => {
@@ -752,12 +779,14 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('resize', scheduleViewportResize)
   window.visualViewport?.removeEventListener('scroll', scheduleViewportResize)
   reduceMotionQuery?.removeEventListener('change', handleReducedMotionChange)
-  controls?.removeEventListener('change', requestRender)
+  document.removeEventListener('visibilitychange', handleSceneVisibility)
+  orbitRendering?.dispose()
   controls?.dispose()
   screenSource?.dispose()
   disposeSurface?.()
   disposeRearMarkings?.()
-  environmentMap?.dispose()
+  environmentTarget?.dispose()
+  keyLight?.shadow.dispose()
   gtaoPass?.dispose()
   smaaPass?.dispose()
   outputPass?.dispose()
@@ -768,6 +797,7 @@ onBeforeUnmount(() => {
   disposeObject(scene?.getObjectByName('CONTACT_OCCLUSION'))
   usbCable?.dispose()
   renderer?.dispose()
+  renderer?.forceContextLoss()
   renderer?.domElement.remove()
 })
 
@@ -778,6 +808,7 @@ onBeforeUnmount(() => {
     ref="host"
     class="scene-host"
     :data-scene-status="status"
+    :data-scene-quality="qualityLevel"
     :data-forecast-spot="selectedSpotId"
     :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"

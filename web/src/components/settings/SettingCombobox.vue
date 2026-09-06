@@ -48,7 +48,15 @@ const props = defineProps({
   ariaDescribedby: { type: String, default: undefined },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:searchTerm', 'update:open', 'create', 'focus', 'dismiss'])
+const emit = defineEmits([
+  'update:modelValue',
+  'update:searchTerm',
+  'update:open',
+  'search-intent',
+  'create',
+  'focus',
+  'dismiss',
+])
 const row = inject('windscout-setting-row', null)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const canOpen = computed(() => props.searchTerm.trim().length >= props.minSearchLength)
@@ -211,6 +219,7 @@ defineExpose({
         :aria-describedby="props.ariaDescribedby || row?.describedBy?.value"
         :aria-busy="props.loading ? 'true' : undefined"
         @update:model-value="emit('update:searchTerm', $event)"
+        @input="emit('search-intent')"
         @pointerdown="pointerFocus = true"
         @focus="handleFocus"
         @keydown="pointerFocus = false"

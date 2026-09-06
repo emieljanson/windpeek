@@ -144,6 +144,30 @@ export function configureOrbitControls(controls) {
   controls.maxDistance = ORBIT_LIMITS.maxDistance
 }
 
+export function createOrbitRendering(controls, requestRender) {
+  const camera = controls.object
+  const position = camera.position.clone()
+  const quaternion = camera.quaternion.clone()
+  let updating = false
+  function onChange() { if (!updating) requestRender() }
+  controls.addEventListener('change', onChange)
+  return {
+    update() {
+      position.copy(camera.position)
+      quaternion.copy(camera.quaternion)
+      const zoom = camera.zoom
+      updating = true
+      try { controls.update() } finally { updating = false }
+      // OrbitControls can report a perpetual zoom change at minDistance due
+      // to floating-point rounding. Only keep drawing actual camera movement.
+      return position.distanceToSquared(camera.position) > 1e-14
+        || 1 - Math.abs(quaternion.dot(camera.quaternion)) > 1e-12
+        || Math.abs(zoom - camera.zoom) > 1e-10
+    },
+    dispose() { controls.removeEventListener('change', onChange) },
+  }
+}
+
 function vectorValues(vector) {
   return [vector.x, vector.y, vector.z]
 }
@@ -404,7 +428,9 @@ export function createUsbCameraAnimation({
 export function isWebGLAvailable() {
   try {
     const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+    const context = canvas.getContext('webgl2')
+    context?.getExtension('WEBGL_lose_context')?.loseContext()
+    return Boolean(context)
   } catch {
     return false
   }

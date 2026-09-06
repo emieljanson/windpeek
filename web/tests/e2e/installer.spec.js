@@ -83,7 +83,7 @@ async function installWifiFailure(page) {
 test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion', async ({ page }) => {
   await installFakeDevice(page)
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   const install = page.getByRole('button', { name: 'Install', exact: true })
   await install.click()
@@ -205,7 +205,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
 test('keeps the installer available at narrow desktop zoom without horizontal overflow', async ({ page }) => {
   await installFakeDevice(page)
   await page.setViewportSize({ width: 640, height: 720 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await page.getByRole('button', { name: 'Install', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(640)
@@ -214,7 +214,7 @@ test('keeps the installer available at narrow desktop zoom without horizontal ov
 test('shows a confirmed diagnostic reference without blocking recovery', async ({ page }) => {
   await installFailingDevice(page)
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await page.getByRole('button', { name: 'Install', exact: true }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
 
@@ -227,7 +227,7 @@ test('shows a confirmed diagnostic reference without blocking recovery', async (
 test('grows a Wi-Fi error state so both recovery actions remain usable', async ({ page }) => {
   await installWifiFailure(page)
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await page.getByRole('button', { name: 'Install', exact: true }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
 
@@ -255,7 +255,7 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
 test('keeps the inspector height when the installer opens with threshold hidden or shown', async ({ page }) => {
   await installFakeDevice(page)
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   const panel = page.getByRole('complementary', { name: 'Windscout settings' })
   const install = page.getByRole('button', { name: 'Install', exact: true })

@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
+import { PerspectiveCamera } from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { BOARD_IDS } from '../src/config/configuration'
 import {
   HERO_CAMERA,
@@ -11,6 +13,7 @@ import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
+  createOrbitRendering,
   createHeroEntranceAnimation,
   createUsbCameraAnimation,
   deviceStageForBoard,
@@ -30,6 +33,22 @@ function vector(values) {
 }
 
 describe('scene controller', () => {
+  it('stops rendering at the orbit zoom limit despite floating-point clamp noise', () => {
+    const camera = new PerspectiveCamera()
+    camera.position.set(0, 0.17440423590791604, 0.04453271266581413)
+    const controls = new OrbitControls(camera, document.createElement('canvas'))
+    configureOrbitControls(controls)
+    const requestRender = vi.fn()
+    const orbit = createOrbitRendering(controls, requestRender)
+    for (let i = 0; i < 10; i++) expect(orbit.update()).toBe(false)
+    expect(requestRender).not.toHaveBeenCalled()
+    controls.dispatchEvent({ type: 'change' })
+    expect(requestRender).toHaveBeenCalledOnce()
+    orbit.dispose()
+    controls.dispatchEvent({ type: 'change' })
+    expect(requestRender).toHaveBeenCalledOnce()
+    controls.dispose()
+  })
   it('frames the USB socket for the selected physical device', () => {
     expect(usbCameraForBoard(BOARD_IDS.E1002)).toBe(USB_CAMERA)
     expect(usbCameraForBoard(BOARD_IDS.E1003)).toBe(E1003_USB_CAMERA)

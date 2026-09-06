@@ -5,7 +5,6 @@ import { BOARD_IDS } from '../src/config/configuration'
 import {
   findMissingModelRoles,
   hideDeviceStand,
-  hideE1002Stand,
   loadDeviceModel,
   loadE1002Model,
 } from '../src/configurator/modelLoader'
@@ -31,15 +30,15 @@ describe('E1002 model loader contract', () => {
     const stand = { visible: true }
     const model = { getObjectByName: vi.fn(() => stand) }
 
-    expect(hideE1002Stand(model)).toBe(true)
+    expect(hideDeviceStand(model)).toBe(true)
     expect(stand.visible).toBe(false)
   })
 
   it('hides the optional printed stand when a source model contains one', () => {
     const e1002Stand = { visible: true }
 
-    expect(hideDeviceStand({ getObjectByName: () => e1002Stand }, BOARD_IDS.E1002)).toBe(true)
-    expect(hideDeviceStand({ getObjectByName: () => undefined }, BOARD_IDS.E1003)).toBe(false)
+    expect(hideDeviceStand({ getObjectByName: () => e1002Stand })).toBe(true)
+    expect(hideDeviceStand({ getObjectByName: () => undefined })).toBe(false)
     expect(e1002Stand.visible).toBe(false)
   })
 

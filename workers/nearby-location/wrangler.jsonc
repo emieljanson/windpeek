@@ -1,0 +1,12 @@
+{
+  "name": "windscout-nearby-location",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-06",
+  "observability": {
+    "enabled": false,
+    "logs": {
+      "invocation_logs": false
+    }
+  },
+  "logpush": false
+}

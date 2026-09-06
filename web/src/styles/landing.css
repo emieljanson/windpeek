@@ -1,0 +1,390 @@
+.landing-page {
+  min-height: 100vh;
+  color: #151512;
+  background: #fff;
+  font-family: 'Inter Variable', Inter, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  --landing-text: #151512;
+  --landing-muted: #696963;
+  --landing-line: #d5d5ce;
+  --landing-rule-width: 1px;
+}
+
+.landing-page main {
+  width: min(calc(100% - 40px), 572px);
+  margin: 0 auto;
+  padding: 96px 0 72px;
+}
+
+.landing-page h1,
+.landing-page h2 {
+  margin: 0;
+  font-family: 'Inter Variable', Inter, sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.landing-page h1 {
+  max-width: 620px;
+  font-size: 40px;
+  line-height: 1.04;
+  font-weight: 780;
+}
+
+.landing-page h2 {
+  font-size: 21px;
+  line-height: 1.15;
+  font-weight: 740;
+  letter-spacing: -0.02em;
+}
+
+.landing-page p { margin: 0; }
+
+.landing-page .intro {
+  max-width: 600px;
+  margin-top: 28px;
+  color: #353531;
+  font-size: 15px;
+}
+
+.landing-page .button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--landing-text);
+  color: white;
+  font: 500 14px/1 'Inter Variable', Inter, sans-serif;
+  text-decoration: none;
+  transition: background-color 120ms ease-out, scale 120ms ease-out;
+}
+
+.landing-page .button:hover { background: #2a302d; }
+.landing-page .button:active { scale: 0.96; }
+.landing-page .button:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--landing-text), 0 0 0 2px #fff, 0 0 0 4px var(--landing-text);
+}
+.landing-page .button:disabled { cursor: wait; opacity: 0.72; }
+.landing-page button.button { cursor: pointer; }
+.landing-page .button-secondary {
+  color: var(--landing-text);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--landing-line);
+}
+.landing-page .button-secondary:hover { background: #e9e9e4; }
+
+.landing-page figure {
+  width: min(calc(100vw - 24px), 642px);
+  margin: 24px 0 0 50%;
+  transform: translateX(-50%);
+}
+
+.landing-page .hero-link { display: block; }
+
+.hero-scene {
+  position: relative;
+  aspect-ratio: 1672 / 941;
+  overflow: hidden;
+  background: #d7b5a4;
+}
+
+.hero-media {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: translate(50%, 50%) scale(1.2) translate(-52%, -50%);
+  transform-origin: 0 0;
+}
+
+.hero-media picture,
+.hero-media img,
+.hero-media canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-media img { object-fit: contain; }
+.hero-media canvas {
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease-out;
+}
+.landing-hero.is-ready canvas { opacity: 1; }
+
+.landing-page .story { margin-top: 32px; }
+
+.landing-page .story p,
+.landing-page .landing-section > p {
+  margin-top: 10px;
+  color: #353531;
+}
+
+.landing-page .landing-section {
+  margin-top: 28px;
+}
+
+.landing-page .story > p:first-child,
+.landing-page .personalize .facts {
+  margin-top: 0;
+}
+
+.landing-page .facts {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .facts li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.landing-page .facts li::before {
+  content: '';
+  position: absolute;
+  top: 0.72em;
+  left: 1px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #b9b9b3;
+}
+
+.landing-page .hardware-models {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .hardware-model {
+  display: grid;
+  grid-template-rows: 112px auto;
+  min-width: 0;
+  justify-items: start;
+}
+
+.landing-page .hardware-model__visual {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  place-items: center start;
+}
+
+.landing-page .hardware-model__visual img {
+  display: block;
+  width: 112%;
+  height: 108px;
+  object-fit: contain;
+  transform: translateX(-18%);
+  transform-origin: left center;
+}
+
+.landing-page .hardware-model:nth-child(3) .hardware-model__visual img {
+  width: 128%;
+  transform: translateX(-23%);
+}
+
+.landing-page .hardware-model__name {
+  width: 100%;
+  color: var(--landing-text);
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.landing-page .hardware-model__buy {
+  min-width: 112px;
+}
+
+.landing-page .hardware-specs {
+  margin: 10px 0 0;
+}
+
+.landing-page .hardware-spec {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  padding: 0 0 6px;
+}
+
+.landing-page .hardware-spec dt {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--landing-muted);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.landing-page .hardware-spec dt::after {
+  flex: 1;
+  height: var(--landing-rule-width);
+  background: var(--landing-line);
+  content: '';
+}
+
+.landing-page .hardware-spec dd {
+  margin: 0;
+  color: var(--landing-text);
+  font-size: 15px;
+  line-height: 1.35;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .hardware-spec__line {
+  display: block;
+}
+
+.landing-page .hardware-spec__line + .hardware-spec__line {
+  margin-top: 2px;
+}
+
+.landing-page .hardware-buys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .configure-step {
+  margin-top: 56px;
+}
+
+.landing-page .configure-step > p {
+  margin-top: 10px;
+  color: #353531;
+}
+
+.landing-page .configure-step > .button {
+  margin-top: 18px;
+}
+
+.landing-page .configure-action--mobile { display: none; }
+
+.landing-page .faq-list {
+  margin-top: 12px;
+}
+
+.landing-page .purchase,
+.landing-page .faq {
+  margin-top: 56px;
+}
+
+.landing-page .faq details + details {
+  border-top: var(--landing-rule-width) solid var(--landing-line);
+}
+
+.landing-page .faq summary {
+  position: relative;
+  padding: 14px 28px 14px 0;
+  cursor: pointer;
+  font-weight: 620;
+  list-style: none;
+}
+
+.landing-page .faq summary::-webkit-details-marker { display: none; }
+
+.landing-page .faq summary::after {
+  content: '+';
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  color: var(--landing-muted);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.landing-page .faq details[open] summary::after { content: '−'; }
+
+.landing-page .faq details p {
+  max-width: 470px;
+  padding: 0 28px 15px 0;
+  color: #353531;
+}
+
+.landing-page .faq details p a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.landing-page footer {
+  margin-top: 48px;
+  padding-top: 0;
+  color: var(--landing-muted);
+  font-size: 12px;
+}
+
+.landing-page footer a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .landing-page main {
+    width: min(calc(100% - 32px), 520px);
+    padding-top: 56px;
+  }
+
+  .landing-page h1 { font-size: 43px; }
+  .landing-page .intro { font-size: 15px; }
+  .landing-page figure { margin-top: 24px; }
+  .landing-page .story { margin-top: 24px; }
+  .landing-page .configure-action--desktop { display: none; }
+  .landing-page .configure-action--mobile:disabled {
+    display: flex;
+    width: 100%;
+    color: #686862;
+    background: #deded8;
+    cursor: not-allowed;
+    opacity: 1;
+  }
+  .landing-page .hardware-models,
+  .landing-page .hardware-spec,
+  .landing-page .hardware-buys {
+    column-gap: 8px;
+  }
+  .landing-page .hardware-model {
+    grid-template-rows: 76px auto;
+  }
+  .landing-page .hardware-model__visual img {
+    height: 72px;
+  }
+  .landing-page .hardware-model__name { font-size: 15px; }
+  .landing-page .hardware-model__buy {
+    width: 100%;
+    min-width: 0;
+    padding: 0 5px;
+  }
+  .landing-page .hardware-spec dd { font-size: 13px; }
+}
+
+@media (min-resolution: 2dppx) {
+  .landing-page { --landing-rule-width: 0.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scene canvas { transition: none; }
+}

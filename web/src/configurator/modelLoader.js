@@ -17,17 +17,13 @@ export function findMissingModelRoles(scene, modelDefinition = E1002_MODEL) {
   return modelDefinition.requiredRoles.filter((role) => !scene.getObjectByName(role))
 }
 
-export function hideE1002Stand(scene) {
+export function hideDeviceStand(scene) {
   const stand = scene.getObjectByName('STAND')
   if (!stand) return false
   // Keep the hidden object attached so the normal scene disposal path still
   // releases its imported geometry and materials.
   stand.visible = false
   return true
-}
-
-export function hideDeviceStand(scene, boardId) {
-  return hideE1002Stand(scene)
 }
 
 async function loadModel(definition, label, {

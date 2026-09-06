@@ -1,10 +1,12 @@
 <script setup>
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
+  BOARD_IDS,
   SUPPORTED_BOARD_IDS,
   createInstalledConfiguration,
   displayConfigurationFromStore,
 } from '../config/configuration'
+import { brouwersdamTide } from '../fixtures/brouwersdam'
 import { getSerialSupport } from '../installer/serialPortAdapter'
 import InstallContinuation from '../components/InstallContinuation.vue'
 import WindScoutSettings from '../components/WindScoutSettings.vue'
@@ -15,12 +17,19 @@ const WindScoutScene = defineAsyncComponent(() => import('../components/WindScou
 
 const store = useConfiguratorStore()
 const { isCompact } = useCompactViewport()
-const requestedPreviewBoardId = new URLSearchParams(window.location.search).get('devicePreview')
+const routeParams = new URLSearchParams(window.location.search)
+const requestedPreviewBoardId = routeParams.get('devicePreview')
+const installerDemoMode = routeParams.has('installerDemo')
 const previewBoardId = SUPPORTED_BOARD_IDS.includes(requestedPreviewBoardId)
   ? requestedPreviewBoardId
   : null
 const captureMode = Boolean(previewBoardId)
-if (captureMode) store.setShowThreshold(true)
+if (captureMode) {
+  store.setShowThreshold(true)
+  if (previewBoardId === BOARD_IDS.E1003) {
+    store.$patch({ tide: brouwersdamTide, tideStatus: 'available', showTide: true })
+  }
+}
 const sceneFailed = ref(false)
 const sceneError = ref('')
 const installerOpen = ref(false)
@@ -76,6 +85,7 @@ onMounted(() => {
   if (!captureMode) {
     void store.initializeForecast()
     void store.initializeTide()
+    if (!installerDemoMode) void store.initializeNearbyDefault()
   }
 })
 
@@ -92,6 +102,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="configurator-page"
+    :data-nearby-default-status="store.nearbyDefaultStatus"
     :class="{
       'configurator-page--compact': isCompact && !captureMode,
       'configurator-page--device-capture': captureMode,

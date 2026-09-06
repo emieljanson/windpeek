@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import InstallerPanel from '../src/components/installer/InstallerPanel.vue'
+import { useConfiguratorStore } from '../src/stores/configurator'
 
 const { fetchForecast, fetchTide } = vi.hoisted(() => ({
   fetchForecast: vi.fn().mockRejectedValue(new Error('offline')),
@@ -19,6 +20,46 @@ vi.mock('../src/forecast/openMeteoMarine', () => ({
 import ConfiguratorView from '../src/views/ConfiguratorView.vue'
 
 describe('configurator experience', () => {
+  it.each([
+    ['', true],
+    ['?devicePreview=seeedstudio_reterminal_e1002', false],
+    ['?installerDemo=1', false],
+  ])('nearby lookup eligibility for route %s', async (search, expected) => {
+    const originalUrl = window.location.href
+    window.history.replaceState({}, '', `/${search}`)
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    const initializeForecast = vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    const initializeTide = vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    const initializeNearbyDefault = vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    try {
+      const wrapper = mount(ConfiguratorView, {
+        global: {
+          plugins: [pinia],
+          stubs: {
+            WindScoutScene: { template: '<div data-testid="3d-scene"></div>' },
+            WindScoutSettings: { template: '<div></div>' },
+            InstallContinuation: { template: '<div></div>' },
+          },
+        },
+      })
+      await wrapper.vm.$nextTick()
+      expect(initializeNearbyDefault).toHaveBeenCalledTimes(expected ? 1 : 0)
+      if (expected) {
+        expect(initializeForecast.mock.invocationCallOrder[0]).toBeLessThan(
+          initializeNearbyDefault.mock.invocationCallOrder[0],
+        )
+        expect(initializeTide.mock.invocationCallOrder[0]).toBeLessThan(
+          initializeNearbyDefault.mock.invocationCallOrder[0],
+        )
+      }
+      wrapper.unmount()
+    } finally {
+      window.history.replaceState({}, '', originalUrl)
+    }
+  })
+
   it('keeps the 3D product and controls as the only configurator view', () => {
     const wrapper = mount(ConfiguratorView, {
       global: {

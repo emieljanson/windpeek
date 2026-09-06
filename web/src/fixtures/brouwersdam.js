@@ -31,3 +31,21 @@ export const brouwersdamForecast = Object.freeze({
     { localDate: '2026-08-30', day: 'SUN', date: '30 AUG', samples: samples([[7, 11, 198], [10, 15, 204], [12, 18, 210], [14, 21, 214], [11, 17, 220]]) },
   ],
 })
+
+export const brouwersdamTide = Object.freeze({
+  capability: 'available',
+  spotId: 'brouwersdam',
+  timezone: 'Europe/Amsterdam',
+  samples: brouwersdamForecast.days.flatMap((day, dayIndex) =>
+    Array.from({ length: 24 }, (_, hour) => ({
+      localDate: day.localDate,
+      localTime: `${String(hour).padStart(2, '0')}:00`,
+      seaLevelMm: Math.round(Math.sin((dayIndex * 24 + hour - 2) * Math.PI / 6.2) * 900),
+    }))),
+  extrema: brouwersdamForecast.days.flatMap((day, dayIndex) => [
+    { localDate: day.localDate, localTime: dayIndex % 2 ? '03:15' : '02:45', seaLevelMm: 900, type: 'high' },
+    { localDate: day.localDate, localTime: dayIndex % 2 ? '09:30' : '09:00', seaLevelMm: -900, type: 'low' },
+    { localDate: day.localDate, localTime: dayIndex % 2 ? '15:45' : '15:15', seaLevelMm: 900, type: 'high' },
+    { localDate: day.localDate, localTime: dayIndex % 2 ? '22:00' : '21:30', seaLevelMm: -900, type: 'low' },
+  ]),
+})

@@ -1,0 +1,60 @@
+import { describe, expect, it, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
+import { useConfiguratorStore } from '../src/stores/configurator'
+import { loadSharedRenderer } from '../src/renderer/sharedRenderer'
+
+vi.mock('../src/renderer/sharedRenderer', () => ({
+  loadSharedRenderer: vi.fn().mockResolvedValue({
+    renderPreviewForDisplay: vi.fn(() => document.createElement('canvas')),
+    dispose: vi.fn(),
+  }),
+}))
+
+vi.mock('../src/marketing/projectiveScreen', () => ({
+  createProjectiveScreen: vi.fn(() => ({
+    setFrame: vi.fn(),
+    draw: vi.fn(),
+    dispose: vi.fn(),
+  })),
+}))
+
+import LandingHero from '../src/components/LandingHero.vue'
+
+describe('landing hero nearby default', () => {
+  it('starts forecast and tide before the fire-and-forget nearby lookup', async () => {
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    const initializeForecast = vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    const initializeTide = vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    const initializeNearbyDefault = vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingHero, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(initializeNearbyDefault).toHaveBeenCalledOnce())
+
+    expect(initializeForecast).toHaveBeenCalledOnce()
+    expect(initializeTide).toHaveBeenCalledOnce()
+    expect(initializeForecast.mock.invocationCallOrder[0]).toBeLessThan(
+      initializeNearbyDefault.mock.invocationCallOrder[0],
+    )
+    expect(initializeTide.mock.invocationCallOrder[0]).toBeLessThan(
+      initializeNearbyDefault.mock.invocationCallOrder[0],
+    )
+    wrapper.unmount()
+  })
+
+  it('still starts the nearby lookup when the renderer cannot load', async () => {
+    loadSharedRenderer.mockRejectedValueOnce(new Error('renderer unavailable'))
+
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    const initializeNearbyDefault = vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingHero, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(initializeNearbyDefault).toHaveBeenCalledOnce())
+
+    wrapper.unmount()
+  })
+})

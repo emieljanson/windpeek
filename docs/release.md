@@ -31,6 +31,11 @@ same-origin browser installer host.
 
 Before enabling the Pages deployment:
 
+- Deploy the nearby-location Worker first. From `workers/nearby-location`, run
+  `npm ci` and `npm run deploy`, then copy its HTTPS URL.
+- Add that URL as the repository variable `VITE_NEARBY_LOCATION_URL`. The next
+  production build uses it to replace Brouwersdam with the nearest bundled spot.
+  The variable is optional: without it the site keeps Brouwersdam and still builds.
 - In the `windscout` repository, open **Settings → Pages** and select
   **GitHub Actions** as the publishing source.
 - Confirm the account plan permits Pages for this private repository, or make
@@ -108,6 +113,7 @@ checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
 
 - `npm test` in `web/`
 - `npm run test:e2e` in `web/`
+- `npm run build` in `web/` both with and without `VITE_NEARBY_LOCATION_URL`
 - `npm run renderer:check` in `web/`
 - `npm run spots:catalog:check` in `web/`
 - `npm run build` in `web/`; verify `esptool-js` remains in a lazy chunk
