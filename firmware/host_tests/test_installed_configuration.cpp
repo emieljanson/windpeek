@@ -11,8 +11,9 @@ TEST(InstalledConfigurationTest, DefaultIsValidAndStable)
 
     EXPECT_TRUE(installed_configuration_validate(&config));
     EXPECT_STREQ(config.board_id, WINDSCOUT_BOARD_ID);
+    EXPECT_STREQ(config.device_timezone, "Europe/Amsterdam");
     EXPECT_STREQ(config.spot.id, "brouwersdam");
-    EXPECT_EQ(installed_configuration_digest(&config), UINT64_C(0x50efeebc7b4f6a3e));
+    EXPECT_EQ(installed_configuration_digest(&config), UINT64_C(0x1cb353796dfceaac));
 }
 
 TEST(InstalledConfigurationTest, RejectsUnsupportedAndOutOfBoundsValues)
@@ -47,7 +48,7 @@ TEST(InstalledConfigurationTest, AcceptsA64CharacterSpotId)
     EXPECT_STREQ(loaded.spot.id, config.spot.id);
 }
 
-TEST(InstalledConfigurationTest, MigratesV2SettingsAndWifiCredentialsToV3)
+TEST(InstalledConfigurationTest, MigratesV2SettingsAndWifiCredentialsToCurrentVersion)
 {
     installed_configuration_reset_host_storage();
     installed_configuration_t legacy;
@@ -86,6 +87,22 @@ TEST(InstalledConfigurationTest, MigratesV2SettingsAndWifiCredentialsToV3)
     ASSERT_EQ(installed_configuration_load(&loaded_again), ESP_OK);
     EXPECT_EQ(installed_configuration_digest(&loaded_again),
               installed_configuration_digest(&loaded));
+}
+
+TEST(InstalledConfigurationTest, MigratesV3UsingTheSpotTimezoneAsDeviceFallback)
+{
+    installed_configuration_reset_host_storage();
+    installed_configuration_t legacy;
+    installed_configuration_default(&legacy);
+    snprintf(legacy.spot.timezone, sizeof(legacy.spot.timezone), "America/New_York");
+    snprintf(legacy.device_timezone, sizeof(legacy.device_timezone), "Europe/Amsterdam");
+    installed_configuration_seed_v3_host_storage(&legacy, "Home WiFi", "secret-value");
+
+    installed_configuration_t loaded;
+    ASSERT_EQ(installed_configuration_load(&loaded), ESP_OK);
+    EXPECT_EQ(loaded.version, INSTALLED_CONFIGURATION_VERSION);
+    EXPECT_STREQ(loaded.spot.timezone, "America/New_York");
+    EXPECT_STREQ(loaded.device_timezone, "America/New_York");
 }
 
 TEST(InstalledConfigurationTest, InterruptedCandidateNeverReplacesActive)

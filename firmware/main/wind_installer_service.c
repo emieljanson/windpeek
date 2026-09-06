@@ -133,7 +133,7 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
 {
     if (!cJSON_IsObject(json)) return false;
     static const char *const root_keys[] = {
-        "version", "boardId", "spot", "forecastModel", "display", "digest",
+        "version", "boardId", "deviceTimezone", "spot", "forecastModel", "display", "digest",
     };
     static const char *const spot_keys[] = {
         "id", "name", "latitude", "longitude", "timezone",
@@ -146,11 +146,13 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
     const cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
     const cJSON *spot = cJSON_GetObjectItemCaseSensitive(json, "spot");
     const cJSON *display = cJSON_GetObjectItemCaseSensitive(json, "display");
-    if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 6) ||
+    if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 7) ||
         !object_has_only_keys(spot, spot_keys, 5) ||
         !object_has_only_keys(display, display_keys, 8) ||
         !copy_json_string(json, "boardId", configuration->board_id,
                           sizeof(configuration->board_id)) ||
+        !copy_json_string(json, "deviceTimezone", configuration->device_timezone,
+                          sizeof(configuration->device_timezone)) ||
         !copy_json_string(json, "forecastModel", configuration->forecast_model,
                           sizeof(configuration->forecast_model)) ||
         !copy_json_string(json, "digest", digest_text, 17) ||

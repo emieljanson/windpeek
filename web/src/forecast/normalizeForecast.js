@@ -1,5 +1,5 @@
 import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract'
-import { validTimezone } from '../timezone'
+import { deviceTimezone as resolveDeviceTimezone, validTimezone } from '../timezone'
 import { FORECAST_MODELS, getForecastModel } from './models'
 
 const REQUIRED_HOURS = Object.freeze([8, 11, 14, 17, 20])
@@ -136,6 +136,7 @@ function optionalAvailability(hourly, units, count, fields) {
 export function normalizeForecast(response, spot, {
   retrievedAt = Date.now(),
   firstDate = localDateAt(retrievedAt, spot?.timezone ?? 'Europe/Amsterdam'),
+  deviceTimezone = resolveDeviceTimezone(),
   model = getForecastModel('best_match'),
   fallbackModel = null,
   suffixed = false,
@@ -144,6 +145,7 @@ export function normalizeForecast(response, spot, {
     fail('spot is invalid')
   }
   if (!Number.isFinite(retrievedAt) || retrievedAt <= 0) fail('retrieval time is invalid')
+  if (!validTimezone(deviceTimezone)) fail('device timezone is invalid')
   dateParts(firstDate)
   if (!model || !getForecastModel(model.id)) fail('model is invalid')
   const {
@@ -223,14 +225,15 @@ export function normalizeForecast(response, spot, {
   })
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     spotId: spot.id,
     spotName: spot.displayName,
     timezone: spot.timezone,
+    deviceTimezone,
     provider: 'OPEN-METEO',
     modelId: model.id,
     model: model.screenLabel,
-    updatedTime: updatedTimeAt(retrievedAt, spot.timezone),
+    updatedTime: updatedTimeAt(retrievedAt, deviceTimezone),
     retrievedAt,
     days,
   }
@@ -238,6 +241,7 @@ export function normalizeForecast(response, spot, {
 
 export function normalizeForecastModels(response, spot, {
   models = FORECAST_MODELS,
+  deviceTimezone = resolveDeviceTimezone(),
   ...options
 } = {}) {
   const forecasts = {}
@@ -246,6 +250,7 @@ export function normalizeForecastModels(response, spot, {
     try {
       forecasts[model.id] = normalizeForecast(response, spot, {
         ...options,
+        deviceTimezone,
         model,
         fallbackModel: model.id === fallbackModel?.id ? null : fallbackModel,
         suffixed: true,
@@ -259,9 +264,10 @@ export function normalizeForecastModels(response, spot, {
 
 export function isNormalizedForecast(value) {
   const model = getForecastModel(value?.modelId)
-  if (!value || value.schemaVersion !== 2 || typeof value.spotId !== 'string' || !value.spotId ||
+  if (!value || value.schemaVersion !== 3 || typeof value.spotId !== 'string' || !value.spotId ||
       typeof value.spotName !== 'string' || !value.spotName ||
-      !validTimezone(value.timezone) || value.provider !== 'OPEN-METEO' ||
+      !validTimezone(value.timezone) || !validTimezone(value.deviceTimezone) ||
+      value.provider !== 'OPEN-METEO' ||
       !model || value.model !== model.screenLabel ||
       typeof value.updatedTime !== 'string' ||
       !Number.isFinite(value.retrievedAt) || value.retrievedAt <= 0 ||

@@ -1,7 +1,8 @@
 import { resolveTimeFormat } from './localeTimeFormat'
 import { DEFAULT_THRESHOLD } from '../renderer/contract'
+import { validTimezone } from '../timezone'
 
-export const CONFIGURATION_VERSION = 3
+export const CONFIGURATION_VERSION = 4
 export const BOARD_ID = 'seeedstudio_reterminal_e1002'
 export const BOARD_IDS = Object.freeze({
   E1001: 'seeedstudio_reterminal_e1001',
@@ -61,6 +62,7 @@ function canonicalInstalledConfiguration(configuration) {
   return [
     configuration.version,
     configuration.boardId,
+    configuration.deviceTimezone,
     spot.id,
     spot.name,
     Number(spot.latitude).toFixed(6),
@@ -89,7 +91,8 @@ export function installedConfigurationDigest(configuration) {
 
 export function validateInstalledConfiguration(configuration) {
   if (!configuration || configuration.version !== CONFIGURATION_VERSION ||
-      !SUPPORTED_BOARD_IDS.includes(configuration.boardId)) return false
+      !SUPPORTED_BOARD_IDS.includes(configuration.boardId) ||
+      !validTimezone(configuration.deviceTimezone) || configuration.deviceTimezone.length > 63) return false
   const { spot, display } = configuration
   if (!spot || typeof spot.id !== 'string' || !SPOT_ID_PATTERN.test(spot.id) ||
       typeof spot.name !== 'string' || spot.name.length < 1 || spot.name.length > 64 ||
@@ -110,10 +113,13 @@ export function validateInstalledConfiguration(configuration) {
     configuration.digest === installedConfigurationDigest(configuration)
 }
 
-export function createInstalledConfiguration({ spot, modelId, display, boardId = BOARD_ID }, { allowInvalid = false } = {}) {
+export function createInstalledConfiguration({
+  spot, modelId, display, boardId = BOARD_ID, deviceTimezone = spot?.timezone,
+}, { allowInvalid = false } = {}) {
   const configuration = {
     version: CONFIGURATION_VERSION,
     boardId,
+    deviceTimezone: String(deviceTimezone ?? ''),
     spot: {
       id: String(spot?.id ?? ''),
       name: String(spot?.name ?? ''),

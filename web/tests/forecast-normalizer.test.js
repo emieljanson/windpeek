@@ -34,19 +34,21 @@ function responseFor({ hours = [8, 11, 14, 17, 20], speedUnit = 'kn', omit = '' 
 }
 
 describe('forecast normalizer', () => {
-  it('creates the canonical five-day renderer input at 08/11/14/17/20 local time', () => {
+  it('uses device-local update time while keeping forecast hours local to the spot', () => {
     const forecast = normalizeForecast(responseFor(), SPOTS[1], {
       firstDate: '2026-08-26',
       retrievedAt: Date.parse('2026-08-26T12:05:00Z'),
+      deviceTimezone: 'America/New_York',
     })
     expect(forecast).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       spotId: 'brouwersdam',
       spotName: 'BROUWERSDAM',
       timezone: 'Europe/Amsterdam',
+      deviceTimezone: 'America/New_York',
       provider: 'OPEN-METEO',
       model: 'BEST MATCH',
-      updatedTime: '26 AUG 2PM',
+      updatedTime: '26 AUG 8AM',
     })
     expect(forecast.days.map((day) => day.day)).toEqual(['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'])
     expect(forecast.days[0].date).toBe('26 AUG')

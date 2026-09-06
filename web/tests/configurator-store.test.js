@@ -32,10 +32,11 @@ function liveForecast(
   const spot = getSpot(spotId)
   const model = getForecastModel(modelId)
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     spotId,
     spotName: spot.displayName,
     timezone: spot.timezone,
+    deviceTimezone: 'Europe/Amsterdam',
     provider: 'OPEN-METEO',
     modelId,
     model: model.screenLabel,

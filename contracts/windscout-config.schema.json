@@ -1,13 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://windscout.app/contracts/windscout-config.schema.json",
-  "title": "WindScout E1002 installed configuration",
+  "title": "WindScout installed configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "boardId", "spot", "forecastModel", "display", "digest"],
+  "required": ["version", "boardId", "deviceTimezone", "spot", "forecastModel", "display", "digest"],
   "properties": {
-    "version": { "const": 2 },
-    "boardId": { "const": "seeedstudio_reterminal_e1002" },
+    "version": { "const": 4 },
+    "boardId": { "enum": ["seeedstudio_reterminal_e1001", "seeedstudio_reterminal_e1002", "seeedstudio_reterminal_e1003"] },
+    "deviceTimezone": { "type": "string", "minLength": 3, "maxLength": 63 },
     "spot": {
       "type": "object",
       "additionalProperties": false,

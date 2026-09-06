@@ -2,7 +2,7 @@ import { isNormalizedForecast } from './normalizeForecast'
 import { availableStorage } from '../storage'
 
 export const FORECAST_CACHE_KEY = 'windscout.forecasts'
-export const FORECAST_CACHE_VERSION = 3
+export const FORECAST_CACHE_VERSION = 4
 
 function readEnvelope(storage) {
   const target = availableStorage(storage)

@@ -14,10 +14,11 @@ function samples(values) {
 }
 
 export const brouwersdamForecast = Object.freeze({
-  schemaVersion: 2,
+  schemaVersion: 3,
   spotId: 'brouwersdam',
   spotName: 'Brouwersdam',
   timezone: 'Europe/Amsterdam',
+  deviceTimezone: 'Europe/Amsterdam',
   provider: 'OPEN-METEO',
   modelId: 'best_match',
   model: 'BEST MATCH',

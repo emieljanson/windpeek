@@ -10,6 +10,8 @@ TEST(WindSpotsTest, ExposesOneInstalledSpot)
 {
     ASSERT_EQ(wind_spots_count(), 1u);
     EXPECT_STREQ(wind_spots_at(0)->id, "brouwersdam");
+    EXPECT_STREQ(wind_spots_at(0)->timezone, "Europe/Amsterdam");
+    EXPECT_STREQ(wind_spots_device_timezone(), "Europe/Amsterdam");
     EXPECT_EQ(wind_spots_at(1), nullptr);
 }
 

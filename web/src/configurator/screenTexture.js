@@ -83,10 +83,10 @@ function rendererTideExtrema(tide, days) {
 }
 
 function formatUpdatedTime(forecast, timeFormat) {
-  if (!Number.isFinite(forecast.retrievedAt) || !forecast.timezone) return forecast.updatedTime
+  if (!Number.isFinite(forecast.retrievedAt) || !forecast.deviceTimezone) return forecast.updatedTime
   const twelveHour = timeFormat === '12-hour'
   const parts = new Intl.DateTimeFormat(twelveHour ? 'en-US' : 'en-GB', {
-    timeZone: forecast.timezone,
+    timeZone: forecast.deviceTimezone,
     day: '2-digit',
     month: 'short',
     hour: twelveHour ? 'numeric' : '2-digit',

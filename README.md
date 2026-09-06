@@ -43,6 +43,14 @@ only the final output pass differs. The device applies the exact e-ink palette
 and dithering, while the browser keeps the pre-dither grayscale and red accents
 for a clean, sharp preview.
 
+## Anonymous dashboard activity
+
+Production firmware sends one anonymous PostHog heartbeat at most once a week,
+and only after it has successfully downloaded and stored a new forecast. It
+contains a random dashboard ID, firmware version and device type. It contains
+no location, Wi-Fi details, configuration or weather data. The random ID stays
+on the device until its storage is fully erased or it is factory-flashed.
+
 The active implementation and setup instructions live in
 [`firmware/`](firmware/README.md). Product decisions and acceptance criteria are
 captured in [`docs/plans/2026-08-24-1109-feat-local-wind-dashboard-plan.md`](docs/plans/2026-08-24-1109-feat-local-wind-dashboard-plan.md).

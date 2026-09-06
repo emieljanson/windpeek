@@ -115,6 +115,7 @@ describe('display configuration', () => {
 
   it('normalizes one active spot into the versioned E1002 installation contract', () => {
     const configuration = createInstalledConfiguration({
+      deviceTimezone: 'America/New_York',
       spot: {
         id: 'brouwersdam',
         name: 'Brouwersdam',
@@ -138,6 +139,7 @@ describe('display configuration', () => {
     expect(configuration).toMatchObject({
       version: CONFIGURATION_VERSION,
       boardId: BOARD_ID,
+      deviceTimezone: 'America/New_York',
       spot: { id: 'brouwersdam', name: 'Brouwersdam' },
       forecastModel: 'best_match',
     })
@@ -161,7 +163,7 @@ describe('display configuration', () => {
         temperatureUnit: 'celsius',
       },
     })
-    expect(configuration.digest).toBe('50efeebc7b4f6a3e')
+    expect(configuration.digest).toBe('1cb353796dfceaac')
   })
 
   it('changes the digest for a spot change but not for object key order', () => {
@@ -178,6 +180,7 @@ describe('display configuration', () => {
       digest: original.digest,
       display: { ...original.display },
       forecastModel: original.forecastModel,
+      deviceTimezone: original.deviceTimezone,
       spot: { ...original.spot },
       boardId: original.boardId,
       version: original.version,

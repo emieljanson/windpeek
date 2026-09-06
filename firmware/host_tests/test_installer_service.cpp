@@ -339,7 +339,7 @@ TEST(InstallerServiceTest, CommitsOnlyAfterWifiAndRenderSucceed)
     FakeDevice fake;
     auto service = make_service(&fake);
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"Europe/Amsterdam","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})");
     const std::string wifi = request(&service, R"({"command":"test_wifi","ssid":"Home","password":"secret-value"})");
     EXPECT_NE(wifi.find("wifi_ready"), std::string::npos);
     EXPECT_EQ(wifi.find("secret-value"), std::string::npos);
@@ -351,12 +351,27 @@ TEST(InstallerServiceTest, CommitsOnlyAfterWifiAndRenderSucceed)
     EXPECT_EQ(fake.wake_releases, 1);
 }
 
+TEST(InstallerServiceTest, PreservesDeviceAndSpotTimezonesSeparately)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    request(&service, R"({"command":"begin","unixTime":1787932800})");
+
+    const std::string staged = request(
+        &service,
+        R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"America/New_York","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"b10310d53df55979"}})");
+
+    EXPECT_NE(staged.find("configuration_staged"), std::string::npos);
+    EXPECT_STREQ(service.candidate.device_timezone, "America/New_York");
+    EXPECT_STREQ(service.candidate.spot.timezone, "Europe/Amsterdam");
+}
+
 TEST(InstallerServiceTest, WrongWifiAndRenderFailureRemainRetryable)
 {
     FakeDevice fake;
     auto service = make_service(&fake);
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"Europe/Amsterdam","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})");
 
     fake.wifi_ok = false;
     const std::string rejected = request(&service, R"({"command":"test_wifi","ssid":"Home","password":"wrong"})");
@@ -384,7 +399,7 @@ TEST(InstallerServiceTest, AsyncApplyReturnsBeforeRenderAndReportsProgress)
     service.dependencies.start_apply = start_apply;
     service.dependencies.apply_state = apply_state;
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"Europe/Amsterdam","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})");
 
     const std::string applying = request(&service, R"({"command":"apply_configuration"})");
     EXPECT_NE(applying.find("applying"), std::string::npos);
@@ -424,7 +439,7 @@ TEST(InstallerServiceTest, AsyncApplyDoesNotStartWhenAcknowledgementWasNotTransm
     service.dependencies.start_apply = start_apply;
     service.dependencies.apply_state = apply_state;
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"Europe/Amsterdam","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})");
     request(&service, R"({"command":"apply_configuration"})");
 
     EXPECT_EQ(wind_installer_service_confirm_pending_apply_response(&service, false), ESP_FAIL);
@@ -456,6 +471,8 @@ TEST(InstallerServiceTest, RejectsConfigurationValuesOutsideThePublishedSchema)
     request(&service, R"({"command":"begin","unixTime":1787932800})");
 
     const char *invalid_configurations[] = {
+        R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})",
+        R"({"command":"stage_configuration","configuration":{"version":4,"boardId":"seeedstudio_reterminal_e1002","deviceTimezone":"Europe/Definitely-Not-A-Zone","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"949c6be684df723d"}})",
         R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"Edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"bde996ae21f5ca31"}})",
         R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"local","temperatureUnit":"celsius"},"digest":"bde996ae21f5ca31"}})",
         R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"24-hour","temperatureUnit":"kelvin","extra":true},"digest":"bde996ae21f5ca31"}})",

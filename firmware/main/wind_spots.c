@@ -33,6 +33,12 @@ static void ensure_loaded(void)
     if (!s_loaded) (void) wind_spots_reload_installed();
 }
 
+const char *wind_spots_device_timezone(void)
+{
+    ensure_loaded();
+    return s_configuration.device_timezone;
+}
+
 size_t wind_spots_count(void)
 {
     ensure_loaded();

@@ -24,6 +24,7 @@ esp_err_t wind_spots_load_selected(size_t *out_index);
 esp_err_t wind_spots_store_selected(size_t index);
 esp_err_t wind_spots_reload_installed(void);
 esp_err_t wind_spots_use_configuration(const installed_configuration_t *configuration);
+const char *wind_spots_device_timezone(void);
 
 #ifdef __cplusplus
 }

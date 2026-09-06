@@ -11,10 +11,11 @@ function memoryStorage() {
 
 function forecast(modelId = 'best_match', model = 'BEST MATCH') {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     spotId: 'brouwersdam',
     spotName: 'BROUWERSDAM',
     timezone: 'Europe/Amsterdam',
+    deviceTimezone: 'Europe/Amsterdam',
     provider: 'OPEN-METEO',
     modelId,
     model,

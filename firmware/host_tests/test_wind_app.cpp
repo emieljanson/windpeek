@@ -2,10 +2,21 @@
 
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 extern "C" {
 #include "wind_app.h"
 #include "wind_timezone.h"
+}
+
+static std::string read_wind_app_source()
+{
+    std::ifstream input(WIND_APP_SOURCE);
+    std::ostringstream contents;
+    contents << input.rdbuf();
+    return contents.str();
 }
 
 struct FakeIo {
@@ -357,4 +368,28 @@ TEST_F(WindAppTest, MissedRetryDoesNotConsumeTheNextBoundaryRetry)
     ASSERT_EQ(wind_app_run(&app, false, second_boundary + 5 * 60, &retry), ESP_OK);
     EXPECT_TRUE(retry.attempted_fetch);
     EXPECT_EQ(fake.fetches, 4);
+}
+
+TEST(WindAppProductionContractTest, SendsHeartbeatOnlyAfterRefreshLocksAreReleased)
+{
+    const std::string source = read_wind_app_source();
+    ASSERT_FALSE(source.empty());
+
+    EXPECT_NE(source.find("wind_app_refresh_unlocked(true, NULL)"), std::string::npos);
+    EXPECT_NE(source.find("wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast)"),
+              std::string::npos);
+
+    const size_t public_refresh = source.find("esp_err_t wind_app_refresh(bool force_refresh)");
+    ASSERT_NE(public_refresh, std::string::npos);
+    const size_t refresh_call = source.find(
+        "wind_app_refresh_unlocked(force_refresh, &published_forecast)", public_refresh);
+    const size_t unlock = source.find("xSemaphoreGive(s_runtime_lock)", refresh_call);
+    const size_t heartbeat = source.find("wind_analytics_maybe_send", unlock);
+
+    ASSERT_NE(refresh_call, std::string::npos);
+    ASSERT_NE(unlock, std::string::npos);
+    ASSERT_NE(heartbeat, std::string::npos);
+    EXPECT_LT(refresh_call, unlock);
+    EXPECT_LT(unlock, heartbeat);
+    EXPECT_NE(source.find("if (published_forecast)", unlock), std::string::npos);
 }

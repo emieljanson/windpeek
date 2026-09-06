@@ -193,16 +193,22 @@ describe('canonical screen texture', () => {
       .toEqual(['8AM', '11AM', '2PM', '5PM', '8PM'])
   })
 
-  it('formats the update time from one timestamp using the selected clock', () => {
-    const twentyFourHour = createRendererInput(brouwersdamForecast, {
+  it('formats the update time in the device timezone using the selected clock', () => {
+    const forecast = {
+      ...brouwersdamForecast,
+      deviceTimezone: 'America/New_York',
+    }
+    const twentyFourHour = createRendererInput(forecast, {
       showThreshold: false, threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
     })
-    const twelveHour = createRendererInput(brouwersdamForecast, {
+    const twelveHour = createRendererInput(forecast, {
       showThreshold: false, threshold: 17, timeFormat: '12-hour', temperatureUnit: 'celsius',
     })
 
-    expect(twentyFourHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{2}:\d{2}$/)
-    expect(twelveHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{1,2}(AM|PM)$/)
+    expect(twentyFourHour.updatedTime).toBe('26 AUG 01:40')
+    expect(twelveHour.updatedTime).toBe('26 AUG 1AM')
+    expect(twentyFourHour.days[0].samples.map((sample) => sample.time))
+      .toEqual(['08', '11', '14', '17', '20'])
   })
 
   it('keeps explicit battery data instead of the web demo fallback', () => {

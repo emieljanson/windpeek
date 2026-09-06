@@ -22,7 +22,7 @@ Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endi
 
 Each request receives one result or typed error with the same request ID. The browser times out an idle request after 15 seconds and network testing after 45 seconds. Forecast/render work runs asynchronously; the browser polls state once per second for at most three minutes. A reconnect starts a new session and request-ID space.
 
-`unixTime` is a required integer Unix timestamp in seconds, captured from the owner's browser immediately before `begin`. Firmware with the required `clock-sync` capability accepts dates from 2025 through 2099 and returns `clock_rejected` without starting the session when it cannot persist that time. The absolute clock comes from the browser; local display and wake times come from the installed spot's IANA timezone.
+`unixTime` is a required integer Unix timestamp in seconds, captured from the owner's browser immediately before `begin`. Firmware with the required `clock-sync` capability accepts dates from 2025 through 2099 and returns `clock_rejected` without starting the session when it cannot persist that time. The absolute clock comes from the browser. The last successful forecast time uses the installed device's IANA timezone. Forecast and wake times use the installed spot's IANA timezone.
 
 ## Hardware profile capability
 
@@ -45,4 +45,4 @@ The command and setup guard use these typed errors:
 
 ## Redaction and compatibility
 
-`password` is write-only. It is forbidden in hello/state/status results, diagnostics, logs, errors, screenshots, and toasts. Implementations must reject unknown fields on credential-bearing requests. Capability negotiation, not firmware-version guessing, decides which optional commands are available. The flash-layout version decides whether an update may preserve partitions or requires a clean reinstall; firmware predating this field is layout 1. Protocol v1 supports configuration schema v2 and board ID `seeedstudio_reterminal_e1002` only.
+`password` is write-only. It is forbidden in hello/state/status results, diagnostics, logs, errors, screenshots, and toasts. Implementations must reject unknown fields on credential-bearing requests. Capability negotiation, not firmware-version guessing, decides which optional commands are available. The flash-layout version decides whether an update may preserve partitions or requires a clean reinstall; firmware predating this field is layout 1. Protocol v1 supports configuration schema v4. A configuration requires `deviceTimezone` plus the spot timezone. Universal E1001/E1002 firmware uses release and configuration board ID `seeedstudio_reterminal_e1002`; E1001 remains a hardware-profile identity. E1003 firmware uses `seeedstudio_reterminal_e1003`.

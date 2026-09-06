@@ -7,3 +7,8 @@ export function validTimezone(timezone) {
     return false
   }
 }
+
+export function deviceTimezone() {
+  const timezone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+  return validTimezone(timezone) ? timezone : 'Etc/UTC'
+}

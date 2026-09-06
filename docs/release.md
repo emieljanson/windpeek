@@ -93,6 +93,33 @@ needed to reproduce the hardware path:
 Use `selected_board_id`, `detected_board_id`, `decision_reason`, `phase` and
 `error_code` as the first Sentry filters when validating an E1003 remotely.
 
+## Dashboard activity analytics setup
+
+Production firmware sends a personless `windscout_dashboard_heartbeat` event
+to the PostHog US ingestion endpoint. Pull-request firmware compiles with
+analytics disabled.
+
+Before releasing:
+
+- Add repository variable `WINDSCOUT_POSTHOG_PROJECT_TOKEN` with the public
+  PostHog project token. The release fails safely when it is missing.
+- In PostHog, enable project-level IP-address discarding before the variable is
+  enabled. Treat this as a privacy release gate.
+- Save an insight for unique `distinct_id` values of
+  `windscout_dashboard_heartbeat` over the last 9 days. Add breakdown views for
+  `firmware_version` and `device_type`.
+
+The event contains only its name, random dashboard ID, firmware version,
+device type and `$process_person_profile: false`. It contains no location,
+Wi-Fi details, configuration, forecast, weather, serial number or hardware
+address. The device attempts it at most weekly after a successful forecast
+refresh; a failed delivery may retry after 24 hours. Analytics failure never
+changes forecast, display or sleep behavior.
+
+This is an approximate fleet signal, not billing-grade data: client events can
+be blocked or spoofed. To disable it, clear the repository variable and ship a
+new firmware release.
+
 ## Moving the production domain
 
 The DNS record already targets `emieljanson.github.io`, so no DNS redesign is

@@ -41,6 +41,7 @@ set(LEGACY_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_analytics.c"
 )
 
 set(WINDSCOUT_SOURCES
@@ -74,6 +75,7 @@ set(WINDSCOUT_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_analytics.c"
 )
 
 set(LEGACY_PRIV_REQUIRES
@@ -155,6 +157,18 @@ idf_component_register(
     PRIV_REQUIRES ${PRIV_REQUIRES}
     EMBED_FILES ${EMBED_FILES}
 )
+
+set(WINDSCOUT_POSTHOG_PROJECT_TOKEN "$ENV{WINDSCOUT_POSTHOG_PROJECT_TOKEN}")
+if(WINDSCOUT_POSTHOG_PROJECT_TOKEN AND
+   NOT WINDSCOUT_POSTHOG_PROJECT_TOKEN MATCHES "^[A-Za-z0-9_]+$")
+    message(FATAL_ERROR "WINDSCOUT_POSTHOG_PROJECT_TOKEN contains unsupported characters")
+endif()
+if(WINDSCOUT_POSTHOG_PROJECT_TOKEN)
+    target_compile_definitions(
+        ${COMPONENT_LIB}
+        PRIVATE WINDSCOUT_POSTHOG_PROJECT_TOKEN="${WINDSCOUT_POSTHOG_PROJECT_TOKEN}"
+    )
+endif()
 
 if(CONFIG_BOARD_CAP_WINDSCOUT)
     target_include_directories(${COMPONENT_LIB} PRIVATE "../components/acetimec/src")

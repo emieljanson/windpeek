@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define INSTALLED_CONFIGURATION_VERSION 3u
+#define INSTALLED_CONFIGURATION_VERSION 4u
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
 #define WINDSCOUT_BOARD_ID "seeedstudio_reterminal_e1003"
 #else
@@ -41,6 +41,7 @@ typedef struct {
     uint32_t version;
     uint32_t generation;
     char board_id[40];
+    char device_timezone[64];
     installed_spot_t spot;
     char forecast_model[32];
     installed_display_configuration_t display;
@@ -60,6 +61,8 @@ esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
 void installed_configuration_reset_host_storage(void);
 void installed_configuration_set_host_failure_boundary(int boundary);
 void installed_configuration_seed_v2_host_storage(const installed_configuration_t *config,
+                                                   const char *ssid, const char *password);
+void installed_configuration_seed_v3_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password);
 #endif
 

@@ -8,6 +8,7 @@ import {
 } from '../config/configuration'
 import { brouwersdamTide } from '../fixtures/brouwersdam'
 import { getSerialSupport } from '../installer/serialPortAdapter'
+import { deviceTimezone } from '../timezone'
 import InstallContinuation from '../components/InstallContinuation.vue'
 import WindScoutSettings from '../components/WindScoutSettings.vue'
 import { useCompactViewport } from '../composables/useCompactViewport'
@@ -16,6 +17,7 @@ import { useConfiguratorStore } from '../stores/configurator'
 const WindScoutScene = defineAsyncComponent(() => import('../components/WindScoutScene.vue'))
 
 const store = useConfiguratorStore()
+const currentDeviceTimezone = deviceTimezone()
 const { isCompact } = useCompactViewport()
 const routeParams = new URLSearchParams(window.location.search)
 const requestedPreviewBoardId = routeParams.get('devicePreview')
@@ -38,6 +40,7 @@ const showInstaller = computed(() => (
   !isCompact.value && getSerialSupport().reason !== 'desktop-required'
 ))
 const installationConfiguration = computed(() => createInstalledConfiguration({
+  deviceTimezone: currentDeviceTimezone,
   spot: store.spotById(store.selectedSpotId),
   modelId: store.selectedModelId,
   boardId: store.selectedBoardId,
