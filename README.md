@@ -11,9 +11,9 @@ Owner instructions are in [`docs/setup.md`](docs/setup.md), USB recovery in
 [`docs/recovery.md`](docs/recovery.md), and release evidence in
 [`docs/release.md`](docs/release.md).
 
-Every push to `main` builds the configurator and the E1002 firmware together,
-then deploys a website containing that exact firmware bundle. Tagged E1002
-releases (`v*`) additionally publish the OTA application and browser-installer
+Every push to `main` builds the configurator, universal E1001/E1002 firmware and
+E1003 firmware together, then deploys a website containing those exact bundles.
+Tagged releases (`v*`) additionally publish the application and browser-installer
 files as a GitHub Release. The bundle is generated from ESP-IDF's
 `flasher_args.json`, contains separate checksummed flash parts, and exposes
 clean-install and preserving-update write sets. Generate and validate it
@@ -22,7 +22,7 @@ locally with one command. When no version is supplied, this creates a fresh
 
 ```sh
 cd firmware
-./build.py --board seeedstudio_reterminal_e1002 --step firmware \
+./build.py --board seeedstudio_reterminal_e100x \
   --installer-output ../web/public/firmware
 ```
 
@@ -111,23 +111,11 @@ Open-Meteo; the renderer itself performs no networking or persistence.
 The Berkeley Mono bitmap assets are derived from a separately licensed local
 font. Check that licence before distributing firmware binaries.
 
-## Firmware updates over Wi-Fi
+## Firmware updates
 
-USB-C is only required for the first installation or recovery. For normal local
-development, build the application and upload it over the network:
+Reconnect the device over USB-C and open the browser installer. It chooses a
+configuration-only update, a preserving firmware update, or repair based on the
+connected device and release. Preserving updates retain Wi-Fi and user storage.
 
-```sh
-cd firmware
-./build.py --board seeedstudio_reterminal_e1002 --step firmware
-./scripts/ota-upload.sh
-```
-
-The upload route is deliberately locked. It opens while USB is connected, for
-ten minutes after pressing the WAKE button, or for ten minutes after waking the
-device with that button. The device writes the upload to its inactive firmware
-partition, validates it, switches boot partitions and only then restarts.
-
-Tagged GitHub releases (`v*`) publish the same OTA binary automatically. A
-WindScout can check and install those releases from its web interface. Keep
-USB-C available as the recovery path if an experimental build cannot boot or
-connect to Wi-Fi.
+The WindScout runtime excludes the upstream photo-frame HTTP and OTA services;
+the retained OTA upload script applies to legacy photo-frame builds.

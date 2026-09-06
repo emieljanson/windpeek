@@ -34,6 +34,10 @@ make test
 idf.py -p /dev/cu.usbmodemXXXX flash monitor
 ```
 
+E1002, universal E1001/E1002 and E1003 builds run only the firmware step by
+default. Other boards still build the photo-frame webapp and setup screens.
+Use `--step` to request individual build steps explicitly.
+
 The E1002 build contains only the WindScout dashboard, USB installer, Wi-Fi
 client, forecast cache and battery/deep-sleep runtime. The upstream photo-frame
 UI, albums, captive portal, Home Assistant and photo OTA runtime are excluded.
