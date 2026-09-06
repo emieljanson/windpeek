@@ -71,4 +71,26 @@ describe('landing hero nearby default', () => {
     wrapper.unmount()
     expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
   })
+
+  it('releases the renderer and WebGL when drawing the loaded frame fails', async () => {
+    const failedRenderer = {
+      renderPreviewForDisplay: vi.fn(() => { throw new Error('draw failed') }),
+      dispose: vi.fn(),
+    }
+    loadSharedRenderer.mockResolvedValueOnce(failedRenderer)
+
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingHero, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(failedRenderer.dispose).toHaveBeenCalledOnce())
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+
+    wrapper.unmount()
+    expect(failedRenderer.dispose).toHaveBeenCalledOnce()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+  })
 })

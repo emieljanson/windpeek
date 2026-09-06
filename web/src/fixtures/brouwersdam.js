@@ -40,17 +40,30 @@ const brouwersdamTideSamples = brouwersdamForecast.days.flatMap((day, dayIndex) 
     seaLevelMm: Math.round(Math.sin((dayIndex * 24 + hour - 2) * Math.PI / 6.2) * 900),
   })))
 
-const brouwersdamTideExtrema = brouwersdamTideSamples.slice(1, -1).flatMap((sample, index) => {
-  const previous = brouwersdamTideSamples[index]
-  const next = brouwersdamTideSamples[index + 2]
-  if (sample.seaLevelMm > previous.seaLevelMm && sample.seaLevelMm > next.seaLevelMm) {
-    return [{ ...sample, type: 'high' }]
+function tideExtremaFromSamples(samples) {
+  const extrema = []
+  let trend = 0
+
+  for (let index = 1; index < samples.length; index += 1) {
+    const nextTrend = Math.sign(samples[index].seaLevelMm - samples[index - 1].seaLevelMm)
+    if (nextTrend === 0) continue
+    if (trend !== 0 && nextTrend !== trend) {
+      const plateauEnd = index - 1
+      let plateauStart = plateauEnd
+      while (
+        plateauStart > 0 &&
+        samples[plateauStart - 1].seaLevelMm === samples[plateauEnd].seaLevelMm
+      ) plateauStart -= 1
+      const sample = samples[Math.floor((plateauStart + plateauEnd) / 2)]
+      extrema.push({ ...sample, type: trend > 0 ? 'high' : 'low' })
+    }
+    trend = nextTrend
   }
-  if (sample.seaLevelMm < previous.seaLevelMm && sample.seaLevelMm < next.seaLevelMm) {
-    return [{ ...sample, type: 'low' }]
-  }
-  return []
-})
+
+  return extrema
+}
+
+const brouwersdamTideExtrema = tideExtremaFromSamples(brouwersdamTideSamples)
 
 export const brouwersdamTide = Object.freeze({
   capability: 'available',

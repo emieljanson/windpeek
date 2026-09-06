@@ -64,6 +64,8 @@ onMounted(async () => {
     }
     drawForecast(store.forecast)
   } catch {
+    renderer?.dispose()
+    renderer = undefined
     projectiveScreen?.dispose()
     projectiveScreen = undefined
     screenReady.value = false

@@ -31,7 +31,7 @@ export function forecastResponseForLatitude(latitude) {
       [`wind_speed_10m_${id}`]: times.map((_, index) => 11 + offset + modelIndex * 3 + (index % 5)),
       [`wind_gusts_10m_${id}`]: times.map((_, index) => 17 + offset + modelIndex * 3 + (index % 5)),
       [`wind_direction_10m_${id}`]: times.map(() => 90 + modelIndex * 15),
-      [`cloud_cover_${id}`]: times.map(() => 20 + modelIndex * 10),
+      [`cloud_cover_${id}`]: times.map(() => Math.min(20 + modelIndex * 10, 100)),
       [`precipitation_${id}`]: times.map(() => 0),
       [`is_day_${id}`]: times.map(() => 1),
       [`temperature_2m_${id}`]: times.map((_, index) => 12 + modelIndex + (index % 5)),
