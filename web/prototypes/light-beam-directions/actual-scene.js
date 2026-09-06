@@ -11,7 +11,7 @@ import {
   createEpaperMaterial,
   createMatteScreenFinish,
   createScreenRecessShadow,
-  enhanceE1002Surface,
+  enhanceDeviceSurface,
   fitScreenUnderBezel,
 } from '../../src/configurator/deviceSurface.js'
 import { configureAmbientOcclusion } from '../../src/configurator/ambientOcclusion.js'
@@ -168,7 +168,7 @@ export async function createActualScene({ canvas, onReady }) {
 
   const model = await loadE1002Model()
   hideDeviceStand(model)
-  enhanceE1002Surface(model, renderer)
+  enhanceDeviceSurface(model, renderer)
   model.traverse((object) => {
     if (!object.isMesh) return
     object.castShadow = object.name !== 'SCREEN'

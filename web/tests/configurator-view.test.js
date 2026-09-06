@@ -24,6 +24,8 @@ describe('configurator experience', () => {
     ['', true],
     ['?devicePreview=seeedstudio_reterminal_e1002', false],
     ['?installerDemo=1', false],
+    ['?installerDemo', true],
+    ['?installerDemo=false', true],
   ])('nearby lookup eligibility for route %s', async (search, expected) => {
     const originalUrl = window.location.href
     window.history.replaceState({}, '', `/${search}`)

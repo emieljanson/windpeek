@@ -8,6 +8,7 @@
   ],
   "remaining_findings": [],
   "rejected_findings": [
-    {"title": "Schema accepts an unsupported E1001 board identity", "reason": "E1001 is intentionally normalized to the shared E1002 release identity before staging; E1003 has its own firmware identity."}
+    {"title": "Schema accepts an unsupported E1001 board identity", "reason": "E1001 is intentionally normalized to the shared E1002 release identity before staging; E1003 has its own firmware identity."},
+    {"title": "Firmware timezone split lacks render test", "reason": "A direct render unit seam remains a non-blocking gap, while timezone conversion and the full firmware build are covered."}
   ]
 }

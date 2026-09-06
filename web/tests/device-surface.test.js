@@ -19,8 +19,7 @@ import {
 
 describe('reTerminal product surfaces', () => {
   it.each([
-    ['E1001', 'e1002'],
-    ['E1002', 'e1002'],
+    ['E1001/E1002 shared', 'e1002'],
     ['E1003', 'e1003'],
   ])('applies the studio finish to the actual %s model', async (_, asset) => {
     const source = await readFile(resolve(process.cwd(), `public/devices/${asset}/${asset}.glb`))

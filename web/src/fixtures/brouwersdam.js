@@ -33,20 +33,29 @@ export const brouwersdamForecast = Object.freeze({
   ],
 })
 
+const brouwersdamTideSamples = brouwersdamForecast.days.flatMap((day, dayIndex) =>
+  Array.from({ length: 24 }, (_, hour) => ({
+    localDate: day.localDate,
+    localTime: `${String(hour).padStart(2, '0')}:00`,
+    seaLevelMm: Math.round(Math.sin((dayIndex * 24 + hour - 2) * Math.PI / 6.2) * 900),
+  })))
+
+const brouwersdamTideExtrema = brouwersdamTideSamples.slice(1, -1).flatMap((sample, index) => {
+  const previous = brouwersdamTideSamples[index]
+  const next = brouwersdamTideSamples[index + 2]
+  if (sample.seaLevelMm > previous.seaLevelMm && sample.seaLevelMm > next.seaLevelMm) {
+    return [{ ...sample, type: 'high' }]
+  }
+  if (sample.seaLevelMm < previous.seaLevelMm && sample.seaLevelMm < next.seaLevelMm) {
+    return [{ ...sample, type: 'low' }]
+  }
+  return []
+})
+
 export const brouwersdamTide = Object.freeze({
   capability: 'available',
   spotId: 'brouwersdam',
   timezone: 'Europe/Amsterdam',
-  samples: brouwersdamForecast.days.flatMap((day, dayIndex) =>
-    Array.from({ length: 24 }, (_, hour) => ({
-      localDate: day.localDate,
-      localTime: `${String(hour).padStart(2, '0')}:00`,
-      seaLevelMm: Math.round(Math.sin((dayIndex * 24 + hour - 2) * Math.PI / 6.2) * 900),
-    }))),
-  extrema: brouwersdamForecast.days.flatMap((day, dayIndex) => [
-    { localDate: day.localDate, localTime: dayIndex % 2 ? '03:15' : '02:45', seaLevelMm: 900, type: 'high' },
-    { localDate: day.localDate, localTime: dayIndex % 2 ? '09:30' : '09:00', seaLevelMm: -900, type: 'low' },
-    { localDate: day.localDate, localTime: dayIndex % 2 ? '15:45' : '15:15', seaLevelMm: 900, type: 'high' },
-    { localDate: day.localDate, localTime: dayIndex % 2 ? '22:00' : '21:30', seaLevelMm: -900, type: 'low' },
-  ]),
+  samples: brouwersdamTideSamples,
+  extrema: brouwersdamTideExtrema,
 })

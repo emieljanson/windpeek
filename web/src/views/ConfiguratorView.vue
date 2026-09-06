@@ -21,7 +21,7 @@ const currentDeviceTimezone = deviceTimezone()
 const { isCompact } = useCompactViewport()
 const routeParams = new URLSearchParams(window.location.search)
 const requestedPreviewBoardId = routeParams.get('devicePreview')
-const installerDemoMode = routeParams.has('installerDemo')
+const installerDemoMode = routeParams.get('installerDemo') === '1'
 const previewBoardId = SUPPORTED_BOARD_IDS.includes(requestedPreviewBoardId)
   ? requestedPreviewBoardId
   : null

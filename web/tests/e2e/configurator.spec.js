@@ -1,50 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { FORECAST_MODELS } from '../../src/forecast/models'
+import { amsterdamDate, forecastResponseForLatitude } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
-
-function amsterdamDate(offset = 0) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date())
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-  const date = new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + offset))
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
-}
-
-function responseFor(latitude) {
-  const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
-    .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
-  const offset = latitude > 52 ? 4 : 0
-  const hourlyUnits = { time: 'iso8601' }
-  const hourly = { time: times }
-  FORECAST_MODELS.forEach((model, modelIndex) => {
-    const modelId = model.apiId
-    Object.assign(hourlyUnits, {
-      [`wind_speed_10m_${modelId}`]: 'kn',
-      [`wind_gusts_10m_${modelId}`]: 'kn',
-      [`wind_direction_10m_${modelId}`]: '°',
-      [`cloud_cover_${modelId}`]: '%',
-      [`precipitation_${modelId}`]: 'mm',
-      [`is_day_${modelId}`]: '',
-      [`temperature_2m_${modelId}`]: '°C',
-    })
-    Object.assign(hourly, {
-      [`wind_speed_10m_${modelId}`]: times.map((_, index) => 11 + offset + modelIndex * 3 + (index % 5)),
-      [`wind_gusts_10m_${modelId}`]: times.map((_, index) => 17 + offset + modelIndex * 3 + (index % 5)),
-      [`wind_direction_10m_${modelId}`]: times.map(() => 90 + modelIndex * 15),
-      [`cloud_cover_${modelId}`]: times.map(() => 20 + modelIndex * 10),
-      [`precipitation_${modelId}`]: times.map(() => 0),
-      [`is_day_${modelId}`]: times.map(() => 1),
-      [`temperature_2m_${modelId}`]: times.map((_, index) => 12 + modelIndex + (index % 5)),
-    })
-  })
-  return {
-    timezone: 'Europe/Amsterdam',
-    hourly_units: hourlyUnits,
-    hourly,
-  }
-}
 
 async function mockForecastApi(page, state = { fail: false, tideUnsupported: false }) {
   const requests = []
@@ -56,7 +13,7 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
       return
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
-      responseFor(Number(url.searchParams.get('latitude'))),
+      forecastResponseForLatitude(Number(url.searchParams.get('latitude'))),
     ) })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {

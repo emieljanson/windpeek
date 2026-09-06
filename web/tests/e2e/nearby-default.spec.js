@@ -1,58 +1,19 @@
 import { expect, test } from '@playwright/test'
-import { FORECAST_MODELS } from '../../src/forecast/models'
+import { forecastResponseForLatitude } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
 const BROUWERSDAM = { latitude: '51.750600', longitude: '3.857700' }
 const EDAM = { latitude: 52.5126, longitude: 5.0486 }
 
-function amsterdamDate(offset = 0) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date())
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-  const date = new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + offset))
-  return date.toISOString().slice(0, 10)
-}
-
-function forecastResponse() {
-  const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
-    .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
-  const hourlyUnits = { time: 'iso8601' }
-  const hourly = { time: times }
-
-  FORECAST_MODELS.forEach((model, modelIndex) => {
-    const id = model.apiId
-    Object.assign(hourlyUnits, {
-      [`wind_speed_10m_${id}`]: 'kn',
-      [`wind_gusts_10m_${id}`]: 'kn',
-      [`wind_direction_10m_${id}`]: '°',
-      [`cloud_cover_${id}`]: '%',
-      [`precipitation_${id}`]: 'mm',
-      [`is_day_${id}`]: '',
-      [`temperature_2m_${id}`]: '°C',
-    })
-    Object.assign(hourly, {
-      [`wind_speed_10m_${id}`]: times.map((_, index) => 11 + modelIndex + (index % 5)),
-      [`wind_gusts_10m_${id}`]: times.map((_, index) => 17 + modelIndex + (index % 5)),
-      [`wind_direction_10m_${id}`]: times.map(() => 90),
-      [`cloud_cover_${id}`]: times.map(() => 20),
-      [`precipitation_${id}`]: times.map(() => 0),
-      [`is_day_${id}`]: times.map(() => 1),
-      [`temperature_2m_${id}`]: times.map(() => 16),
-    })
-  })
-
-  return { timezone: 'Europe/Amsterdam', hourly_units: hourlyUnits, hourly }
-}
-
 async function mockWeather(page) {
   const forecastRequests = []
   await page.route('https://api.open-meteo.com/v1/forecast**', async (route) => {
-    forecastRequests.push(new URL(route.request().url()))
+    const url = new URL(route.request().url())
+    forecastRequests.push(url)
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(forecastResponse()),
+      body: JSON.stringify(forecastResponseForLatitude(Number(url.searchParams.get('latitude')))),
     })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {

@@ -36,7 +36,7 @@ describe('Windscout landing page', () => {
     const specs = wrapper.findAll('.hardware-spec')
     expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Threshold line', 'Battery'])
     expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.text())))).toEqual([
-      [['7.5″ · 4 greys', '800 × 480'], ['7.3″ · 6 colours', '800 × 480'], ['10.3″ · 16 greys', '1404 × 1872']],
+      [['7.5″ · 4 greys', '800 × 480'], ['7.3″ · 6 colours', '800 × 480'], ['10.3″ · 16 greys', '1872 × 1404']],
       [['Black'], ['Red'], ['Black']],
       [['Up to 3 months'], ['Up to 3 months'], ['Up to 6 months']],
     ])

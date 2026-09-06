@@ -18,8 +18,11 @@ const toasterPosition = computed(() => isCompact.value ? 'top-center' : 'bottom-
 watch(
   () => [store.forecastStatus, store.forecastMessage],
   ([status, message]) => {
-    if (status !== 'warning' || !message) return
-    toast.error(message, { id: 'forecast-error' })
+    if (status === 'warning' && message) {
+      toast.error(message, { id: 'forecast-error' })
+      return
+    }
+    toast.dismiss('forecast-error')
   },
   { flush: 'post' },
 )

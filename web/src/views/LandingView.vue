@@ -26,7 +26,7 @@ const hardwareModels = [
   {
     model: 'E1003',
     screen: '10.3″ · 16 greys',
-    resolution: '1404 × 1872',
+    resolution: '1872 × 1404',
     threshold: 'Black',
     battery: 'Up to 6 months',
     price: '~$160',

@@ -1,27 +1,38 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { useConfiguratorStore } from '../src/stores/configurator'
 import { loadSharedRenderer } from '../src/renderer/sharedRenderer'
 
+const { frame, projectiveScreen } = vi.hoisted(() => ({
+  frame: { data: new Uint8Array(16), width: 2, height: 2 },
+  projectiveScreen: {
+    setFrame: vi.fn(),
+    draw: vi.fn(),
+    dispose: vi.fn(),
+  },
+}))
+
 vi.mock('../src/renderer/sharedRenderer', () => ({
   loadSharedRenderer: vi.fn().mockResolvedValue({
-    renderPreviewForDisplay: vi.fn(() => document.createElement('canvas')),
+    renderPreviewForDisplay: vi.fn(() => frame),
     dispose: vi.fn(),
   }),
 }))
 
 vi.mock('../src/marketing/projectiveScreen', () => ({
-  createProjectiveScreen: vi.fn(() => ({
-    setFrame: vi.fn(),
-    draw: vi.fn(),
-    dispose: vi.fn(),
-  })),
+  createProjectiveScreen: vi.fn(() => projectiveScreen),
 }))
 
 import LandingHero from '../src/components/LandingHero.vue'
 
 describe('landing hero nearby default', () => {
+  beforeEach(() => {
+    projectiveScreen.setFrame.mockClear()
+    projectiveScreen.draw.mockClear()
+    projectiveScreen.dispose.mockClear()
+  })
+
   it('starts forecast and tide before the fire-and-forget nearby lookup', async () => {
     const pinia = createPinia()
     const store = useConfiguratorStore(pinia)
@@ -40,10 +51,11 @@ describe('landing hero nearby default', () => {
     expect(initializeTide.mock.invocationCallOrder[0]).toBeLessThan(
       initializeNearbyDefault.mock.invocationCallOrder[0],
     )
+    await vi.waitFor(() => expect(projectiveScreen.setFrame).toHaveBeenCalledWith(frame))
     wrapper.unmount()
   })
 
-  it('still starts the nearby lookup when the renderer cannot load', async () => {
+  it('starts the nearby lookup and releases WebGL when the renderer cannot load', async () => {
     loadSharedRenderer.mockRejectedValueOnce(new Error('renderer unavailable'))
 
     const pinia = createPinia()
@@ -54,7 +66,9 @@ describe('landing hero nearby default', () => {
 
     const wrapper = mount(LandingHero, { global: { plugins: [pinia] } })
     await vi.waitFor(() => expect(initializeNearbyDefault).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(projectiveScreen.dispose).toHaveBeenCalledOnce())
 
     wrapper.unmount()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
   })
 })

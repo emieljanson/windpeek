@@ -7,7 +7,11 @@ const VERTEX_SHADER = `
 
 const FRAGMENT_SHADER = `
   #extension GL_OES_standard_derivatives : enable
-  precision highp float;
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+  #else
+    precision mediump float;
+  #endif
   uniform sampler2D u_texture;
   uniform mat3 u_inverse;
   uniform vec2 u_resolution;
@@ -132,10 +136,21 @@ export function createProjectiveScreen(canvas) {
   }
 
   const program = gl.createProgram()
-  gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER))
-  gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER))
-  gl.linkProgram(program)
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program))
+  let vertexShader
+  let fragmentShader
+  try {
+    vertexShader = compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER)
+    fragmentShader = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER)
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program))
+  } catch (error) {
+    if (vertexShader) gl.deleteShader(vertexShader)
+    if (fragmentShader) gl.deleteShader(fragmentShader)
+    gl.deleteProgram(program)
+    throw error
+  }
   gl.useProgram(program)
 
   const buffer = gl.createBuffer()
@@ -182,6 +197,8 @@ export function createProjectiveScreen(canvas) {
   function dispose() {
     gl.deleteTexture(texture)
     gl.deleteBuffer(buffer)
+    gl.deleteShader(vertexShader)
+    gl.deleteShader(fragmentShader)
     gl.deleteProgram(program)
   }
 

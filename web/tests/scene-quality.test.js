@@ -38,7 +38,7 @@ describe('adaptive scene quality', () => {
     expect(quality.level).toBe('studio')
   })
 
-  it('also recovers from extremely slow rendering and excludes a hidden tab', () => {
+  it('does not downgrade further while rendering is paused for a hidden tab', () => {
     const quality = createSceneQuality()
     frames(quality, 0, 24, 300)
     expect(quality.level).toBe('balanced')
