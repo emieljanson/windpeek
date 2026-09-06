@@ -1,0 +1,33 @@
+{
+  "reviewer": "testing",
+  "findings": [
+    {
+      "title": "Firmware timezone split lacks render test",
+      "severity": "P2",
+      "file": "firmware/main/wind_app.c",
+      "line": 477,
+      "why_it_matters": "The device can regress to showing the spot's time for the last successful forecast while every current host test still passes. The web normalizer has a distinct-zone assertion, but the firmware's new device-versus-spot split is only present inside the static dashboard assembly path; renderer tests receive an already formatted update string and therefore cannot catch a swapped timezone. A small host-testable formatting seam with deliberately different device and spot zones would prove the behavior users actually see.",
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "suggested_fix": "Extract the dashboard time-label preparation into a host-testable helper and add a test using one retrieval epoch with device timezone America/New_York and spot timezone Europe/Amsterdam; assert the update label is New York-local while the forecast date/hour labels remain Amsterdam-local, covering both 24-hour and 12-hour display modes.",
+      "confidence": 75,
+      "evidence": [
+        "firmware/main/wind_app.c:477 -- if (wind_timezone_from_unix(runtime->device_timezone, forecast->retrieved_at, &local) !=",
+        "firmware/host_tests/test_wind_renderer.cpp:31 -- result.updated_time = \"24 AUG 21:00\";",
+        "web/tests/forecast-normalizer.test.js:37 -- it('uses device-local update time while keeping forecast hours local to the spot', () => {"
+      ],
+      "pre_existing": false
+    }
+  ],
+  "residual_risks": [
+    "The v2/v3 migration is covered through host-memory record sizing, but not with an ESP NVS blob fixture that proves the real nvs_get_blob size behavior.",
+    "The actual e-paper dashboard path is build-tested, but its rendered update label is not inspected in a host or screenshot test."
+  ],
+  "testing_gaps": [
+    "No test verifies ConfiguratorView captures the browser timezone and passes it into the installation payload; configuration tests supply deviceTimezone directly.",
+    "No focused test covers deviceTimezone() returning Etc/UTC when Intl reports a missing or invalid timezone.",
+    "Installer rejection tests do not isolate a version-4 payload with a missing or unsupported deviceTimezone; their invalid fixtures are still version 2 and fail earlier.",
+    "Cache rejection tests use arbitrary incompatible versions rather than the exact previous version-3 envelope/schema-2 forecast being invalidated."
+  ]
+}

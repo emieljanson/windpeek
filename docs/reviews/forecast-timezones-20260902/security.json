@@ -1,0 +1,8 @@
+{
+  "reviewer": "security",
+  "findings": [],
+  "residual_risks": [],
+  "testing_gaps": [
+    "The installer-service negative fixtures all use legacy version-2 payloads, so there is no focused test proving a version-4 payload with a missing, oversized, or unsupported deviceTimezone is rejected before staging."
+  ]
+}

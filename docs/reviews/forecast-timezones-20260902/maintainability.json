@@ -1,0 +1,28 @@
+{
+  "reviewer": "maintainability",
+  "findings": [
+    {
+      "title": "Preview discards the device timezone",
+      "severity": "P2",
+      "file": "web/src/configurator/screenTexture.js",
+      "line": 89,
+      "why_it_matters": "The configurator preview still shows the forecast update in the spot timezone whenever the installer and spot are in different zones. The normalized forecast now carries `deviceTimezone`, but this downstream formatter recomputes the label from the older `timezone` field, so the two display paths disagree in normal remote-spot usage. Formatting from `deviceTimezone` makes the preview follow the same explicit contract as the firmware.",
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "suggested_fix": "In `formatUpdatedTime`, require and pass `forecast.deviceTimezone` to `Intl.DateTimeFormat` instead of `forecast.timezone`, and add a screen-texture test where the device is `America/New_York`, the spot is `Europe/Amsterdam`, and the expected update hour is device-local.",
+      "confidence": 100,
+      "evidence": [
+        "web/src/configurator/screenTexture.js:89 -- timeZone: forecast.timezone,",
+        "web/src/forecast/normalizeForecast.js:232 -- deviceTimezone,",
+        "web/src/forecast/normalizeForecast.js:236 -- updatedTime: updatedTimeAt(retrievedAt, deviceTimezone),",
+        "web/tests/screen-texture.test.js:196 -- it('formats the update time from one timestamp using the selected clock', () => {"
+      ],
+      "pre_existing": false
+    }
+  ],
+  "residual_risks": [],
+  "testing_gaps": [
+    "Firmware host tests verify device-timezone persistence and migration but do not exercise `render_dashboard` with device and spot timezones that differ; the ESP build is the only coverage of that integration path."
+  ]
+}

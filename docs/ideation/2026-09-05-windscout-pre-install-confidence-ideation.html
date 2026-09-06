@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ideation: Windscout pre-install confidence</title>
+  <style>
+    :root { color-scheme: light; --bg:#f4f4f0; --ink:#151512; --muted:#696963; --line:#d5d5ce; --soft:#e9e9e3; --warm:#f6e7d5; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 Inter, ui-sans-serif, system-ui, sans-serif; }
+    main { width:min(calc(100% - 40px), 900px); margin:auto; padding:72px 0; }
+    h1,h2,h3 { margin:0; letter-spacing:-.025em; line-height:1.15; }
+    h1 { max-width:16ch; font-size:clamp(38px,6vw,68px); }
+    h2 { margin-top:64px; font-size:24px; }
+    h3 { font-size:20px; }
+    p { max-width:72ch; }
+    a { color:inherit; text-underline-offset:3px; }
+    .eyebrow { margin:0 0 12px; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    .lede { max-width:66ch; margin:22px 0 0; font-size:18px; color:#353531; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; margin:28px 0 0; padding:0; }
+    .meta div { padding:7px 10px; background:var(--soft); }
+    .meta dt,.meta dd { display:inline; margin:0; font-size:12px; }
+    .meta dt { color:var(--muted); }
+    .meta dt::after { content:": "; }
+    .context { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:20px; }
+    .context article,.idea { background:#fff; padding:22px; }
+    .context h3 { font-size:14px; }
+    .context p { margin:8px 0 0; }
+    .axes { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 0; padding:0; list-style:none; }
+    .axes li { padding:7px 10px; background:var(--soft); font-size:13px; }
+    .jump { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; margin:18px 0 24px; padding:0; list-style:none; }
+    .jump a { display:block; padding:10px 0; border-bottom:1px solid var(--line); text-decoration:none; }
+    .idea { margin-top:12px; scroll-margin-top:20px; }
+    .rank { display:inline-flex; min-width:28px; height:28px; align-items:center; justify-content:center; margin-bottom:13px; background:var(--ink); color:#fff; font-size:12px; font-weight:750; }
+    .idea dl { display:grid; grid-template-columns:110px 1fr; gap:8px 16px; margin:18px 0 0; }
+    .idea dt { color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+    .idea dd { margin:0; }
+    .idea .copy { margin:18px 0 0; padding:18px; background:var(--warm); }
+    .idea .copy strong { display:block; margin-bottom:6px; }
+    table { width:100%; margin-top:18px; border-collapse:collapse; background:#fff; }
+    th,td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+    footer { margin-top:64px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+    @media (max-width:680px) { main{padding:44px 0}.context,.jump{grid-template-columns:1fr}.idea dl{grid-template-columns:1fr;gap:3px}.idea dt{margin-top:10px}th:first-child,td:first-child{display:none} }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Ideation</p>
+    <h1>Remove the fear before setup</h1>
+    <p class="lede">Windscout should feel like choosing a spot and installing an app on a ready-made display — not like starting an electronics project.</p>
+    <dl class="meta">
+      <div><dt>Date</dt><dd><time datetime="2026-09-05">2026-09-05</time></dd></div>
+      <div><dt>Topic</dt><dd>windscout-pre-install-confidence</dd></div>
+      <div><dt>Focus</dt><dd>Remove purchase and installation reservations without redesigning the page</dd></div>
+      <div><dt>Mode</dt><dd>repo-grounded</dd></div>
+    </dl>
+  </header>
+
+  <section aria-labelledby="grounding">
+    <h2 id="grounding">Grounding Context</h2>
+    <div class="context">
+      <article><h3>The current copy creates fear</h3><p>“Build your Windscout” implies assembly, coding and technical risk. The real flow is a guided browser installer.</p></article>
+      <article><h3>The product already does the hard safety work</h3><p>The installer checks the device, verifies firmware, chooses the safe write path, reports when USB can be disconnected and confirms the first rendered forecast.</p></article>
+      <article><h3>People ask practical questions</h3><p>Reddit responses ask about price, shipping, data sources, models, multiple locations, tides and whether API changes could make the device useless.</p></article>
+      <article><h3>The hardware is already a finished product</h3><p>Seeed positions reTerminal as a ready-to-use e-paper display and itself offers browser-based firmware flashing. Windscout is software for that display, not a hardware kit.</p></article>
+    </div>
+    <p>Evidence: <a href="https://www.reddit.com/r/Kiteboarding/comments/1vxutb5/i_made_an_eink_screen_that_shows_the_wind_forecast/">Kiteboarding discussion</a>, <a href="https://www.reddit.com/r/wingfoil/comments/1vxuw3k/i_built_an_eink_screen_that_shows_the_wind/">Wingfoil discussion</a>, <a href="https://www.reddit.com/r/windsurfing/comments/1vxuxj4/built_an_eink_display_that_shows_the_wind_forecast/">Windsurfing discussion</a>, <code>web/src/components/installer/InstallerPanel.vue</code>, <code>docs/recovery.md</code>, and the <a href="https://wiki.seeedstudio.com/reterminal_e10xx_main_page/">Seeed reTerminal overview</a>.</p>
+  </section>
+
+  <section aria-labelledby="axes-title">
+    <h2 id="axes-title">Topic Axes</h2>
+    <ul class="axes">
+      <li>Commitment language</li><li>Setup path</li><li>Purchase readiness</li><li>Installation safety</li><li>Ongoing trust</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="ideas-title">
+    <h2 id="ideas-title">Ranked Ideas</h2>
+    <ol class="jump">
+      <li><a href="#idea-1">1. Guided setup, not “build”</a></li>
+      <li><a href="#idea-2">2. Three calm steps</a></li>
+      <li><a href="#idea-3">3. Try before buying</a></li>
+      <li><a href="#idea-4">4. Exact readiness list</a></li>
+      <li><a href="#idea-5">5. Prove the safety system</a></li>
+      <li><a href="#idea-6">6. Explain ongoing ownership</a></li>
+    </ol>
+
+    <article class="idea" id="idea-1">
+      <span class="rank">1</span><h3>Guided setup, not “build”</h3>
+      <p>Remove maker-language at the decision point. Present Windscout as software that turns a supported reTerminal into a wind display.</p>
+      <div class="copy"><strong>Suggested landing copy</strong>Set up Windscout — no coding or soldering. Choose your spot, connect a supported reTerminal with USB-C, and the browser guides you through the rest.</div>
+      <dl><dt>Axis</dt><dd>Commitment language</dd><dt>Basis</dt><dd><strong>direct:</strong> <code>LandingView.vue:31</code> says “Build,” while <code>InstallerPanel.vue</code> implements a guided sequence.</dd><dt>Rationale</dt><dd>This removes the largest imagined burden before explaining details.</dd><dt>Downsides</dt><dd>“No soldering” is slightly defensive; use it once, near commitment.</dd><dt>Confidence</dt><dd>96%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+
+    <article class="idea" id="idea-2">
+      <span class="rank">2</span><h3>Three calm steps</h3>
+      <p>Show the complete journey before the CTA: get a display, personalize it, connect it once. Keep the existing one-column page and use the same plain list styling.</p>
+      <div class="copy"><strong>Suggested structure</strong>1. Get a supported reTerminal. 2. Choose your spot and preview the screen. 3. Connect it to your computer and follow the guided install.</div>
+      <dl><dt>Axis</dt><dd>Setup path</dd><dt>Basis</dt><dd><strong>direct:</strong> The real installer already follows connect → identify → write → Wi-Fi → verify.</dd><dt>Rationale</dt><dd>Fear thrives in unspecified gaps. Showing the whole path makes the task finite.</dd><dt>Downsides</dt><dd>Must stay high-level; exposing firmware terminology would recreate the fear.</dd><dt>Confidence</dt><dd>94%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+
+    <article class="idea" id="idea-3">
+      <span class="rank">3</span><h3>Try before buying</h3>
+      <p>Frame the configurator as a zero-commitment preview. People can choose a spot and see their exact display before owning hardware.</p>
+      <div class="copy"><strong>Suggested CTA</strong>Choose your spot <span aria-hidden="true">→</span><br><small>No device needed to explore.</small></div>
+      <dl><dt>Axis</dt><dd>Purchase readiness</dd><dt>Basis</dt><dd><strong>direct:</strong> The configurator loads forecast and screen previews before any USB connection or purchase.</dd><dt>Rationale</dt><dd>The current “Configure Windscout” sounds like setup begins now. “Choose your spot” offers immediate value with no risk.</dd><dt>Downsides</dt><dd>The configurator must clearly separate preview from the later install action.</dd><dt>Confidence</dt><dd>92%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+
+    <article class="idea" id="idea-4">
+      <span class="rank">4</span><h3>Exact readiness list</h3>
+      <p>Answer “what do I actually need?” in one compact block: supported reTerminal, desktop Firefox/Chrome/Edge, USB-C data cable, and 2.4 GHz Wi-Fi. Explicitly say no account, coding or soldering.</p>
+      <dl><dt>Axis</dt><dd>Purchase readiness</dd><dt>Basis</dt><dd><strong>direct:</strong> These are the concrete requirements in <code>docs/setup.md</code> and <code>serialPortAdapter.js</code>; Reddit asks repeatedly which hardware is used and how to buy it.</dd><dt>Rationale</dt><dd>Specific requirements build more trust than “easy to install.”</dd><dt>Downsides</dt><dd>The list becomes harmful if docs and supported-model claims drift. <code>docs/setup.md</code> is already stale about E1001.</dd><dt>Confidence</dt><dd>90%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+
+    <article class="idea" id="idea-5">
+      <span class="rank">5</span><h3>Prove the safety system</h3>
+      <p>Do not merely call installation safe. Name two or three protections the product actually provides: it checks the connected device before writing, verifies the software download, and finishes only after the forecast appears.</p>
+      <div class="copy"><strong>Suggested reassurance</strong>Windscout checks your device before changing anything and confirms setup only after the first forecast appears. If USB is interrupted, the installer guides you into repair.</div>
+      <dl><dt>Axis</dt><dd>Installation safety</dd><dt>Basis</dt><dd><strong>direct:</strong> <code>InstallerPanel.vue:55–60</code>, <code>firmwareManifest.js</code>, and <code>docs/recovery.md</code> implement these protections.</dd><dt>Rationale</dt><dd>Concrete mechanisms answer “can I break it?” better than confidence adjectives.</dd><dt>Downsides</dt><dd>Avoid promising zero risk or easy factory restoration until every supported model has public, verified recovery evidence.</dd><dt>Confidence</dt><dd>88%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+
+    <article class="idea" id="idea-6">
+      <span class="rank">6</span><h3>Explain ongoing ownership</h3>
+      <p>Answer the quiet fear that a hobby project or API change leaves useless hardware. State only settled facts: no Windscout account or subscription, forecasts come directly from Open-Meteo, rendering happens on the device, and the last forecast is cached.</p>
+      <div class="copy"><strong>Suggested reassurance</strong>No account or subscription. Windscout fetches forecast data directly and keeps the last forecast available if the connection drops.</div>
+      <dl><dt>Axis</dt><dd>Ongoing trust</dd><dt>Basis</dt><dd><strong>direct:</strong> Reddit explicitly raises API-death risk; <code>README.md</code> and firmware implement direct retrieval, local rendering and caching.</dd><dt>Rationale</dt><dd>This distinguishes a durable local product from a screen dependent on a paid cloud dashboard.</dd><dt>Downsides</dt><dd>Do not imply permanent maintenance or open-source availability until those promises are decided.</dd><dt>Confidence</dt><dd>84%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+    </article>
+  </section>
+
+  <section aria-labelledby="rejections">
+    <h2 id="rejections">Rejection Summary</h2>
+    <table><thead><tr><th>#</th><th>Idea</th><th>Reason rejected</th></tr></thead><tbody>
+      <tr><td>1</td><td>Generic FAQ</td><td>Too broad; questions should map to observed purchase objections.</td></tr>
+      <tr><td>2</td><td>“Five-minute setup”</td><td>No measured evidence supports a time promise.</td></tr>
+      <tr><td>3</td><td>Factory-restore guarantee</td><td>Recovery exists, but the public all-model restoration promise is not yet sufficiently verified.</td></tr>
+      <tr><td>4</td><td>Compatibility badge row</td><td>Adds visual furniture without explaining requirements.</td></tr>
+      <tr><td>5</td><td>Large compatibility matrix</td><td>Too much complexity for the landing page; the exact device can be recommended directly.</td></tr>
+      <tr><td>6</td><td>Setup video as the primary answer</td><td>Higher production and maintenance cost than truthful copy plus the live configurator.</td></tr>
+      <tr><td>7</td><td>Open-source guarantee</td><td>Not a settled product decision.</td></tr>
+      <tr><td>8</td><td>Automatic firmware updates</td><td>False; current updates require USB reconnection.</td></tr>
+      <tr><td>9</td><td>“One-click install”</td><td>Misleading: browser permission, device confirmation and Wi-Fi are real steps.</td></tr>
+      <tr><td>10</td><td>“Impossible to brick”</td><td>Absolute safety claim exceeds evidence and damages trust.</td></tr>
+      <tr><td>11</td><td>Compare setup to a printer</td><td>Printers carry their own setup-frustration baggage.</td></tr>
+      <tr><td>12</td><td>Lead with firmware details</td><td>Technically accurate but increases perceived difficulty.</td></tr>
+      <tr><td>13</td><td>Promise support forever</td><td>Unsustainable and unverifiable for an independent project.</td></tr>
+      <tr><td>14</td><td>Replace feature proof with objection copy</td><td>Overcorrects; visitors still need to see why the product is desirable.</td></tr>
+    </tbody></table>
+  </section>
+
+  <footer>Composed 2026-09-05T19:30Z by ce-ideate from the current Windscout landing page, installer implementation, setup/recovery docs, and linked Reddit discussions.</footer>
+</main>
+</body>
+</html>

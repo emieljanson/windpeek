@@ -1,0 +1,50 @@
+{
+  "reviewer": "api-contract",
+  "findings": [
+    {
+      "title": "Serial protocol advertises obsolete configuration contract",
+      "severity": "P1",
+      "file": "contracts/windscout-serial-protocol.md",
+      "line": 48,
+      "why_it_matters": "A client implemented from the public serial protocol will send configuration schema v2 without `deviceTimezone`, while the firmware now accepts only schema v4 with that field. The install then fails with `configuration_rejected`, and the same document also incorrectly says all local display times use the spot timezone even though the update timestamp now uses the device timezone. Updating the protocol's compatibility and time-semantics sections keeps external clients aligned with the versioned schema and firmware parser.",
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "suggested_fix": "Update `contracts/windscout-serial-protocol.md` to state that protocol v1 supports configuration schema v4, document required `deviceTimezone`, list the supported board identities, and distinguish device-local update timestamps from spot-local forecast and wake times.",
+      "confidence": 100,
+      "evidence": [
+        "contracts/windscout-serial-protocol.md:48 -- Protocol v1 supports configuration schema v2 and board ID `seeedstudio_reterminal_e1002` only.",
+        "contracts/windscout-config.schema.json:7 -- \"required\": [\"version\", \"boardId\", \"deviceTimezone\", \"spot\", \"forecastModel\", \"display\", \"digest\"],",
+        "contracts/windscout-config.schema.json:9 -- \"version\": { \"const\": 4 },",
+        "firmware/main/wind_installer_service.c:154 -- !copy_json_string(json, \"deviceTimezone\", configuration->device_timezone,"
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "Schema accepts an unsupported E1001 board identity",
+      "severity": "P1",
+      "file": "contracts/windscout-config.schema.json",
+      "line": 10,
+      "why_it_matters": "An external installer can produce a schema-valid E1001 configuration that every firmware build rejects: E1001 uses the universal E1002 firmware identity, while the installed-configuration validator accepts only the compiled `WINDSCOUT_BOARD_ID`. The official web installer masks this mismatch by rewriting E1001 to E1002 before transmission, but consumers of the published schema do not know to do that. Keeping E1001 out of the wire schema, or defining the mapping in firmware, prevents valid-by-contract payloads from failing installation.",
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "suggested_fix": "Remove `seeedstudio_reterminal_e1001` from the installed-configuration schema's `boardId` enum and document that E1001 uses the E1002 release identity; alternatively, make firmware accept and canonicalize E1001 consistently before digest validation.",
+      "confidence": 100,
+      "evidence": [
+        "contracts/windscout-config.schema.json:10 -- \"boardId\": { \"enum\": [\"seeedstudio_reterminal_e1001\", \"seeedstudio_reterminal_e1002\", \"seeedstudio_reterminal_e1003\"] },",
+        "firmware/main/installed_configuration.h:14-17 -- #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003 / #define WINDSCOUT_BOARD_ID \"seeedstudio_reterminal_e1003\" / #else / #define WINDSCOUT_BOARD_ID \"seeedstudio_reterminal_e1002\"",
+        "firmware/main/installed_configuration.c:197 -- strcmp(config->board_id, WINDSCOUT_BOARD_ID) != 0 ||",
+        "web/src/installer/createInstallerSession.js:89 -- const compatible = { ...configuration, boardId: BOARD_IDS.E1002 }"
+      ],
+      "pre_existing": false
+    }
+  ],
+  "residual_risks": [
+    "The browser validates `deviceTimezone` using its own Intl timezone database while firmware validates against bundled zonedb2025. A browser-reported zone added or renamed after that firmware database can pass web validation but be rejected during staging."
+  ],
+  "testing_gaps": [
+    "No contract-conformance test validates representative payloads from `contracts/windscout-config.schema.json` against the firmware `stage_configuration` parser for each advertised board identity.",
+    "No installer-service test asserts that a v4 payload with device and spot in different timezones is accepted and preserves both values."
+  ]
+}
