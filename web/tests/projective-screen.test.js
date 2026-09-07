@@ -72,6 +72,12 @@ describe('projective screen', () => {
 
     expect(fragmentSource).toContain('#ifdef GL_FRAGMENT_PRECISION_HIGH')
     expect(fragmentSource).toContain('precision mediump float;')
+    expect(canvas.getContext).toHaveBeenCalledWith('webgl', {
+      alpha: true,
+      antialias: true,
+      premultipliedAlpha: true,
+    })
+    expect(fragmentSource).toContain('vec4(ink.rgb * alpha, alpha)')
 
     screen.dispose()
 

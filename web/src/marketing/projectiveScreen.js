@@ -51,7 +51,8 @@ const FRAGMENT_SHADER = `
 
     float grain = (random(pixel) - 0.5) * 0.018;
     ink.rgb += grain;
-    gl_FragColor = vec4(ink.rgb, u_opacity * screenMask);
+    float alpha = u_opacity * screenMask;
+    gl_FragColor = vec4(ink.rgb * alpha, alpha);
   }
 `
 
@@ -129,7 +130,7 @@ function hexToRgb(hex) {
 }
 
 export function createProjectiveScreen(canvas) {
-  const gl = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false })
+  const gl = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: true })
   if (!gl) throw new Error('WebGL is required for the perspective screen')
   if (!gl.getExtension('OES_standard_derivatives')) {
     throw new Error('This browser cannot smooth the perspective screen edge')
