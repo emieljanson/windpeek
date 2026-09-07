@@ -56,5 +56,12 @@ describe('landing share metadata', () => {
       )
       expect(surface.theme).toBe(surface.page)
     }
+
+    expect(applySurface('')).toEqual({ page: '#ffffff', studio: '#f3f5f7', theme: '#ffffff' })
+    expect(applySurface('?configure')).toEqual({
+      page: '#f3f5f7',
+      studio: '#f3f5f7',
+      theme: '#f3f5f7',
+    })
   })
 })
