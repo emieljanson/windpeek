@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { isConfiguratorLocation } from '../src/routes'
 
 describe('landing share metadata', () => {
   it('points crawlers to the production page and a published static preview', () => {
@@ -36,7 +37,24 @@ describe('landing share metadata', () => {
     }
 
     expect(script).toBeTruthy()
-    expect(applySurface('')).toEqual({ page: '#ffffff', studio: '#f3f5f7', theme: '#ffffff' })
-    expect(applySurface('?configure')).toEqual({ page: '#f3f5f7', studio: '#f3f5f7', theme: '#f3f5f7' })
+
+    const searches = [
+      '',
+      '?configure',
+      '?configure=1',
+      '?devicePreview=seeedstudio_reterminal_e1002',
+      '?installerDemo=1',
+      '?unrelated=1',
+    ]
+
+    for (const search of searches) {
+      const surface = applySurface(search)
+      const isStudioSurface = surface.page === surface.studio
+
+      expect(isStudioSurface, `surface and app route disagree for ${search || 'landing'}`).toBe(
+        isConfiguratorLocation({ search }),
+      )
+      expect(surface.theme).toBe(surface.page)
+    }
   })
 })

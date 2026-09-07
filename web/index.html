@@ -13,7 +13,7 @@
       const pageBackground = isConfigurator ? studioBackground : '#ffffff'
       document.documentElement.style.setProperty('--studio-background', studioBackground)
       document.documentElement.style.setProperty('--page-background', pageBackground)
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', pageBackground)
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', pageBackground)
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://emieljanson.com/windscout/" />
