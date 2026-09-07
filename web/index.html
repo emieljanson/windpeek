@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
+    <script data-page-surface>
+      const routeParams = new URLSearchParams(location.search)
+      const studioBackground = '#f3f5f7'
+      const isConfigurator = routeParams.has('configure')
+        || routeParams.has('devicePreview')
+        || routeParams.has('installerDemo')
+      const pageBackground = isConfigurator ? studioBackground : '#ffffff'
+      document.documentElement.style.setProperty('--studio-background', studioBackground)
+      document.documentElement.style.setProperty('--page-background', pageBackground)
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', pageBackground)
+    </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://emieljanson.com/windscout/" />
     <meta name="description" content="An always-on e-ink wind forecast for your favorite spot, so you notice when the forecast improves before the session slips past." />

@@ -2,7 +2,7 @@
   color-scheme: light;
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   color: #151817;
-  background: var(--page-background, #f3f5f7);
+  background: var(--page-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #151817;
@@ -11,14 +11,13 @@
   --signal: #e74d32;
   --line: rgba(21, 24, 23, 0.16);
   --focus: #000000;
-  --studio-background: #f3f5f7;
   --visual-viewport-bottom: 0px;
 }
 
 * { box-sizing: border-box; }
 
-html { min-width: 320px; background: var(--page-background, var(--studio-background)); }
-body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--page-background, var(--studio-background)); }
+html { min-width: 320px; background: var(--page-background); }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--page-background); }
 button, input, select { font: inherit; }
 
 html.configurator-is-compact,

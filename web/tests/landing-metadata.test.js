@@ -15,4 +15,28 @@ describe('landing share metadata', () => {
     expect(head.querySelector('[property="og:image:height"]').content).toBe('675')
     expect(head.querySelector('[property="og:description"]').content).not.toContain('Preview your own spot')
   })
+
+  it('sets the correct page surface before the app mounts', () => {
+    const html = readFileSync('index.html', 'utf8')
+    const head = new DOMParser().parseFromString(html, 'text/html').head
+    const script = head.querySelector('script[data-page-surface]')?.textContent
+    const applySurface = (search) => {
+      document.head.innerHTML = '<meta name="theme-color" content="#ffffff">'
+      document.documentElement.style.cssText = ''
+      new Function('document', 'location', 'URLSearchParams', script)(
+        document,
+        { search },
+        URLSearchParams,
+      )
+      return {
+        page: document.documentElement.style.getPropertyValue('--page-background'),
+        studio: document.documentElement.style.getPropertyValue('--studio-background'),
+        theme: document.querySelector('meta[name="theme-color"]').content,
+      }
+    }
+
+    expect(script).toBeTruthy()
+    expect(applySurface('')).toEqual({ page: '#ffffff', studio: '#f3f5f7', theme: '#ffffff' })
+    expect(applySurface('?configure')).toEqual({ page: '#f3f5f7', studio: '#f3f5f7', theme: '#f3f5f7' })
+  })
 })
