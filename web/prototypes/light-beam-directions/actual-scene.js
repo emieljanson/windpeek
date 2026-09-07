@@ -11,11 +11,11 @@ import {
   createEpaperMaterial,
   createMatteScreenFinish,
   createScreenRecessShadow,
-  enhanceE1002Surface,
+  enhanceDeviceSurface,
   fitScreenUnderBezel,
 } from '../../src/configurator/deviceSurface.js'
 import { configureAmbientOcclusion } from '../../src/configurator/ambientOcclusion.js'
-import { hideE1002Stand, loadE1002Model } from '../../src/configurator/modelLoader.js'
+import { hideDeviceStand, loadE1002Model } from '../../src/configurator/modelLoader.js'
 import { configureOrbitControls, FIRMWARE_CAMERA } from '../../src/configurator/sceneController.js'
 import { createProductStudioScene } from '../../src/configurator/studioEnvironment.js'
 import { PRODUCT_LIGHTING } from '../../src/configurator/productLighting.js'
@@ -167,8 +167,8 @@ export async function createActualScene({ canvas, onReady }) {
   addFloor(scene)
 
   const model = await loadE1002Model()
-  hideE1002Stand(model)
-  enhanceE1002Surface(model, renderer)
+  hideDeviceStand(model)
+  enhanceDeviceSurface(model, renderer)
   model.traverse((object) => {
     if (!object.isMesh) return
     object.castShadow = object.name !== 'SCREEN'

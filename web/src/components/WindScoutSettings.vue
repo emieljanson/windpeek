@@ -98,6 +98,7 @@ function restoreCompactSpotSearch() {
 }
 
 function selectSpot(spotId) {
+  store.markUserSpotIntent()
   const spot = store.spotById(spotId)
   if (!spot) return
   spotHasUserSelection.value = true
@@ -116,11 +117,13 @@ function handleSpotDismiss() {
 }
 
 function createSpot(query) {
+  store.markUserSpotIntent()
   customSpotQuery.value = query.trim()
   spotDialogOpen.value = true
 }
 
 function saveSpot(input) {
+  store.markUserSpotIntent()
   const spot = store.addPersonalSpot(input)
   if (!spot) return null
   spotHasUserSelection.value = true
@@ -267,6 +270,7 @@ function clearPillPointerFocus(event) {
         name="spot"
         aria-label="Search spot"
         @update:model-value="selectSpot"
+        @search-intent="store.markUserSpotIntent"
         @create="createSpot"
         @dismiss="handleSpotDismiss"
       />

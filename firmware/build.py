@@ -15,6 +15,11 @@ from boards import SUPPORTED_BOARDS
 BOARDS = list(SUPPORTED_BOARDS.keys())
 
 STEPS = ["webapp", "splash", "firmware"]
+WINDSCOUT_BOARDS = {
+    "seeedstudio_reterminal_e1002",
+    "seeedstudio_reterminal_e100x",
+    "seeedstudio_reterminal_e1003",
+}
 PINNED_IDF_VERSION = "v6.0.2"
 DEFAULT_IDF_PATH = os.path.expanduser(
     f"~/.espressif/frameworks/esp-idf-{PINNED_IDF_VERSION}"
@@ -139,7 +144,7 @@ def build_firmware(board, extra_args, debug=False):
     except subprocess.CalledProcessError as e:
         print(f"Build failed with exit code {e.returncode}")
         sys.exit(e.returncode)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         print(
             f"Error: ESP-IDF {PINNED_IDF_VERSION} was not found. {e}"
         )
@@ -189,12 +194,13 @@ def main():
         choices=STEPS,
         action="append",
         help="Run only specific step(s). Can be specified multiple times. "
-        "If omitted, all steps run.",
+        "If omitted, WindScout boards build firmware only; photo-frame boards run all steps.",
     )
     # Allow passing extra arguments to idf.py
     args, extra_args = parser.parse_known_args()
 
-    steps = args.step if args.step else STEPS
+    # WindScout does not embed the photo-frame webapp or generated setup screens.
+    steps = args.step or (["firmware"] if args.board in WINDSCOUT_BOARDS else STEPS)
 
     installer_version = None
     if args.installer_output:
@@ -209,8 +215,6 @@ def main():
 
     if args.fullclean:
         print("Performing full clean...")
-        import shutil
-
         for f in ["sdkconfig", "partitions.csv"]:
             if os.path.exists(f):
                 os.remove(f)

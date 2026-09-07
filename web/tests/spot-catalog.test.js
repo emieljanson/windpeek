@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildRuntimeCatalog } from '../scripts/spots/lib/catalog-builder.mjs'
+import { buildNearbyIndex } from '../scripts/spots/lib/nearby-index.mjs'
 import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
+import { stableSpotId } from '../src/spots/spotIdentity'
 
 const existing = [
   { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
@@ -106,6 +108,88 @@ describe('catalog search', () => {
     expect(searchSpots(many, '')).toEqual([])
     expect(searchSpots(many, 's')).toEqual([])
     expect(searchSpots(many, 'spot')).toHaveLength(20)
+  })
+})
+
+describe('nearby default index', () => {
+  const surfCandidate = {
+    id: 'varun:popular',
+    name: 'Popular Beach',
+    activities: ['kitesurfing'],
+    featureType: 'spot-collection',
+  }
+  const surfSpot = { id: stableSpotId(surfCandidate.id), name: 'Popular Beach' }
+
+  it('includes named places but excludes clubs, schools and generic activity labels', () => {
+    const dolphinBeach = {
+      ...surfCandidate,
+      id: 'varun:dolphin-beach',
+      name: 'Dolphin Beach',
+    }
+    const dolphinBeachSpot = { id: stableSpotId(dolphinBeach.id), name: 'Dolphin Beach' }
+    const excludedCandidates = [
+      { ...surfCandidate, id: 'osm:club', featureType: 'club' },
+      { ...surfCandidate, id: 'varun:school', name: 'Surfschule Timmendorfer Strand' },
+      { ...surfCandidate, id: 'varun:centre', name: 'Wind Sport Center' },
+      { ...surfCandidate, id: 'varun:camping', name: 'Surf camping Vietnam' },
+      { ...surfCandidate, id: 'varun:launch', name: 'Kitesurf launch' },
+      { ...surfCandidate, id: 'varun:generic', name: 'Kitesurf' },
+      { ...surfCandidate, id: 'varun:generic-spaced', name: 'Kite Surfing' },
+    ]
+    expect(buildNearbyIndex({
+      candidates: [
+        surfCandidate,
+        ...excludedCandidates,
+        dolphinBeach,
+      ],
+      catalog: [
+        surfSpot,
+        dolphinBeachSpot,
+        ...excludedCandidates.map((candidate) => ({
+          id: stableSpotId(candidate.id),
+          name: candidate.name,
+        })),
+      ],
+      popularSpots: [{ ...surfSpot, priority: 3 }],
+    })).toEqual([
+      { id: dolphinBeachSpot.id, priority: 1 },
+      { id: surfSpot.id, priority: 3 },
+    ].sort((left, right) => left.id.localeCompare(right.id)))
+  })
+
+  it.each(['beach', 'spot-collection', 'watersport-location'])('includes a named %s without a curated override', (featureType) => {
+    expect(buildNearbyIndex({
+      candidates: [{ ...surfCandidate, featureType }],
+      catalog: [surfSpot],
+      popularSpots: [],
+    })).toEqual([{ id: surfSpot.id, priority: 1 }])
+  })
+
+  it('includes explicitly bundled places at baseline priority', () => {
+    expect(buildNearbyIndex({
+      candidates: [], catalog: existing, popularSpots: [],
+      baselineSpotIds: ['edam', 'castricum-aan-zee'],
+    })).toEqual([
+      { id: 'castricum-aan-zee', priority: 1 },
+      { id: 'edam', priority: 1 },
+    ])
+  })
+
+  it('rejects missing baseline spots', () => {
+    expect(() => buildNearbyIndex({
+      candidates: [], catalog: existing, popularSpots: [], baselineSpotIds: ['missing'],
+    })).toThrow('must be a named place in the catalog')
+  })
+
+  it('rejects duplicate curated entries instead of silently overriding them', () => {
+    expect(() => buildNearbyIndex({
+      candidates: [surfCandidate],
+      catalog: [surfSpot],
+      popularSpots: [
+        { ...surfSpot, priority: 2 },
+        { ...surfSpot, priority: 3 },
+      ],
+    })).toThrow('listed more than once')
   })
 })
 

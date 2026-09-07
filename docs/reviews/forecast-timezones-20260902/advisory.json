@@ -1,0 +1,9 @@
+{
+  "residual_risks": [
+    "Migrated version 2 and 3 installations use the spot timezone as their device-timezone fallback until configured again.",
+    "A future IANA timezone name could be known to the browser before it reaches the firmware timezone database."
+  ],
+  "testing_gaps": [
+    "The production firmware render function has no direct host assertion with different device and spot timezones; the timezone converter, configuration boundary, web preview, and full firmware build are covered."
+  ]
+}

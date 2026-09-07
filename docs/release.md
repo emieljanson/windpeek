@@ -1,11 +1,11 @@
 # WindScout release checklist
 
 WindScout ships from this monorepo. The production configurator, browser
-installer, E1002 firmware and shared renderer must never be released from
+installer, reTerminal firmware and shared renderer must never be released from
 `windscout-site` or assembled by hand from separate builds.
 
-The browser installer currently supports the Seeed Studio reTerminal E1002
-with one configured spot.
+The browser installer supports the Seeed Studio reTerminal E1001, E1002 and
+E1003 with one configured spot per device.
 
 ## What the release workflow guarantees
 
@@ -13,7 +13,7 @@ with one configured spot.
 
 1. It verifies the renderer, spot catalog, web unit tests and browser tests.
 2. It runs the firmware host tests and installer-bundle tests.
-3. It builds the E1002 firmware with ESP-IDF 6.0.2.
+3. It builds the shared E1001/E1002 firmware and the E1003 firmware with ESP-IDF 6.0.2.
 4. It creates both the downloadable GitHub Release files and the nested,
    same-origin firmware bundle used by the website from that one build.
 5. It places the website bundle in `web/public/firmware`, builds the site and
@@ -31,6 +31,11 @@ same-origin browser installer host.
 
 Before enabling the Pages deployment:
 
+- Deploy the nearby-location Worker first. From `workers/nearby-location`, run
+  `npm ci` and `npm run deploy`, then copy its HTTPS URL.
+- Add that URL as the repository variable `VITE_NEARBY_LOCATION_URL`. The next
+  production build uses it to replace Brouwersdam with the nearest bundled spot.
+  The variable is optional: without it the site keeps Brouwersdam and still builds.
 - In the `windscout` repository, open **Settings → Pages** and select
   **GitHub Actions** as the publishing source.
 - Confirm the account plan permits Pages for this private repository, or make
@@ -135,6 +140,7 @@ checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
 
 - `npm test` in `web/`
 - `npm run test:e2e` in `web/`
+- `npm run build` in `web/` both with and without `VITE_NEARBY_LOCATION_URL`
 - `npm run renderer:check` in `web/`
 - `npm run spots:catalog:check` in `web/`
 - `npm run build` in `web/`; verify `esptool-js` remains in a lazy chunk
@@ -142,7 +148,7 @@ checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
   file in the deployable site artifact
 - `make -C firmware test`
 - `python3 firmware/scripts/test_generate_installer_manifest.py`
-- E1002 ESP-IDF 6.0.2 release build
+- E1001/E1002 and E1003 ESP-IDF 6.0.2 release builds
 - Immutable installer bundle generated from the same build as the OTA app
 - Hash, 32 MB bound, write-range and protected-storage validation
 
@@ -154,6 +160,7 @@ for each run.
 - Clean E1002 install on current Chrome/macOS
 - Clean E1002 install on current Edge/Windows
 - Clean E1002 install on current Firefox/Linux
+- Clean E1001 and E1003 installs on a supported desktop browser
 - Configuration-only update with no firmware write
 - Preserving firmware update with Wi-Fi and configuration retained
 - Damaged application repair
@@ -161,7 +168,7 @@ for each run.
 - Wrong Wi-Fi followed by retry
 - Disconnect during configuration; previous setup still boots
 - Disconnect during flash; bootloader repair succeeds
-- Known E1001 and non-S3 device; no write occurs
+- Unsupported non-S3 device; no write occurs
 - Unverified compatible S3 with confirmation declined; no write occurs
 
 ## Privacy inspection
@@ -192,8 +199,11 @@ failure and verify all of the following:
 Record the tested release, browser and reference in the release notes. Do not
 paste the planted password or raw diagnostic payload into those notes.
 
-The E1002 has one setup path: the website over USB. Do not publish the installer
-as generally available until the physical matrix has passed on one real E1002.
+All three supported models use the website over USB. General availability covers
+E1001, E1002 and E1003; record acceptance for the applicable rows above for each
+model, not just E1002. For the September 2026 launch, the project owner confirmed
+model support and installation-browser coverage. Automated checks do not replace
+that physical acceptance.
 
 ## Release monitoring and rollback
 
@@ -205,8 +215,9 @@ checks:
   firmware part return HTTP 200 over HTTPS.
 - A clean browser session can open the configurator and reach the USB device
   chooser without console or network errors.
-- One real E1002 completes setup and subsequently wakes, fetches a forecast,
-  renders the selected spot with the correct local time and returns to sleep.
+- Repeat the post-release setup smoke check on E1001, E1002 and E1003: each wakes,
+  fetches a forecast, renders the selected spot with the correct local time and
+  returns to sleep. Record which models were actually checked.
 
 If the website is broken, redeploy the last known-good commit before changing
 the custom domain. If a firmware release is broken, stop the public installer,

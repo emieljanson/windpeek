@@ -40,15 +40,3 @@ export function writeCachedForecasts(forecasts, storage) {
     return false
   }
 }
-
-export function writeCachedForecast(forecast, storage) {
-  return writeCachedForecasts([forecast], storage)
-}
-
-export function clearCachedForecast(storage) {
-  try {
-    availableStorage(storage)?.removeItem(FORECAST_CACHE_KEY)
-  } catch {
-    // Storage is an optional browser optimization; failures are intentionally non-fatal.
-  }
-}

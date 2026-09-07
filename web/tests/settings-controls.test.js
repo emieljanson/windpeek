@@ -218,10 +218,15 @@ describe('WindScout setting controls', () => {
     const input = wrapper.get('input[role="combobox"]')
 
     await input.setValue('Nowhere')
+    expect(wrapper.emitted('search-intent')).toHaveLength(1)
+    await input.setValue('')
+    expect(wrapper.emitted('search-intent')).toHaveLength(2)
+    await input.setValue('Nowhere')
     await input.trigger('keydown', { key: 'Escape' })
 
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     expect(wrapper.emitted('update:searchTerm').at(-1)).toEqual(['Brouwersdam'])
+    expect(wrapper.emitted('search-intent')).toHaveLength(3)
     expect(document.activeElement).toBe(input.element)
     expect(wrapper.find('.setting-combobox__chevron').exists()).toBe(false)
     wrapper.unmount()

@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { clearCachedForecast, readCachedForecast, writeCachedForecast } from '../src/forecast/forecastCache'
+import { readCachedForecast, writeCachedForecasts } from '../src/forecast/forecastCache'
 
 function memoryStorage() {
   const values = new Map()
   return {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
-    removeItem: (key) => values.delete(key),
   }
 }
 
@@ -38,8 +37,8 @@ function forecast(modelId = 'best_match', model = 'BEST MATCH') {
 describe('forecast cache', () => {
   it('round-trips independent model forecasts for the same spot', () => {
     const storage = memoryStorage()
-    expect(writeCachedForecast(forecast(), storage)).toBe(true)
-    expect(writeCachedForecast(forecast('ncep_gfs_seamless', 'NOAA GFS'), storage)).toBe(true)
+    expect(writeCachedForecasts([forecast()], storage)).toBe(true)
+    expect(writeCachedForecasts([forecast('ncep_gfs_seamless', 'NOAA GFS')], storage)).toBe(true)
     expect(readCachedForecast('brouwersdam', 'best_match', storage)).toEqual(forecast())
     expect(readCachedForecast('brouwersdam', 'ncep_gfs_seamless', storage))
       .toEqual(forecast('ncep_gfs_seamless', 'NOAA GFS'))
@@ -49,7 +48,7 @@ describe('forecast cache', () => {
   it('round-trips forecasts for valid personal-spot timezones', () => {
     const storage = memoryStorage()
     const lisbon = { ...forecast(), spotId: 'personal-lisbon', timezone: 'Europe/Lisbon' }
-    expect(writeCachedForecast(lisbon, storage)).toBe(true)
+    expect(writeCachedForecasts([lisbon], storage)).toBe(true)
     expect(readCachedForecast('personal-lisbon', 'best_match', storage)).toEqual(lisbon)
   })
 
@@ -63,21 +62,26 @@ describe('forecast cache', () => {
     expect(readCachedForecast('brouwersdam', 'best_match', storage)).toBeNull()
   })
 
-  it('can clear a stale cache safely', () => {
+  it('writes a model batch and preserves it when a later batch contains invalid data', () => {
     const storage = memoryStorage()
-    writeCachedForecast(forecast(), storage)
-    clearCachedForecast(storage)
-    expect(readCachedForecast('brouwersdam', 'best_match', storage)).toBeNull()
+    const bestMatch = forecast()
+    const gfs = forecast('ncep_gfs_seamless', 'NOAA GFS')
+    expect(writeCachedForecasts({ best_match: bestMatch, ncep_gfs_seamless: gfs }, storage)).toBe(true)
+    const cached = storage.getItem('windscout.forecasts')
+    expect(readCachedForecast('brouwersdam', 'ncep_gfs_seamless', storage)).toEqual(gfs)
+
+    expect(writeCachedForecasts([bestMatch, { ...gfs, days: [] }], storage)).toBe(false)
+    expect(storage.getItem('windscout.forecasts')).toBe(cached)
   })
 
   it('rejects structurally valid data that cannot cross the renderer bridge', () => {
     const storage = memoryStorage()
     const oversizedName = forecast()
     oversizedName.spotName = 'x'.repeat(96)
-    expect(writeCachedForecast(oversizedName, storage)).toBe(false)
+    expect(writeCachedForecasts([oversizedName], storage)).toBe(false)
 
     const oversizedWind = forecast()
     oversizedWind.days[0].samples[0].sustainedKt = 32768
-    expect(writeCachedForecast(oversizedWind, storage)).toBe(false)
+    expect(writeCachedForecasts([oversizedWind], storage)).toBe(false)
   })
 })

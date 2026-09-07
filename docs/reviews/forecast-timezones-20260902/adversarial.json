@@ -1,0 +1,32 @@
+{
+  "reviewer": "adversarial",
+  "findings": [
+    {
+      "title": "Generated releases become uninstallable after schema v4",
+      "severity": "P1",
+      "file": "firmware/scripts/generate_installer_manifest.py",
+      "line": 213,
+      "why_it_matters": "Every newly generated firmware release advertises support for configuration schema 3 only, while the configurator now requires schema 4. The browser therefore rejects the release manifest before flashing starts, so fresh installs and firmware updates cannot reach the timezone fix. Advertising schema 4 in the generated manifest restores agreement between the release pipeline, browser, and firmware.",
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "suggested_fix": "Change the generated configuration compatibility range to minimum 4 and maximum 4, then add a release-generator test that feeds its produced manifest to the web manifest validator (or at minimum asserts both generated bounds equal 4).",
+      "confidence": 100,
+      "evidence": [
+        "firmware/scripts/generate_installer_manifest.py:213 -- \"configuration\": {\"minimum\": 3, \"maximum\": 3},",
+        "web/src/config/configuration.js:5 -- export const CONFIGURATION_VERSION = 4",
+        "web/src/installer/firmwareManifest.js:42-43 -- !manifest.configuration || manifest.configuration.minimum > CONFIGURATION_VERSION || manifest.configuration.maximum < CONFIGURATION_VERSION",
+        ".github/workflows/firmware-release.yml:111 -- python3 firmware/scripts/generate_installer_manifest.py"
+      ],
+      "pre_existing": false
+    }
+  ],
+  "residual_risks": [
+    "A v2/v3 record has no device timezone to recover, so migration deliberately falls back to the spot timezone; upgraded devices whose owner timezone differs from the spot remain wrong until their configuration is applied again.",
+    "The browser accepts any timezone known to its Intl runtime, while firmware accepts only names present in its embedded TZDB registry; no cross-runtime acceptance check proves every browser-produced device timezone can be installed."
+  ],
+  "testing_gaps": [
+    "No end-to-end contract test validates a manifest produced by firmware/scripts/generate_installer_manifest.py with web/src/installer/firmwareManifest.js after the shared configuration version changes.",
+    "No firmware render test exercises different device and spot timezones through the production render_dashboard path, including a DST boundary."
+  ]
+}

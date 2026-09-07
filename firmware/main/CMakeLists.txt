@@ -14,7 +14,6 @@ set(LEGACY_SOURCES
     "mdns_service.c"
     "ota_manager.c"
     "periodic_tasks.c"
-    "png_decoder.c"
     "power_manager.c"
     "processing_settings.c"
     "splash_screen.c"

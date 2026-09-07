@@ -1,50 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { FORECAST_MODELS } from '../../src/forecast/models'
+import { amsterdamDate, forecastResponseForLatitude } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
-
-function amsterdamDate(offset = 0) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date())
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-  const date = new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + offset))
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
-}
-
-function responseFor(latitude) {
-  const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
-    .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
-  const offset = latitude > 52 ? 4 : 0
-  const hourlyUnits = { time: 'iso8601' }
-  const hourly = { time: times }
-  FORECAST_MODELS.forEach((model, modelIndex) => {
-    const modelId = model.apiId
-    Object.assign(hourlyUnits, {
-      [`wind_speed_10m_${modelId}`]: 'kn',
-      [`wind_gusts_10m_${modelId}`]: 'kn',
-      [`wind_direction_10m_${modelId}`]: '°',
-      [`cloud_cover_${modelId}`]: '%',
-      [`precipitation_${modelId}`]: 'mm',
-      [`is_day_${modelId}`]: '',
-      [`temperature_2m_${modelId}`]: '°C',
-    })
-    Object.assign(hourly, {
-      [`wind_speed_10m_${modelId}`]: times.map((_, index) => 11 + offset + modelIndex * 3 + (index % 5)),
-      [`wind_gusts_10m_${modelId}`]: times.map((_, index) => 17 + offset + modelIndex * 3 + (index % 5)),
-      [`wind_direction_10m_${modelId}`]: times.map(() => 90 + modelIndex * 15),
-      [`cloud_cover_${modelId}`]: times.map(() => 20 + modelIndex * 10),
-      [`precipitation_${modelId}`]: times.map(() => 0),
-      [`is_day_${modelId}`]: times.map(() => 1),
-      [`temperature_2m_${modelId}`]: times.map((_, index) => 12 + modelIndex + (index % 5)),
-    })
-  })
-  return {
-    timezone: 'Europe/Amsterdam',
-    hourly_units: hourlyUnits,
-    hourly,
-  }
-}
 
 async function mockForecastApi(page, state = { fail: false, tideUnsupported: false }) {
   const requests = []
@@ -56,7 +13,7 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
       return
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
-      responseFor(Number(url.searchParams.get('latitude'))),
+      forecastResponseForLatitude(Number(url.searchParams.get('latitude'))),
     ) })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
@@ -157,7 +114,7 @@ function splitShadows(value) {
 test('keeps the implicit default empty, then shows and restores a chosen spot', async ({ page }) => {
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   await expect(page.getByRole('region', { name: 'Windscout 3D preview' })).toBeVisible()
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
@@ -191,7 +148,7 @@ test('keeps the implicit default empty, then shows and restores a chosen spot', 
 test('uses model typeahead and restores focus when its popup is dismissed', async ({ page }) => {
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const model = await selectWithKeyboard(page, 'Wind model', 'noaa')
@@ -209,7 +166,7 @@ test('uses model typeahead and restores focus when its popup is dismissed', asyn
 test('keeps threshold state explicit and redraws the live preview', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   const before = await page.locator('canvas').screenshot()
 
@@ -239,7 +196,7 @@ test('keeps threshold state explicit and redraws the live preview', async ({ pag
 test('loads the local CAD model into the constrained 3D scene', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await expect(page.getByRole('button', { name: 'Reset view' })).toHaveCount(0)
@@ -258,9 +215,9 @@ test('sizes the 3D canvas sharply while the CAD model is still loading', async (
     await route.continue()
   })
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/?configure', { waitUntil: 'domcontentloaded' })
   const canvas = page.locator('canvas')
-  await expect(canvas).toBeVisible()
+  await expect(canvas).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-scene-status', 'loading')
 
   const dimensions = await canvas.evaluate((element) => ({
@@ -280,7 +237,7 @@ test('sizes the 3D canvas sharply while the CAD model is still loading', async (
 test('switches the live preview to another supported spot without a page reload', async ({ page }) => {
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const spot = page.getByRole('combobox', { name: 'Search spot' })
@@ -300,7 +257,7 @@ test('creates and remembers a personal spot only after the explicit map flow', a
   const forecastRequests = await mockForecastApi(page)
   const { autocompleteRequests, reverseRequests } = await mockGeoapify(page)
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const spot = page.getByRole('combobox', { name: 'Search spot' })
@@ -353,7 +310,7 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   })
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   await expect(page.locator('.mobile-settings-sheet')).toHaveCount(0)
@@ -390,7 +347,7 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
 test('recomposes the preview when Weather, Temperature, and Tide change', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   const before = await page.locator('canvas').screenshot()
 
@@ -414,7 +371,7 @@ test('recomposes the preview when Weather, Temperature, and Tide change', async 
 test('keeps unavailable Tide on Hide and explains it in a tooltip', async ({ page }) => {
   await mockForecastApi(page, { tideUnsupported: true })
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   const tide = page.getByRole('switch', { name: 'Tide' })
   await expect(tide).toBeDisabled({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
@@ -449,7 +406,7 @@ for (const viewport of [
     await mockForecastApi(page)
     await page.setViewportSize({ width: viewport.width, height: viewport.height })
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/')
+    await page.goto('/?configure')
     await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
     const panel = page.locator('.settings-panel')
@@ -638,7 +595,7 @@ test('keeps the compact inspector above the viewport edge without widening the p
   await mockForecastApi(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const panel = page.locator('.settings-panel--compact')
@@ -743,7 +700,7 @@ test('keeps the full installer floating above the model on a narrow desktop', as
 test('keeps the full settings panel below the model inside one continuous 3D scene', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 823, height: 968 })
-  await page.goto('/')
+  await page.goto('/?configure')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const panel = page.locator('.settings-panel')
@@ -776,7 +733,7 @@ for (const viewport of [
   test(`keeps the full desktop surface at ${viewport.width}px`, async ({ page }) => {
     await mockForecastApi(page)
     await page.setViewportSize({ width: viewport.width, height: viewport.height })
-    await page.goto('/')
+    await page.goto('/?configure')
     await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
     await expect(page.locator('.settings-panel--compact')).toHaveCount(viewport.compact ? 1 : 0)
     await expect(page.getByTestId('install-continuation')).toHaveCount(viewport.installer ? 1 : 0)
@@ -788,7 +745,7 @@ for (const viewport of [
 test('labels a first network failure as demo outside the device screen', async ({ page }) => {
   await mockForecastApi(page, { fail: true })
   await page.setViewportSize({ width: 1200, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   const toast = page.locator('[data-sonner-toast]')
   await expect(toast).toContainText('Live forecast unavailable. Showing demo data.', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
@@ -804,7 +761,7 @@ test('labels a first network failure as demo outside the device screen', async (
 test('keeps installation continuation and omits retired controls', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/')
+  await page.goto('/?configure')
 
   await expect(page.getByText('Treatment', { exact: true })).toHaveCount(0)
   await expect(page.getByText('Time format', { exact: true })).toHaveCount(0)

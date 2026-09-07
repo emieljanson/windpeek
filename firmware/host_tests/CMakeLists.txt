@@ -326,7 +326,6 @@ target_compile_definitions(
     WIND_POWER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/power_manager.c"
     WIFI_MANAGER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wifi_manager.c"
     WIND_CMAKE_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/CMakeLists.txt"
-    WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
     E100X_BOARD_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../components/board_hal/src/driver_seeedstudio_reterminal_e1002.c"
 )
 

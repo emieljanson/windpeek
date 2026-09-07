@@ -9,6 +9,7 @@ import {
 } from '../forecast/models'
 import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
 import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
+import { fetchIpLocation } from '../location/ipLocation'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
 import {
   createDefaultDisplayConfiguration,
@@ -23,6 +24,7 @@ import {
   MIN_THRESHOLD,
 } from '../renderer/contract'
 import { DEFAULT_SPOT_ID, SPOTS } from '../spots'
+import { findNearbyDefaultSpot } from '../spots/nearestSpot'
 import {
   createPersonalSpot,
   readPersonalSpots,
@@ -45,6 +47,8 @@ export const useConfiguratorStore = defineStore('configurator', {
       temperatureUnit: displayConfiguration.temperatureUnit,
       selectedBoardId: BOARD_ID,
       selectedSpotId: DEFAULT_SPOT_ID,
+      hasUserSpotIntent: false,
+      nearbyDefaultStatus: 'idle',
       personalSpots: readPersonalSpots(),
       selectedModelId: DEFAULT_FORECAST_MODEL_ID,
       forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
@@ -67,7 +71,6 @@ export const useConfiguratorStore = defineStore('configurator', {
       tideMessage: 'Tide availability has not been checked yet.',
       tideInitialized: false,
       tideRequestId: 0,
-      tideRequestInFlight: false,
     }
   },
   getters: {
@@ -97,6 +100,43 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
   },
   actions: {
+    markUserSpotIntent() {
+      this.hasUserSpotIntent = true
+    },
+    async initializeNearbyDefault({
+      locationFetcher = fetchIpLocation,
+      ...selectionOptions
+    } = {}) {
+      if (this.nearbyDefaultStatus !== 'idle') return false
+      this.nearbyDefaultStatus = 'resolving'
+
+      if (this.hasUserSpotIntent || this.selectedSpotId !== DEFAULT_SPOT_ID) {
+        this.nearbyDefaultStatus = 'ignored'
+        return false
+      }
+
+      let coordinates
+      try {
+        coordinates = await locationFetcher()
+      } catch {
+        this.nearbyDefaultStatus = 'ignored'
+        return false
+      }
+
+      if (this.hasUserSpotIntent || this.selectedSpotId !== DEFAULT_SPOT_ID) {
+        this.nearbyDefaultStatus = 'ignored'
+        return false
+      }
+
+      const spot = findNearbyDefaultSpot(coordinates)
+      if (!spot) {
+        this.nearbyDefaultStatus = 'ignored'
+        return false
+      }
+      if (spot.id !== DEFAULT_SPOT_ID) await this.selectSpot(spot.id, selectionOptions)
+      this.nearbyDefaultStatus = 'applied'
+      return true
+    },
     setSelectedBoardId(value) {
       if (!SUPPORTED_BOARD_IDS.includes(value)) return false
       this.selectedBoardId = value
@@ -185,7 +225,6 @@ export const useConfiguratorStore = defineStore('configurator', {
       const spot = this.spotById(this.selectedSpotId)
       if (!spot) return false
       const requestId = ++this.tideRequestId
-      this.tideRequestInFlight = true
       const cached = readCachedTide(spot.id, spot.timezone, storage)
       if (cached) {
         this.tide = cached
@@ -223,8 +262,6 @@ export const useConfiguratorStore = defineStore('configurator', {
           this.tideMessage = 'Could not check tide availability. Try again later.'
         }
         return false
-      } finally {
-        if (requestId === this.tideRequestId) this.tideRequestInFlight = false
       }
     },
     async initializeForecast(options = {}) {

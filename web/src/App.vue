@@ -1,29 +1,16 @@
 <script setup>
-import { computed, watch } from 'vue'
-import { Toaster, toast } from 'vue-sonner'
-import ConfiguratorView from './views/ConfiguratorView.vue'
-import { useCompactViewport } from './composables/useCompactViewport'
-import { useConfiguratorStore } from './stores/configurator'
+import { defineAsyncComponent } from 'vue'
+import { isConfiguratorLocation } from './routes'
 
-const store = useConfiguratorStore()
-const { isCompact } = useCompactViewport()
-const toasterPosition = computed(() => isCompact.value ? 'top-center' : 'bottom-right')
-
-watch(
-  () => [store.forecastStatus, store.forecastMessage],
-  ([status, message]) => {
-    if (status !== 'warning' || !message) return
-    toast.error(message, { id: 'forecast-error' })
-  },
-  { flush: 'post' },
-)
+const ConfiguratorApp = defineAsyncComponent(() => import('./ConfiguratorApp.vue'))
+const LandingView = defineAsyncComponent(() => import('./views/LandingView.vue'))
+const showConfigurator = isConfiguratorLocation()
+document.title = showConfigurator
+  ? 'Configure Windscout'
+  : 'Windscout — Always-on e-ink wind forecast'
 </script>
 
 <template>
-  <ConfiguratorView />
-  <Toaster
-    :position="toasterPosition"
-    :visible-toasts="3"
-    :toast-options="{ duration: 5000 }"
-  />
+  <ConfiguratorApp v-if="showConfigurator" />
+  <LandingView v-else />
 </template>

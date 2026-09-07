@@ -186,6 +186,11 @@ describe('USB-C cable', () => {
     expect(braidMaterial.map.image.data[1]).toBeGreaterThan(130)
     expect(braidMaterial.map.image.data[1]).toBeGreaterThan(braidMaterial.map.image.data[0])
     expect(braidMaterial.normalMap).toBeTruthy()
+    for (const texture of [braidMaterial.map, braidMaterial.normalMap, braidMaterial.roughnessMap]) {
+      expect(texture.generateMipmaps).toBe(true)
+      expect(texture.minFilter).toBe(THREE.LinearMipmapLinearFilter)
+      expect(texture.magFilter).toBe(THREE.LinearFilter)
+    }
     expect(braidMaterial.roughnessMap).toBeTruthy()
     expect(braidMaterial.roughnessMap.format).toBe(THREE.RGBAFormat)
     expect(braidMaterial.roughnessMap.image.data[1]).toBeGreaterThan(190)

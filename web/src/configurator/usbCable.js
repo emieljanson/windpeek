@@ -1,3 +1,4 @@
+import { filterDetailTexture } from './detailTexture'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { BOARD_IDS } from '../config/configuration'
@@ -276,7 +277,6 @@ function createBraidTexture(size = 512, {
   texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(repeatX, repeatY)
   texture.anisotropy = 16
-  texture.needsUpdate = true
 
   const normalTexture = new THREE.DataTexture(normalPixels, size, size, THREE.RGBAFormat)
   normalTexture.name = 'usb-cable-braid-normal-texture'
@@ -284,7 +284,6 @@ function createBraidTexture(size = 512, {
   normalTexture.wrapT = THREE.RepeatWrapping
   normalTexture.repeat.copy(texture.repeat)
   normalTexture.anisotropy = texture.anisotropy
-  normalTexture.needsUpdate = true
 
   const roughnessTexture = new THREE.DataTexture(roughnessPixels, size, size, THREE.RGBAFormat)
   roughnessTexture.name = 'usb-cable-braid-roughness-texture'
@@ -292,8 +291,7 @@ function createBraidTexture(size = 512, {
   roughnessTexture.wrapT = THREE.RepeatWrapping
   roughnessTexture.repeat.copy(texture.repeat)
   roughnessTexture.anisotropy = texture.anisotropy
-  roughnessTexture.needsUpdate = true
-  return { color: texture, normal: normalTexture, roughness: roughnessTexture }
+  return { color: filterDetailTexture(texture), normal: filterDetailTexture(normalTexture), roughness: filterDetailTexture(roughnessTexture) }
 }
 
 function createMoldGrainTexture(size = 128) {
@@ -344,8 +342,7 @@ function createMoldGrainTexture(size = 128) {
     texture.wrapT = THREE.RepeatWrapping
     texture.repeat.set(6, 6)
     texture.anisotropy = 8
-    texture.needsUpdate = true
-    return texture
+    return filterDetailTexture(texture)
   }
 
   return {

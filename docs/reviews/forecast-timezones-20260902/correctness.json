@@ -1,0 +1,12 @@
+{
+  "reviewer": "correctness",
+  "findings": [],
+  "residual_risks": [
+    "The browser validates deviceTimezone against its own Intl timezone database while firmware validates against embedded TZDB 2025b; a future browser-only IANA zone could make an otherwise valid web configuration fail during device staging."
+  ],
+  "testing_gaps": [
+    "No firmware integration test renders a forecast with device_timezone different from spot.timezone and asserts that updated_time uses the former while forecast dates and sample hours use the latter.",
+    "The web and firmware digest fixtures only share a constant for the same device and spot timezone; there is no cross-language fixture proving digest parity when deviceTimezone differs from spot.timezone.",
+    "Installer-service tests do not exercise rejection of a missing or unsupported deviceTimezone in an otherwise valid version-4 payload."
+  ]
+}

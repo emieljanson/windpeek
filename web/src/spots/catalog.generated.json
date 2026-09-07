@@ -27,6 +27,15 @@
     "countryCode": "nl"
   },
   {
+    "id": "third-avenue",
+    "name": "Third Avenue",
+    "displayName": "THIRD AVENUE",
+    "latitude": 37.57457,
+    "longitude": -122.283926,
+    "timezone": "America/Los_Angeles",
+    "countryCode": "us"
+  },
+  {
     "id": "spot-1ab3bs8",
     "name": "'t Vossenhol",
     "displayName": "'T VOSSENHOL",

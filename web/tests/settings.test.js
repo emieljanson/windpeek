@@ -69,10 +69,22 @@ describe('WindScout settings panel', () => {
     expect(rowControl('Wind model').find('.setting-select__chevron').exists()).toBe(true)
   })
 
+  it('keeps search empty when the store applies an automatic spot', async () => {
+    const store = useConfiguratorStore()
+    mountSettings()
+
+    store.selectedSpotId = 'edam'
+    await nextTick()
+
+    expect(wrapper.get('.inspector-search input[role="combobox"]').element.value).toBe('')
+    expect(store.hasUserSpotIntent).toBe(false)
+  })
+
   it('filters local spots, commits only a supplied result, and announces no results', async () => {
     const store = useConfiguratorStore()
     store.selectedSpotId = 'edam'
     const selectSpot = vi.spyOn(store, 'selectSpot').mockResolvedValue(true)
+    const markUserSpotIntent = vi.spyOn(store, 'markUserSpotIntent')
     mountSettings()
     const input = wrapper.get('.inspector-search input[role="combobox"]')
 
@@ -82,6 +94,7 @@ describe('WindScout settings panel', () => {
     expect(document.body.textContent).not.toContain('No existing spots found')
 
     await input.setValue('b')
+    expect(markUserSpotIntent).toHaveBeenCalledOnce()
     await nextTick()
     expect(document.body.querySelector('[role="listbox"]')).toBeNull()
 
@@ -93,6 +106,7 @@ describe('WindScout settings panel', () => {
     bodyOption('Brouwersdam').click()
     await nextTick()
     expect(selectSpot).toHaveBeenCalledWith('brouwersdam')
+    expect(markUserSpotIntent).toHaveBeenCalledTimes(3)
     expect(input.element.value).toBe('Brouwersdam')
 
     await input.setValue('nowhere')
@@ -193,6 +207,7 @@ describe('WindScout settings panel', () => {
     }
     const addPersonalSpot = vi.spyOn(store, 'addPersonalSpot').mockReturnValue(personalSpot)
     const selectSpot = vi.spyOn(store, 'selectSpot').mockReturnValue(new Promise(() => {}))
+    const markUserSpotIntent = vi.spyOn(store, 'markUserSpotIntent')
     mountSettings()
     const spotCombobox = wrapper.findComponent(SettingCombobox)
 
@@ -205,12 +220,14 @@ describe('WindScout settings panel', () => {
     const dialog = wrapper.findComponent(SpotCreationDialog)
     expect(dialog.props('open')).toBe(true)
     expect(dialog.props('initialQuery')).toBe('Edam harbour')
+    expect(markUserSpotIntent).toHaveBeenCalledOnce()
     const savedSpot = dialog.props('saveSpot')(personalSpot)
     await nextTick()
 
     expect(savedSpot).toBe(personalSpot)
     expect(addPersonalSpot).toHaveBeenCalledWith(personalSpot)
     expect(selectSpot).toHaveBeenCalledWith(personalSpot.id)
+    expect(markUserSpotIntent).toHaveBeenCalledTimes(2)
     expect(spotCombobox.props('searchTerm')).toBe('Edam harbour')
   })
 

@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const port = Number(process.env.PLAYWRIGHT_PORT || 43_173)
+const baseURL = `http://127.0.0.1:${port}`
+
 export default defineConfig({
   testDir: './tests/e2e',
   outputDir: './test-results',
@@ -12,19 +15,20 @@ export default defineConfig({
   },
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   webServer: {
     // Browser tests mock the installer firmware responses. Starting Vite
     // directly keeps an unrelated local device build from blocking UI QA.
-    command: 'vite --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
+    command: `vite --host 127.0.0.1 --port ${port}`,
+    url: baseURL,
+    reuseExistingServer: false,
     env: {
       ...process.env,
       VITE_GEOAPIFY_API_KEY: 'playwright-key',
+      VITE_NEARBY_LOCATION_URL: '/__windscout-location',
     },
   },
   projects: [

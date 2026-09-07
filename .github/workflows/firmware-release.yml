@@ -43,6 +43,12 @@ jobs:
         working-directory: web
         run: npm test
 
+      - name: Verify nearby-location Worker bundle
+        working-directory: workers/nearby-location
+        run: |
+          npm ci
+          npm run deploy -- --dry-run
+
       - name: Install browser test runtime
         working-directory: web
         run: npx playwright install --with-deps chromium
@@ -216,6 +222,7 @@ jobs:
         working-directory: web
         env:
           VITE_GEOAPIFY_API_KEY: ${{ vars.VITE_GEOAPIFY_API_KEY }}
+          VITE_NEARBY_LOCATION_URL: ${{ vars.VITE_NEARBY_LOCATION_URL }}
           VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

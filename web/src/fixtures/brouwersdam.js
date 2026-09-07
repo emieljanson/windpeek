@@ -32,3 +32,43 @@ export const brouwersdamForecast = Object.freeze({
     { localDate: '2026-08-30', day: 'SUN', date: '30 AUG', samples: samples([[7, 11, 198], [10, 15, 204], [12, 18, 210], [14, 21, 214], [11, 17, 220]]) },
   ],
 })
+
+const brouwersdamTideSamples = brouwersdamForecast.days.flatMap((day, dayIndex) =>
+  Array.from({ length: 24 }, (_, hour) => ({
+    localDate: day.localDate,
+    localTime: `${String(hour).padStart(2, '0')}:00`,
+    seaLevelMm: Math.round(Math.sin((dayIndex * 24 + hour - 2) * Math.PI / 6.2) * 900),
+  })))
+
+function tideExtremaFromSamples(samples) {
+  const extrema = []
+  let trend = 0
+
+  for (let index = 1; index < samples.length; index += 1) {
+    const nextTrend = Math.sign(samples[index].seaLevelMm - samples[index - 1].seaLevelMm)
+    if (nextTrend === 0) continue
+    if (trend !== 0 && nextTrend !== trend) {
+      const plateauEnd = index - 1
+      let plateauStart = plateauEnd
+      while (
+        plateauStart > 0 &&
+        samples[plateauStart - 1].seaLevelMm === samples[plateauEnd].seaLevelMm
+      ) plateauStart -= 1
+      const sample = samples[Math.floor((plateauStart + plateauEnd) / 2)]
+      extrema.push({ ...sample, type: trend > 0 ? 'high' : 'low' })
+    }
+    trend = nextTrend
+  }
+
+  return extrema
+}
+
+const brouwersdamTideExtrema = tideExtremaFromSamples(brouwersdamTideSamples)
+
+export const brouwersdamTide = Object.freeze({
+  capability: 'available',
+  spotId: 'brouwersdam',
+  timezone: 'Europe/Amsterdam',
+  samples: brouwersdamTideSamples,
+  extrema: brouwersdamTideExtrema,
+})

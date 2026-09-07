@@ -1,3 +1,4 @@
+import { filterDetailTexture } from './detailTexture'
 import * as THREE from 'three'
 import { BOARD_IDS } from '../config/configuration'
 
@@ -197,8 +198,7 @@ export function createPowderCoatNormalMap(size = 64) {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
   texture.colorSpace = THREE.NoColorSpace
-  texture.needsUpdate = true
-  return texture
+  return filterDetailTexture(texture)
 }
 
 export function createPowderCoatRoughnessMap(size = 64) {
@@ -221,8 +221,7 @@ export function createPowderCoatRoughnessMap(size = 64) {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
   texture.colorSpace = THREE.NoColorSpace
-  texture.needsUpdate = true
-  return texture
+  return filterDetailTexture(texture)
 }
 
 export function addSurfaceProjectionUvs(geometry, repeatsPerMeter = 82) {
@@ -253,7 +252,7 @@ export function addSurfaceProjectionUvs(geometry, repeatsPerMeter = 82) {
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
 }
 
-export function enhanceE1002Surface(model, renderer) {
+export function enhanceDeviceSurface(model, renderer) {
   const powderCoatNormal = createPowderCoatNormalMap()
   const powderCoatRoughness = createPowderCoatRoughnessMap()
   const panelReflections = []
@@ -266,26 +265,26 @@ export function enhanceE1002Surface(model, renderer) {
     for (const material of materials) {
       if (POWDER_COAT_MATERIALS.has(material.name)) {
         addSurfaceProjectionUvs(child.geometry)
-        material.color.setHex(0xd9dad7)
+        material.color.setHex(0xe5e5e1)
         material.normalMap = powderCoatNormal
-        material.normalScale.set(0.62, 0.62)
-        material.roughness = 0.62
+        material.normalScale.set(0.3, 0.3)
+        material.roughness = 0.78
         material.roughnessMap = powderCoatRoughness
         material.metalness = 0
         material.ior = 1.52
-        material.specularIntensity = 0.52
-        material.clearcoat = 0.08
+        material.specularIntensity = 0.65
+        material.clearcoat = 0
         material.clearcoatRoughness = 0.56
-        material.envMapIntensity = 0.8
+        material.envMapIntensity = 0.85
         material.needsUpdate = true
       } else if (material.name === 'front-satin-plastic' || material.name === 'front-satin-trim') {
-        material.color.setHex(0xe0e2de)
-        material.roughness = 0.025
+        material.color.setHex(0xe6e7e3)
+        material.roughness = 0.12
         material.ior = 1.55
         material.specularIntensity = 1
-        material.clearcoat = 1
-        material.clearcoatRoughness = 0.012
-        material.envMapIntensity = 2.25
+        material.clearcoat = 0.65
+        material.clearcoatRoughness = 0.055
+        material.envMapIntensity = 1.35
         material.needsUpdate = true
         if (!child.getObjectByName('FRONT_PANEL_REFLECTION')) {
           panelReflections.push(createFrontPanelReflection(child))

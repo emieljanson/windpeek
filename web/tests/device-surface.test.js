@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {
   addSurfaceProjectionUvs,
   createFrontPanelReflection,
@@ -9,12 +12,68 @@ import {
   createPowderCoatRoughnessMap,
   createMatteScreenFinish,
   createScreenRecessShadow,
-  enhanceE1002Surface,
+  enhanceDeviceSurface,
   fitScreenUnderBezel,
   SCREEN_BEZEL_OVERSCAN,
 } from '../src/configurator/deviceSurface'
 
-describe('E1002 product surfaces', () => {
+describe('reTerminal product surfaces', () => {
+  it.each([
+    ['E1001/E1002 shared', 'e1002'],
+    ['E1003', 'e1003'],
+  ])('applies the studio finish to the actual %s model', async (_, asset) => {
+    const source = await readFile(resolve(process.cwd(), `public/devices/${asset}/${asset}.glb`))
+    const buffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)
+    const { scene } = await new GLTFLoader().parseAsync(buffer, '')
+    const dispose = enhanceDeviceSurface(scene, { capabilities: { getMaxAnisotropy: () => 4 } })
+    try {
+      const meshes = scene.getObjectsByProperty('isMesh', true)
+      const materials = new Map(meshes.map((mesh) => [mesh.material.name, mesh.material]))
+      const coatNames = asset === 'e1003'
+        ? ['enclosure-white-powder-coat', 'rear-service-cover', 'control-surround-white', 'front-lower-cover']
+        : ['enclosure-white-powder-coat']
+      for (const name of coatNames) {
+        const material = materials.get(name)
+        expect(material, name).toBeDefined()
+        expect(material.normalMap?.name).toBe('powder-coat-micro-normal')
+        expect(material.roughness).toBeCloseTo(0.78)
+        expect(material.metalness).toBe(0)
+      }
+      const frontName = asset === 'e1003' ? 'front-satin-trim' : 'front-satin-plastic'
+      const fronts = meshes.filter((mesh) => mesh.material.name === frontName)
+      expect(fronts.length).toBeGreaterThan(0)
+      for (const front of fronts) {
+        expect(front.material.roughness).toBeCloseTo(0.12)
+        expect(front.material.clearcoat).toBeCloseTo(0.65)
+        expect(front.getObjectByName('FRONT_PANEL_REFLECTION')).toBeDefined()
+      }
+    } finally {
+      dispose()
+      scene.traverse((object) => {
+        object.geometry?.dispose()
+        object.material?.dispose()
+      })
+    }
+  })
+  it('retains the moving front-panel reflection in the standard studio', () => {
+    const model = new THREE.Group()
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.176, 0.12, 0.001),
+      new THREE.MeshPhysicalMaterial({ name: 'front-satin-plastic' }),
+    )
+    model.add(panel)
+    const dispose = enhanceDeviceSurface(model, {
+      capabilities: { getMaxAnisotropy: () => 4 },
+    })
+    try {
+      expect(panel.getObjectByName('FRONT_PANEL_REFLECTION')).toBeDefined()
+    } finally {
+      dispose()
+      expect(panel.getObjectByName('FRONT_PANEL_REFLECTION')).toBeUndefined()
+      panel.geometry.dispose()
+      panel.material.dispose()
+    }
+  })
   it('builds a tileable, linear-space powder-coat normal map', () => {
     const texture = createPowderCoatNormalMap(16)
 
@@ -24,6 +83,9 @@ describe('E1002 product surfaces', () => {
     expect(texture.wrapS).toBe(THREE.RepeatWrapping)
     expect(texture.wrapT).toBe(THREE.RepeatWrapping)
     expect(texture.colorSpace).toBe(THREE.NoColorSpace)
+    expect(texture.generateMipmaps).toBe(true)
+    expect(texture.minFilter).toBe(THREE.LinearMipmapLinearFilter)
+    expect(texture.magFilter).toBe(THREE.LinearFilter)
     texture.dispose()
   })
 
@@ -61,12 +123,12 @@ describe('E1002 product surfaces', () => {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), panelMaterial)
     model.add(enclosure, rear, panel)
 
-    const dispose = enhanceE1002Surface(model, { capabilities: { getMaxAnisotropy: () => 8 } })
+    const dispose = enhanceDeviceSurface(model, { capabilities: { getMaxAnisotropy: () => 8 } })
 
     expect(enclosureMaterial.normalMap?.name).toBe('powder-coat-micro-normal')
-    expect(enclosureMaterial.normalScale.x).toBeCloseTo(0.62)
+    expect(enclosureMaterial.normalScale.x).toBeCloseTo(0.3)
     expect(enclosureMaterial.roughnessMap?.name).toBe('powder-coat-micro-roughness')
-    expect(enclosureMaterial.roughness).toBeCloseTo(0.62)
+    expect(enclosureMaterial.roughness).toBeCloseTo(0.78)
     expect(rearMaterial.normalMap?.name).toBe('powder-coat-micro-normal')
     expect(rearMaterial.roughnessMap?.name).toBe('powder-coat-micro-roughness')
     expect(rearMaterial.roughness).toBeCloseTo(enclosureMaterial.roughness)
@@ -74,13 +136,13 @@ describe('E1002 product surfaces', () => {
     expect(rearMaterial.clearcoat).toBe(enclosureMaterial.clearcoat)
     expect(rearMaterial.clearcoatRoughness).toBe(enclosureMaterial.clearcoatRoughness)
     expect(panelMaterial.normalMap).toBeNull()
-    expect(panelMaterial.roughness).toBeCloseTo(0.025)
+    expect(panelMaterial.roughness).toBeCloseTo(0.12)
     expect(panelMaterial.ior).toBeCloseTo(1.55)
     expect(panelMaterial.specularIntensity).toBeCloseTo(1)
-    expect(panelMaterial.clearcoat).toBeCloseTo(1)
-    expect(panelMaterial.clearcoatRoughness).toBeCloseTo(0.012)
-    expect(panelMaterial.envMapIntensity).toBeCloseTo(2.25)
-    expect(panelMaterial.color.getHex()).toBe(0xe0e2de)
+    expect(panelMaterial.clearcoat).toBeCloseTo(0.65)
+    expect(panelMaterial.clearcoatRoughness).toBeCloseTo(0.055)
+    expect(panelMaterial.envMapIntensity).toBeCloseTo(1.35)
+    expect(panelMaterial.color.getHex()).toBe(0xe6e7e3)
     expect(panel.getObjectByName('FRONT_PANEL_REFLECTION')).toBeDefined()
 
     dispose()
