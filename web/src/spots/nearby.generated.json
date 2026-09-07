@@ -4,6 +4,14 @@
     "priority": 3
   },
   {
+    "id": "castricum-aan-zee",
+    "priority": 1
+  },
+  {
+    "id": "edam",
+    "priority": 1
+  },
+  {
     "id": "spot-100yph0",
     "priority": 1
   },
@@ -33,6 +41,10 @@
   },
   {
     "id": "spot-10oivy8",
+    "priority": 1
+  },
+  {
+    "id": "spot-10prqtu",
     "priority": 1
   },
   {
@@ -96,6 +108,10 @@
     "priority": 1
   },
   {
+    "id": "spot-12fua4o",
+    "priority": 1
+  },
+  {
     "id": "spot-12gnskw",
     "priority": 1
   },
@@ -117,6 +133,10 @@
   },
   {
     "id": "spot-12z16q2",
+    "priority": 1
+  },
+  {
+    "id": "spot-131q1uj",
     "priority": 1
   },
   {
@@ -152,6 +172,18 @@
     "priority": 1
   },
   {
+    "id": "spot-13t9btx",
+    "priority": 1
+  },
+  {
+    "id": "spot-142uisa",
+    "priority": 1
+  },
+  {
+    "id": "spot-143eu71",
+    "priority": 1
+  },
+  {
     "id": "spot-144z48g",
     "priority": 1
   },
@@ -184,11 +216,19 @@
     "priority": 1
   },
   {
+    "id": "spot-14fnofx",
+    "priority": 1
+  },
+  {
     "id": "spot-14jzi4y",
     "priority": 1
   },
   {
     "id": "spot-14k84nu",
+    "priority": 1
+  },
+  {
+    "id": "spot-14nu7xt",
     "priority": 1
   },
   {
@@ -273,6 +313,10 @@
   },
   {
     "id": "spot-15tltru",
+    "priority": 1
+  },
+  {
+    "id": "spot-15xzx6d",
     "priority": 1
   },
   {
@@ -380,6 +424,14 @@
     "priority": 1
   },
   {
+    "id": "spot-172x2u",
+    "priority": 1
+  },
+  {
+    "id": "spot-1767y8f",
+    "priority": 1
+  },
+  {
     "id": "spot-176a3xu",
     "priority": 1
   },
@@ -452,7 +504,15 @@
     "priority": 1
   },
   {
+    "id": "spot-18k7vfw",
+    "priority": 1
+  },
+  {
     "id": "spot-18ot79c",
+    "priority": 1
+  },
+  {
+    "id": "spot-18sf13w",
     "priority": 1
   },
   {
@@ -461,6 +521,10 @@
   },
   {
     "id": "spot-1947bsn",
+    "priority": 1
+  },
+  {
+    "id": "spot-19495vd",
     "priority": 1
   },
   {
@@ -496,7 +560,19 @@
     "priority": 1
   },
   {
+    "id": "spot-19x5wji",
+    "priority": 1
+  },
+  {
+    "id": "spot-19y0mg5",
+    "priority": 1
+  },
+  {
     "id": "spot-19yr9h6",
+    "priority": 1
+  },
+  {
+    "id": "spot-1a2ii98",
     "priority": 1
   },
   {
@@ -533,6 +609,10 @@
   },
   {
     "id": "spot-1at4py",
+    "priority": 1
+  },
+  {
+    "id": "spot-1au35d3",
     "priority": 1
   },
   {
@@ -676,6 +756,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1duxz3b",
+    "priority": 1
+  },
+  {
     "id": "spot-1dxzrx6",
     "priority": 1
   },
@@ -689,6 +773,10 @@
   },
   {
     "id": "spot-1e2hhom",
+    "priority": 1
+  },
+  {
+    "id": "spot-1e88xbi",
     "priority": 1
   },
   {
@@ -732,6 +820,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1f5dk4n",
+    "priority": 1
+  },
+  {
     "id": "spot-1f6b89c",
     "priority": 1
   },
@@ -752,6 +844,14 @@
     "priority": 1
   },
   {
+    "id": "spot-1ffd5tm",
+    "priority": 1
+  },
+  {
+    "id": "spot-1ffhljj",
+    "priority": 1
+  },
+  {
     "id": "spot-1fja5y7",
     "priority": 1
   },
@@ -768,6 +868,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1fq4zoh",
+    "priority": 1
+  },
+  {
     "id": "spot-1fwl3bh",
     "priority": 1
   },
@@ -781,6 +885,10 @@
   },
   {
     "id": "spot-1g3lqcs",
+    "priority": 1
+  },
+  {
+    "id": "spot-1g4a5f",
     "priority": 1
   },
   {
@@ -849,6 +957,10 @@
   },
   {
     "id": "spot-1h11496",
+    "priority": 1
+  },
+  {
+    "id": "spot-1h77i3x",
     "priority": 1
   },
   {
@@ -936,6 +1048,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1j0c22n",
+    "priority": 1
+  },
+  {
     "id": "spot-1j2fluy",
     "priority": 1
   },
@@ -988,6 +1104,14 @@
     "priority": 1
   },
   {
+    "id": "spot-1k5chdk",
+    "priority": 1
+  },
+  {
+    "id": "spot-1k9f8lj",
+    "priority": 1
+  },
+  {
     "id": "spot-1kfkehr",
     "priority": 1
   },
@@ -1005,6 +1129,10 @@
   },
   {
     "id": "spot-1kn1kgw",
+    "priority": 1
+  },
+  {
+    "id": "spot-1kn8j39",
     "priority": 1
   },
   {
@@ -1052,7 +1180,15 @@
     "priority": 1
   },
   {
+    "id": "spot-1llns5y",
+    "priority": 1
+  },
+  {
     "id": "spot-1lmcsse",
+    "priority": 1
+  },
+  {
+    "id": "spot-1lmeofc",
     "priority": 1
   },
   {
@@ -1080,6 +1216,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1ly4ucm",
+    "priority": 1
+  },
+  {
     "id": "spot-1m0lt58",
     "priority": 1
   },
@@ -1100,6 +1240,10 @@
     "priority": 3
   },
   {
+    "id": "spot-1m9853e",
+    "priority": 1
+  },
+  {
     "id": "spot-1maleu7",
     "priority": 1
   },
@@ -1117,6 +1261,14 @@
   },
   {
     "id": "spot-1mg0beo",
+    "priority": 1
+  },
+  {
+    "id": "spot-1midnk6",
+    "priority": 1
+  },
+  {
+    "id": "spot-1mj7qsd",
     "priority": 1
   },
   {
@@ -1164,6 +1316,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1o68r2n",
+    "priority": 1
+  },
+  {
     "id": "spot-1ofwrzi",
     "priority": 1
   },
@@ -1185,6 +1341,10 @@
   },
   {
     "id": "spot-1p4gcfn",
+    "priority": 1
+  },
+  {
+    "id": "spot-1p5tz32",
     "priority": 1
   },
   {
@@ -1248,6 +1408,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1pzz9up",
+    "priority": 1
+  },
+  {
     "id": "spot-1q7ra93",
     "priority": 1
   },
@@ -1273,6 +1437,10 @@
   },
   {
     "id": "spot-1qmxgii",
+    "priority": 1
+  },
+  {
+    "id": "spot-1qqdrm7",
     "priority": 1
   },
   {
@@ -1308,6 +1476,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1rbe2u2",
+    "priority": 1
+  },
+  {
     "id": "spot-1rkzww7",
     "priority": 1
   },
@@ -1320,7 +1492,15 @@
     "priority": 1
   },
   {
+    "id": "spot-1rtmr0j",
+    "priority": 1
+  },
+  {
     "id": "spot-1s08h2",
+    "priority": 1
+  },
+  {
+    "id": "spot-1scg6ey",
     "priority": 1
   },
   {
@@ -1344,7 +1524,19 @@
     "priority": 1
   },
   {
+    "id": "spot-1swj3c0",
+    "priority": 1
+  },
+  {
+    "id": "spot-1t6ip0z",
+    "priority": 1
+  },
+  {
     "id": "spot-1tdocq7",
+    "priority": 1
+  },
+  {
+    "id": "spot-1tgiapy",
     "priority": 1
   },
   {
@@ -1352,7 +1544,19 @@
     "priority": 1
   },
   {
+    "id": "spot-1toalgt",
+    "priority": 1
+  },
+  {
+    "id": "spot-1tqhwex",
+    "priority": 1
+  },
+  {
     "id": "spot-1tzz1fv",
+    "priority": 1
+  },
+  {
+    "id": "spot-1u0hi3w",
     "priority": 1
   },
   {
@@ -1361,6 +1565,14 @@
   },
   {
     "id": "spot-1u8bk1v",
+    "priority": 1
+  },
+  {
+    "id": "spot-1u8js24",
+    "priority": 1
+  },
+  {
+    "id": "spot-1uah3sv",
     "priority": 1
   },
   {
@@ -1373,6 +1585,10 @@
   },
   {
     "id": "spot-1uhp0i2",
+    "priority": 1
+  },
+  {
+    "id": "spot-1ukgphu",
     "priority": 1
   },
   {
@@ -1392,11 +1608,27 @@
     "priority": 1
   },
   {
+    "id": "spot-1uugb6t",
+    "priority": 1
+  },
+  {
+    "id": "spot-1uvlj57",
+    "priority": 1
+  },
+  {
     "id": "spot-1v1cqr0",
     "priority": 1
   },
   {
     "id": "spot-1v427uy",
+    "priority": 1
+  },
+  {
+    "id": "spot-1v4j2dr",
+    "priority": 1
+  },
+  {
+    "id": "spot-1v5l4u6",
     "priority": 1
   },
   {
@@ -1432,6 +1664,14 @@
     "priority": 1
   },
   {
+    "id": "spot-1vnespq",
+    "priority": 1
+  },
+  {
+    "id": "spot-1vof49q",
+    "priority": 1
+  },
+  {
     "id": "spot-1vr6pgm",
     "priority": 1
   },
@@ -1450,6 +1690,14 @@
   {
     "id": "spot-1vwzneb",
     "priority": 2
+  },
+  {
+    "id": "spot-1vyepyp",
+    "priority": 1
+  },
+  {
+    "id": "spot-1vzjxx3",
+    "priority": 1
   },
   {
     "id": "spot-1w0fui7",
@@ -1476,6 +1724,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1wf7i1q",
+    "priority": 1
+  },
+  {
     "id": "spot-1wfdwpu",
     "priority": 1
   },
@@ -1485,6 +1737,10 @@
   },
   {
     "id": "spot-1wik38f",
+    "priority": 1
+  },
+  {
+    "id": "spot-1wjj5b1",
     "priority": 1
   },
   {
@@ -1524,6 +1780,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1xtdduh",
+    "priority": 1
+  },
+  {
     "id": "spot-1xuwv94",
     "priority": 1
   },
@@ -1540,7 +1800,19 @@
     "priority": 1
   },
   {
+    "id": "spot-1y5azq6",
+    "priority": 1
+  },
+  {
+    "id": "spot-1y722ge",
+    "priority": 1
+  },
+  {
     "id": "spot-1y9s7hj",
+    "priority": 1
+  },
+  {
+    "id": "spot-1ybep0o",
     "priority": 1
   },
   {
@@ -1592,6 +1864,10 @@
     "priority": 1
   },
   {
+    "id": "spot-1yxzo15",
+    "priority": 1
+  },
+  {
     "id": "spot-1yyp24f",
     "priority": 1
   },
@@ -1613,6 +1889,10 @@
   },
   {
     "id": "spot-21okfb",
+    "priority": 1
+  },
+  {
+    "id": "spot-23q0n7",
     "priority": 1
   },
   {
@@ -1672,6 +1952,10 @@
     "priority": 1
   },
   {
+    "id": "spot-2ywcfw",
+    "priority": 1
+  },
+  {
     "id": "spot-33uxdq",
     "priority": 1
   },
@@ -1692,7 +1976,19 @@
     "priority": 1
   },
   {
+    "id": "spot-38vy4v",
+    "priority": 1
+  },
+  {
+    "id": "spot-3cxdyz",
+    "priority": 1
+  },
+  {
     "id": "spot-3h6vuf",
+    "priority": 1
+  },
+  {
+    "id": "spot-3icxd1",
     "priority": 1
   },
   {
@@ -1712,7 +2008,19 @@
     "priority": 1
   },
   {
+    "id": "spot-3ss00u",
+    "priority": 1
+  },
+  {
     "id": "spot-41qccu",
+    "priority": 1
+  },
+  {
+    "id": "spot-42rlpt",
+    "priority": 1
+  },
+  {
+    "id": "spot-42ur7s",
     "priority": 1
   },
   {
@@ -1721,6 +2029,10 @@
   },
   {
     "id": "spot-47yqw8",
+    "priority": 1
+  },
+  {
+    "id": "spot-4a41g5",
     "priority": 1
   },
   {
@@ -1740,6 +2052,10 @@
     "priority": 1
   },
   {
+    "id": "spot-4mtylq",
+    "priority": 1
+  },
+  {
     "id": "spot-4rxya6",
     "priority": 1
   },
@@ -1748,11 +2064,19 @@
     "priority": 1
   },
   {
+    "id": "spot-4wtkap",
+    "priority": 1
+  },
+  {
     "id": "spot-4xk8eo",
     "priority": 1
   },
   {
     "id": "spot-4y1ch4",
+    "priority": 1
+  },
+  {
+    "id": "spot-51wr80",
     "priority": 1
   },
   {
@@ -1776,11 +2100,19 @@
     "priority": 1
   },
   {
+    "id": "spot-5djb7y",
+    "priority": 1
+  },
+  {
     "id": "spot-5djfu8",
     "priority": 1
   },
   {
     "id": "spot-5etl17",
+    "priority": 1
+  },
+  {
+    "id": "spot-5f3msp",
     "priority": 1
   },
   {
@@ -1844,6 +2176,10 @@
     "priority": 1
   },
   {
+    "id": "spot-6nqh5e",
+    "priority": 1
+  },
+  {
     "id": "spot-6rgz9r",
     "priority": 1
   },
@@ -1865,6 +2201,10 @@
   },
   {
     "id": "spot-7648v6",
+    "priority": 1
+  },
+  {
+    "id": "spot-7dogfa",
     "priority": 1
   },
   {
@@ -1909,6 +2249,10 @@
   },
   {
     "id": "spot-8dgc5o",
+    "priority": 1
+  },
+  {
+    "id": "spot-8fyq90",
     "priority": 1
   },
   {
@@ -2016,6 +2360,10 @@
     "priority": 1
   },
   {
+    "id": "spot-aohla2",
+    "priority": 1
+  },
+  {
     "id": "spot-azsq2s",
     "priority": 1
   },
@@ -2044,6 +2392,10 @@
     "priority": 1
   },
   {
+    "id": "spot-bxldo6",
+    "priority": 1
+  },
+  {
     "id": "spot-bzbvl5",
     "priority": 1
   },
@@ -2056,11 +2408,19 @@
     "priority": 1
   },
   {
+    "id": "spot-ccbtf1",
+    "priority": 1
+  },
+  {
     "id": "spot-cd9bnj",
     "priority": 1
   },
   {
     "id": "spot-cjbc7g",
+    "priority": 1
+  },
+  {
+    "id": "spot-cmp0hj",
     "priority": 1
   },
   {
@@ -2080,6 +2440,10 @@
     "priority": 1
   },
   {
+    "id": "spot-d3lphe",
+    "priority": 1
+  },
+  {
     "id": "spot-d8vwqr",
     "priority": 1
   },
@@ -2088,7 +2452,15 @@
     "priority": 1
   },
   {
+    "id": "spot-d9opg7",
+    "priority": 1
+  },
+  {
     "id": "spot-d9oy76",
+    "priority": 1
+  },
+  {
+    "id": "spot-dat0mg",
     "priority": 1
   },
   {
@@ -2176,6 +2548,10 @@
     "priority": 1
   },
   {
+    "id": "spot-f10fc2",
+    "priority": 1
+  },
+  {
     "id": "spot-f1c3xn",
     "priority": 1
   },
@@ -2205,6 +2581,10 @@
   },
   {
     "id": "spot-falp8z",
+    "priority": 1
+  },
+  {
+    "id": "spot-fb0111",
     "priority": 1
   },
   {
@@ -2277,6 +2657,10 @@
   },
   {
     "id": "spot-g71005",
+    "priority": 1
+  },
+  {
+    "id": "spot-g7mio0",
     "priority": 1
   },
   {
@@ -2373,6 +2757,14 @@
   },
   {
     "id": "spot-hr3oqy",
+    "priority": 1
+  },
+  {
+    "id": "spot-ht0k8o",
+    "priority": 1
+  },
+  {
+    "id": "spot-hvadki",
     "priority": 1
   },
   {
@@ -2512,6 +2904,10 @@
     "priority": 1
   },
   {
+    "id": "spot-lbuog4",
+    "priority": 1
+  },
+  {
     "id": "spot-lhbg1d",
     "priority": 1
   },
@@ -2548,7 +2944,23 @@
     "priority": 1
   },
   {
+    "id": "spot-m1v6h1",
+    "priority": 1
+  },
+  {
+    "id": "spot-m22h47",
+    "priority": 1
+  },
+  {
+    "id": "spot-m49fuw",
+    "priority": 1
+  },
+  {
     "id": "spot-m9of2p",
+    "priority": 1
+  },
+  {
+    "id": "spot-mc22t6",
     "priority": 1
   },
   {
@@ -2596,6 +3008,10 @@
     "priority": 1
   },
   {
+    "id": "spot-nfzydb",
+    "priority": 1
+  },
+  {
     "id": "spot-nmhzi8",
     "priority": 1
   },
@@ -2632,11 +3048,23 @@
     "priority": 1
   },
   {
+    "id": "spot-obiick",
+    "priority": 1
+  },
+  {
     "id": "spot-ofmnwk",
     "priority": 1
   },
   {
     "id": "spot-ogvm6t",
+    "priority": 1
+  },
+  {
+    "id": "spot-oh8vy7",
+    "priority": 1
+  },
+  {
+    "id": "spot-ovhpqi",
     "priority": 1
   },
   {
@@ -2652,6 +3080,14 @@
     "priority": 1
   },
   {
+    "id": "spot-p5hbfh",
+    "priority": 1
+  },
+  {
+    "id": "spot-p9ctx1",
+    "priority": 1
+  },
+  {
     "id": "spot-patgg6",
     "priority": 1
   },
@@ -2660,11 +3096,19 @@
     "priority": 1
   },
   {
+    "id": "spot-pk47pi",
+    "priority": 1
+  },
+  {
     "id": "spot-pp4x29",
     "priority": 1
   },
   {
     "id": "spot-prpfcs",
+    "priority": 1
+  },
+  {
+    "id": "spot-pub0to",
     "priority": 1
   },
   {
@@ -2696,6 +3140,10 @@
     "priority": 1
   },
   {
+    "id": "spot-qg0ecs",
+    "priority": 1
+  },
+  {
     "id": "spot-qjij8l",
     "priority": 1
   },
@@ -2708,6 +3156,10 @@
     "priority": 1
   },
   {
+    "id": "spot-qq001r",
+    "priority": 1
+  },
+  {
     "id": "spot-qxkuyf",
     "priority": 1
   },
@@ -2716,7 +3168,19 @@
     "priority": 1
   },
   {
+    "id": "spot-qzzlqq",
+    "priority": 1
+  },
+  {
+    "id": "spot-r5tqzu",
+    "priority": 1
+  },
+  {
     "id": "spot-r8vpab",
+    "priority": 1
+  },
+  {
+    "id": "spot-r9z7fp",
     "priority": 1
   },
   {
@@ -2733,6 +3197,10 @@
   },
   {
     "id": "spot-rfgl1j",
+    "priority": 1
+  },
+  {
+    "id": "spot-rgctjx",
     "priority": 1
   },
   {
@@ -2753,6 +3221,10 @@
   },
   {
     "id": "spot-rsx5if",
+    "priority": 1
+  },
+  {
+    "id": "spot-rxpol",
     "priority": 1
   },
   {
@@ -2852,6 +3324,10 @@
     "priority": 1
   },
   {
+    "id": "spot-u1ydve",
+    "priority": 1
+  },
+  {
     "id": "spot-ug7u95",
     "priority": 1
   },
@@ -2880,6 +3356,10 @@
     "priority": 1
   },
   {
+    "id": "spot-uz4m9v",
+    "priority": 1
+  },
+  {
     "id": "spot-v0s68p",
     "priority": 1
   },
@@ -2901,6 +3381,14 @@
   },
   {
     "id": "spot-vdpzxx",
+    "priority": 1
+  },
+  {
+    "id": "spot-vgg8mj",
+    "priority": 1
+  },
+  {
+    "id": "spot-vj0y66",
     "priority": 1
   },
   {
@@ -3004,6 +3492,10 @@
     "priority": 1
   },
   {
+    "id": "spot-wnv9wy",
+    "priority": 1
+  },
+  {
     "id": "spot-wscaid",
     "priority": 1
   },
@@ -3012,11 +3504,19 @@
     "priority": 1
   },
   {
+    "id": "spot-wue93e",
+    "priority": 1
+  },
+  {
     "id": "spot-x55mq9",
     "priority": 1
   },
   {
     "id": "spot-x870ou",
+    "priority": 1
+  },
+  {
+    "id": "spot-xfc2uu",
     "priority": 1
   },
   {
@@ -3032,7 +3532,15 @@
     "priority": 1
   },
   {
+    "id": "spot-xjkdwp",
+    "priority": 1
+  },
+  {
     "id": "spot-xp2fjn",
+    "priority": 1
+  },
+  {
+    "id": "spot-xxp4xq",
     "priority": 1
   },
   {
@@ -3068,6 +3576,10 @@
     "priority": 1
   },
   {
+    "id": "spot-ynn982",
+    "priority": 1
+  },
+  {
     "id": "spot-yt3zti",
     "priority": 1
   },
@@ -3084,11 +3596,27 @@
     "priority": 1
   },
   {
+    "id": "spot-yxmux1",
+    "priority": 1
+  },
+  {
     "id": "spot-z3r0i",
     "priority": 1
   },
   {
     "id": "spot-z3w53z",
+    "priority": 1
+  },
+  {
+    "id": "spot-z76pvx",
+    "priority": 1
+  },
+  {
+    "id": "spot-z7mgm0",
+    "priority": 1
+  },
+  {
+    "id": "spot-z8cvah",
     "priority": 1
   },
   {
@@ -3116,6 +3644,10 @@
     "priority": 1
   },
   {
+    "id": "spot-zhm2az",
+    "priority": 1
+  },
+  {
     "id": "spot-zkbowg",
     "priority": 1
   },
@@ -3134,6 +3666,10 @@
   {
     "id": "spot-zuyd7a",
     "priority": 3
+  },
+  {
+    "id": "spot-zvps8y",
+    "priority": 1
   },
   {
     "id": "spot-zy2p04",

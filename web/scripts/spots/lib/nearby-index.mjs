@@ -1,14 +1,22 @@
 import { stableSpotId } from '../../../src/spots/spotIdentity.js'
 
-const PLACE_FEATURE_TYPES = new Set(['beach', 'spot-collection'])
+const PLACE_FEATURE_TYPES = new Set(['beach', 'spot-collection', 'watersport-location'])
 const ORGANIZATION_WORDS = /\b(?:academy|camp(?:ing)?|center|centre|centrum|club|rental|rentals|school|schule|surfschule|shop|vereniging)\b/i
 const GENERIC_SPOT_NAMES = /^(?:kite(?:\s*surf(?:ing)?)?|windsurf(?:ing)?|wingfoil(?:ing)?|surf(?:ing)?|(?:kite|kitesurf|surf|windsurf|wingfoil)\s+(?:launch|spot)|foil kite\s*\/\s*wing launch)$/i
 const LAUNCH_WORD = /\blaunch\b/i
 
-export function buildNearbyIndex({ candidates, catalog, popularSpots }) {
+export function buildNearbyIndex({ candidates, catalog, popularSpots, baselineSpotIds = [] }) {
   const catalogById = new Map(catalog.map((spot) => [spot.id, spot]))
   const recommended = new Map()
   const popularIds = new Set()
+
+  for (const id of baselineSpotIds) {
+    const spot = catalogById.get(id)
+    if (!spot || !isPlaceName(spot.name)) {
+      throw new Error(`Baseline spot ${id} must be a named place in the catalog.`)
+    }
+    recommended.set(id, 1)
+  }
 
   for (const candidate of candidates) {
     if (!isSurfSpot(candidate)) continue

@@ -118,7 +118,7 @@ describe('nearby default index', () => {
     activities: ['kitesurfing'],
     featureType: 'spot-collection',
   }
-  const surfSpot = { id: 'spot-w4y4gt', name: 'Popular Beach' }
+  const surfSpot = { id: stableSpotId(surfCandidate.id), name: 'Popular Beach' }
 
   it('includes named places but excludes clubs, schools and generic activity labels', () => {
     const dolphinBeach = {
@@ -126,7 +126,7 @@ describe('nearby default index', () => {
       id: 'varun:dolphin-beach',
       name: 'Dolphin Beach',
     }
-    const dolphinBeachSpot = { id: 'spot-ljv2fx', name: 'Dolphin Beach' }
+    const dolphinBeachSpot = { id: stableSpotId(dolphinBeach.id), name: 'Dolphin Beach' }
     const excludedCandidates = [
       { ...surfCandidate, id: 'osm:club', featureType: 'club' },
       { ...surfCandidate, id: 'varun:school', name: 'Surfschule Timmendorfer Strand' },
@@ -154,7 +154,31 @@ describe('nearby default index', () => {
     })).toEqual([
       { id: dolphinBeachSpot.id, priority: 1 },
       { id: surfSpot.id, priority: 3 },
+    ].sort((left, right) => left.id.localeCompare(right.id)))
+  })
+
+  it.each(['beach', 'spot-collection', 'watersport-location'])('includes a named %s without a curated override', (featureType) => {
+    expect(buildNearbyIndex({
+      candidates: [{ ...surfCandidate, featureType }],
+      catalog: [surfSpot],
+      popularSpots: [],
+    })).toEqual([{ id: surfSpot.id, priority: 1 }])
+  })
+
+  it('includes explicitly bundled places at baseline priority', () => {
+    expect(buildNearbyIndex({
+      candidates: [], catalog: existing, popularSpots: [],
+      baselineSpotIds: ['edam', 'castricum-aan-zee'],
+    })).toEqual([
+      { id: 'castricum-aan-zee', priority: 1 },
+      { id: 'edam', priority: 1 },
     ])
+  })
+
+  it('rejects missing baseline spots', () => {
+    expect(() => buildNearbyIndex({
+      candidates: [], catalog: existing, popularSpots: [], baselineSpotIds: ['missing'],
+    })).toThrow('must be a named place in the catalog')
   })
 
   it('rejects duplicate curated entries instead of silently overriding them', () => {

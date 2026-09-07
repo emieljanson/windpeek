@@ -97,6 +97,7 @@ describe('findNearbyDefaultSpot', () => {
   it('chooses Third Avenue for San Francisco', () => {
     expect(findNearbyDefaultSpot({ latitude: 37.7749, longitude: -122.4194 })?.name)
       .toBe('Third Avenue')
+    expect(nearbyIndex.some(({ id }) => id === 'spot-2h4kyt')).toBe(false)
   })
 
   it('includes the popular Dutch surf spots but excludes the nearby sailing club', () => {
@@ -105,6 +106,9 @@ describe('findNearbyDefaultSpot', () => {
     expect(priorities.get('spot-yd8j5z')).toBe(3)
     expect(priorities.get('spot-1ljalze')).toBe(3)
     expect(priorities.has('spot-tecvwf')).toBe(false)
+    expect(priorities.get('edam')).toBe(1)
+    expect(priorities.get('castricum-aan-zee')).toBe(1)
+    expect(priorities.get('spot-xjkdwp')).toBe(1)
   })
 })
 

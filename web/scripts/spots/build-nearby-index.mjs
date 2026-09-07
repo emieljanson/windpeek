@@ -21,6 +21,7 @@ const index = buildNearbyIndex({
   candidates: candidateData.candidates ?? [],
   catalog,
   popularSpots: popularData.spots ?? [],
+  baselineSpotIds: ['edam', 'castricum-aan-zee'],
 })
 const output = `${JSON.stringify(index, null, 2)}\n`
 
