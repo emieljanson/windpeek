@@ -115,7 +115,7 @@ describe('WindScout settings panel', () => {
     expect(selectSpot).toHaveBeenCalledTimes(1)
   })
 
-  it('lets compact mode switch models from a labelled dropdown', async () => {
+  it('keeps compact mode focused on display choices without a device selector', async () => {
     const store = useConfiguratorStore()
     mountSettings({ compact: true })
 
@@ -124,22 +124,17 @@ describe('WindScout settings panel', () => {
     expect(wrapper.find('.inspector-search').exists()).toBe(false)
     expect(wrapper.find('.inspector-divider').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Wind model')
-    expect(wrapper.findAll('select.setting-select__native')).toHaveLength(1)
+    expect(wrapper.findAll('select.setting-select__native')).toHaveLength(0)
     expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(0)
-    const deviceSelect = wrapper.get('select[name="device"]')
-    expect(deviceSelect.findAll('option').map((option) => option.text())).toEqual([
-      'E1001',
-      'E1002',
-      'E1003',
-    ])
+    expect(wrapper.find('[name="device"]').exists()).toBe(false)
+    expect(wrapper.find('button[aria-label="About reTerminal devices"]').exists()).toBe(false)
     const pills = wrapper.findAll('.mobile-display-pill')
     expect(pills.map((pill) => pill.text())).toEqual(['Threshold', 'Weather', 'Temp', 'Tide'])
     expect(pills.map((pill) => pill.attributes('aria-pressed'))).toEqual(['false', 'true', 'false', 'false'])
 
-    await deviceSelect.setValue('seeedstudio_reterminal_e1003')
     await pills[0].trigger('click')
     await pills[2].trigger('click')
-    expect(store.selectedBoardId).toBe('seeedstudio_reterminal_e1003')
+    expect(store.selectedBoardId).toBe('seeedstudio_reterminal_e1002')
     expect(store.showThreshold).toBe(true)
     expect(store.temperatureChoice).toBe('celsius')
     expect(pills[0].attributes('aria-pressed')).toBe('true')
