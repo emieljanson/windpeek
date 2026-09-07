@@ -171,28 +171,6 @@ function clearPillPointerFocus(event) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
-    <SettingRow v-if="compact" class="mobile-model-row" label="reTerminal">
-      <template #label-action>
-        <button
-          class="setting-row__help"
-          type="button"
-          aria-label="About reTerminal devices"
-          aria-haspopup="dialog"
-          :aria-expanded="reTerminalHelpOpen"
-          @click="reTerminalHelpOpen = true"
-        >
-          reTerminal
-        </button>
-      </template>
-      <SettingSelect
-        :model-value="selectedBoardId"
-        :options="DEVICE_OPTIONS"
-        native
-        name="device"
-        @update:model-value="store.setSelectedBoardId"
-      />
-    </SettingRow>
-
     <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windscout">
       <button
         class="mobile-display-pill"
