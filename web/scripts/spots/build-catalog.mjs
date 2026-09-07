@@ -14,6 +14,7 @@ const existing = [
   { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
   { id: 'brouwersdam', name: 'Brouwersdam', displayName: 'BROUWERSDAM', latitude: 51.7506, longitude: 3.8577, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
   { id: 'castricum-aan-zee', name: 'Castricum aan Zee', displayName: 'CASTRICUM AAN ZEE', latitude: 52.555, longitude: 4.609, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
+  { id: 'third-avenue', name: 'Third Avenue', displayName: 'THIRD AVENUE', latitude: 37.57457, longitude: -122.283926, timezone: 'America/Los_Angeles', countryCode: 'us' },
 ]
 
 async function json(filePath, fallback) {

@@ -96,7 +96,7 @@ describe('findNearbyDefaultSpot', () => {
 
   it('chooses Third Avenue for San Francisco', () => {
     expect(findNearbyDefaultSpot({ latitude: 37.7749, longitude: -122.4194 })?.name)
-      .toBe('Kite Launch 3rd Ave Upper')
+      .toBe('Third Avenue')
   })
 
   it('includes the popular Dutch surf spots but excludes the nearby sailing club', () => {

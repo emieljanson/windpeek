@@ -4,6 +4,7 @@ import { buildRuntimeCatalog } from '../scripts/spots/lib/catalog-builder.mjs'
 import { buildNearbyIndex } from '../scripts/spots/lib/nearby-index.mjs'
 import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
+import { stableSpotId } from '../src/spots/spotIdentity'
 
 const existing = [
   { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
@@ -119,15 +120,41 @@ describe('nearby default index', () => {
   }
   const surfSpot = { id: 'spot-w4y4gt', name: 'Popular Beach' }
 
-  it('includes surf catalog records, excludes clubs and applies curated priority', () => {
+  it('includes named places but excludes clubs, schools and generic activity labels', () => {
+    const dolphinBeach = {
+      ...surfCandidate,
+      id: 'varun:dolphin-beach',
+      name: 'Dolphin Beach',
+    }
+    const dolphinBeachSpot = { id: 'spot-ljv2fx', name: 'Dolphin Beach' }
+    const excludedCandidates = [
+      { ...surfCandidate, id: 'osm:club', featureType: 'club' },
+      { ...surfCandidate, id: 'varun:school', name: 'Surfschule Timmendorfer Strand' },
+      { ...surfCandidate, id: 'varun:centre', name: 'Wind Sport Center' },
+      { ...surfCandidate, id: 'varun:camping', name: 'Surf camping Vietnam' },
+      { ...surfCandidate, id: 'varun:launch', name: 'Kitesurf launch' },
+      { ...surfCandidate, id: 'varun:generic', name: 'Kitesurf' },
+      { ...surfCandidate, id: 'varun:generic-spaced', name: 'Kite Surfing' },
+    ]
     expect(buildNearbyIndex({
       candidates: [
         surfCandidate,
-        { ...surfCandidate, id: 'osm:club', featureType: 'club' },
+        ...excludedCandidates,
+        dolphinBeach,
       ],
-      catalog: [surfSpot, { id: 'spot-club', name: 'Sailing Club' }],
+      catalog: [
+        surfSpot,
+        dolphinBeachSpot,
+        ...excludedCandidates.map((candidate) => ({
+          id: stableSpotId(candidate.id),
+          name: candidate.name,
+        })),
+      ],
       popularSpots: [{ ...surfSpot, priority: 3 }],
-    })).toEqual([{ id: surfSpot.id, priority: 3 }])
+    })).toEqual([
+      { id: dolphinBeachSpot.id, priority: 1 },
+      { id: surfSpot.id, priority: 3 },
+    ])
   })
 
   it('rejects duplicate curated entries instead of silently overriding them', () => {
