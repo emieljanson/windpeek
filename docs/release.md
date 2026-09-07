@@ -1,11 +1,11 @@
 # WindScout release checklist
 
 WindScout ships from this monorepo. The production configurator, browser
-installer, E1002 firmware and shared renderer must never be released from
+installer, reTerminal firmware and shared renderer must never be released from
 `windscout-site` or assembled by hand from separate builds.
 
-The browser installer currently supports the Seeed Studio reTerminal E1002
-with one configured spot.
+The browser installer supports the Seeed Studio reTerminal E1001, E1002 and
+E1003 with one configured spot per device.
 
 ## What the release workflow guarantees
 
@@ -13,7 +13,7 @@ with one configured spot.
 
 1. It verifies the renderer, spot catalog, web unit tests and browser tests.
 2. It runs the firmware host tests and installer-bundle tests.
-3. It builds the E1002 firmware with ESP-IDF 6.0.2.
+3. It builds the shared E1001/E1002 firmware and the E1003 firmware with ESP-IDF 6.0.2.
 4. It creates both the downloadable GitHub Release files and the nested,
    same-origin firmware bundle used by the website from that one build.
 5. It places the website bundle in `web/public/firmware`, builds the site and
@@ -148,7 +148,7 @@ checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
   file in the deployable site artifact
 - `make -C firmware test`
 - `python3 firmware/scripts/test_generate_installer_manifest.py`
-- E1002 ESP-IDF 6.0.2 release build
+- E1001/E1002 and E1003 ESP-IDF 6.0.2 release builds
 - Immutable installer bundle generated from the same build as the OTA app
 - Hash, 32 MB bound, write-range and protected-storage validation
 
@@ -160,6 +160,7 @@ for each run.
 - Clean E1002 install on current Chrome/macOS
 - Clean E1002 install on current Edge/Windows
 - Clean E1002 install on current Firefox/Linux
+- Clean E1001 and E1003 installs on a supported desktop browser
 - Configuration-only update with no firmware write
 - Preserving firmware update with Wi-Fi and configuration retained
 - Damaged application repair
@@ -167,7 +168,7 @@ for each run.
 - Wrong Wi-Fi followed by retry
 - Disconnect during configuration; previous setup still boots
 - Disconnect during flash; bootloader repair succeeds
-- Known E1001 and non-S3 device; no write occurs
+- Unsupported non-S3 device; no write occurs
 - Unverified compatible S3 with confirmation declined; no write occurs
 
 ## Privacy inspection

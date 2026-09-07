@@ -35,10 +35,10 @@ describe('Windscout landing page', () => {
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1001', 'E1002', 'E1003'])
     const specs = wrapper.findAll('.hardware-spec')
     expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Threshold line', 'Battery'])
-    expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.text())))).toEqual([
-      [['7.5″ · 4 greys', '800 × 480'], ['7.3″ · 6 colours', '800 × 480'], ['10.3″ · 16 greys', '1872 × 1404']],
-      [['Black'], ['Red'], ['Black']],
-      [['Up to 3 months'], ['Up to 3 months'], ['Up to 6 months']],
+    expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.find('.hardware-spec__copy--desktop').exists() ? line.get('.hardware-spec__copy--desktop').text() : line.text())))).toEqual([
+      [['7.5″, 4 greys', '800 × 480'], ['7.3″, 6 colours', '800 × 480'], ['10.3″, 16 greys', '1872 × 1404']],
+      [['Black threshold'], ['Red threshold'], ['Black threshold']],
+      [['3 month battery'], ['3 month battery'], ['6 month battery']],
     ])
     devices.forEach((device, index) => {
       const model = `E100${index + 1}`
@@ -67,7 +67,10 @@ describe('Windscout landing page', () => {
     expect(wrapper.get('.configure-action--mobile').text()).toBe('Configure & install on desktop')
     expect(wrapper.find('.configure-desktop-note').exists()).toBe(false)
     expect(wrapper.find('.quiet-note').exists()).toBe(false)
-    const donationLink = wrapper.get('.faq a')
+    const forecastQuestion = wrapper.findAll('.faq details').find(item => item.get('summary').text() === 'Which forecast models can I use?')
+    expect(forecastQuestion.text()).toContain('Forecasts come from Open-Meteo')
+    expect(forecastQuestion.get('a').attributes('href')).toBe('https://open-meteo.com/')
+    const donationLink = wrapper.get('.faq a[href^="https://donate.stripe.com/"]')
     expect(donationLink.attributes('href')).toBe('https://donate.stripe.com/6oU14o3Hy1Xg5C02291wY00')
     expect(donationLink.attributes('target')).toBe('_blank')
     expect(donationLink.attributes('rel')).toContain('noopener')

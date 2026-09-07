@@ -3,29 +3,32 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { publicAssetUrl } from '../assets/publicAssetUrl'
 import { createRendererInput } from '../configurator/screenTexture'
 import { landingDisplayConfiguration } from '../marketing/landingDisplay'
+import { LANDING_HERO_PRESENTATION } from '../marketing/landingHeroPresentation'
 import { RENDERER_DISPLAYS } from '../renderer/contract'
 import { loadSharedRenderer } from '../renderer/sharedRenderer'
 import { useConfiguratorStore } from '../stores/configurator'
 import { createProjectiveScreen } from '../marketing/projectiveScreen'
 
-const WIDTH = 1672
-const HEIGHT = 941
-const heroImage = publicAssetUrl('marketing/windscout-hero-yellow-v2.png')
-const heroImageWebp = publicAssetUrl('marketing/windscout-hero-yellow-v2.webp')
-const SCREEN_CORNERS = Object.freeze([
-  { x: 606, y: 285 },
-  { x: 1228, y: 282 },
-  { x: 1230, y: 654 },
-  { x: 604, y: 654 },
-])
-const SCREEN_FINISH = Object.freeze({
-  opacity: 1,
-  brightness: 0.79,
-  contrast: 1,
-  shadowSize: 0.018,
-  shadowOpacity: 0.06,
-  reflection: 0.1,
-  reflectionColor: '#ffe0c2',
+const {
+  width: WIDTH,
+  height: HEIGHT,
+  corners: SCREEN_CORNERS,
+  finish: SCREEN_FINISH,
+  framing: HERO_FRAMING,
+} = LANDING_HERO_PRESENTATION
+const heroImage = publicAssetUrl(LANDING_HERO_PRESENTATION.image)
+const heroImageWebp = publicAssetUrl(LANDING_HERO_PRESENTATION.imageWebp)
+const heroImageSrcset = [
+  ...LANDING_HERO_PRESENTATION.responsiveWebp.map(({ image, width }) => `${publicAssetUrl(image)} ${width}w`),
+  `${heroImageWebp} ${WIDTH * 2}w`,
+].join(', ')
+// Match the 642px scene / 24px viewport gutter, including the calibrated zoom.
+const zoomedSize = size => Math.round(size * HERO_FRAMING.zoom * 100) / 100
+const heroImageSizes = `(max-width: 666px) calc(${zoomedSize(100)}vw - ${zoomedSize(24)}px), ${zoomedSize(642)}px`
+const heroMediaStyle = Object.freeze({
+  '--hero-zoom': HERO_FRAMING.zoom,
+  '--hero-focus-x': `${-HERO_FRAMING.focusX}%`,
+  '--hero-focus-y': `${-HERO_FRAMING.focusY}%`,
 })
 
 const store = useConfiguratorStore()
@@ -88,9 +91,9 @@ onBeforeUnmount(() => {
   >
     <a class="hero-link" href="?configure" aria-label="Open the Windscout configurator">
       <div class="hero-scene">
-        <div class="hero-media">
+        <div class="hero-media" :style="heroMediaStyle">
           <picture>
-            <source :srcset="heroImageWebp" type="image/webp">
+            <source :srcset="heroImageSrcset" :sizes="heroImageSizes" type="image/webp">
             <img
               :src="heroImage"
               width="1672"

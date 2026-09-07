@@ -5,30 +5,33 @@ import { publicAssetUrl } from '../assets/publicAssetUrl'
 const hardwareModels = [
   {
     model: 'E1001',
-    screen: '7.5″ · 4 greys',
+    screen: '7.5″, 4 greys',
     resolution: '800 × 480',
-    threshold: 'Black',
-    battery: 'Up to 3 months',
+    threshold: 'Black threshold',
+    battery: '3 month battery',
+    batteryCompact: '3 mo battery',
     price: '~$74',
     image: publicAssetUrl('devices/previews/e1001.png'),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
   {
     model: 'E1002',
-    screen: '7.3″ · 6 colours',
+    screen: '7.3″, 6 colours',
     resolution: '800 × 480',
-    threshold: 'Red',
-    battery: 'Up to 3 months',
+    threshold: 'Red threshold',
+    battery: '3 month battery',
+    batteryCompact: '3 mo battery',
     price: '~$107',
     image: publicAssetUrl('devices/previews/e1002.png'),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
   {
     model: 'E1003',
-    screen: '10.3″ · 16 greys',
+    screen: '10.3″, 16 greys',
     resolution: '1872 × 1404',
-    threshold: 'Black',
-    battery: 'Up to 6 months',
+    threshold: 'Black threshold',
+    battery: '6 month battery',
+    batteryCompact: '6 mo battery',
     price: '~$160',
     image: publicAssetUrl('devices/previews/e1003.png'),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
@@ -87,7 +90,10 @@ const hardwareSpecs = [
                 v-for="key in spec.keys"
                 :key="key"
                 class="hardware-spec__line"
-              >{{ device[key] }}</span>
+              >
+                <span :class="{ 'hardware-spec__copy--desktop': key === 'battery' }">{{ device[key] }}</span>
+                <span v-if="key === 'battery'" class="hardware-spec__copy--mobile" aria-hidden="true">{{ device.batteryCompact }}</span>
+              </span>
             </dd>
           </div>
         </dl>
@@ -120,7 +126,7 @@ const hardwareSpecs = [
           </details>
           <details>
             <summary>Which forecast models can I use?</summary>
-            <p>ECMWF, DWD ICON and NOAA GFS work worldwide. Depending on your spot, Windscout also offers 13 high-resolution local models, including KNMI HARMONIE, DMI HARMONIE, AROME, UKV and HRRR.</p>
+            <p>Forecasts come from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Choose worldwide models ECMWF, DWD ICON and NOAA GFS, or one of 13 high-resolution local models, including KNMI HARMONIE, DMI HARMONIE, AROME, UKV and HRRR, depending on your spot.</p>
           </details>
           <details>
             <summary>What can I show on the screen?</summary>
