@@ -53,6 +53,7 @@ describe('landing hero nearby default', () => {
     )
     await vi.waitFor(() => expect(projectiveScreen.setFrame).toHaveBeenCalledWith(frame))
     const photo = wrapper.get('picture source')
+    expect(wrapper.get('picture img').attributes('src')).toContain('windscout-hero-yellow-v17-1672w.jpg')
     expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-960w.webp 960w')
     expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-1672w.webp 1672w')
     expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-2508w.webp 2508w')

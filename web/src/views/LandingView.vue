@@ -92,7 +92,7 @@ const hardwareSpecs = [
                 class="hardware-spec__line"
               >
                 <span :class="{ 'hardware-spec__copy--desktop': key === 'battery' }">{{ device[key] }}</span>
-                <span v-if="key === 'battery'" class="hardware-spec__copy--mobile" aria-hidden="true">{{ device.batteryCompact }}</span>
+                <span v-if="key === 'battery'" class="hardware-spec__copy--mobile">{{ device.batteryCompact }}</span>
               </span>
             </dd>
           </div>

@@ -35,6 +35,9 @@ describe('Windscout landing page', () => {
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1001', 'E1002', 'E1003'])
     const specs = wrapper.findAll('.hardware-spec')
     expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Threshold line', 'Battery'])
+    wrapper.findAll('.hardware-spec__copy--mobile').forEach(copy => {
+      expect(copy.attributes('aria-hidden')).toBeUndefined()
+    })
     expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.find('.hardware-spec__copy--desktop').exists() ? line.get('.hardware-spec__copy--desktop').text() : line.text())))).toEqual([
       [['7.5″, 4 greys', '800 × 480'], ['7.3″, 6 colours', '800 × 480'], ['10.3″, 16 greys', '1872 × 1404']],
       [['Black threshold'], ['Red threshold'], ['Black threshold']],

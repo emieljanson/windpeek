@@ -16,7 +16,7 @@ const {
   finish: SCREEN_FINISH,
   framing: HERO_FRAMING,
 } = LANDING_HERO_PRESENTATION
-const heroImage = publicAssetUrl(LANDING_HERO_PRESENTATION.image)
+const heroImage = publicAssetUrl(LANDING_HERO_PRESENTATION.imageFallback)
 const heroImageWebp = publicAssetUrl(LANDING_HERO_PRESENTATION.imageWebp)
 const heroImageSrcset = [
   ...LANDING_HERO_PRESENTATION.responsiveWebp.map(({ image, width }) => `${publicAssetUrl(image)} ${width}w`),

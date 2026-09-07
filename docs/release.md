@@ -199,8 +199,11 @@ failure and verify all of the following:
 Record the tested release, browser and reference in the release notes. Do not
 paste the planted password or raw diagnostic payload into those notes.
 
-The E1002 has one setup path: the website over USB. Do not publish the installer
-as generally available until the physical matrix has passed on one real E1002.
+All three supported models use the website over USB. General availability covers
+E1001, E1002 and E1003; record acceptance for the applicable rows above for each
+model, not just E1002. For the September 2026 launch, the project owner confirmed
+model support and installation-browser coverage. Automated checks do not replace
+that physical acceptance.
 
 ## Release monitoring and rollback
 
@@ -212,8 +215,9 @@ checks:
   firmware part return HTTP 200 over HTTPS.
 - A clean browser session can open the configurator and reach the USB device
   chooser without console or network errors.
-- One real E1002 completes setup and subsequently wakes, fetches a forecast,
-  renders the selected spot with the correct local time and returns to sleep.
+- Repeat the post-release setup smoke check on E1001, E1002 and E1003: each wakes,
+  fetches a forecast, renders the selected spot with the correct local time and
+  returns to sleep. Record which models were actually checked.
 
 If the website is broken, redeploy the last known-good commit before changing
 the custom domain. If a firmware release is broken, stop the public installer,
