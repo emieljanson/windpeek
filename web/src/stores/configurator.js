@@ -24,7 +24,7 @@ import {
   MIN_THRESHOLD,
 } from '../renderer/contract'
 import { DEFAULT_SPOT_ID, SPOTS } from '../spots'
-import { findNearestSpot } from '../spots/nearestSpot'
+import { findNearbyDefaultSpot } from '../spots/nearestSpot'
 import {
   createPersonalSpot,
   readPersonalSpots,
@@ -128,7 +128,7 @@ export const useConfiguratorStore = defineStore('configurator', {
         return false
       }
 
-      const spot = findNearestSpot(coordinates)
+      const spot = findNearbyDefaultSpot(coordinates)
       if (!spot) {
         this.nearbyDefaultStatus = 'ignored'
         return false

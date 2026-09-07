@@ -9,7 +9,7 @@ export function amsterdamDate(offset = 0) {
   return date.toISOString().slice(0, 10)
 }
 
-export function forecastResponseForLatitude(latitude) {
+export function forecastResponseForLatitude(latitude, timezone = 'Europe/Amsterdam') {
   const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
     .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
   const offset = latitude > 52 ? 4 : 0
@@ -38,5 +38,5 @@ export function forecastResponseForLatitude(latitude) {
     })
   })
 
-  return { timezone: 'Europe/Amsterdam', hourly_units: hourlyUnits, hourly }
+  return { timezone, hourly_units: hourlyUnits, hourly }
 }

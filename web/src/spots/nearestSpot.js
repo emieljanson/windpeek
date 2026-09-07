@@ -1,9 +1,15 @@
 import { SPOTS } from '../spots.js'
+import nearbySpots from './nearby.generated.json'
 
 const MIN_LATITUDE = -90
 const MAX_LATITUDE = 90
 const MIN_LONGITUDE = -180
 const MAX_LONGITUDE = 180
+const EARTH_RADIUS_KM = 6371
+export const NEARBY_DEFAULT_RADIUS_KM = 75
+const DEFAULT_NEARBY_PRIORITIES = new Map(
+  nearbySpots.map(({ id, priority }) => [id, priority]),
+)
 
 export function normalizeCoordinates(value) {
   if (!value || typeof value !== 'object') return null
@@ -35,6 +41,47 @@ export function findNearestSpot(coordinates, spots = SPOTS) {
   }
 
   return nearestSpot
+}
+
+export function findNearbyDefaultSpot(
+  coordinates,
+  spots = SPOTS,
+  {
+    recommendations = nearbySpots,
+    maxDistanceKm = NEARBY_DEFAULT_RADIUS_KM,
+  } = {},
+) {
+  const origin = normalizeCoordinates(coordinates)
+  if (!origin || !Array.isArray(spots) || !Array.isArray(recommendations)) return null
+
+  const priorityById = recommendations === nearbySpots
+    ? DEFAULT_NEARBY_PRIORITIES
+    : new Map(recommendations.map(({ id, priority }) => [id, priority]))
+  let bestSpot = null
+  let bestPriority = Number.NEGATIVE_INFINITY
+  let bestDistanceKm = Number.POSITIVE_INFINITY
+  let nearestSpot = null
+  let nearestDistanceKm = Number.POSITIVE_INFINITY
+
+  for (const spot of spots) {
+    const priority = priorityById.get(spot.id)
+    const candidate = normalizeCoordinates(spot)
+    if (!Number.isFinite(priority) || !candidate) continue
+
+    const distanceKm = haversineDistance(origin, candidate) * EARTH_RADIUS_KM
+    if (distanceKm < nearestDistanceKm) {
+      nearestSpot = spot
+      nearestDistanceKm = distanceKm
+    }
+    if (distanceKm > maxDistanceKm) continue
+    if (priority > bestPriority || (priority === bestPriority && distanceKm < bestDistanceKm)) {
+      bestSpot = spot
+      bestPriority = priority
+      bestDistanceKm = distanceKm
+    }
+  }
+
+  return bestSpot ?? nearestSpot
 }
 
 function haversineDistance(origin, destination) {

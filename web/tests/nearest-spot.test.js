@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { findNearestSpot, normalizeCoordinates } from '../src/spots/nearestSpot.js'
+import {
+  findNearbyDefaultSpot,
+  findNearestSpot,
+  normalizeCoordinates,
+} from '../src/spots/nearestSpot.js'
+import nearbyIndex from '../src/spots/nearby.generated.json'
 
 const spots = [
   { id: 'west', latitude: 0, longitude: 179 },
@@ -42,6 +47,64 @@ describe('findNearestSpot', () => {
       { latitude: 50, longitude: 5 },
       [{ id: 'invalid', latitude: null, longitude: 5 }, spots[2]],
     )).toBe(spots[2])
+  })
+})
+
+describe('findNearbyDefaultSpot', () => {
+  const nearbySpots = [
+    { id: 'club', latitude: 52.1, longitude: 5.1 },
+    { id: 'local-surf-spot', latitude: 52.2, longitude: 5.2 },
+    { id: 'popular-surf-spot', latitude: 52.5, longitude: 5.5 },
+    { id: 'far-away-icon', latitude: 54, longitude: 7 },
+  ]
+  const recommendations = [
+    { id: 'local-surf-spot', priority: 1 },
+    { id: 'popular-surf-spot', priority: 3 },
+    { id: 'far-away-icon', priority: 4 },
+  ]
+
+  it('prefers a more popular surf spot within the nearby region', () => {
+    expect(findNearbyDefaultSpot(
+      { latitude: 52.1, longitude: 5.1 },
+      nearbySpots,
+      { recommendations },
+    )).toBe(nearbySpots[2])
+  })
+
+  it('uses distance when surf spots have the same popularity', () => {
+    const equalRecommendations = recommendations.map((spot) => ({ ...spot, priority: 1 }))
+
+    expect(findNearbyDefaultSpot(
+      { latitude: 52.1, longitude: 5.1 },
+      nearbySpots,
+      { recommendations: equalRecommendations },
+    )).toBe(nearbySpots[1])
+  })
+
+  it('falls back to the nearest surf spot outside the nearby region', () => {
+    expect(findNearbyDefaultSpot(
+      { latitude: 0, longitude: 0 },
+      nearbySpots,
+      { recommendations },
+    )).toBe(nearbySpots[1])
+  })
+
+  it('chooses IJmuiden for a broad Utrecht-region IP location', () => {
+    expect(findNearbyDefaultSpot({ latitude: 52.09083, longitude: 5.12222 })?.name)
+      .toBe('IJmuiden')
+  })
+
+  it('chooses Third Avenue for San Francisco', () => {
+    expect(findNearbyDefaultSpot({ latitude: 37.7749, longitude: -122.4194 })?.name)
+      .toBe('Kite Launch 3rd Ave Upper')
+  })
+
+  it('includes the popular Dutch surf spots but excludes the nearby sailing club', () => {
+    const priorities = new Map(nearbyIndex.map(({ id, priority }) => [id, priority]))
+
+    expect(priorities.get('spot-yd8j5z')).toBe(3)
+    expect(priorities.get('spot-1ljalze')).toBe(3)
+    expect(priorities.has('spot-tecvwf')).toBe(false)
   })
 })
 

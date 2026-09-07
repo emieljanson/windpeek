@@ -4,6 +4,7 @@ import { forecastResponseForLatitude } from './helpers/forecast'
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
 const BROUWERSDAM = { latitude: '51.750600', longitude: '3.857700' }
 const EDAM = { latitude: 52.5126, longitude: 5.0486 }
+const WIJK_AAN_ZEE = { latitude: '52.470158', longitude: '4.566933' }
 
 async function mockWeather(page) {
   const forecastRequests = []
@@ -13,7 +14,10 @@ async function mockWeather(page) {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(forecastResponseForLatitude(Number(url.searchParams.get('latitude')))),
+      body: JSON.stringify(forecastResponseForLatitude(
+        Number(url.searchParams.get('latitude')),
+        url.searchParams.get('timezone'),
+      )),
     })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
@@ -46,7 +50,7 @@ async function locationGate(page) {
   return { requested, release: () => release?.() }
 }
 
-test('homepage shows Brouwersdam immediately, then requests the nearby forecast', async ({ page }) => {
+test('homepage shows Brouwersdam immediately, then requests a popular nearby surf spot', async ({ page }) => {
   const forecastRequests = await mockWeather(page)
   const location = await locationGate(page)
 
@@ -62,9 +66,13 @@ test('homepage shows Brouwersdam immediately, then requests the nearby forecast'
 
   location.release()
   await expect.poll(() => forecastRequests.length).toBe(2)
-  expect(forecastRequests[1].searchParams.get('latitude')).toBe(EDAM.latitude.toFixed(6))
-  expect(forecastRequests[1].searchParams.get('longitude')).toBe(EDAM.longitude.toFixed(6))
-  await expect(hero).toHaveAttribute('data-forecast-spot', 'edam')
+  expect(forecastRequests[1].searchParams.get('latitude')).toBe(WIJK_AAN_ZEE.latitude)
+  expect(forecastRequests[1].searchParams.get('longitude')).toBe(WIJK_AAN_ZEE.longitude)
+  await expect(hero).toHaveAttribute(
+    'data-forecast-spot',
+    'spot-1ljalze',
+    { timeout: CONFIGURATOR_READY_TIMEOUT_MS },
+  )
   await expect.poll(async () => {
     const currentFrame = await hero.locator('canvas').screenshot()
     return currentFrame.equals(initialFrame)
@@ -82,7 +90,7 @@ test('nearby configurator spot does not fill the search field', async ({ page })
   await page.goto('/?configure')
   await expect(page.locator('.scene-host')).toHaveAttribute(
     'data-forecast-spot',
-    'edam',
+    'spot-1ljalze',
     { timeout: CONFIGURATOR_READY_TIMEOUT_MS },
   )
   await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveValue('')

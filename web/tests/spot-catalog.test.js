@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildRuntimeCatalog } from '../scripts/spots/lib/catalog-builder.mjs'
+import { buildNearbyIndex } from '../scripts/spots/lib/nearby-index.mjs'
 import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
 
@@ -106,6 +107,38 @@ describe('catalog search', () => {
     expect(searchSpots(many, '')).toEqual([])
     expect(searchSpots(many, 's')).toEqual([])
     expect(searchSpots(many, 'spot')).toHaveLength(20)
+  })
+})
+
+describe('nearby default index', () => {
+  const surfCandidate = {
+    id: 'varun:popular',
+    name: 'Popular Beach',
+    activities: ['kitesurfing'],
+    featureType: 'spot-collection',
+  }
+  const surfSpot = { id: 'spot-w4y4gt', name: 'Popular Beach' }
+
+  it('includes surf catalog records, excludes clubs and applies curated priority', () => {
+    expect(buildNearbyIndex({
+      candidates: [
+        surfCandidate,
+        { ...surfCandidate, id: 'osm:club', featureType: 'club' },
+      ],
+      catalog: [surfSpot, { id: 'spot-club', name: 'Sailing Club' }],
+      popularSpots: [{ ...surfSpot, priority: 3 }],
+    })).toEqual([{ id: surfSpot.id, priority: 3 }])
+  })
+
+  it('rejects duplicate curated entries instead of silently overriding them', () => {
+    expect(() => buildNearbyIndex({
+      candidates: [surfCandidate],
+      catalog: [surfSpot],
+      popularSpots: [
+        { ...surfSpot, priority: 2 },
+        { ...surfSpot, priority: 3 },
+      ],
+    })).toThrow('listed more than once')
   })
 })
 
