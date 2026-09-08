@@ -118,7 +118,20 @@ function lockPlanarFrontNormals(geometry) {
   return geometry
 }
 
-function geometryFromOcct(mesh, { planarFront = false } = {}) {
+function lockPlanarRearNormals(geometry) {
+  const { position, normal } = geometry.attributes
+  const rearZ = geometry.boundingBox.min.z
+  // Keep screw-hole fillet normals from bleeding across the flat back plate.
+  // Only coplanar triangles are corrected; curved geometry keeps its smoothing.
+  for (let index = 0; index < position.count; index += 3) {
+    const vertices = [index, index + 1, index + 2]
+    if (!vertices.every((vertex) => Math.abs(position.getZ(vertex) - rearZ) <= 0.000001)) continue
+    for (const vertex of vertices) normal.setXYZ(vertex, 0, 0, -1)
+  }
+  normal.needsUpdate = true
+}
+
+function geometryFromOcct(mesh, { planarFront = false, planarRear = false } = {}) {
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.attributes.position.array.flat(), 3))
   geometry.setIndex(mesh.index.array.flat())
@@ -130,6 +143,7 @@ function geometryFromOcct(mesh, { planarFront = false } = {}) {
   treated.scale(0.001, 0.001, 0.001)
   treated.computeBoundingBox()
   if (planarFront) lockPlanarFrontNormals(treated)
+  if (planarRear) lockPlanarRearNormals(treated)
   return treated
 }
 
@@ -301,7 +315,7 @@ function buildScene(imported, e1003Imported) {
     if (!role) return
     const materialRole = materialRoleForMesh(role, index)
     const object = new THREE.Mesh(
-      geometryFromOcct(mesh, { planarFront: frontPanelMeshes.has(index) }),
+      geometryFromOcct(mesh, { planarFront: frontPanelMeshes.has(index), planarRear: index === 0 }),
       materialForMesh(role, index, materials),
     )
     object.name = `${role}_${String(index).padStart(2, '0')}`
@@ -449,7 +463,7 @@ async function main() {
         exporter: `three@${packageJson.dependencies.three}`,
         linearDeflectionMm: 0.2,
         angularDeflection: 0.25,
-        normalTreatment: '45-degree crease-aware normals with a planar front-face lock',
+        normalTreatment: '45-degree crease-aware normals with a planar front-face lock and planar rear-panel lock',
         excludedInternalMeshes: [...excludedInternalMeshes],
         excludedVariantMeshes: [...excludedVariantMeshes],
         markings: {

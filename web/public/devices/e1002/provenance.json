@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T07:38:27.006Z",
+  "generatedAt": "2026-09-08T08:29:21.620Z",
   "source": {
     "url": "https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp",
     "sha256": "d007d0db5ecd78f2109ee9115aa562b31d058fc054172b7237a4692c6e30a6b1",
@@ -15,7 +15,7 @@
     "exporter": "three@^0.185.0",
     "linearDeflectionMm": 0.2,
     "angularDeflection": 0.25,
-    "normalTreatment": "45-degree crease-aware normals with a planar front-face lock",
+    "normalTreatment": "45-degree crease-aware normals with a planar front-face lock and planar rear-panel lock",
     "excludedInternalMeshes": [
       23,
       24,
@@ -143,7 +143,7 @@
   "output": {
     "file": "e1002.glb",
     "bytes": 2570672,
-    "sha256": "4855e3318564745511ab43ef60125cdc59b4a2feebb403580fbe0cdf7b2ea39f",
+    "sha256": "db360c3b05d85749c6442b689c03b095e14cc805fdc1e2ed67967dfd22dd9e3a",
     "roles": [
       "BODY",
       "CONTROLS",
