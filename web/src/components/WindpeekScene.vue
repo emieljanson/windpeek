@@ -37,13 +37,15 @@ import { createProductStudioEnvironment } from '../configurator/studioEnvironmen
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { createSceneComposer } from '../configurator/sceneComposer'
 import { createSceneQuality, SCENE_QUALITY, scenePixelRatio } from '../configurator/sceneQuality'
-import { PRODUCT_LIGHTING } from '../configurator/productLighting'
+import { PRODUCT_LIGHTING, DARK_PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
 import { markingGroupForSourceMesh } from '../configurator/markingDebug'
 import {
   cablePoseAt,
   createUsbCable,
   createUsbCableAnimation,
+  USB_CABLE_DISTANCE_FADE_START,
+  USB_CABLE_DISTANCE_FADE_END,
 } from '../configurator/usbCable'
 
 const props = defineProps({
@@ -136,6 +138,82 @@ let keyLight
 let softbox
 let accent
 let rimLight
+let oppositePortFill
+let hemisphereLight
+let themeQuery
+let environmentPalette
+
+function applyStudioTheme() {
+  if (!scene || !renderer || !keyLight) return
+  const dark = themeQuery.matches && !props.captureMode
+  const lighting = dark ? DARK_PRODUCT_LIGHTING : PRODUCT_LIGHTING
+  renderer.toneMappingExposure = dark ? 0.7 : 1.0
+  scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
+  scene.fog = dark ? new THREE.FogExp2(lighting.background, 1.5) : null
+  if (environmentPalette !== lighting.environment) {
+    const previousEnvironment = environmentTarget
+    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
+    environmentPalette = lighting.environment
+    scene.environment = environmentTarget.texture
+    previousEnvironment?.dispose()
+  }
+  hemisphereLight.color.set(lighting.hemisphere.sky)
+  hemisphereLight.groundColor.set(lighting.hemisphere.ground)
+  hemisphereLight.intensity = lighting.hemisphere.intensity
+  if (oppositePortFill) {
+    oppositePortFill.intensity = dark ? lighting.rim.intensity : 0
+    oppositePortFill.color.set(lighting.rim.color)
+    oppositePortFill.position.set(-lighting.rim.position[0], lighting.rim.position[1], lighting.rim.position[2])
+  }
+  for (const [light, settings] of [[keyLight, lighting.key], [softbox, lighting.softbox], [accent, lighting.accent], [rimLight, lighting.rim]]) {
+    light.color.set(settings.color)
+    light.intensity = settings.intensity
+    light.position.set(...settings.position)
+    if (light.isRectAreaLight) {
+      light.width = settings.width
+      light.height = settings.height
+    }
+  }
+  softbox.lookAt(0, 0, 0)
+  accent.lookAt(0, 0, 0)
+  keyLight.angle = lighting.key.angle
+  keyLight.penumbra = lighting.key.penumbra
+  keyLight.target.position.set(...(lighting.key.target ?? [0, -0.02, 0]))
+  const floor = scene.getObjectByName('STUDIO_LIT_FLOOR')
+  if (floor) floor.visible = dark
+  usbCable?.setDistanceFade(
+    dark ? 0.055 : USB_CABLE_DISTANCE_FADE_START,
+    dark ? 0.22 : USB_CABLE_DISTANCE_FADE_END,
+  )
+  const shadow = scene.getObjectByName('PHYSICAL_SHADOW_LAYER')
+  if (shadow) shadow.visible = !dark // The dark floor already receives real shadows.
+  const contact = scene.getObjectByName('CONTACT_OCCLUSION')
+  if (contact) contact.material.uniforms.contactColor.value.setRGB(...(dark ? [0, 0, 0] : [0.075, 0.082, 0.078]))
+  const grid = scene.getObjectByName('SURFACE_GRID')
+  if (grid) {
+    grid.visible = true
+    grid.material.uniforms.lineColor.value.set(dark ? 0x7f7f81 : 0x6f7784)
+    grid.material.uniforms.veilOpacity.value = dark ? 0 : 0.032
+    grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 0.7 : 0.24
+    grid.material.uniforms.stageFadeStart.value = dark ? 0.055 : 0.28
+    grid.material.uniforms.stageFadeEnd.value = dark ? 0.22 : 0.82
+  }
+  // These artistic reflection overlays describe the light studio's softboxes.
+  // The dark studio uses the physical material and its own reflected lights.
+  model?.traverse((child) => {
+    // Camera distance must not darken the product. Atmospheric fading belongs
+    // to the stage, while the device stays under the same studio lights.
+    const materials = Array.isArray(child.material) ? child.material : [child.material]
+    for (const material of materials) {
+      if (!material?.fog) continue
+      material.fog = false
+      material.needsUpdate = true
+    }
+    if (child.name === 'FRONT_PANEL_REFLECTION' || child.name === 'SCREEN_FINISH') child.visible = !dark
+  })
+  if (cableLabEnabled) applyCableLabSettings()
+  requestRender()
+}
 let usbCable
 let usbCableAnimation
 let heroEntranceAnimation
@@ -416,6 +494,8 @@ function createPerspectiveSurface(stage) {
       horizonFadeEnd: { value: 1.35 },
       horizonFadeStart: { value: 0.58 },
       lineColor: { value: new THREE.Color(0x6f7784) },
+      veilOpacity: { value: 0.032 },
+      lineOpacity: { value: 0.24 },
       spacing: { value: 0.032 },
       stageFadeEnd: { value: 0.82 },
       stageFadeStart: { value: 0.28 },
@@ -431,6 +511,8 @@ function createPerspectiveSurface(stage) {
     `,
     fragmentShader: `
       uniform vec3 lineColor;
+      uniform float veilOpacity;
+      uniform float lineOpacity;
       uniform float spacing;
       uniform float horizonFadeStart;
       uniform float horizonFadeEnd;
@@ -449,8 +531,8 @@ function createPerspectiveSurface(stage) {
         float horizonFade = 1.0 - smoothstep(horizonFadeStart, horizonFadeEnd, cameraDistance);
         float stageFade = 1.0 - smoothstep(stageFadeStart, stageFadeEnd, length(vWorldPosition.xz));
 
-        float surfaceVeil = horizonFade * stageFade * 0.032;
-        float gridAlpha = line * densityFade * horizonFade * stageFade * stageFade * 0.24;
+        float surfaceVeil = horizonFade * stageFade * veilOpacity;
+        float gridAlpha = line * densityFade * horizonFade * stageFade * stageFade * lineOpacity;
         gl_FragColor = vec4(lineColor, surfaceVeil + gridAlpha);
       }
     `,
@@ -489,6 +571,7 @@ function createContactOcclusion(stage, opacityScale = 1) {
     uniforms: {
       contactOpacity: { value: stage.contactOpacity * opacityScale },
       contactPower: { value: stage.contactPower },
+      contactColor: { value: new THREE.Color().setRGB(0.075, 0.082, 0.078) },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -501,13 +584,14 @@ function createContactOcclusion(stage, opacityScale = 1) {
       varying vec2 vUv;
       uniform float contactOpacity;
       uniform float contactPower;
+      uniform vec3 contactColor;
       void main() {
         float ends = 1.0 - smoothstep(0.462, 0.5, abs(vUv.x - 0.5));
         float frontTail = smoothstep(0.0, 0.5, vUv.y);
         float backTail = 1.0 - smoothstep(0.5, 1.0, vUv.y);
         float contact = vUv.y < 0.5 ? frontTail : backTail;
         contact = pow(max(contact, 0.0), contactPower);
-        gl_FragColor = vec4(vec3(0.075, 0.082, 0.078), ends * contact * contactOpacity);
+        gl_FragColor = vec4(contactColor, ends * contact * contactOpacity);
       }
     `,
   })
@@ -591,14 +675,12 @@ async function initialize() {
     })
     updateSceneFocus()
 
-    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
-    scene.environment = environmentTarget.texture
-
-    scene.add(new THREE.HemisphereLight(
+    hemisphereLight = new THREE.HemisphereLight(
       lighting.hemisphere.sky,
       lighting.hemisphere.ground,
       lighting.hemisphere.intensity,
-    ))
+    )
+    scene.add(hemisphereLight)
     keyLight = new THREE.SpotLight(lighting.key.color, lighting.key.intensity)
     keyLight.position.set(...lighting.key.position)
     keyLight.angle = lighting.key.angle
@@ -637,8 +719,32 @@ async function initialize() {
     rimLight = new THREE.DirectionalLight(lighting.rim.color, lighting.rim.intensity)
     rimLight.position.set(...lighting.rim.position)
     scene.add(rimLight)
+    oppositePortFill = new THREE.DirectionalLight(lighting.rim.color, 0)
+    scene.add(oppositePortFill)
     const deviceStage = deviceStageForBoard(props.boardId)
     if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
+    if (!props.captureMode) {
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x303032, roughness: 0.92, metalness: 0, envMapIntensity: 0.12, transparent: true, depthWrite: false })
+      // Fade the lit floor into the studio background, leaving a soft pool
+      // around the product. Local XY is the floor's horizontal plane.
+      floorMaterial.onBeforeCompile = (shader) => {
+        shader.vertexShader = shader.vertexShader
+          .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
+          .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFloorPosition = position.xy;')
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
+          .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= 1.0 - smoothstep(0.055, 0.22, length(vFloorPosition));')
+          .replace('#include <opaque_fragment>', 'outgoingLight *= 0.5;\n#include <opaque_fragment>')
+      }
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMaterial)
+      floor.name = 'STUDIO_LIT_FLOOR'
+      floor.renderOrder = -2
+      floor.rotation.x = -Math.PI / 2
+      floor.position.y = deviceStage.surfaceY - 0.0001
+      floor.receiveShadow = true
+      scene.add(floor)
+    }
+    applyStudioTheme()
 
     const loadedModel = await loadDeviceModel(props.boardId)
     if (!lifetime.adopt(loadedModel, disposeObject)) return
@@ -706,6 +812,7 @@ async function initialize() {
       model,
       usbCable.object,
     )
+    applyStudioTheme()
     updateUsbCableVisibility(props.showUsbCable)
     requestRender()
 
@@ -770,12 +877,15 @@ watch(cableLab, applyCableLabSettings)
 watch(markingOffsets, applyMarkingOffsets, { deep: true })
 
 onMounted(() => {
+  themeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  themeQuery.addEventListener('change', applyStudioTheme)
   reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
   document.addEventListener('visibilitychange', handleSceneVisibility)
   initialize()
 })
 onBeforeUnmount(() => {
+  themeQuery?.removeEventListener('change', applyStudioTheme)
   lifetime.cancel()
   stopLoadingStatus()
   if (animationFrame !== undefined) cancelAnimationFrame(animationFrame)
@@ -798,6 +908,7 @@ onBeforeUnmount(() => {
   composer?.dispose()
   disposeObject(model)
   disposeObject(scene?.getObjectByName('SURFACE_GRID'))
+  disposeObject(scene?.getObjectByName('STUDIO_LIT_FLOOR'))
   disposeObject(scene?.getObjectByName('PHYSICAL_SHADOW_LAYER'))
   disposeObject(scene?.getObjectByName('CONTACT_OCCLUSION'))
   usbCable?.dispose()

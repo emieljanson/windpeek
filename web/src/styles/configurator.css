@@ -19,6 +19,13 @@
   min-height: 100dvh;
 }
 
+@media (prefers-color-scheme: dark) {
+  .configurator-page {
+    --studio-background-rgb: 16 16 18;
+    --studio-status: #aaaaac;
+  }
+}
+
 .product-stage {
   position: relative;
   min-height: 100dvh;
@@ -328,9 +335,9 @@
 
 @media (prefers-color-scheme: dark) {
   .configurator-page {
-    --config-copy: #c1c8c2;
+    --config-copy: #c5c5c7;
     --config-status-surface: rgba(255, 255, 255, 0.06);
-    --config-status-label: #4b534d;
+    --config-status-label: #505052;
     --config-warning-ink: #edc896;
     --config-warning-surface: rgba(128, 85, 36, 0.22);
     --config-warning-label: #80613f;

@@ -249,17 +249,17 @@
 
 @media (prefers-color-scheme: dark) {
   .landing-page {
-    --landing-text: #f2f3ef;
-    --landing-copy: #c7ccc7;
-    --landing-muted: #969d98;
-    --landing-line: rgba(242, 243, 239, 0.18);
-    --landing-button-background: #f2f3ef;
-    --landing-button-text: #151815;
-    --landing-button-hover: #d9ddd8;
-    --landing-secondary-hover: #242824;
-    --landing-bullet: #727a74;
-    --landing-disabled-background: #292d29;
-    --landing-disabled-text: #9da39e;
+    --landing-text: #f2f2f4;
+    --landing-copy: #c9c9cb;
+    --landing-muted: #99999b;
+    --landing-line: rgba(242, 242, 244, 0.18);
+    --landing-button-background: #f2f2f4;
+    --landing-button-text: #171719;
+    --landing-button-hover: #dbdbdd;
+    --landing-secondary-hover: #262628;
+    --landing-bullet: #777779;
+    --landing-disabled-background: #2b2b2d;
+    --landing-disabled-text: #a1a1a3;
   }
 }
 

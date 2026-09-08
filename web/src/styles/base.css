@@ -102,35 +102,35 @@ html.configurator-is-compact [data-sonner-toaster][data-y-position='top'] {
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    color: #f1f3ef;
-    background: var(--page-background, #101210);
-    --ink: #f1f3ef;
-    --muted: #a6ada8;
-    --mist: #202320;
+    color: #f1f1f3;
+    background: var(--page-background, #111113);
+    --ink: #f1f1f3;
+    --muted: #aaaaac;
+    --mist: #222224;
     --signal: #f2765d;
-    --line: rgba(241, 243, 239, 0.16);
+    --line: rgba(241, 241, 243, 0.16);
     --focus: #ffffff;
-    --panel-background: #242725;
-    --panel-raised: #2e322f;
-    --panel-hover: #383d39;
-    --panel-border: rgba(241, 243, 239, 0.13);
-    --panel-glass: rgba(36, 39, 37, 0.72);
+    --panel-background: #262628;
+    --panel-raised: #303032;
+    --panel-hover: #3a3a3c;
+    --panel-border: rgba(241, 241, 243, 0.13);
+    --panel-glass: rgba(38, 38, 40, 0.72);
     --panel-glass-border: rgba(255, 255, 255, 0.1);
-    --panel-primary-background: #f1f3ef;
-    --panel-primary-hover: #d8ddd8;
-    --panel-primary-ink: #171a18;
+    --panel-primary-background: #f1f1f3;
+    --panel-primary-hover: #dadadc;
+    --panel-primary-ink: #18181a;
   }
 
   [data-sonner-toast] {
-    color: #f1f3ef !important;
-    background: #292d2a !important;
+    color: #f1f1f3 !important;
+    background: #2b2b2d !important;
     box-shadow:
       0 1px 2px rgb(0 0 0 / 24%),
       0 12px 36px rgb(0 0 0 / 42%) !important;
   }
 
-  [data-sonner-toast] [data-icon] { color: #f1f3ef !important; }
-  [data-sonner-toast] [data-description] { color: #a6ada8 !important; }
+  [data-sonner-toast] [data-icon] { color: #f1f1f3 !important; }
+  [data-sonner-toast] [data-description] { color: #aaaaac !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

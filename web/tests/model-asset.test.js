@@ -12,6 +12,31 @@ async function loadGeneratedModel() {
 }
 
 describe('E1002 model contract', () => {
+  it('keeps rear-panel normals planar around the screw holes without flattening the fillets', async () => {
+    const { scene } = await loadGeneratedModel()
+    const { geometry } = scene.getObjectByName('BODY_00')
+    geometry.computeBoundingBox()
+    const { position, normal } = geometry.attributes
+    const rearZ = geometry.boundingBox.min.z
+    let planarTriangles = 0
+    let curvedVertices = 0
+    for (let index = 0; index < position.count; index += 3) {
+      const vertices = [index, index + 1, index + 2]
+      if (vertices.every((vertex) => Math.abs(position.getZ(vertex) - rearZ) < 1e-6)) {
+        planarTriangles += 1
+        for (const vertex of vertices) {
+          expect(normal.getX(vertex)).toBeCloseTo(0, 6)
+          expect(normal.getY(vertex)).toBeCloseTo(0, 6)
+          expect(normal.getZ(vertex)).toBeCloseTo(-1, 6)
+        }
+      } else {
+        curvedVertices += vertices.filter((vertex) => Math.abs(position.getZ(vertex) - rearZ) < 0.002 && Math.abs(normal.getZ(vertex)) > 0.1 && Math.abs(normal.getZ(vertex)) < 0.9).length
+      }
+    }
+    expect(planarTriangles).toBeGreaterThan(100)
+    expect(curvedVertices).toBeGreaterThan(100)
+  })
+
   it('records the documented enclosure and native screen proportions', () => {
     expect(E1002_MODEL.enclosureMm).toEqual({ width: 176, height: 120, depth: 17, standDepth: 53 })
     expect(E1002_MODEL.screenAspect).toBeCloseTo(1.6667, 3)
