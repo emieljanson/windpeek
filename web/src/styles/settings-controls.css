@@ -7,6 +7,16 @@
   --settings-control-muted: #949496;
   --settings-control-danger: #a93624;
   --settings-focus: #000;
+  --settings-popup-surface: #fff;
+  --settings-divider: #ededed;
+  --settings-strong-surface: #fff;
+  --settings-pill-ink: rgba(21, 24, 23, 0.54);
+  --settings-pill-surface: rgba(21, 24, 23, 0.07);
+  --settings-pill-hover: rgba(21, 24, 23, 0.12);
+  --settings-pill-active-ink: #fff;
+  --settings-pill-active: rgba(0, 0, 0, 0.88);
+  --settings-pill-disabled-ink: rgba(21, 24, 23, 0.32);
+  --settings-pill-disabled: rgba(21, 24, 23, 0.05);
   --settings-label-size: 0.8125rem;
 }
 
@@ -150,7 +160,8 @@
   z-index: 2200;
   overflow: hidden;
   max-block-size: min(18rem, var(--reka-select-content-available-height, var(--reka-combobox-content-available-height, 18rem)));
-  background: #fff;
+  color: var(--settings-control-ink);
+  background: var(--settings-popup-surface);
   border: 0;
   border-radius: 0.75rem;
   box-shadow:
@@ -309,8 +320,8 @@
   padding-inline: 0.75rem;
   border: 0;
   border-radius: 1.125rem;
-  color: rgba(21, 24, 23, 0.54);
-  background: rgba(21, 24, 23, 0.07);
+  color: var(--settings-pill-ink);
+  background: var(--settings-pill-surface);
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
@@ -328,18 +339,18 @@
 @media (hover: hover) and (pointer: fine) {
   .mobile-display-pill:hover:not(:disabled):not([aria-pressed='true']) {
     color: var(--settings-control-ink);
-    background: rgba(21, 24, 23, 0.12);
+    background: var(--settings-pill-hover);
   }
 }
 
 .mobile-display-pill[aria-pressed='true'] {
-  color: #fff;
-  background: rgba(0, 0, 0, 0.88);
+  color: var(--settings-pill-active-ink);
+  background: var(--settings-pill-active);
 }
 
 .mobile-display-pill:disabled {
-  color: rgba(21, 24, 23, 0.32);
-  background: rgba(21, 24, 23, 0.05);
+  color: var(--settings-pill-disabled-ink);
+  background: var(--settings-pill-disabled);
   cursor: not-allowed;
 }
 .mobile-display-pill:focus-visible {
@@ -349,8 +360,8 @@
 .mobile-display-pill.is-pointer-focus:focus-visible { outline: none; }
 
 @media (prefers-reduced-transparency: reduce) {
-  .mobile-display-pill { background: #f2f2f2; }
-  .mobile-display-pill[aria-pressed='true'] { background: #000; }
+  .mobile-display-pill { background: var(--settings-control-surface); }
+  .mobile-display-pill[aria-pressed='true'] { background: var(--settings-pill-active); }
 }
 .setting-popup__viewport {
   overflow-y: auto;
@@ -363,7 +374,7 @@
   block-size: 1px;
   margin-block: 0.25rem;
   margin-inline: -0.25rem;
-  background: #ededed;
+  background: var(--settings-divider);
 }
 
 .setting-option {
@@ -467,7 +478,7 @@
   inline-size: calc(100% + 1.5rem);
   margin-inline: -0.75rem;
   block-size: 1px;
-  background: #f6f6f6;
+  background: var(--settings-divider);
 }
 .inspector-rows { display: grid; gap: 0.5rem; padding-block-end: 0.4375rem; }
 .inspector-rows > .setting-row { block-size: var(--settings-control-height); }
@@ -521,9 +532,9 @@
 .setting-switch__segment--on { inset-inline-start: 0.125rem; }
 .setting-switch__segment--off { inset-inline-end: 0.125rem; }
 
-.setting-switch:not([data-state='checked']) .setting-switch__segment--off { color: #000; }
-.setting-switch[data-state='checked'] .setting-switch__segment--on { color: #000; }
-.setting-switch:not(:disabled):not([aria-disabled='true']) .setting-switch__segment:hover { color: #000; }
+.setting-switch:not([data-state='checked']) .setting-switch__segment--off { color: var(--settings-control-ink); }
+.setting-switch[data-state='checked'] .setting-switch__segment--on { color: var(--settings-control-ink); }
+.setting-switch:not(:disabled):not([aria-disabled='true']) .setting-switch__segment:hover { color: var(--settings-control-ink); }
 
 .setting-switch:disabled,
 .setting-switch[aria-disabled='true'] {
@@ -538,7 +549,7 @@
   inline-size: calc((100% - 0.4375rem) / 2);
   block-size: calc(100% - 0.25rem);
   border-radius: 0.5rem;
-  background: #ffffff;
+  background: var(--settings-strong-surface);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 0 0 0.5px rgba(0, 0, 0, 0.04),
@@ -547,6 +558,27 @@
   transition-property: transform, box-shadow;
   transition-duration: 120ms;
   transition-timing-function: ease-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --settings-control-surface: #303431;
+    --settings-control-surface-hover: #393e3a;
+    --settings-control-ink: #f2f4f0;
+    --settings-control-muted: #a2aaa4;
+    --settings-control-danger: #ff8a73;
+    --settings-focus: #ffffff;
+    --settings-popup-surface: #292d2a;
+    --settings-divider: rgba(242, 244, 240, 0.1);
+    --settings-strong-surface: #454b46;
+    --settings-pill-ink: rgba(242, 244, 240, 0.66);
+    --settings-pill-surface: rgba(242, 244, 240, 0.09);
+    --settings-pill-hover: rgba(242, 244, 240, 0.15);
+    --settings-pill-active-ink: #171a18;
+    --settings-pill-active: #f1f3ef;
+    --settings-pill-disabled-ink: rgba(242, 244, 240, 0.34);
+    --settings-pill-disabled: rgba(242, 244, 240, 0.05);
+  }
 }
 
 .setting-switch[data-state='checked'] .setting-switch__thumb {

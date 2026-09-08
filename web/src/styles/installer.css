@@ -8,7 +8,8 @@
   overflow: hidden;
   padding: 0.75rem;
   border-radius: 1rem;
-  background: #fff;
+  color: var(--settings-control-ink);
+  background: var(--panel-background);
   overscroll-behavior: contain;
 }
 
@@ -31,11 +32,11 @@
 .installer-state-icon__cell {
   block-size: 0.25rem;
   inline-size: 0.25rem;
-  background: #e8e8e5;
+  background: var(--settings-control-surface);
 }
 
-.installer-state-icon__cell.is-active { background: #171717; }
-.installer-state-icon[data-phase='error'] .installer-state-icon__cell.is-active { background: #a93624; }
+.installer-state-icon__cell.is-active { background: var(--settings-control-ink); }
+.installer-state-icon[data-phase='error'] .installer-state-icon__cell.is-active { background: var(--settings-control-danger); }
 
 .installer-back {
   position: absolute;
@@ -49,15 +50,15 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  color: #858589;
-  background: #f7f7f7;
+  color: var(--settings-control-muted);
+  background: var(--settings-control-surface);
   cursor: pointer;
 }
 
-.installer-back:hover { color: #000; background: #efefef; }
+.installer-back:hover { color: var(--settings-control-ink); background: var(--settings-control-surface-hover); }
 .installer-back:disabled {
-  color: #b5b5b7;
-  background: #fafafa;
+  color: var(--settings-control-muted);
+  background: var(--panel-raised);
   cursor: default;
 }
 .installer-back svg {
@@ -105,7 +106,7 @@
 
 .installer-step__copy h2 {
   margin: 0;
-  color: #151515;
+  color: var(--settings-control-ink);
   font: 500 0.875rem/1.25 'Inter Variable', Inter, sans-serif;
   letter-spacing: -0.015em;
   text-wrap: balance;
@@ -113,7 +114,7 @@
 
 .installer-step__copy p {
   margin: 0;
-  color: #9a9a9e;
+  color: var(--settings-control-muted);
   font: 400 var(--settings-label-size)/1.45 'Inter Variable', Inter, sans-serif;
   text-wrap: pretty;
 }
@@ -139,11 +140,11 @@
   touch-action: manipulation;
 }
 
-.installer-primary { color: #fff; background: #000; }
-.installer-primary:hover:not(:disabled) { background: #272b29; }
-.installer-primary:disabled { color: #8d8d90; background: #f1f1f1; cursor: default; }
-.installer-secondary { color: #222; background: #f5f5f5; text-decoration: none; }
-.installer-secondary:hover:not(:disabled) { color: #000; background: #ededed; }
+.installer-primary { color: var(--config-primary-ink, #fff); background: var(--config-primary, #000); }
+.installer-primary:hover:not(:disabled) { background: var(--config-primary-hover, #272b29); }
+.installer-primary:disabled { color: var(--settings-control-muted); background: var(--settings-control-surface); cursor: default; }
+.installer-secondary { color: var(--settings-control-ink); background: var(--settings-control-surface); text-decoration: none; }
+.installer-secondary:hover:not(:disabled) { color: var(--settings-control-ink); background: var(--settings-control-surface-hover); }
 
 .installer-primary:focus-visible,
 .installer-secondary:focus-visible,
@@ -158,26 +159,26 @@
 .installer-message,
 .installer-connection-state {
   margin: 0;
-  color: #96969a;
+  color: var(--settings-control-muted);
   font: 400 0.6875rem/1.35 'Inter Variable', Inter, sans-serif;
   text-align: center;
 }
 
-.installer-message.is-error { color: #a93624; text-align: center; }
+.installer-message.is-error { color: var(--settings-control-danger); text-align: center; }
 .installer-diagnostic-status {
   margin: 0;
-  color: #67625c;
+  color: var(--settings-control-muted);
   font: 400 0.6875rem/1.35 'Inter Variable', Inter, sans-serif;
   text-align: center;
 }
 .installer-diagnostic-status code {
-  color: #313131;
+  color: var(--settings-control-ink);
   font: inherit;
   font-variant-numeric: tabular-nums;
   user-select: text;
 }
 .installer-connection-state { padding: 0.5rem; }
-.installer-connection-state.is-unsafe { color: #67625c; }
+.installer-connection-state.is-unsafe { color: var(--settings-control-muted); }
 
 .installer-step--error .installer-diagnostic-status,
 .installer-step--error .installer-connection-state {
@@ -201,7 +202,7 @@
   margin-inline: auto;
   overflow: hidden;
   border-radius: 999px;
-  background: #f0f0f0;
+  background: var(--settings-control-surface);
 }
 
 .installer-progress span {
@@ -210,7 +211,7 @@
   inline-size: 100%;
   transform-origin: left center;
   border-radius: inherit;
-  background: #000;
+  background: var(--settings-control-ink);
 }
 
 .installer-wifi { justify-content: stretch; }
@@ -243,7 +244,7 @@
   grid-template-columns: minmax(0, 5.25rem) minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
-  color: #9a9a9e;
+  color: var(--settings-control-muted);
   font: 400 var(--settings-label-size)/1.2 'Inter Variable', Inter, sans-serif;
 }
 

@@ -142,6 +142,7 @@ let heroEntranceAnimation
 let heroEntranceActive = false
 let usbCameraAnimation
 let reduceMotionQuery
+let colorSchemeQuery
 const sceneQuality = createSceneQuality()
 const qualityLevel = ref(sceneQuality.level)
 
@@ -262,6 +263,15 @@ function renderFrame(timestamp) {
 function requestRender() {
   if (!lifetime.active || document.hidden || animationFrame !== undefined) return
   animationFrame = requestAnimationFrame(renderFrame)
+}
+
+function syncSceneAppearance() {
+  if (!scene || props.captureMode) return
+  const background = getComputedStyle(document.documentElement)
+    .getPropertyValue('--studio-background')
+    .trim()
+  scene.background.set(background || PRODUCT_LIGHTING.background)
+  requestRender()
 }
 
 function handleSceneVisibility() {
@@ -538,7 +548,12 @@ async function initialize() {
     const lighting = PRODUCT_LIGHTING
     RectAreaLightUniformsLib.init()
     scene = new THREE.Scene()
-    scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
+    const studioBackground = getComputedStyle(document.documentElement)
+      .getPropertyValue('--studio-background')
+      .trim()
+    scene.background = props.captureMode
+      ? null
+      : new THREE.Color(studioBackground || lighting.background)
     camera = new THREE.PerspectiveCamera(29, 1, 0.01, 10)
     renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -766,7 +781,9 @@ watch(markingOffsets, applyMarkingOffsets, { deep: true })
 
 onMounted(() => {
   reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)')
   reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
+  colorSchemeQuery.addEventListener('change', syncSceneAppearance)
   document.addEventListener('visibilitychange', handleSceneVisibility)
   initialize()
 })
@@ -779,6 +796,7 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('resize', scheduleViewportResize)
   window.visualViewport?.removeEventListener('scroll', scheduleViewportResize)
   reduceMotionQuery?.removeEventListener('change', handleReducedMotionChange)
+  colorSchemeQuery?.removeEventListener('change', syncSceneAppearance)
   document.removeEventListener('visibilitychange', handleSceneVisibility)
   orbitRendering?.dispose()
   controls?.dispose()

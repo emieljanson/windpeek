@@ -1,14 +1,23 @@
 .landing-page {
   min-height: 100vh;
-  color: #151512;
-  background: #fff;
+  color: var(--landing-text);
+  background: var(--landing-background);
   font-family: 'Inter Variable', Inter, sans-serif;
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   --landing-text: #151512;
+  --landing-background: #ffffff;
+  --landing-copy: #353531;
   --landing-muted: #696963;
   --landing-line: #d5d5ce;
+  --landing-button-background: #151512;
+  --landing-button-text: #ffffff;
+  --landing-button-hover: #2a302d;
+  --landing-secondary-hover: #e9e9e4;
+  --landing-bullet: #b9b9b3;
+  --landing-disabled-background: #deded8;
+  --landing-disabled-text: #686862;
   --landing-rule-width: 1px;
 }
 
@@ -44,7 +53,7 @@
 .landing-page .intro {
   max-width: 600px;
   margin-top: 28px;
-  color: #353531;
+  color: var(--landing-copy);
   font-size: 15px;
 }
 
@@ -56,18 +65,18 @@
   padding: 0 12px;
   border: 0;
   border-radius: 10px;
-  background: var(--landing-text);
-  color: white;
+  background: var(--landing-button-background);
+  color: var(--landing-button-text);
   font: 500 14px/1 'Inter Variable', Inter, sans-serif;
   text-decoration: none;
   transition: background-color 120ms ease-out, scale 120ms ease-out;
 }
 
-.landing-page .button:hover { background: #2a302d; }
+.landing-page .button:hover { background: var(--landing-button-hover); }
 .landing-page .button:active { scale: 0.96; }
 .landing-page .button:focus-visible {
   outline: 0;
-  box-shadow: inset 0 0 0 1px var(--landing-text), 0 0 0 2px #fff, 0 0 0 4px var(--landing-text);
+  box-shadow: inset 0 0 0 1px var(--landing-text), 0 0 0 2px var(--landing-background), 0 0 0 4px var(--landing-text);
 }
 .landing-page .button:disabled { cursor: wait; opacity: 0.72; }
 .landing-page button.button { cursor: pointer; }
@@ -76,7 +85,7 @@
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--landing-line);
 }
-.landing-page .button-secondary:hover { background: #e9e9e4; }
+.landing-page .button-secondary:hover { background: var(--landing-secondary-hover); }
 
 .landing-page figure {
   width: min(calc(100vw - 24px), 642px);
@@ -127,7 +136,7 @@
 .landing-page .story p,
 .landing-page .landing-section > p {
   margin-top: 10px;
-  color: #353531;
+  color: var(--landing-copy);
 }
 
 .landing-page .landing-section {
@@ -160,7 +169,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #b9b9b3;
+  background: var(--landing-bullet);
 }
 
 .landing-page .hardware-models {
@@ -274,7 +283,7 @@
 
 .landing-page .configure-step > p {
   margin-top: 10px;
-  color: #353531;
+  color: var(--landing-copy);
 }
 
 .landing-page .configure-step > .button {
@@ -322,7 +331,7 @@
 
 .landing-page .faq details p {
   padding: 0 28px 15px 0;
-  color: #353531;
+  color: var(--landing-copy);
 }
 
 .landing-page .faq details p a {
@@ -356,8 +365,8 @@
   .landing-page .configure-action--mobile:disabled {
     display: flex;
     width: 100%;
-    color: #686862;
-    background: #deded8;
+    color: var(--landing-disabled-text);
+    background: var(--landing-disabled-background);
     cursor: not-allowed;
     opacity: 1;
   }
@@ -382,6 +391,23 @@
   .landing-page .hardware-spec dd { font-size: 13px; }
   .landing-page .hardware-spec__copy--desktop { display: none; }
   .landing-page .hardware-spec__copy--mobile { display: inline; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-page {
+    --landing-background: #101210;
+    --landing-text: #f2f3ef;
+    --landing-copy: #c7ccc7;
+    --landing-muted: #969d98;
+    --landing-line: rgba(242, 243, 239, 0.18);
+    --landing-button-background: #f2f3ef;
+    --landing-button-text: #151815;
+    --landing-button-hover: #d9ddd8;
+    --landing-secondary-hover: #242824;
+    --landing-bullet: #727a74;
+    --landing-disabled-background: #292d29;
+    --landing-disabled-text: #9da39e;
+  }
 }
 
 @media (min-resolution: 2dppx) {

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { isConfiguratorLocation } from '../src/routes'
 
 describe('landing share metadata', () => {
@@ -21,19 +21,27 @@ describe('landing share metadata', () => {
     const html = readFileSync('index.html', 'utf8')
     const head = new DOMParser().parseFromString(html, 'text/html').head
     const script = head.querySelector('script[data-page-surface]')?.textContent
-    const applySurface = (search) => {
+    const currentSurface = () => ({
+      page: document.documentElement.style.getPropertyValue('--page-background'),
+      studio: document.documentElement.style.getPropertyValue('--studio-background'),
+      theme: document.querySelector('meta[name="theme-color"]').content,
+    })
+    const applySurface = (search, dark = false, captureChangeListener) => {
       document.head.innerHTML = '<meta name="theme-color" content="#ffffff">'
       document.documentElement.style.cssText = ''
-      new Function('document', 'location', 'URLSearchParams', script)(
+      const matchMedia = () => ({
+        matches: dark,
+        addEventListener: vi.fn((event, listener) => {
+          if (event === 'change') captureChangeListener?.(listener)
+        }),
+      })
+      new Function('document', 'location', 'URLSearchParams', 'matchMedia', script)(
         document,
         { search },
         URLSearchParams,
+        matchMedia,
       )
-      return {
-        page: document.documentElement.style.getPropertyValue('--page-background'),
-        studio: document.documentElement.style.getPropertyValue('--studio-background'),
-        theme: document.querySelector('meta[name="theme-color"]').content,
-      }
+      return currentSurface()
     }
 
     expect(script).toBeTruthy()
@@ -62,6 +70,29 @@ describe('landing share metadata', () => {
       page: '#f3f5f7',
       studio: '#f3f5f7',
       theme: '#f3f5f7',
+    })
+    expect(applySurface('', true)).toEqual({
+      page: '#101210',
+      studio: '#181b19',
+      theme: '#101210',
+    })
+    expect(applySurface('?configure', true)).toEqual({
+      page: '#181b19',
+      studio: '#181b19',
+      theme: '#181b19',
+    })
+
+    let applySchemeChange
+    expect(applySurface('', false, (listener) => { applySchemeChange = listener })).toEqual({
+      page: '#ffffff',
+      studio: '#f3f5f7',
+      theme: '#ffffff',
+    })
+    applySchemeChange({ matches: true })
+    expect(currentSurface()).toEqual({
+      page: '#101210',
+      studio: '#181b19',
+      theme: '#101210',
     })
   })
 })

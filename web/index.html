@@ -6,14 +6,21 @@
     <meta name="theme-color" content="#ffffff" />
     <script data-page-surface>
       const routeParams = new URLSearchParams(location.search)
-      const studioBackground = '#f3f5f7'
       const isConfigurator = routeParams.has('configure')
         || routeParams.has('devicePreview')
         || routeParams.has('installerDemo')
-      const pageBackground = isConfigurator ? studioBackground : '#ffffff'
-      document.documentElement.style.setProperty('--studio-background', studioBackground)
-      document.documentElement.style.setProperty('--page-background', pageBackground)
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', pageBackground)
+      const colorScheme = matchMedia('(prefers-color-scheme: dark)')
+      const applyPageSurface = ({ matches: dark }) => {
+        const studioBackground = dark ? '#181b19' : '#f3f5f7'
+        const landingBackground = dark ? '#101210' : '#ffffff'
+        const pageBackground = isConfigurator ? studioBackground : landingBackground
+        document.documentElement.style.setProperty('--studio-background', studioBackground)
+        document.documentElement.style.setProperty('--page-background', pageBackground)
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', pageBackground)
+      }
+      applyPageSurface(colorScheme)
+      colorScheme.addEventListener?.('change', applyPageSurface)
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://emieljanson.com/windscout/" />
