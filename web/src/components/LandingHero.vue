@@ -1,7 +1,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { publicAssetUrl } from '../assets/publicAssetUrl'
-import { createRendererInput } from '../configurator/screenTexture'
+import { createRendererInput } from '../renderer/rendererInput'
 import { landingDisplayConfiguration } from '../marketing/landingDisplay'
 import { LANDING_HERO_PRESENTATION } from '../marketing/landingHeroPresentation'
 import { RENDERER_DISPLAYS } from '../renderer/contract'
