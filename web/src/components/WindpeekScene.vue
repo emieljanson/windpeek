@@ -32,6 +32,7 @@ import {
   isWebGLAvailable,
 } from '../configurator/sceneController'
 import { createResourceLifetime } from '../configurator/sceneLifetime'
+import { loadSceneResources } from '../configurator/sceneResources'
 import { createScreenTexture } from '../configurator/screenTexture'
 import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
@@ -744,9 +745,27 @@ async function initialize() {
     }
     applyStudioTheme()
 
-    const loadedModel = await loadDeviceModel(props.boardId)
-    if (!lifetime.adopt(loadedModel, disposeObject)) return
-    model = loadedModel
+    const initialConfig = currentDisplayConfig()
+    const initialForecast = forecast.value
+    const initialForecastRevision = forecastRevision.value
+    const resources = await loadSceneResources({
+      lifetime,
+      loadModel: () => loadDeviceModel(props.boardId),
+      loadScreen: () => createScreenTexture({
+        forecast: initialForecast,
+        config: initialConfig,
+        boardId: props.boardId,
+      }),
+      disposeModel: disposeObject,
+    })
+    if (!resources) return
+    if (!lifetime.active) {
+      disposeObject(resources.model)
+      resources.screen.dispose()
+      return
+    }
+    model = resources.model
+    screenSource = resources.screen
     hideDeviceStand(model)
     disposeSurface = enhanceDeviceSurface(model, renderer)
     disposeRearMarkings = addDeviceRearMarkings(model, props.boardId, requestRender)
@@ -758,16 +777,6 @@ async function initialize() {
         child.receiveShadow = false
       }
     })
-    const initialConfig = currentDisplayConfig()
-    const initialForecast = forecast.value
-    const initialForecastRevision = forecastRevision.value
-    const loadedScreenSource = await createScreenTexture({
-      forecast: initialForecast,
-      config: initialConfig,
-      boardId: props.boardId,
-    })
-    if (!lifetime.adopt(loadedScreenSource, (source) => source.dispose())) return
-    screenSource = loadedScreenSource
     if (showThreshold.value !== initialConfig.showThreshold || threshold.value !== initialConfig.threshold ||
         showWeather.value !== initialConfig.showWeather ||
         showTemperature.value !== initialConfig.showTemperature ||
