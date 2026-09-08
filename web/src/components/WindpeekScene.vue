@@ -141,6 +141,7 @@ let rimLight
 let oppositePortFill
 let hemisphereLight
 let themeQuery
+let environmentPalette
 
 function applyStudioTheme() {
   if (!scene || !renderer || !keyLight) return
@@ -149,10 +150,13 @@ function applyStudioTheme() {
   renderer.toneMappingExposure = dark ? 0.7 : 1.0
   scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
   scene.fog = dark ? new THREE.FogExp2(lighting.background, 1.5) : null
-  const previousEnvironment = environmentTarget
-  environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
-  scene.environment = environmentTarget.texture
-  previousEnvironment?.dispose()
+  if (environmentPalette !== lighting.environment) {
+    const previousEnvironment = environmentTarget
+    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
+    environmentPalette = lighting.environment
+    scene.environment = environmentTarget.texture
+    previousEnvironment?.dispose()
+  }
   hemisphereLight.color.set(lighting.hemisphere.sky)
   hemisphereLight.groundColor.set(lighting.hemisphere.ground)
   hemisphereLight.intensity = lighting.hemisphere.intensity
@@ -207,6 +211,7 @@ function applyStudioTheme() {
     }
     if (child.name === 'FRONT_PANEL_REFLECTION' || child.name === 'SCREEN_FINISH') child.visible = !dark
   })
+  if (cableLabEnabled) applyCableLabSettings()
   requestRender()
 }
 let usbCable
@@ -669,9 +674,6 @@ async function initialize() {
       requestRender,
     })
     updateSceneFocus()
-
-    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
-    scene.environment = environmentTarget.texture
 
     hemisphereLight = new THREE.HemisphereLight(
       lighting.hemisphere.sky,

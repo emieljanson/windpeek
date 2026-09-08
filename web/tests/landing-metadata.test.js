@@ -90,6 +90,12 @@ describe('landing share metadata', () => {
       landing: '#111113',
       theme: '#101012',
     })
+    for (const preview of ['', 'unsupported']) {
+      expect(applySurface(`?devicePreview=${preview}`, true).studio).toBe('#101012')
+    }
+    for (const board of ['e1001', 'e1002', 'e1003']) {
+      expect(applySurface(`?devicePreview=seeedstudio_reterminal_${board}`, true).studio).toBe('#f3f5f7')
+    }
 
     let applySchemeChange
     expect(applySurface('', false, (listener) => { applySchemeChange = listener })).toEqual({

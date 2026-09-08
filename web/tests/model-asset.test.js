@@ -30,7 +30,7 @@ describe('E1002 model contract', () => {
           expect(normal.getZ(vertex)).toBeCloseTo(-1, 6)
         }
       } else {
-        curvedVertices += vertices.filter((vertex) => Math.abs(normal.getZ(vertex)) > 0.1 && Math.abs(normal.getZ(vertex)) < 0.9).length
+        curvedVertices += vertices.filter((vertex) => Math.abs(position.getZ(vertex) - rearZ) < 0.002 && Math.abs(normal.getZ(vertex)) > 0.1 && Math.abs(normal.getZ(vertex)) < 0.9).length
       }
     }
     expect(planarTriangles).toBeGreaterThan(100)
