@@ -135,8 +135,8 @@
   align-items: center;
   justify-content: center;
   align-self: end;
-  color: var(--config-primary-ink, #fff);
-  background: var(--config-primary, #000);
+  color: var(--panel-primary-ink);
+  background: var(--panel-primary-background);
   border-radius: 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -145,7 +145,7 @@
   white-space: nowrap;
   transition: background-color 120ms ease-out, scale 120ms ease-out;
 }
-.reterminal-help__buy:hover { background: var(--config-primary-hover, #202020); }
+.reterminal-help__buy:hover { background: var(--panel-primary-hover); }
 .reterminal-help__buy:active { scale: 0.97; }
 .reterminal-help__buy:focus-visible {
   outline: 2px solid var(--settings-focus, #000);

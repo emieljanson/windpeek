@@ -15,6 +15,7 @@
         const landingBackground = dark ? '#101210' : '#ffffff'
         const pageBackground = isConfigurator ? studioBackground : landingBackground
         document.documentElement.style.setProperty('--studio-background', studioBackground)
+        document.documentElement.style.setProperty('--landing-page-background', landingBackground)
         document.documentElement.style.setProperty('--page-background', pageBackground)
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', pageBackground)

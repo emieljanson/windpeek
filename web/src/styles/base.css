@@ -5,8 +5,6 @@
   background: var(--page-background, #ffffff);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --studio-background: #f3f5f7;
-  --page-background: #ffffff;
   --ink: #151817;
   --muted: #68716e;
   --mist: #ffffff;
@@ -19,6 +17,9 @@
   --panel-border: rgba(21, 24, 23, 0.12);
   --panel-glass: rgba(255, 255, 255, 0.38);
   --panel-glass-border: rgba(255, 255, 255, 0.78);
+  --panel-primary-background: #000000;
+  --panel-primary-hover: #2a302d;
+  --panel-primary-ink: #f7f8f5;
   --visual-viewport-bottom: 0px;
 }
 
@@ -103,8 +104,6 @@ html.configurator-is-compact [data-sonner-toaster][data-y-position='top'] {
     color-scheme: dark;
     color: #f1f3ef;
     background: var(--page-background, #101210);
-    --studio-background: #181b19;
-    --page-background: #101210;
     --ink: #f1f3ef;
     --muted: #a6ada8;
     --mist: #202320;
@@ -117,6 +116,9 @@ html.configurator-is-compact [data-sonner-toaster][data-y-position='top'] {
     --panel-border: rgba(241, 243, 239, 0.13);
     --panel-glass: rgba(36, 39, 37, 0.72);
     --panel-glass-border: rgba(255, 255, 255, 0.1);
+    --panel-primary-background: #f1f3ef;
+    --panel-primary-hover: #d8ddd8;
+    --panel-primary-ink: #171a18;
   }
 
   [data-sonner-toast] {

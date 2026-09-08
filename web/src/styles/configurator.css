@@ -11,9 +11,6 @@
   --config-warning-ink: #684b2c;
   --config-warning-surface: rgba(255, 248, 234, 0.7);
   --config-warning-label: #765b3d;
-  --config-primary: #000;
-  --config-primary-hover: #2a302d;
-  --config-primary-ink: #f7f8f5;
 }
 
 .configurator-layout {
@@ -201,14 +198,14 @@
   padding: 0 0.5rem;
   border: 0;
   border-radius: 10px;
-  color: var(--config-primary-ink);
-  background: var(--config-primary);
+  color: var(--panel-primary-ink);
+  background: var(--panel-primary-background);
   font: 500 0.8125rem/1 'Inter Variable', Inter, sans-serif;
   cursor: pointer;
 }
 
 .install-button:hover {
-  background: var(--config-primary-hover);
+  background: var(--panel-primary-hover);
 }
 
 .install-button:focus-visible {
@@ -337,9 +334,6 @@
     --config-warning-ink: #edc896;
     --config-warning-surface: rgba(128, 85, 36, 0.22);
     --config-warning-label: #80613f;
-    --config-primary: #f1f3ef;
-    --config-primary-hover: #d8ddd8;
-    --config-primary-ink: #171a18;
   }
 
   .settings-panel {

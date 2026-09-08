@@ -24,6 +24,7 @@ describe('landing share metadata', () => {
     const currentSurface = () => ({
       page: document.documentElement.style.getPropertyValue('--page-background'),
       studio: document.documentElement.style.getPropertyValue('--studio-background'),
+      landing: document.documentElement.style.getPropertyValue('--landing-page-background'),
       theme: document.querySelector('meta[name="theme-color"]').content,
     })
     const applySurface = (search, dark = false, captureChangeListener) => {
@@ -65,20 +66,28 @@ describe('landing share metadata', () => {
       expect(surface.theme).toBe(surface.page)
     }
 
-    expect(applySurface('')).toEqual({ page: '#ffffff', studio: '#f3f5f7', theme: '#ffffff' })
+    expect(applySurface('')).toEqual({
+      page: '#ffffff',
+      studio: '#f3f5f7',
+      landing: '#ffffff',
+      theme: '#ffffff',
+    })
     expect(applySurface('?configure')).toEqual({
       page: '#f3f5f7',
       studio: '#f3f5f7',
+      landing: '#ffffff',
       theme: '#f3f5f7',
     })
     expect(applySurface('', true)).toEqual({
       page: '#101210',
       studio: '#181b19',
+      landing: '#101210',
       theme: '#101210',
     })
     expect(applySurface('?configure', true)).toEqual({
       page: '#181b19',
       studio: '#181b19',
+      landing: '#101210',
       theme: '#181b19',
     })
 
@@ -86,13 +95,32 @@ describe('landing share metadata', () => {
     expect(applySurface('', false, (listener) => { applySchemeChange = listener })).toEqual({
       page: '#ffffff',
       studio: '#f3f5f7',
+      landing: '#ffffff',
       theme: '#ffffff',
     })
     applySchemeChange({ matches: true })
     expect(currentSurface()).toEqual({
       page: '#101210',
       studio: '#181b19',
+      landing: '#101210',
       theme: '#101210',
+    })
+
+    let applyStudioSchemeChange
+    applySurface('?configure', true, (listener) => { applyStudioSchemeChange = listener })
+    applyStudioSchemeChange({ matches: false })
+    expect(currentSurface()).toEqual({
+      page: '#f3f5f7',
+      studio: '#f3f5f7',
+      landing: '#ffffff',
+      theme: '#f3f5f7',
+    })
+    applyStudioSchemeChange({ matches: true })
+    expect(currentSurface()).toEqual({
+      page: '#181b19',
+      studio: '#181b19',
+      landing: '#101210',
+      theme: '#181b19',
     })
   })
 })

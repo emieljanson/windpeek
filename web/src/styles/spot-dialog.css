@@ -207,15 +207,15 @@
 .spot-dialog__confirm {
   block-size: 2.375rem;
   padding-inline: 1.5rem;
-  color: var(--config-primary-ink, #fff);
-  background: var(--config-primary, #000);
+  color: var(--panel-primary-ink);
+  background: var(--panel-primary-background);
   border: 0;
   border-radius: 0.625rem;
   font: 500 0.8125rem/1 'Inter Variable', Inter, system-ui, sans-serif;
   cursor: pointer;
   transition: background-color 120ms ease-out, scale 120ms ease-out, opacity 120ms ease-out;
 }
-.spot-dialog__confirm:hover:not(:disabled) { background: var(--config-primary-hover, #202020); }
+.spot-dialog__confirm:hover:not(:disabled) { background: var(--panel-primary-hover); }
 .spot-dialog__confirm:disabled { opacity: 0.35; cursor: not-allowed; }
 .spot-dialog__close:focus-visible,
 .spot-dialog__confirm:focus-visible {

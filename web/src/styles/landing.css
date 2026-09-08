@@ -7,7 +7,7 @@
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   --landing-text: #151512;
-  --landing-background: #ffffff;
+  --landing-background: var(--landing-page-background, #ffffff);
   --landing-copy: #353531;
   --landing-muted: #696963;
   --landing-line: #d5d5ce;
@@ -395,7 +395,6 @@
 
 @media (prefers-color-scheme: dark) {
   .landing-page {
-    --landing-background: #101210;
     --landing-text: #f2f3ef;
     --landing-copy: #c7ccc7;
     --landing-muted: #969d98;

@@ -140,8 +140,8 @@
   touch-action: manipulation;
 }
 
-.installer-primary { color: var(--config-primary-ink, #fff); background: var(--config-primary, #000); }
-.installer-primary:hover:not(:disabled) { background: var(--config-primary-hover, #272b29); }
+.installer-primary { color: var(--panel-primary-ink); background: var(--panel-primary-background); }
+.installer-primary:hover:not(:disabled) { background: var(--panel-primary-hover); }
 .installer-primary:disabled { color: var(--settings-control-muted); background: var(--settings-control-surface); cursor: default; }
 .installer-secondary { color: var(--settings-control-ink); background: var(--settings-control-surface); text-decoration: none; }
 .installer-secondary:hover:not(:disabled) { color: var(--settings-control-ink); background: var(--settings-control-surface-hover); }
