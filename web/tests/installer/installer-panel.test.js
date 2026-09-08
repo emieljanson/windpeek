@@ -48,9 +48,9 @@ describe('installer inspector panel', () => {
 
     expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
     const dialog = document.body.querySelector('[role="dialog"]')
-    expect(dialog?.textContent).toContain('7.5″ monochrome — E1001')
-    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
-    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+    expect(dialog?.textContent).toContain('7.5″, 4 greys')
+    expect(dialog?.textContent).toContain('7.3″, 6 colours')
+    expect(dialog?.textContent).toContain('10.3″, 16 greys')
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await wrapper.vm.$nextTick()

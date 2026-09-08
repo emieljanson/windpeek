@@ -159,8 +159,8 @@ describe('Windpeek settings panel', () => {
     expect(dialog?.textContent).toContain('Windpeek only uses colour for the threshold line')
     expect(dialog?.textContent).toContain('Direct installation supports E1001, E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
-    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
-    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+    expect(dialog?.textContent).toContain('7.3″, 6 colours')
+    expect(dialog?.textContent).toContain('10.3″, 16 greys')
     expect(dialog?.textContent).not.toContain('touch')
     expect(dialog?.textContent).not.toContain('affiliate')
     const buyLinks = [...dialog.querySelectorAll('a')]
@@ -172,12 +172,12 @@ describe('Windpeek settings panel', () => {
     ])
     expect(deviceImages.every((image) => image.getAttribute('alt') === '')).toBe(true)
     expect(buyLinks.map((link) => link.textContent.trim().replace(/\s+/g, ' '))).toEqual([
-      'Buy ~$70',
-      'Buy ~$107',
-      'Buy ~$160',
+      'Buy for ~$74',
+      'Buy for ~$107',
+      'Buy for ~$160',
     ])
     expect(buyLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
-      'Buy reTerminal E1001, approximately $70',
+      'Buy reTerminal E1001, approximately $74',
       'Buy reTerminal E1002, approximately $107',
       'Buy reTerminal E1003, approximately $160',
     ])
