@@ -14,7 +14,7 @@ deepened: 2026-09-06
 
 ## Goal Capsule
 
-- **Objective:** A new visitor sees a relevant Windscout forecast from nearby instead of the fixed Brouwersdam example.
+- **Objective:** A new visitor sees a relevant Windpeek forecast from nearby instead of the fixed Brouwersdam example.
 - **Means:** Resolve approximate IP location through a small Cloudflare Worker, then select the nearest bundled spot through the shared configurator store (KTD1-KTD4).
 - **Product authority:** This only replaces the automatic Brouwersdam default; it does not make a spot choice on the user's behalf once they interact.
 - **Open blockers:** None.
@@ -25,13 +25,13 @@ deepened: 2026-09-06
 
 ### Summary
 
-On the homepage and in the normal configurator, Windscout will replace Brouwersdam with the nearest catalog spot after approximate IP location becomes available.
+On the homepage and in the normal configurator, Windpeek will replace Brouwersdam with the nearest catalog spot after approximate IP location becomes available.
 The experience remains immediate and silent without adding badges, explanations, popups, or other interface.
 
 ### Problem Frame
 
 Every new visitor currently sees Brouwersdam, including visitors far outside the Netherlands.
-That makes Windscout feel like a local Dutch demo instead of a product with worldwide spot support.
+That makes Windpeek feel like a local Dutch demo instead of a product with worldwide spot support.
 
 ### Key Decisions
 
@@ -45,15 +45,15 @@ That makes Windscout feel like a local Dutch demo instead of a product with worl
 **Automatic default**
 
 - R1. A fresh homepage or normal configurator load initially renders the existing Brouwersdam default without waiting for location detection.
-- R2. Windscout obtains an approximate visitor coordinate from IP without requesting browser location permission.
-- R3. When a usable coordinate is returned, Windscout selects the geographically nearest spot from its bundled catalog.
+- R2. Windpeek obtains an approximate visitor coordinate from IP without requesting browser location permission.
+- R3. When a usable coordinate is returned, Windpeek selects the geographically nearest spot from its bundled catalog.
 - R4. The detected spot becomes the active forecast spot and loads the same live forecast and tide data as a manually selected spot.
 
 **Interaction and fallback**
 
 - R5. The configurator's search input remains empty until the user types, even when a nearby default spot is active.
 - R6. Missing, invalid, slow, or failed location detection leaves Brouwersdam active without blocking the page or showing an error.
-- R7. Windscout does not persist the detected nearby spot and determines it again on each fresh page load.
+- R7. Windpeek does not persist the detected nearby spot and determines it again on each fresh page load.
 - R8. A location result that arrives after the user has selected or edited a spot cannot override that interaction.
 
 **Experience consistency**
@@ -65,17 +65,17 @@ That makes Windscout feel like a local Dutch demo instead of a product with worl
 
 - F1. Nearby default resolves
   - **Trigger:** A visitor opens the homepage or configurator.
-  - **Steps:** Brouwersdam renders immediately; approximate IP coordinates arrive; Windscout finds the nearest catalog spot; its live forecast and tide replace the initial data.
+  - **Steps:** Brouwersdam renders immediately; approximate IP coordinates arrive; Windpeek finds the nearest catalog spot; its live forecast and tide replace the initial data.
   - **Outcome:** The visitor sees a nearby forecast without taking action.
   - **Covered by:** R1-R4, R9, R10.
 - F2. Detection cannot provide a default
   - **Trigger:** Location detection fails, returns unusable data, or never completes.
   - **Steps:** The initial Brouwersdam state remains unchanged.
-  - **Outcome:** Windscout stays usable without an interruption or error state.
+  - **Outcome:** Windpeek stays usable without an interruption or error state.
   - **Covered by:** R1, R6.
 - F3. User acts before detection completes
   - **Trigger:** The visitor searches for or selects a spot while location detection is pending.
-  - **Steps:** Windscout marks the user's interaction as authoritative and ignores the late location result.
+  - **Steps:** Windpeek marks the user's interaction as authoritative and ignores the late location result.
   - **Outcome:** The interface never jumps away from the user's choice.
   - **Covered by:** R5, R8.
 
@@ -110,7 +110,7 @@ That makes Windscout feel like a local Dutch demo instead of a product with worl
 - Spot selection and forecast refresh: `web/src/stores/configurator.js`
 - Homepage initialization: `web/src/components/LandingHero.vue`
 - Configurator initialization: `web/src/views/ConfiguratorView.vue`
-- Separate selected-spot and search state: `web/src/components/WindScoutSettings.vue`
+- Separate selected-spot and search state: `web/src/components/WindpeekSettings.vue`
 - Conditional GitHub Pages deployment: `.github/workflows/firmware-release.yml`
 - Cloudflare request location fields: https://developers.cloudflare.com/workers/runtime-apis/request/
 - Cloudflare geolocation example: https://developers.cloudflare.com/workers/examples/geolocation-hello-world/
@@ -163,7 +163,7 @@ stateDiagram-v2
 - **Browser:** Homepage and normal configurator add one short best-effort request after their existing immediate render.
 - **Store:** Automatic and manual spot changes share the existing forecast and tide refresh path, while only manual intent sets the protection flag.
 - **Deployment:** The static build receives the deployed Worker URL through a GitHub Actions repository variable.
-- **Privacy posture:** Windscout stores no location and sends no browser GPS coordinate; Cloudflare derives an approximate coordinate from request metadata.
+- **Privacy posture:** Windpeek stores no location and sends no browser GPS coordinate; Cloudflare derives an approximate coordinate from request metadata.
 
 ### Risks and Dependencies
 
@@ -222,7 +222,7 @@ stateDiagram-v2
 - **Goal:** Apply the nearby default through existing spot selection while preserving user intent and empty search state.
 - **Requirements:** R1, R3-R9; F1-F3; AE1-AE5.
 - **Dependencies:** U1.
-- **Files:** `web/src/stores/configurator.js`, `web/src/components/settings/SettingCombobox.vue`, `web/src/components/WindScoutSettings.vue`, `web/src/components/LandingHero.vue`, `web/src/views/ConfiguratorView.vue`, `web/tests/configurator-store.test.js`, `web/tests/settings-controls.test.js`, `web/tests/settings.test.js`, `web/tests/landing-hero.test.js`, `web/tests/configurator-view.test.js`.
+- **Files:** `web/src/stores/configurator.js`, `web/src/components/settings/SettingCombobox.vue`, `web/src/components/WindpeekSettings.vue`, `web/src/components/LandingHero.vue`, `web/src/views/ConfiguratorView.vue`, `web/tests/configurator-store.test.js`, `web/tests/settings-controls.test.js`, `web/tests/settings.test.js`, `web/tests/landing-hero.test.js`, `web/tests/configurator-view.test.js`.
 - **Approach:** Follow KTD3-KTD6. Start existing forecast and tide initialization first. Trigger nearby resolution without awaiting it only from the two owning entrypoints. Emit explicit user-input intent from the shared combobox instead of inferring intent from model updates. Mark catalog selection and entering or saving custom-spot creation before asynchronous work begins. Focus, programmatic label restoration, automatic selection, and non-spot settings do not count as spot intent. Treat both `devicePreview` and `installerDemo` as deterministic routes that skip detection.
 - **Test scenarios:**
   1. Covers F1 / AE1. Brouwersdam is initial state and a valid nearby result changes the active spot through `selectSpot()`.

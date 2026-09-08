@@ -4,7 +4,7 @@
  *
  * Lifecycle, LUTs, polarity, and plane ordering are derived from Seeed's
  * pinned GPL-3.0 reference documented in firmware/UPSTREAM.md. This port is
- * modified for ESP-IDF, bounded BUSY waits, and WindScout's logical surface.
+ * modified for ESP-IDF, bounded BUSY waits, and Windpeek's logical surface.
  * Hardware correctness remains gated on U7 physical acceptance.
  */
 #include <stdbool.h>

@@ -271,7 +271,7 @@ add_wind_test(
 )
 target_compile_definitions(
   hardware_profile_test
-  PRIVATE WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
+  PRIVATE WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windpeek_main.c"
 )
 
 add_wind_test(
@@ -322,7 +322,7 @@ add_wind_test(production_power_policy_test test_production_power_policy.cpp)
 target_compile_definitions(
   production_power_policy_test
   PRIVATE
-    WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
+    WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windpeek_main.c"
     WIND_POWER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/power_manager.c"
     WIFI_MANAGER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wifi_manager.c"
     WIND_CMAKE_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/CMakeLists.txt"

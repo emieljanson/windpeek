@@ -32,7 +32,7 @@ async function resolveCoordinates(locationUrl, { fetchImpl, resolutions }) {
     }
     const response = await fetchImpl(url, {
       redirect: 'manual',
-      headers: { 'User-Agent': 'Windscout spot importer' },
+      headers: { 'User-Agent': 'Windpeek spot importer' },
     })
     if (response?.status >= 300 && response.status < 400) {
       const destination = response.headers?.get?.('location')

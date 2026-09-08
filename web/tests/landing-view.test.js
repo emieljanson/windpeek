@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import LandingView from '../src/views/LandingView.vue'
 
-describe('Windscout landing page', () => {
+describe('Windpeek landing page', () => {
   it('presents every compatible device equally before the configuration step', () => {
     const wrapper = mount(LandingView, {
       global: {

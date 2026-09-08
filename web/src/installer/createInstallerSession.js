@@ -255,7 +255,7 @@ export function createInstallerSession({
     const timeout = new Promise((_, reject) => {
       timeoutId = setTimeout(() => reject(new InstallerError(
         INSTALLER_ERROR_CODES.CONNECTION_LOST,
-        'Windscout could not check previously granted USB devices.',
+        'Windpeek could not check previously granted USB devices.',
       )), portDiscoveryTimeoutMs)
     })
     try {
@@ -293,7 +293,7 @@ export function createInstallerSession({
       if (error?.name === 'NetworkError') {
         throw new InstallerError(
           INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED,
-          'This USB device is already in use. Close other Windscout tabs or serial tools, then try again.',
+          'This USB device is already in use. Close other Windpeek tabs or serial tools, then try again.',
           { cause: error },
         )
       }
@@ -302,7 +302,7 @@ export function createInstallerSession({
     let hello
     try {
       hello = await candidate.request('hello')
-      if (!validHello(hello)) throw new Error('Incomplete Windscout identity')
+      if (!validHello(hello)) throw new Error('Incomplete Windpeek identity')
     } catch {
       try { await candidate.close() } catch {}
       return null
@@ -326,7 +326,7 @@ export function createInstallerSession({
       return {
         protocol: candidate,
         device: {
-          kind: 'windscout',
+          kind: 'windpeek',
           verifiedBoard: (usesHardwareProfile ? reportedHardwareModel : hello.boardId) === expectedHardwareModel,
           hardwareModelMismatch: usesHardwareProfile && reportedHardwareModel !== undefined &&
             reportedHardwareModel !== expectedHardwareModel,
@@ -350,7 +350,7 @@ export function createInstallerSession({
       }
     } catch (error) {
       try { await candidate.close() } catch {}
-      throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout disconnected while its setup was checked.', { cause: error })
+      throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek disconnected while its setup was checked.', { cause: error })
     }
   }
 
@@ -382,7 +382,7 @@ export function createInstallerSession({
         selectedPort = await requestPort()
       } catch (error) {
         if (currentAttempt !== attempt) return state
-        const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.')
+        const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.')
         update({ phase: 'error', error: installerError, safeToDisconnect: true })
         reportFailure(installerError, 'choosing-device')
         return state
@@ -451,7 +451,7 @@ export function createInstallerSession({
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not check this device.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not check this device.')
       update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: installerError.safeToDisconnect })
       reportFailure(installerError, 'checking-device')
     }
@@ -473,7 +473,7 @@ export function createInstallerSession({
       const response = await protocol.request('scan_networks', {}, 45000)
       return Array.isArray(response.networks) ? response.networks : []
     } catch (error) {
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not scan for Wi-Fi networks.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not scan for Wi-Fi networks.')
       // A network scan can finish after the user has already submitted the
       // chosen network. Its late failure must not pull a successfully applying
       // or completed installer back to the Wi-Fi form.
@@ -490,29 +490,29 @@ export function createInstallerSession({
     update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true, action })
     const unixTime = Math.floor(now() / 1000)
     if (!Number.isSafeInteger(unixTime)) {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not read this computer’s time.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not read this computer’s time.')
     }
     const begun = await protocol.request('begin', { unixTime })
     if (begun.status === 'clock_rejected') {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not set its clock from this computer.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not set its clock from this computer.')
     }
     if (!isCurrent(expectedAttempt)) return false
     const staged = await protocol.request('stage_configuration', {
       configuration: installationConfiguration,
     })
     if (!isCurrent(expectedAttempt)) return false
-    if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout rejected this configuration.')
+    if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek rejected this configuration.')
     if (credentials) {
       const wifi = await protocol.request('test_wifi', credentials, WIFI_TEST_REQUEST_TIMEOUT_MS)
       if (!isCurrent(expectedAttempt)) return false
-      if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not connect to that Wi-Fi network.')
+      if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
     }
     update({ phase: 'verifying', progress: 0.92 })
     const applied = await protocol.request('apply_configuration', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
     if (!isCurrent(expectedAttempt)) return false
     if (!['applying', 'complete'].includes(applied.status)) {
       recordVerificationFailure({ apply: applied.status })
-      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
     }
     for (let poll = 0; poll < 180; poll += 1) {
       if (poll > 0 || applied.status === 'applying') await waitFor(1000)
@@ -521,14 +521,14 @@ export function createInstallerSession({
       if (!isCurrent(expectedAttempt)) return false
       if (['render_failed', 'commit_failed'].includes(status.apply)) {
         recordVerificationFailure(status)
-        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
+        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
       }
       const applyComplete = status.apply === 'complete' ||
         (applied.status === 'complete' && [undefined, 'idle'].includes(status.apply))
       if (applyComplete && status.configurationDigest === installationConfiguration.digest &&
           status.wifi === 'connected' && status.render === 'valid') return true
     }
-    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the new setup.')
+    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not verify the new setup.')
   }
 
   async function verifyCurrentConfiguration(expectedAttempt, initialDevice) {
@@ -542,12 +542,12 @@ export function createInstallerSession({
       if (!isCurrent(expectedAttempt)) return false
       if (['render_failed', 'commit_failed'].includes(status.apply)) {
         recordVerificationFailure(status)
-        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
+        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
       }
       if (status.configurationDigest === installationConfiguration.digest &&
           status.wifi === 'connected' && status.render === 'valid') return true
     }
-    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the current setup.')
+    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not verify the current setup.')
   }
 
   async function executeAction() {
@@ -598,7 +598,7 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout setup could not continue.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek setup could not continue.')
       update({
         phase: installerError.code === INSTALLER_ERROR_CODES.FLASH_FAILED ? 'reconnect' : 'error',
         error: installerError,
@@ -627,7 +627,7 @@ export function createInstallerSession({
       if (awaitingWrittenFirmware) {
         throw new InstallerError(
           INSTALLER_ERROR_CODES.CONNECTION_LOST,
-          'Windscout is still restarting. Wait a moment, then select it again.',
+          'Windpeek is still restarting. Wait a moment, then select it again.',
         )
       }
       const identity = await esptool.identify(port)
@@ -674,7 +674,7 @@ export function createInstallerSession({
       if (!['reboot_required', 'hardware_profile_saved'].includes(selected.status)) {
         throw new InstallerError(
           INSTALLER_ERROR_CODES.INVALID_RESPONSE,
-          'Windscout could not save the selected screen model.',
+          'Windpeek could not save the selected screen model.',
         )
       }
       if (selected.status === 'reboot_required') {
@@ -724,7 +724,7 @@ export function createInstallerSession({
       return await attachReconnectedPort(grantedPort, expectedAttempt)
     } catch (error) {
       if (!isCurrent(expectedAttempt)) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout did not reconnect automatically.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect automatically.')
       update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
@@ -752,7 +752,7 @@ export function createInstallerSession({
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout did not reconnect yet.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
       update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
@@ -771,7 +771,7 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not connect to that Wi-Fi network.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
       const phase = installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED
         ? 'wifi'
         : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'

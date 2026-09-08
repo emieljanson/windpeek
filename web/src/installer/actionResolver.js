@@ -18,10 +18,10 @@ export function resolveInstallAction({
     return { action: INSTALL_ACTIONS.BLOCKED, reason: 'device-not-recognized' }
   }
   if (device.hardwareModelMismatch) {
-    return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' }
+    return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windpeek-model' }
   }
   if (device.boardId && device.boardId !== release.boardId) {
-    return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' }
+    return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windpeek-model' }
   }
   if (device.chipFamily && device.chipFamily !== release.chipFamily) {
     return { action: INSTALL_ACTIONS.BLOCKED, reason: 'incompatible-chip' }
@@ -36,7 +36,7 @@ export function resolveInstallAction({
     return { action: INSTALL_ACTIONS.REINSTALL, reason: 'flash-layout-changed' }
   }
   if (!device.firmwareVersion) {
-    return { action: INSTALL_ACTIONS.INSTALL, reason: 'windscout-not-installed' }
+    return { action: INSTALL_ACTIONS.INSTALL, reason: 'windpeek-not-installed' }
   }
   if (Number.isInteger(requiredConfigurationVersion) &&
       Number.isInteger(device.configurationVersion) &&

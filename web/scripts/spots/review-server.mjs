@@ -42,7 +42,7 @@ function validDecision(decision) {
   if (decision.action === 'reject') return typeof decision.reason === 'string' && Boolean(decision.reason.trim())
   const latitude = Number(decision.latitude)
   const longitude = Number(decision.longitude)
-  return typeof decision.windscoutId === 'string' && Boolean(decision.windscoutId) &&
+  return typeof decision.windpeekId === 'string' && Boolean(decision.windpeekId) &&
     typeof decision.name === 'string' && Boolean(decision.name.trim()) &&
     Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 &&
     Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
@@ -53,7 +53,7 @@ export function spotReviewPlugin({ dataRoot }) {
   const resultsPath = path.join(dataRoot, 'validation-results.json')
   const decisionsPath = path.join(dataRoot, 'review-decisions.json')
   return {
-    name: 'windscout-spot-review',
+    name: 'windpeek-spot-review',
     configureServer(server) {
       server.middlewares.use('/api/spot-review', async (request, response) => {
         try {

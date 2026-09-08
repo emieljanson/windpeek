@@ -41,7 +41,7 @@ export function validateFirmwareManifest(manifest, expectedBoardId = BOARD_ID) {
       !manifest.protocol || manifest.protocol.minimum > 1 || manifest.protocol.maximum < 1 ||
       !manifest.configuration || manifest.configuration.minimum > CONFIGURATION_VERSION ||
       manifest.configuration.maximum < CONFIGURATION_VERSION) {
-    fail('This firmware release is not compatible with Windscout.')
+    fail('This firmware release is not compatible with Windpeek.')
   }
   if (!Array.isArray(manifest.parts) || manifest.parts.length !== REQUIRED_KINDS.length ||
       new Set(manifest.parts.map((part) => part.kind)).size !== REQUIRED_KINDS.length) {
@@ -151,13 +151,13 @@ export async function loadFirmwareRelease({
 } = {}) {
   return withDownloadTimeout(async (downloadSignal) => {
     const releaseBoardId = installerReleaseBoardId(boardId)
-    const root = new URL(baseUrl, globalThis.location?.href ?? 'https://windscout.invalid/')
+    const root = new URL(baseUrl, globalThis.location?.href ?? 'https://windpeek.invalid/')
     const pointerPath = releaseBoardId === BOARD_IDS.E1003 ? 'e1003/latest.json' : 'latest.json'
     const pointerUrl = new URL(pointerPath, root)
     const pointer = await fetchJson(fetchFn, pointerUrl, downloadSignal)
     if (!pointer || typeof pointer.manifest !== 'string' || !SHA256_PATTERN.test(pointer.sha256 ?? '')) fail('The release pointer is invalid.')
     const pointerDirectory = new URL('.', pointerUrl)
-    const manifestUrl = releaseUrl(pointer.manifest, pointerDirectory, 'The release pointer leaves the Windscout firmware directory.')
+    const manifestUrl = releaseUrl(pointer.manifest, pointerDirectory, 'The release pointer leaves the Windpeek firmware directory.')
     const response = await fetchFn(manifestUrl, { cache: 'no-store', signal: downloadSignal })
     if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware manifest could not be downloaded.')
     const manifestBytes = new Uint8Array(await response.arrayBuffer())

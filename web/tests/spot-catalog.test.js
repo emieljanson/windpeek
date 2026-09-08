@@ -40,7 +40,7 @@ describe('runtime spot catalog', () => {
       ],
       decisions: [{
         candidateId: reviewCandidate.id, action: 'approve', evidenceFingerprint: 'review-current',
-        windscoutId: 'reviewed-spot', name: 'Reviewed Corrected', latitude: 54.7, longitude: 18.4,
+        windpeekId: 'reviewed-spot', name: 'Reviewed Corrected', latitude: 54.7, longitude: 18.4,
         timezone: 'Europe/Warsaw',
       }],
     })

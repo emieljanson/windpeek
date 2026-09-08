@@ -56,16 +56,16 @@
 
 static const char *TAG = "main";
 
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
-#define WINDSCOUT_BUZZER_SUPPORTED 1
-#define WINDSCOUT_BUZZER_PIN GPIO_NUM_45
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
+#define WINDPEEK_BUZZER_SUPPORTED 1
+#define WINDPEEK_BUZZER_PIN GPIO_NUM_45
 #else
-#define WINDSCOUT_BUZZER_SUPPORTED 0
+#define WINDPEEK_BUZZER_SUPPORTED 0
 #endif
 
 static void buzzer_init(void)
 {
-#if WINDSCOUT_BUZZER_SUPPORTED
+#if WINDPEEK_BUZZER_SUPPORTED
     ledc_timer_config_t timer = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .duty_resolution = LEDC_TIMER_10_BIT,
@@ -74,7 +74,7 @@ static void buzzer_init(void)
         .clk_cfg = LEDC_AUTO_CLK,
     };
     ledc_channel_config_t channel = {
-        .gpio_num = WINDSCOUT_BUZZER_PIN,
+        .gpio_num = WINDPEEK_BUZZER_PIN,
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .channel = LEDC_CHANNEL_0,
         .intr_type = LEDC_INTR_DISABLE,
@@ -89,7 +89,7 @@ static void buzzer_init(void)
 
 static void buzzer_button_acknowledge(void)
 {
-#if WINDSCOUT_BUZZER_SUPPORTED
+#if WINDPEEK_BUZZER_SUPPORTED
     ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 256);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
     vTaskDelay(pdMS_TO_TICKS(70));
@@ -357,7 +357,7 @@ static void ensure_http_server_running(void)
     if (started) {
         return;
     }
-    // Start mDNS so the LAN can resolve windscout.local.
+    // Start mDNS so the LAN can resolve windpeek.local.
     ESP_ERROR_CHECK(mdns_service_init());
     ESP_ERROR_CHECK(http_server_init());
     http_server_set_ready();
@@ -546,7 +546,7 @@ void app_main(void)
         reset_reason_str = "Unknown";
         break;
     }
-    ESP_LOGI(TAG, "WindScout starting...");
+    ESP_LOGI(TAG, "Windpeek starting...");
 
     // Log initial memory state
     ESP_LOGI(TAG, "Free heap: %lu bytes, Largest free block: %lu bytes", esp_get_free_heap_size(),
@@ -709,7 +709,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(wifi_manager_init());
     ESP_ERROR_CHECK(wifi_provisioning_init());
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     ESP_ERROR_CHECK(wind_installer_service_start());
 #endif
 
@@ -755,12 +755,12 @@ void app_main(void)
                 ESP_LOGI(TAG, "Option 1: Place wifi.txt on root of storage with:");
                 ESP_LOGI(TAG, "  Line 1: WiFi SSID");
                 ESP_LOGI(TAG, "  Line 2: WiFi Password");
-                ESP_LOGI(TAG, "  Line 3: Device Name (optional, default: WindScout)");
+                ESP_LOGI(TAG, "  Line 3: Device Name (optional, default: Windpeek)");
                 ESP_LOGI(TAG, "  Then restart the device");
                 ESP_LOGI(TAG, "===========================================");
             }
             ESP_LOGI(TAG, "Option 2: Use captive portal:");
-            ESP_LOGI(TAG, "1. Connect to WiFi: WindScout - XXXXXX");
+            ESP_LOGI(TAG, "1. Connect to WiFi: Windpeek - XXXXXX");
             ESP_LOGI(TAG, "2. Open browser to: http://192.168.4.1");
             ESP_LOGI(TAG, "3. Enter your WiFi credentials");
             ESP_LOGI(TAG, "===========================================");
@@ -855,9 +855,9 @@ void app_main(void)
     ESP_LOGI(TAG, "Sending online notification to Home Assistant");
     ha_notify_online(NULL);
 
-    ESP_LOGI(TAG, "WindScout started successfully");
+    ESP_LOGI(TAG, "Windpeek started successfully");
 
-    // WindScout is a long-running appliance. Keep app_main alive so ESP-IDF
+    // Windpeek is a long-running appliance. Keep app_main alive so ESP-IDF
     // never tears down the main task while the dashboard, HTTP and button
     // worker tasks still reference application-owned state.
     while (true) {

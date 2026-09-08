@@ -1,6 +1,6 @@
-# WindScout release checklist
+# Windpeek release checklist
 
-WindScout ships from this monorepo. The production configurator, browser
+Windpeek ships from this monorepo. The production configurator, browser
 installer, reTerminal firmware and shared renderer must never be released from
 `windscout-site` or assembled by hand from separate builds.
 
@@ -19,7 +19,7 @@ E1003 with one configured spot per device.
 5. It places the website bundle in `web/public/firmware`, builds the site and
    checks that every referenced firmware part exists and has the expected size.
 6. It prepares a deployable site artifact from `main`. When the repository
-   variable `WINDSCOUT_PAGES_ENABLED` is `true`, it also deploys that artifact.
+   variable `WINDPEEK_PAGES_ENABLED` is `true`, it also deploys that artifact.
    A `v*` tag publishes the firmware as a GitHub Release.
 
 The browser uses `./firmware/` by default, so the same artifact works on the
@@ -36,16 +36,15 @@ Before enabling the Pages deployment:
 - Add that URL as the repository variable `VITE_NEARBY_LOCATION_URL`. The next
   production build uses it to replace Brouwersdam with the nearest bundled spot.
   The variable is optional: without it the site keeps Brouwersdam and still builds.
-- In the `windscout` repository, open **Settings → Pages** and select
+- In the `windpeek` repository, open **Settings → Pages** and select
   **GitHub Actions** as the publishing source.
 - Confirm the account plan permits Pages for this private repository, or make
   the repository public. A Pages website is public even when its source repo is
   private.
-- Add the repository variable `WINDSCOUT_PAGES_ENABLED` with value `true` only
+- Add the repository variable `WINDPEEK_PAGES_ENABLED` with value `true` only
   after Pages accepts the repository. Until then, `main` still verifies and
   packages the complete site but deliberately skips publication.
-- Keep the custom domain on `windscout-site` until the new Pages deployment has
-  passed at its temporary URL.
+- Set the custom domain to `windpeek.com` and follow the DNS records below.
 
 ## Installer diagnostics setup
 
@@ -57,8 +56,7 @@ To enable diagnostics, configure all of these Actions values. A release still
 builds without them; diagnostics and source-map upload are then disabled:
 
 - Repository variable `VITE_SENTRY_DSN`: the public browser DSN.
-- Repository variables `SENTRY_ORG` and `SENTRY_PROJECT`: both currently use
-  `windscout`.
+- Repository variables `SENTRY_ORG` and `SENTRY_PROJECT`: the actual organization and project slugs configured in Sentry.
 - Actions secret `SENTRY_AUTH_TOKEN`: a Sentry token with release and project
   access. Never put this token in source, logs, screenshots or artifacts.
 
@@ -68,12 +66,12 @@ The Sentry project must keep these defenses enabled:
 - Scrub passwords, passphrases, SSIDs, BSSIDs, authorization values, cookies,
   tokens, API keys, secrets, coordinates, email addresses, IP addresses and
   configuration fields.
-- Accept browser events only from `windscout.emieljanson.com` and the temporary
+- Accept browser events only from `windpeek.com`, `www.windpeek.com` and the temporary
   `emieljanson.github.io` Pages origin.
 - Keep spike protection enabled.
-- Keep the active `WindScout installer failures` alert. It emails issue owners,
+- Keep the active `Windpeek installer failures` alert. It emails issue owners,
   or recently active project members when no owner exists, for new or regressed
-  events tagged `windscout.diagnostic=installer`.
+  events tagged `windpeek.diagnostic=installer`.
 
 When Sentry is configured, the release build uses the Git commit SHA as the
 Sentry release, uploads hidden source maps, and removes every `.map` file before
@@ -95,18 +93,18 @@ Use `selected_board_id`, `detected_board_id`, `decision_reason`, `phase` and
 
 ## Dashboard activity analytics setup
 
-Production firmware sends a personless `windscout_dashboard_heartbeat` event
+Production firmware sends a personless `windpeek_dashboard_heartbeat` event
 to the PostHog US ingestion endpoint. Pull-request firmware compiles with
 analytics disabled.
 
 Before releasing:
 
-- Add repository variable `WINDSCOUT_POSTHOG_PROJECT_TOKEN` with the public
+- Add repository variable `WINDPEEK_POSTHOG_PROJECT_TOKEN` with the public
   PostHog project token. The release fails safely when it is missing.
 - In PostHog, enable project-level IP-address discarding before the variable is
   enabled. Treat this as a privacy release gate.
 - Save an insight for unique `distinct_id` values of
-  `windscout_dashboard_heartbeat` over the last 9 days. Add breakdown views for
+  `windpeek_dashboard_heartbeat` over the last 9 days. Add breakdown views for
   `firmware_version` and `device_type`.
 
 The event contains only its name, random dashboard ID, firmware version,
@@ -120,21 +118,34 @@ This is an approximate fleet signal, not billing-grade data: client events can
 be blocked or spoofed. To disable it, clear the repository variable and ship a
 new firmware release.
 
-## Moving the production domain
+## Production domain: windpeek.com
 
-The DNS record already targets `emieljanson.github.io`, so no DNS redesign is
-needed. During the release window:
+The repository is `emieljanson/windpeek`. GitHub Pages uses the GitHub Actions
+source and the custom domain `windpeek.com`. The checked-in `web/public/CNAME`
+is copied into the site artifact; the custom domain must also be set in GitHub
+Pages settings when deploying with Actions.
 
-1. Deploy and smoke-test the new site from `windscout`.
-2. Remove `windscout.emieljanson.com` from the old `windscout-site` Pages
-   settings.
-3. Add `windscout.emieljanson.com` to the `windscout` Pages settings and enable
-   HTTPS after GitHub validates the domain.
-4. Test the configurator and a real USB install on the production HTTPS URL.
-5. Archive `windscout-site` only after the production checks pass.
+Set these DNS records at the domain registrar (TTL: default):
 
-GitHub requires the custom domain to be configured in repository settings; a
-checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
+| Type | Host | Value |
+| --- | --- | --- |
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| CNAME | www | emieljanson.github.io |
+
+Replace parking A/AAAA/CNAME records for these hosts; preserve mail records.
+Do not use a wildcard or include the repository name in the CNAME target.
+Enable Enforce HTTPS once GitHub has issued the domain certificate. Check both
+https://windpeek.com and https://www.windpeek.com, the configurator, location
+search, and installer manifest downloads. DNS changes can take up to 24 hours.
+
+[GitHub custom-domain documentation](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
+
+The USB wire marker `WINDSC01` and existing device configuration storage remain
+unchanged so previously installed devices can still be recognized and upgraded.
+They are protocol compatibility values, not visible branding.
 
 ## Automated gates
 
@@ -184,7 +195,7 @@ failure and verify all of the following:
 1. The Sonner toast changes from `Sending technical details…` to
    `Technical details sent`, and the same `WS-…` reference stays selectable in
    the recovery screen.
-2. Searching Sentry for `windscout.reference:<reference>` finds exactly that
+2. Searching Sentry for `windpeek.reference:<reference>` finds exactly that
    event. The phase, stable error code and filtered timeline are useful.
 3. The event payload contains none of the planted password, SSID, configuration
    values, coordinates, email, IP address, cookies, headers, request body, full
@@ -210,7 +221,7 @@ that physical acceptance.
 For the first hour after a production release, one person owns the following
 checks:
 
-- The `WindScout release` workflow and Pages deployment remain green.
+- The `Windpeek release` workflow and Pages deployment remain green.
 - The production URL, `firmware/latest.json`, its referenced manifest and every
   firmware part return HTTP 200 over HTTPS.
 - A clean browser session can open the configurator and reach the USB device

@@ -6,8 +6,8 @@ const ConfiguratorApp = defineAsyncComponent(() => import('./ConfiguratorApp.vue
 const LandingView = defineAsyncComponent(() => import('./views/LandingView.vue'))
 const showConfigurator = isConfiguratorLocation()
 document.title = showConfigurator
-  ? 'Configure Windscout'
-  : 'Windscout — Always-on e-ink wind forecast'
+  ? 'Configure Windpeek'
+  : 'Windpeek — Always-on e-ink wind forecast'
 </script>
 
 <template>

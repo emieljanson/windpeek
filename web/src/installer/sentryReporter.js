@@ -6,7 +6,7 @@ const INSTALLER_MARKER = 'installer'
 const MAX_REPORTED_OCCURRENCES = 200
 
 const TAG_FIELDS = new Set([
-  'windscout.diagnostic', 'windscout.reference', 'error_code', 'phase', 'action',
+  'windpeek.diagnostic', 'windpeek.reference', 'error_code', 'phase', 'action',
   'route', 'release', 'board_id', 'chip_family', 'layout_version', 'browser', 'os',
   'build_release', 'selected_board_id', 'detected_board_id', 'detected_firmware',
   'release_board_id', 'release_version', 'connection_kind', 'decision_reason',
@@ -89,7 +89,7 @@ function filterException(input) {
 }
 
 export function filterInstallerEvent(event) {
-  if (event?.tags?.['windscout.diagnostic'] !== INSTALLER_MARKER) return null
+  if (event?.tags?.['windpeek.diagnostic'] !== INSTALLER_MARKER) return null
   const filtered = {
     event_id: event.event_id,
     timestamp: event.timestamp,
@@ -278,8 +278,8 @@ export function createSentryReporter({
     const environmentContext = browserContext(navigatorApi)
     const context = { ...pickScalars(input.snapshot?.context, CONTEXT_FIELDS, 240), ...environmentContext }
     const tags = {
-      'windscout.diagnostic': INSTALLER_MARKER,
-      'windscout.reference': reference,
+      'windpeek.diagnostic': INSTALLER_MARKER,
+      'windpeek.reference': reference,
       error_code: context.errorCode ?? safeString(input.error?.code, 120),
       phase: context.phase ?? safeString(input.phase, 120),
       action: context.action,

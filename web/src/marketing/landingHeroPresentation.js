@@ -1,13 +1,13 @@
 export const LANDING_HERO_PRESENTATION = Object.freeze({
   width: 1672,
   height: 941,
-  image: 'marketing/windscout-hero-yellow-v17-2x.png',
-  imageFallback: 'marketing/windscout-hero-yellow-v17-1672w.jpg',
-  imageWebp: 'marketing/windscout-hero-yellow-v17-2x.webp',
+  image: 'marketing/windpeek-hero-yellow-v17-2x.png',
+  imageFallback: 'marketing/windpeek-hero-yellow-v17-1672w.jpg',
+  imageWebp: 'marketing/windpeek-hero-yellow-v17-2x.webp',
   responsiveWebp: Object.freeze([
-    { width: 960, image: 'marketing/windscout-hero-yellow-v17-960w.webp' },
-    { width: 1672, image: 'marketing/windscout-hero-yellow-v17-1672w.webp' },
-    { width: 2508, image: 'marketing/windscout-hero-yellow-v17-2508w.webp' },
+    { width: 960, image: 'marketing/windpeek-hero-yellow-v17-960w.webp' },
+    { width: 1672, image: 'marketing/windpeek-hero-yellow-v17-1672w.webp' },
+    { width: 2508, image: 'marketing/windpeek-hero-yellow-v17-2508w.webp' },
   ]),
   framing: Object.freeze({
     zoom: 1.2,

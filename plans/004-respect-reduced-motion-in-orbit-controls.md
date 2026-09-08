@@ -31,16 +31,16 @@ export function configureOrbitControls(controls, { reduceMotion = false } = {}) 
 }
 ```
 
-`WindScoutScene.vue` must read `(prefers-reduced-motion: reduce)` before configuring controls and respond if the preference changes while the page is open.
+`WindpeekScene.vue` must read `(prefers-reduced-motion: reduce)` before configuring controls and respond if the preference changes while the page is open.
 
 ## Repo conventions to follow
 
-`WindScoutScene.vue:424–443` centralizes setup cleanup. Register the media-query listener during initialization and remove it there. Keep rendering demand-driven through `requestRender()`.
+`WindpeekScene.vue:424–443` centralizes setup cleanup. Register the media-query listener during initialization and remove it there. Keep rendering demand-driven through `requestRender()`.
 
 ## Steps
 
 1. Extend `configureOrbitControls` in `sceneController.js` with the exact optional options argument shown above.
-2. In `WindScoutScene.vue`, add a `reducedMotionQuery` module variable beside `resizeObserver`.
+2. In `WindpeekScene.vue`, add a `reducedMotionQuery` module variable beside `resizeObserver`.
 3. Before line 280 configures controls, call `window.matchMedia('(prefers-reduced-motion: reduce)')` and pass its current `matches` value.
 4. Add a change listener that updates `controls.enableDamping`, calls `controls.update()`, and calls `requestRender()`.
 5. Remove the listener in `onBeforeUnmount`.

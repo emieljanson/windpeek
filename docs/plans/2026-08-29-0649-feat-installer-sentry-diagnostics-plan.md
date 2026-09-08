@@ -14,7 +14,7 @@ deepened: 2026-08-29
 
 ## Goal Capsule
 
-- **Objective:** WindScout maintainers can diagnose failed installations on other people's devices without asking them to reproduce the failure or inspect browser developer tools.
+- **Objective:** Windpeek maintainers can diagnose failed installations on other people's devices without asking them to reproduce the failure or inspect browser developer tools.
 - **Means:** Automatically report installer failures to Sentry with deep, pre-filtered diagnostics and a user-visible reference code.
 - **Product authority:** This plan governs production observability for the browser installer only. It does not authorize general website analytics or monitoring.
 - **Open blockers:** None.
@@ -36,7 +36,7 @@ When another person encounters a problem, the maintainer receives no event histo
 ### Actors
 
 - A1. **Installer user:** Connects a supported device and receives recovery guidance plus a reference code when diagnostics are reported.
-- A2. **WindScout maintainer:** Investigates an incident in Sentry without needing access to the user's browser or device.
+- A2. **Windpeek maintainer:** Investigates an incident in Sentry without needing access to the user's browser or device.
 - A3. **Connected device:** Supplies installer protocol, bootloader, flash, and runtime output that may inform diagnosis.
 - A4. **Sentry:** Receives only the filtered installer failure event and makes it searchable by reference code.
 
@@ -55,7 +55,7 @@ When another person encounters a problem, the maintainer receives no event histo
 
 - R1. Every unexpected production installer failure shall create one automatic Sentry error report when the security gates in R6-R9 permit transmission.
 - R2. Reporting shall cover only failures originating in the device connection, device check, firmware download, flashing, reconnection, Wi-Fi setup, configuration application, and verification flow.
-- R3. A successfully accepted report shall produce a short WindScout reference code that the user sees and the maintainer can use to find the event in Sentry.
+- R3. A successfully accepted report shall produce a short Windpeek reference code that the user sees and the maintainer can use to find the event in Sentry.
 - R4. Each report shall identify the installer phase, stable installer error code, user action, selected installation route, software release, browser environment, supported hardware identity, elapsed timings, and the deepest safe cause available.
 - R5. Reports shall include a bounded timeline of installer state changes, flash progress, protocol exchanges, and available device, serial, or bootloader output at the greatest detail allowed by R6-R9.
 
@@ -78,7 +78,7 @@ When another person encounters a problem, the maintainer receives no event histo
 - F1. Automatic report before credentials exist
   - **Trigger:** The installer encounters an unexpected device, download, flash, or reconnection failure.
   - **Actors:** A1, A2, A3, A4
-  - **Steps:** The installer freezes the bounded diagnostic timeline, filters it, submits one error event, receives the event identity, and renders the matching WindScout reference code with the existing recovery guidance.
+  - **Steps:** The installer freezes the bounded diagnostic timeline, filters it, submits one error event, receives the event identity, and renders the matching Windpeek reference code with the existing recovery guidance.
   - **Outcome:** The user can quote the code and the maintainer can inspect the failure path in Sentry.
   - **Covered by:** R1-R7, R9, R11-R13
 - F2. Failure while credentials exist
@@ -104,7 +104,7 @@ flowchart TB
   D -->|No| G[Submit filtered event]
   F --> G
   G --> H{Sentry accepted it?}
-  H -->|Yes| I[Show searchable WindScout reference]
+  H -->|Yes| I[Show searchable Windpeek reference]
   H -->|No| J[Show diagnostics were not sent]
   I --> K[Keep normal recovery guidance]
   J --> K
@@ -122,7 +122,7 @@ flowchart TB
 ### Success Criteria
 
 - A maintainer can determine the failing installer phase and deepest safe cause from one Sentry event without first asking the user for developer-console output.
-- Every displayed WindScout reference code resolves to the corresponding Sentry event.
+- Every displayed Windpeek reference code resolves to the corresponding Sentry event.
 - Secret-bearing test values remain absent from outbound requests, Sentry storage, browser persistence, console output, and user-facing diagnostics.
 - Blocking Sentry produces no observable regression in installation, recovery, cancellation, or USB safety behavior.
 - Sentry contains no events from outside the browser installer.
@@ -132,7 +132,7 @@ flowchart TB
 - General website errors, product analytics, performance monitoring, session replay, screenshots, and screen recordings are outside this work.
 - Successful-install analytics and installation conversion metrics are outside this work.
 - A user-triggered diagnostic download or support bundle is outside this work.
-- A new WindScout telemetry backend is outside this work; the first version uses Sentry's free Developer plan.
+- A new Windpeek telemetry backend is outside this work; the first version uses Sentry's free Developer plan.
 - Consent prompts and a new privacy notice are outside this work.
 
 ### Dependencies and Assumptions
@@ -158,12 +158,12 @@ Product Contract unchanged.
 
 ### Key Technical Decisions
 
-- KTD1. **Use the browser SDK only for explicit installer failure reports.** Add `@sentry/browser`, load it lazily after a report passes the credential gate, and do not install a global Vue error handler. Initialize it with `defaultIntegrations: false`, `sendClientReports: false`, `enableLogs: false`, `enableMetrics: false`, `tracePropagationTargets: []`, and every `dataCollection` category disabled. A final `beforeSend` hook shall accept only WindScout-marked diagnostic events and shall rebuild their custom fields from an allowlist. This implements R1, R2, R6, R7, R10, and R11.
+- KTD1. **Use the browser SDK only for explicit installer failure reports.** Add `@sentry/browser`, load it lazily after a report passes the credential gate, and do not install a global Vue error handler. Initialize it with `defaultIntegrations: false`, `sendClientReports: false`, `enableLogs: false`, `enableMetrics: false`, `tracePropagationTargets: []`, and every `dataCollection` category disabled. A final `beforeSend` hook shall accept only Windpeek-marked diagnostic events and shall rebuild their custom fields from an allowlist. This implements R1, R2, R6, R7, R10, and R11.
 - KTD2. **Own the diagnostic history in a bounded browser-memory recorder.** Keep at most 100 structured entries and 50 KiB of text for the active installation attempt. Truncate each low-level text entry to 512 characters before insertion, evict the oldest entries at either bound, and destroy the recorder on completion, cancellation, or panel close. Do not use Sentry Logs or automatic breadcrumbs. This implements R5 and R9.
 - KTD3. **Treat Wi-Fi credentials as an active transmission lock.** Register every scalar configuration value for redaction when an attempt starts, but do not use configuration reachability as a network lock. Acquire the transmission lock when the submitted SSID and password are copied from the form. The reporting controller shall refuse SDK initialization and network transmission while that credential lock is active. On every success, exception, cancellation, and stale-attempt path, both the form and session shall blank SSID and password references, release the lock, scrub the frozen report again, and only then allow a pending report to continue. This implements R6-R9 and F2.
 - KTD4. **Use two independent browser-side filters.** The first filter shall replace every registered sensitive value and remove prohibited structured fields before a report snapshot is created. It shall also redact common secret assignments, network identifiers, email addresses, IP addresses, coordinates, URL query strings, and authorization material from free text. The `beforeSend` allowlist in KTD1 is the final filter. Any field or text fragment that cannot be classified safely shall be dropped. This implements R6, R7, R9, and AE2.
 - KTD5. **Instrument existing seams with a passive diagnostic sink.** Inject one recorder/controller into `createInstallerSession`, `createSerialProtocol`, and `createEsptoolAdapter`. Record phase changes, elapsed durations, stable error codes, safe device metadata, command names, response status, byte counts, flash progress, discarded UART text, and esptool terminal text. Never record protocol request values, response configuration values, serial numbers, configuration digests, full user-agent strings, or raw device objects. This implements R4, R5, and R7.
-- KTD6. **Give each report a WindScout-owned reference and confirm delivery before showing it.** Generate a random `WS-` reference with at least 50 bits of entropy, store it as an exact Sentry tag, and include it in the filtered event. Wrap the Sentry transport so the reporter can correlate the envelope event ID with its HTTP result. Set state to `sent` and expose the reference only after a 2xx response; timeout, rejection, blocking, quota failure, or non-2xx response sets state to `failed` and exposes no reference. `captureException` or `flush` alone is not proof of acceptance. This implements R3, R11, R12, and F3.
+- KTD6. **Give each report a Windpeek-owned reference and confirm delivery before showing it.** Generate a random `WS-` reference with at least 50 bits of entropy, store it as an exact Sentry tag, and include it in the filtered event. Wrap the Sentry transport so the reporter can correlate the envelope event ID with its HTTP result. Set state to `sent` and expose the reference only after a 2xx response; timeout, rejection, blocking, quota failure, or non-2xx response sets state to `failed` and exposes no reference. `captureException` or `flush` alone is not proof of acceptance. This implements R3, R11, R12, and F3.
 - KTD7. **Report one event for each reportable failure occurrence.** Report failures that end or interrupt an installation attempt in connection, download, flash, reconnection, Wi-Fi, configuration, or verification. Do not report unsupported-browser guards, cancelled device choosers, declined hardware confirmation, incompatible-device safety blocks, successful attempts, or ordinary configurator behavior. Deduplicate by attempt and failure occurrence so repeated rendering or subscriptions cannot send the same event twice. This implements R1, R2, R10, and AE5.
 - KTD8. **Upload hidden production source maps without publishing them.** Add `@sentry/vite-plugin` after the Vue plugin, use one release identifier for the SDK event and upload, and enable hidden source maps only for production release builds that have Sentry configuration. The release workflow shall supply the public DSN and release identifier through repository variables and the upload token through a GitHub secret. Delete source maps from `web/dist` after upload and before the Pages artifact is created. This implements R4 without exposing source maps or credentials.
 - KTD9. **Keep Sentry failure outside the installer safety state machine.** Reporting runs as a separately observed promise and may update only diagnostic delivery fields. It shall not delay device cleanup, recovery transitions, cancellation, panel close, or `safeToDisconnect`. This implements R11 and AE6.
@@ -192,7 +192,7 @@ sequenceDiagram
   participant UI as Wi-Fi form
   participant Session as Installer session
   participant Reporter as Reporting controller
-  participant Device as WindScout device
+  participant Device as Windpeek device
   participant Sentry as Sentry
   UI->>Session: Submit SSID and password
   Session->>Reporter: Register values and acquire credential lock
@@ -226,7 +226,7 @@ stateDiagram-v2
 
 The report uses a small allowlist. Any unlisted field is discarded.
 
-- **Tags:** WindScout reference, stable installer error code, installer phase, installation action, firmware release, board ID, chip family, firmware layout version, browser engine family and major version, operating-system family, and build release identifier.
+- **Tags:** Windpeek reference, stable installer error code, installer phase, installation action, firmware release, board ID, chip family, firmware layout version, browser engine family and major version, operating-system family, and build release identifier.
 - **Measurements:** Milliseconds since attempt start, phase durations, flash file index, bytes written, total bytes, retry count, and bounded recorder counts.
 - **Timeline:** Timestamp offset, category, safe operation name, result status, and filtered message. Protocol command names are allowed; request and response values are not.
 - **Exception:** Stable user-safe message, error class, safe cause chain, and production stack trace. Arbitrary enumerable properties from thrown objects are not copied.
@@ -374,7 +374,7 @@ The release workflow remains the final automated gate. Diagnostics may merge beh
 
 - Every R-ID and AE-ID is covered by at least one implementation unit and a named verification gate.
 - One filtered Sentry event is created for each reportable failure occurrence, and no event is created for excluded or successful behavior.
-- Every displayed WindScout reference resolves to exactly one accepted Sentry event; failed delivery never displays a reference.
+- Every displayed Windpeek reference resolves to exactly one accepted Sentry event; failed delivery never displays a reference.
 - Credential-bearing and planted personal values are absent from recorder snapshots, outbound envelopes, stored events, browser persistence, console output, UI copy, source maps, and build artifacts.
 - No Sentry SDK initialization or request can occur while the credential lock is active.
 - Blocking, rejecting, timing out, or disabling Sentry does not change installer recovery, cancellation, device cleanup, or `safeToDisconnect` behavior.

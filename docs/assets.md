@@ -1,4 +1,4 @@
-# WindScout design assets
+# Windpeek design assets
 
 ## E1002 product model
 

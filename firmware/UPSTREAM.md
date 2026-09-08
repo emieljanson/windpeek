@@ -25,7 +25,7 @@ parts keep their original notices. See `LICENSING.md` for the project-level
 distribution statement and the separate asset caveat.
 
 Local deviations are limited to replacing Arduino SPI/GPIO/delay calls with
-ESP-IDF APIs, accepting WindScout's one-byte-per-logical-pixel 800x480
+ESP-IDF APIs, accepting Windpeek's one-byte-per-logical-pixel 800x480
 surface, encoding the two 48,000-byte planes in PSRAM, propagating SPI
 errors, and replacing the upstream unbounded BUSY loop with a 40-second
 bounded wait. Initialization and all five external LUT writes run again for

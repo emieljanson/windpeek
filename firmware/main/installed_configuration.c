@@ -108,7 +108,7 @@ static bool legacy_configuration_core_valid(uint32_t version, uint32_t expected_
                                             const char *forecast_model, uint8_t threshold_kt)
 {
     return version == expected_version && generation > 0 && board_id && spot && forecast_model &&
-           terminated(board_id, 40) && strcmp(board_id, WINDSCOUT_BOARD_ID) == 0 &&
+           terminated(board_id, 40) && strcmp(board_id, WINDPEEK_BOARD_ID) == 0 &&
            terminated(spot->id, sizeof(spot->id)) && spot->id[0] != '\0' &&
            terminated(spot->display_name, sizeof(spot->display_name)) &&
            spot->display_name[0] != '\0' && spot->latitude >= -90.0 && spot->latitude <= 90.0 &&
@@ -172,7 +172,7 @@ void installed_configuration_default(installed_configuration_t *config)
     memset(config, 0, sizeof(*config));
     config->version = INSTALLED_CONFIGURATION_VERSION;
     config->generation = 1;
-    snprintf(config->board_id, sizeof(config->board_id), "%s", WINDSCOUT_BOARD_ID);
+    snprintf(config->board_id, sizeof(config->board_id), "%s", WINDPEEK_BOARD_ID);
     snprintf(config->device_timezone, sizeof(config->device_timezone), "Europe/Amsterdam");
     snprintf(config->spot.id, sizeof(config->spot.id), "brouwersdam");
     snprintf(config->spot.display_name, sizeof(config->spot.display_name), "Brouwersdam");
@@ -194,7 +194,7 @@ bool installed_configuration_validate(const installed_configuration_t *config)
 {
     if (!config || config->version != INSTALLED_CONFIGURATION_VERSION || config->generation == 0 ||
         !terminated(config->board_id, sizeof(config->board_id)) ||
-        strcmp(config->board_id, WINDSCOUT_BOARD_ID) != 0 ||
+        strcmp(config->board_id, WINDPEEK_BOARD_ID) != 0 ||
         !terminated(config->device_timezone, sizeof(config->device_timezone)) ||
         config->device_timezone[0] == '\0' || !wind_timezone_is_supported(config->device_timezone) ||
         !terminated(config->spot.id, sizeof(config->spot.id)) || config->spot.id[0] == '\0' ||

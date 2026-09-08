@@ -116,7 +116,7 @@ test('keeps the implicit default empty, then shows and restores a chosen spot', 
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/?configure')
 
-  await expect(page.getByRole('region', { name: 'Windscout 3D preview' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Windpeek 3D preview' })).toBeVisible()
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   expect(requests).toHaveLength(1)
 
@@ -263,8 +263,8 @@ test('creates and remembers a personal spot only after the explicit map flow', a
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
   const spot = page.getByRole('combobox', { name: 'Search spot' })
-  await spot.fill('Windscout Test Bay')
-  const addTestBay = page.getByRole('option', { name: 'Add Windscout Test Bay' })
+  await spot.fill('Windpeek Test Bay')
+  const addTestBay = page.getByRole('option', { name: 'Add Windpeek Test Bay' })
   await expect(addTestBay).toBeVisible()
   expect(autocompleteRequests).toHaveLength(0)
   await addTestBay.click()
@@ -321,7 +321,7 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'About reTerminal devices' })).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'reTerminal' })).toHaveCount(0)
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
-  const displayOptions = page.getByRole('group', { name: 'Show on Windscout' })
+  const displayOptions = page.getByRole('group', { name: 'Show on Windpeek' })
   await expect(displayOptions).toBeVisible()
   await expect(displayOptions.getByRole('button')).toHaveCount(4)
   await displayOptions.getByRole('button', { name: 'Threshold' }).click()

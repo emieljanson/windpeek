@@ -158,7 +158,7 @@ describe('firmware manifest', () => {
     }))
     await expect(loadFirmwareRelease({
       baseUrl: 'https://example.test/firmware/', fetchFn: escapingFetch, cryptoApi: webcrypto,
-    })).rejects.toThrow(/leaves the Windscout firmware directory/i)
+    })).rejects.toThrow(/leaves the Windpeek firmware directory/i)
   })
 
   it('rejects firmware part URLs outside the immutable release directory', async () => {

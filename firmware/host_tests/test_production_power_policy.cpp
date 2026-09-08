@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#ifdef WINDSCOUT_DEVELOPMENT_MODE
-#error "WindScout production firmware must not expose an always-on development mode"
+#ifdef WINDPEEK_DEVELOPMENT_MODE
+#error "Windpeek production firmware must not expose an always-on development mode"
 #endif
 
 TEST(ProductionPowerPolicy, AlwaysOnDevelopmentModeIsUnavailable)
@@ -37,12 +37,12 @@ TEST(ProductionPowerPolicy, UsbPowerNeverDisablesFutureBatteryWakes)
               std::string::npos);
 }
 
-TEST(ProductionPowerPolicy, E100xCapabilityBuildContainsOnlyTheWindScoutRuntime)
+TEST(ProductionPowerPolicy, E100xCapabilityBuildContainsOnlyTheWindpeekRuntime)
 {
     const std::string cmake = read_source(WIND_CMAKE_SOURCE);
-    EXPECT_NE(cmake.find("if(CONFIG_BOARD_CAP_WINDSCOUT)"), std::string::npos);
-    EXPECT_NE(cmake.find("windscout_main.c"), std::string::npos);
-    EXPECT_NE(cmake.find("windscout_display_manager.c"), std::string::npos);
+    EXPECT_NE(cmake.find("if(CONFIG_BOARD_CAP_WINDPEEK)"), std::string::npos);
+    EXPECT_NE(cmake.find("windpeek_main.c"), std::string::npos);
+    EXPECT_NE(cmake.find("windpeek_display_manager.c"), std::string::npos);
 
     const std::string main_source = read_source(WIND_MAIN_SOURCE);
     for (const char *legacy : {"album_manager", "ha_integration", "http_server",

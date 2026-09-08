@@ -171,7 +171,7 @@ function clearPillPointerFocus(event) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
-    <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windscout">
+    <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windpeek">
       <button
         class="mobile-display-pill"
         type="button"

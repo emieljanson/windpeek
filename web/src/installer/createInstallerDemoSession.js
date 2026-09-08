@@ -1,5 +1,5 @@
 const DEMO_NETWORKS = [
-  { ssid: 'Windscout Studio', rssi: -35, secured: true },
+  { ssid: 'Windpeek Studio', rssi: -35, secured: true },
   { ssid: 'North Sea Guest', rssi: -58, secured: false },
 ]
 

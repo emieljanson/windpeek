@@ -2,7 +2,7 @@ import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract
 import { availableStorage } from '../storage'
 import { validTimezone } from '../timezone'
 
-export const PERSONAL_SPOTS_STORAGE_KEY = 'windscout.personal-spots'
+export const PERSONAL_SPOTS_STORAGE_KEY = 'windpeek.personal-spots'
 const PERSONAL_SPOTS_VERSION = 1
 
 function slug(value) {

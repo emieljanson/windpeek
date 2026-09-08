@@ -10,7 +10,7 @@ function validDecision(decision) {
   if (typeof decision.evidenceFingerprint !== 'string' || !decision.evidenceFingerprint) return false
   if (!['approve', 'reject'].includes(decision.action)) return false
   if (decision.action === 'reject') return typeof decision.reason === 'string' && Boolean(decision.reason.trim())
-  return typeof decision.windscoutId === 'string' && Boolean(decision.windscoutId) &&
+  return typeof decision.windpeekId === 'string' && Boolean(decision.windpeekId) &&
     typeof decision.name === 'string' && Boolean(decision.name.trim()) &&
     validCoordinates(Number(decision.latitude), Number(decision.longitude))
 }
@@ -45,7 +45,7 @@ export function createReviewDecision(candidate, validation, {
   name = candidate.name,
   latitude = candidate.latitude,
   longitude = candidate.longitude,
-  windscoutId = stableSpotId(candidate.id),
+  windpeekId = stableSpotId(candidate.id),
   reason = '',
 } = {}) {
   if (!['approve', 'reject'].includes(action)) throw new Error('Choose approve or reject.')
@@ -65,7 +65,7 @@ export function createReviewDecision(candidate, validation, {
   if (!validCoordinates(lat, lon)) throw new Error('Choose valid coordinates.')
   return {
     ...base,
-    windscoutId,
+    windpeekId,
     name: cleanName,
     latitude: Number(lat.toFixed(6)),
     longitude: Number(lon.toFixed(6)),

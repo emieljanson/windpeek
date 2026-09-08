@@ -163,7 +163,7 @@ static esp_err_t fetch_github_release_info(char *latest_version, size_t version_
     }
 
     // Set User-Agent header (GitHub API requires it)
-    esp_http_client_set_header(client, "User-Agent", "WindScout");
+    esp_http_client_set_header(client, "User-Agent", "Windpeek");
 
     err = esp_http_client_open(client, 0);
     if (err != ESP_OK) {
@@ -241,7 +241,7 @@ static esp_err_t fetch_github_release_info(char *latest_version, size_t version_
     const char *board_name = BOARD_HAL_NAME;
 
     char target_binary[64];
-    snprintf(target_binary, sizeof(target_binary), "windscout-%s.bin", board_name);
+    snprintf(target_binary, sizeof(target_binary), "windpeek-%s.bin", board_name);
     ESP_LOGI(TAG, "Searching for board-specific OTA binary: %s", target_binary);
 
     cJSON_ArrayForEach(asset, assets)

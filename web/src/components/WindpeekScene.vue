@@ -37,7 +37,7 @@ import { createProductStudioEnvironment } from '../configurator/studioEnvironmen
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { createSceneComposer } from '../configurator/sceneComposer'
 import { createSceneQuality, SCENE_QUALITY, scenePixelRatio } from '../configurator/sceneQuality'
-import { PRODUCT_LIGHTING } from '../configurator/productLighting'
+import { PRODUCT_LIGHTING, DARK_PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
 import { markingGroupForSourceMesh } from '../configurator/markingDebug'
 import {
@@ -136,6 +136,42 @@ let keyLight
 let softbox
 let accent
 let rimLight
+let hemisphereLight
+let themeQuery
+
+function applyStudioTheme() {
+  if (!scene || !renderer || !keyLight) return
+  const dark = themeQuery.matches && !props.captureMode
+  const lighting = dark ? DARK_PRODUCT_LIGHTING : PRODUCT_LIGHTING
+  scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
+  scene.fog = dark ? new THREE.FogExp2(lighting.background, 1.5) : null
+  const previousEnvironment = environmentTarget
+  environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
+  scene.environment = environmentTarget.texture
+  previousEnvironment?.dispose()
+  hemisphereLight.color.set(lighting.hemisphere.sky)
+  hemisphereLight.groundColor.set(lighting.hemisphere.ground)
+  hemisphereLight.intensity = lighting.hemisphere.intensity
+  for (const [light, settings] of [[keyLight, lighting.key], [softbox, lighting.softbox], [accent, lighting.accent], [rimLight, lighting.rim]]) {
+    light.color.set(settings.color)
+    light.intensity = settings.intensity
+    light.position.set(...settings.position)
+  }
+  softbox.lookAt(0, 0, 0)
+  accent.lookAt(0, 0, 0)
+  keyLight.angle = lighting.key.angle
+  keyLight.penumbra = lighting.key.penumbra
+  const floor = scene.getObjectByName('STUDIO_LIT_FLOOR')
+  if (floor) floor.visible = dark
+  const grid = scene.getObjectByName('SURFACE_GRID')
+  if (grid) grid.visible = !dark
+  // These artistic reflection overlays describe the light studio's softboxes.
+  // The dark studio uses the physical material and its own reflected lights.
+  model?.traverse((child) => {
+    if (child.name === 'FRONT_PANEL_REFLECTION' || child.name === 'SCREEN_FINISH') child.visible = !dark
+  })
+  requestRender()
+}
 let usbCable
 let usbCableAnimation
 let heroEntranceAnimation
@@ -594,11 +630,12 @@ async function initialize() {
     environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
     scene.environment = environmentTarget.texture
 
-    scene.add(new THREE.HemisphereLight(
+    hemisphereLight = new THREE.HemisphereLight(
       lighting.hemisphere.sky,
       lighting.hemisphere.ground,
       lighting.hemisphere.intensity,
-    ))
+    )
+    scene.add(hemisphereLight)
     keyLight = new THREE.SpotLight(lighting.key.color, lighting.key.intensity)
     keyLight.position.set(...lighting.key.position)
     keyLight.angle = lighting.key.angle
@@ -639,6 +676,15 @@ async function initialize() {
     scene.add(rimLight)
     const deviceStage = deviceStageForBoard(props.boardId)
     if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
+    if (!props.captureMode) {
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({ color: 0x555b61, roughness: 0.92, metalness: 0, envMapIntensity: 0.12 }))
+      floor.name = 'STUDIO_LIT_FLOOR'
+      floor.rotation.x = -Math.PI / 2
+      floor.position.y = deviceStage.surfaceY - 0.0001
+      floor.receiveShadow = true
+      scene.add(floor)
+    }
+    applyStudioTheme()
 
     const loadedModel = await loadDeviceModel(props.boardId)
     if (!lifetime.adopt(loadedModel, disposeObject)) return
@@ -691,6 +737,7 @@ async function initialize() {
     const screenBacking = createEpaperBacking(screen)
     createScreenRecessShadow(screenBacking)
     createMatteScreenFinish(screenBacking)
+    applyStudioTheme()
     const initialCompositionMode = host.value.clientWidth <= 56 * 16 ? 'compact' : 'wide'
     compositionMode = initialCompositionMode
     usbCable = createUsbCable(initialCompositionMode, props.boardId)
@@ -770,12 +817,15 @@ watch(cableLab, applyCableLabSettings)
 watch(markingOffsets, applyMarkingOffsets, { deep: true })
 
 onMounted(() => {
+  themeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  themeQuery.addEventListener('change', applyStudioTheme)
   reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
   document.addEventListener('visibilitychange', handleSceneVisibility)
   initialize()
 })
 onBeforeUnmount(() => {
+  themeQuery?.removeEventListener('change', applyStudioTheme)
   lifetime.cancel()
   stopLoadingStatus()
   if (animationFrame !== undefined) cancelAnimationFrame(animationFrame)
@@ -798,6 +848,7 @@ onBeforeUnmount(() => {
   composer?.dispose()
   disposeObject(model)
   disposeObject(scene?.getObjectByName('SURFACE_GRID'))
+  disposeObject(scene?.getObjectByName('STUDIO_LIT_FLOOR'))
   disposeObject(scene?.getObjectByName('PHYSICAL_SHADOW_LAYER'))
   disposeObject(scene?.getObjectByName('CONTACT_OCCLUSION'))
   usbCable?.dispose()
@@ -818,7 +869,7 @@ onBeforeUnmount(() => {
     :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"
   >
-    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windscout…</span>
+    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windpeek…</span>
     <aside v-if="cableLabEnabled" class="cable-lab" aria-label="Cable motion lab">
       <header>
         <strong>Cable motion lab</strong>

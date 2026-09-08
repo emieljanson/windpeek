@@ -1,5 +1,5 @@
 ---
-title: Weather icon row for the WindScout forecast dashboard
+title: Weather icon row for the Windpeek forecast dashboard
 date: 2026-08-24
 type: feat
 artifact_contract: ce-unified-plan/v1
@@ -9,7 +9,7 @@ execution: code
 origin: conversation
 ---
 
-# Weather icon row for the WindScout forecast dashboard
+# Weather icon row for the Windpeek forecast dashboard
 
 ## Goal Capsule
 

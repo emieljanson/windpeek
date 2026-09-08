@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and validate WindScout's immutable browser-installer bundles."""
+"""Build and validate Windpeek's immutable browser-installer bundles."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ PART_KINDS = {
     "bootloader/bootloader.bin": "bootloader",
     "partition_table/partition-table.bin": "partition-table",
     "ota_data_initial.bin": "boot-selection",
-    "windscout.bin": "application",
+    "windpeek.bin": "application",
 }
 
 

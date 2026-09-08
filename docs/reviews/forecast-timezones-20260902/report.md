@@ -14,7 +14,7 @@
 - Releases: 5 manifesttests groen.
 - Review: drie restfouten gevonden en opgelost; geen open actiepunten.
 - Commit: `0f0dbdd`.
-- PR: [#7](https://github.com/emieljanson/windscout/pull/7).
+- PR: [#7](https://github.com/emieljanson/windpeek/pull/7).
 
 ### Coverage
 

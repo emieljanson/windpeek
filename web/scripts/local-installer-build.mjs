@@ -7,7 +7,7 @@ const PART_KINDS = {
   'bootloader/bootloader.bin': 'bootloader',
   'partition_table/partition-table.bin': 'partition-table',
   'ota_data_initial.bin': 'boot-selection',
-  'windscout.bin': 'application',
+  'windpeek.bin': 'application',
 }
 
 function partKind(sourceName) {
@@ -16,7 +16,7 @@ function partKind(sourceName) {
   if (basename === 'bootloader.bin') return 'bootloader'
   if (basename === 'partition-table.bin') return 'partition-table'
   if (basename === 'ota_data_initial.bin') return 'boot-selection'
-  if (basename === 'windscout.bin') return 'application'
+  if (basename === 'windpeek.bin') return 'application'
   return null
 }
 
@@ -48,7 +48,7 @@ function readCandidate(buildDir) {
   if (typeof projectDescription.project_version !== 'string' || !projectDescription.project_version.trim()) return null
   const appFile = projectDescription.app_bin
     ? path.join(buildDir, projectDescription.app_bin)
-    : files.find((file) => path.basename(file) === 'windscout.bin')
+    : files.find((file) => path.basename(file) === 'windpeek.bin')
   if (!appFile || !existsSync(appFile)) return null
 
   return {

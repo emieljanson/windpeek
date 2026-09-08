@@ -15,7 +15,7 @@ from boards import SUPPORTED_BOARDS
 BOARDS = list(SUPPORTED_BOARDS.keys())
 
 STEPS = ["webapp", "splash", "firmware"]
-WINDSCOUT_BOARDS = {
+WINDPEEK_BOARDS = {
     "seeedstudio_reterminal_e1002",
     "seeedstudio_reterminal_e100x",
     "seeedstudio_reterminal_e1003",
@@ -194,13 +194,13 @@ def main():
         choices=STEPS,
         action="append",
         help="Run only specific step(s). Can be specified multiple times. "
-        "If omitted, WindScout boards build firmware only; photo-frame boards run all steps.",
+        "If omitted, Windpeek boards build firmware only; photo-frame boards run all steps.",
     )
     # Allow passing extra arguments to idf.py
     args, extra_args = parser.parse_known_args()
 
-    # WindScout does not embed the photo-frame webapp or generated setup screens.
-    steps = args.step or (["firmware"] if args.board in WINDSCOUT_BOARDS else STEPS)
+    # Windpeek does not embed the photo-frame webapp or generated setup screens.
+    steps = args.step or (["firmware"] if args.board in WINDPEEK_BOARDS else STEPS)
 
     installer_version = None
     if args.installer_output:

@@ -30,7 +30,7 @@ function donate() {
   <div class="installer-step installer-step--complete">
     <div class="installer-step__copy">
       <h2 id="installer-title">Ready for the wind</h2>
-      <p v-if="donationUrl">Windscout is free, so you can decide what it’s worth to you. If it’s useful, a donation can help make future features possible.</p>
+      <p v-if="donationUrl">Windpeek is free, so you can decide what it’s worth to you. If it’s useful, a donation can help make future features possible.</p>
       <p v-else>The selected spot and display options are live on your device.</p>
     </div>
     <div class="installer-actions">

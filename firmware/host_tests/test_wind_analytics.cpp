@@ -166,7 +166,7 @@ TEST(WindAnalyticsTest, BuildsAnExactPersonlessPostHogPayload)
     EXPECT_STREQ(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(root, "api_key")),
                  "phc_test");
     EXPECT_STREQ(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(root, "event")),
-                 "windscout_dashboard_heartbeat");
+                 "windpeek_dashboard_heartbeat");
     EXPECT_STREQ(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(root, "distinct_id")),
                  "00112233445566778899aabbccddeeff");
 

@@ -62,7 +62,7 @@ export function buildRuntimeCatalog({ existing, candidates, validationResults, d
     if (validation.outcome !== 'needs-review' || decision?.action !== 'approve' ||
         decision.evidenceFingerprint !== validation.evidenceFingerprint) continue
     generated.push(runtimeSpot({
-      id: decision.windscoutId || stableSpotId(candidate.id),
+      id: decision.windpeekId || stableSpotId(candidate.id),
       name: decision.name,
       latitude: decision.latitude,
       longitude: decision.longitude,

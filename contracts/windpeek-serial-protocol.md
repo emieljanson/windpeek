@@ -1,4 +1,4 @@
-# WindScout USB serial protocol v1
+# Windpeek USB serial protocol v1
 
 The E1002 USB-C connector exposes its UART bridge. Installer responses are serialized with firmware console output so log bytes can appear between frames, but never inside a CRC-protected frame. Browser parsers ignore console bytes while searching for the next frame magic.
 

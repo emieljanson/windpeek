@@ -51,4 +51,4 @@ execute_process(
 )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(windscout)
+project(windpeek)

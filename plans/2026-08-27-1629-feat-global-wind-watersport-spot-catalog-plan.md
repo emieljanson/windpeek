@@ -27,19 +27,19 @@ execution: code
 
 ### Summary
 
-Windscout will ship a quality-controlled worldwide catalog of kitesurf, windsurf, wingfoil, and sailing locations.
+Windpeek will ship a quality-controlled worldwide catalog of kitesurf, windsurf, wingfoil, and sailing locations.
 Each public result presents only a name and forecast location; deterministic source processing and human review keep the catalog trustworthy without AI.
 
 ### Problem Frame
 
-Windscout currently ships three manually maintained spots, so catalog search is useful only for a tiny part of its intended audience.
+Windpeek currently ships three manually maintained spots, so catalog search is useful only for a tiny part of its intended audience.
 Public datasets offer much broader coverage, but mix facilities with usable water locations and contain uneven names, shortened links, duplicates, incorrect pins, and unclear provenance.
 No single source covers all four activities well enough to become the sole authority.
 
 ### Key Decisions
 
-- **All wind-dependent watersports** (session-settled: user-directed — chosen over a kitesurf-only catalog: Windscout's forecast is useful for kitesurfing, windsurfing, wingfoiling, and sailing). Governs R1, R5, R6, R18.
-- **Name and location are the complete public spot model** (session-settled: user-directed — chosen over surf conditions and access metadata: Windscout only needs a forecast target). Governs R2-R4.
+- **All wind-dependent watersports** (session-settled: user-directed — chosen over a kitesurf-only catalog: Windpeek's forecast is useful for kitesurfing, windsurfing, wingfoiling, and sailing). Governs R1, R5, R6, R18.
+- **Name and location are the complete public spot model** (session-settled: user-directed — chosen over surf conditions and access metadata: Windpeek only needs a forecast target). Governs R2-R4.
 - **Deterministic validation instead of AI** (session-settled: user-approved — chosen over model-assisted review: geometry and explicit rules are cheaper and repeatable). Governs R7-R10.
 - **Aggregate and curate instead of trusting one source.** Varun provides kite coverage, OpenStreetMap adds multiple activities, and permitted local sources or personal spots fill gaps. Governs R5, R6, R13, R19.
 
@@ -50,11 +50,11 @@ No single source covers all four activities well enough to become the sole autho
 - R1. The searchable catalog supports locations used for kitesurfing, windsurfing, wingfoiling, or sailing and excludes locations that only serve unrelated sports.
 - R2. A published location exposes a stable identity, display name, latitude, and longitude; only the name and location are user-facing.
 - R3. Coordinates represent usable water, launch access, or a watersports club closely enough to request a relevant forecast rather than the center of a town or region.
-- R4. Restricted locations may remain searchable without turning Windscout into an access guide, while locations known to be forbidden are excluded.
+- R4. Restricted locations may remain searchable without turning Windpeek into an access guide, while locations known to be forbidden are excluded.
 
 **Source handling**
 
-- R5. External records enter Windscout as candidates and are never published merely because they exist in a source collection.
+- R5. External records enter Windpeek as candidates and are never published merely because they exist in a source collection.
 - R6. The first import uses the current Varun records as kite candidates and a pinned OpenStreetMap snapshot for tagged kitesurf, windsurf, sailing, and wind-watersport candidates.
 - R7. Every candidate is checked for valid coordinates, plausible country placement, a valid timezone, proximity to mapped water, and likely duplication before publication.
 - R8. Import, normalization, and validation consume no AI or language-model calls.
@@ -65,9 +65,9 @@ No single source covers all four activities well enough to become the sole autho
 **Quality and maintenance**
 
 - R11. Each candidate has an internal outcome of accepted, needs review, rejected, or import failure, and only accepted records enter the searchable catalog.
-- R12. Windscout internally retains source identity, activity tags, evidence fingerprints, and review history without exposing that metadata in the inspector.
+- R12. Windpeek internally retains source identity, activity tags, evidence fingerprints, and review history without exposing that metadata in the inspector.
 - R13. OpenStreetMap and permitted national or community sources can add or corroborate candidates without becoming live runtime dependencies.
-- R14. Catalog search keeps working from Windscout's own versioned data when any external source is unavailable or changes format.
+- R14. Catalog search keeps working from Windpeek's own versioned data when any external source is unavailable or changes format.
 - R15. User-created personal spots remain available for missing locations and stay separate from the curated global catalog until reviewed.
 - R16. Re-running an unchanged import produces the same normalized records, flags, and review outcomes.
 - R17. A catalog release includes every required source attribution, and no restricted external dataset is imported without permission.
@@ -92,7 +92,7 @@ No single source covers all four activities well enough to become the sole autho
   - **Covered by:** R9-R12, R16, R18.
 - F4. Forecast selection
   - **Trigger:** A user selects a curated result in spot search.
-  - **Steps:** Windscout resolves the stable location and uses its coordinates and derived timezone for the forecast request.
+  - **Steps:** Windpeek resolves the stable location and uses its coordinates and derived timezone for the forecast request.
   - **Outcome:** The forecast targets the selected watersport location.
   - **Covered by:** R1-R3, R14, R19.
 
@@ -123,7 +123,7 @@ No single source covers all four activities well enough to become the sole autho
 
 - Conditions, skill levels, hazards, facilities, best wind directions, seasonal guidance, and activity badges are not shown in catalog search.
 - Surfing, swimming, paddling, rowing, diving, motorboating, and other non-wind activities do not qualify on their own.
-- Windscout does not promise that a listed location is currently legal, safe, open, or suitable; it only provides a forecast target.
+- Windpeek does not promise that a listed location is currently legal, safe, open, or suitable; it only provides a forecast target.
 - Live scraping or querying source catalogs during user search is excluded.
 - AI enrichment, AI classification, and AI review are excluded.
 - Synchronizing the complete global catalog to firmware is deferred to follow-up work.
@@ -141,7 +141,7 @@ No single source covers all four activities well enough to become the sole autho
 
 - Current catalog: `web/src/spots.js`
 - Personal spots: `web/src/spots/personalSpots.js`
-- Existing search integration: `web/src/components/WindScoutSettings.vue`
+- Existing search integration: `web/src/components/WindpeekSettings.vue`
 - Existing map and reverse-geocoding patterns: `web/src/map/geoapify.js`, `web/src/map/geoapifyMap.js`, `web/src/components/SpotCreationDialog.vue`
 - Existing catalog and browser tests: `web/tests/configurator-store.test.js`, `web/tests/settings.test.js`, `web/tests/e2e/configurator.spec.js`
 - Varun spot catalog and GPL-3.0 repository: https://github.com/pwittchen/varun.surf
@@ -167,7 +167,7 @@ All other product intent and stable IDs are preserved.
 - KTD3. **Validate with cached Geoapify evidence and explicit geometry rules** (session-settled: user-approved — chosen over AI-assisted validation: the checks must be cheap, deterministic, and rerunnable). Each uncached candidate may use one reverse-geocoding request and one nearby-water request; a preflight credit budget prevents accidental overuse. Governs R7-R9, R16.
 - KTD4. **Persist review decisions in versioned data through a local review app.** The reviewer approves, corrects, or rejects candidates on a map, and a changed evidence fingerprint reopens the decision. Governs R9-R12, R16, R18.
 - KTD5. **Keep public fields minimal and derive runtime-only fields at build time.** The generated runtime record adds stable ID, uppercase renderer name, and timezone because the existing forecast and cache contracts require them, but search displays only name and location. Governs R2, R3, R12.
-- KTD6. **Preserve current IDs and make new IDs correction-safe.** Existing Edam, Brouwersdam, and Castricum IDs stay stable; accepted new records receive a stored Windscout ID that does not change when a reviewer moves the pin or fixes the name. Governs R2, R10, R12, R16.
+- KTD6. **Preserve current IDs and make new IDs correction-safe.** Existing Edam, Brouwersdam, and Castricum IDs stay stable; accepted new records receive a stored Windpeek ID that does not change when a reviewer moves the pin or fixes the name. Governs R2, R10, R12, R16.
 - KTD7. **Rank a bounded local result set.** Search folds accents and punctuation, ranks personal and exact or prefix matches before substrings, requires two typed characters for the global catalog, and renders at most 20 results. Governs R14, R15, R19.
 - KTD8. **Filter source semantics before geographic validation.** OpenStreetMap objects must have a supported activity plus a physical water, launch, club, school, or sports-centre feature; shops, offices, and travel agencies never become candidates. Governs R1, R5, R18.
 - KTD9. **Treat attribution as a release gate, not inspector content.** Ship a public data-sources page and a subtle link outside the inspector; keep source details out of search results. Governs R2, R12, R17.
@@ -270,7 +270,7 @@ stateDiagram-v2
 | Geoapify quota or network fails mid-run | Incomplete evidence | Preflight the uncached credit count, limit request rate, persist each compact result, and resume without repeating cached calls. |
 | Nearby launches are merged | Distinct forecast points disappear | Flag only, require a human merge choice, and retain source provenance for every accepted record. |
 | Large catalog slows or overwhelms the combobox | Inspector feels worse | Use KTD7, keep catalog data minimal, and add focused component and browser performance assertions. |
-| Corrected name or pin changes cache identity | Forecast history is lost | Persist Windscout IDs separately from mutable labels and coordinates per KTD6. |
+| Corrected name or pin changes cache identity | Forecast history is lost | Persist Windpeek IDs separately from mutable labels and coordinates per KTD6. |
 | Wingfoil coverage remains sparse | Supported activity feels incomplete | Include shared kite or windsurf locations, preserve personal spots, and add permitted wingfoil sources later without changing the runtime contract. |
 
 ### Alternatives Considered
@@ -278,7 +278,7 @@ stateDiagram-v2
 - **Runtime search against external spot APIs:** Rejected because it creates latency, outage, quota, and format dependencies in the primary inspector flow.
 - **Import all source rows directly:** Rejected because source semantics and coordinate errors would become user-visible without a quality gate.
 - **OpenStreetMap only:** Rejected because current explicit activity coverage is sparse and wingfoil has no established tag.
-- **A hosted Windscout database and moderation system:** Deferred because a static reviewed catalog meets the current forecast need without accounts, backend operations, or abuse handling.
+- **A hosted Windpeek database and moderation system:** Deferred because a static reviewed catalog meets the current forecast need without accounts, backend operations, or abuse handling.
 - **AI-assisted classification:** Rejected by the settled no-AI requirement; deterministic checks are cheaper and auditable.
 
 ---
@@ -347,7 +347,7 @@ stateDiagram-v2
   1. Run a maintainer-only Vite entry bound to loopback, with local read and write endpoints limited to the review data files and atomic decision-file replacement.
   2. Show one unresolved candidate at a time with source, activity, failed checks, duplicate links, and a center-pin map.
   3. Support approve, corrected name or position, reject, previous, next, and keyboard navigation.
-  4. Store decisions by candidate identity and evidence fingerprint, including a stable Windscout ID on first approval.
+  4. Store decisions by candidate identity and evidence fingerprint, including a stable Windpeek ID on first approval.
   5. Reopen stale decisions when source or validation evidence changes instead of silently carrying them forward.
 - **Patterns to follow:** Center-pin interaction and lifecycle cleanup in `web/src/components/SpotCreationDialog.vue` and `web/src/map/geoapifyMap.js`; accessible controls and focus treatment in `web/src/components/settings/`.
 - **Test scenarios:**
@@ -368,7 +368,7 @@ stateDiagram-v2
 - **Goal:** Build the accepted static catalog and make it searchable without changing the established selection and forecast behavior.
 - **Requirements:** R1-R3, R10-R16, R19; F4; AE7, AE9, AE10.
 - **Dependencies:** U1-U3.
-- **Files:** `web/package.json`, `web/scripts/spots/build-catalog.mjs`, `web/scripts/spots/check-catalog.mjs`, `web/src/spots/catalog.generated.json`, `web/src/spots/searchSpots.js`, `web/src/spots.js`, `web/src/stores/configurator.js`, `web/src/components/WindScoutSettings.vue`, `web/tests/spot-catalog.test.js`, `web/tests/configurator-store.test.js`, `web/tests/settings.test.js`, `web/tests/e2e/configurator.spec.js`.
+- **Files:** `web/package.json`, `web/scripts/spots/build-catalog.mjs`, `web/scripts/spots/check-catalog.mjs`, `web/src/spots/catalog.generated.json`, `web/src/spots/searchSpots.js`, `web/src/spots.js`, `web/src/stores/configurator.js`, `web/src/components/WindpeekSettings.vue`, `web/tests/spot-catalog.test.js`, `web/tests/configurator-store.test.js`, `web/tests/settings.test.js`, `web/tests/e2e/configurator.spec.js`.
 - **Approach:**
   1. Merge automatically accepted candidates with matching review decisions and exclude every unresolved or rejected record.
   2. Preserve the three existing IDs and allocate stored IDs for new records per KTD5 and KTD6.

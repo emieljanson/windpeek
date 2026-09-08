@@ -7,16 +7,16 @@ describe('serial port adapter', () => {
     const requestPort = vi.fn()
     expect(getSerialSupport({
       navigatorApi: { serial: { requestPort }, userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:153.0) Gecko/20100101 Firefox/153.0' },
-      locationApi: { protocol: 'https:', hostname: 'windscout.nl' },
+      locationApi: { protocol: 'https:', hostname: 'windpeek.nl' },
     })).toEqual({ supported: true, reason: null })
     expect(requestPort).not.toHaveBeenCalled()
   })
 
   it('blocks mobile, insecure and unsupported browsers before permission', () => {
     const requestPort = vi.fn()
-    expect(getSerialSupport({ navigatorApi: { serial: { requestPort }, userAgent: 'iPhone' }, locationApi: { protocol: 'https:', hostname: 'windscout.nl' } }).reason).toBe('desktop-required')
-    expect(getSerialSupport({ navigatorApi: { serial: { requestPort }, userAgent: 'Chrome' }, locationApi: { protocol: 'http:', hostname: 'windscout.nl' } }).reason).toBe('secure-context-required')
-    expect(getSerialSupport({ navigatorApi: { userAgent: 'Safari' }, locationApi: { protocol: 'https:', hostname: 'windscout.nl' } }).reason).toBe('browser-not-supported')
+    expect(getSerialSupport({ navigatorApi: { serial: { requestPort }, userAgent: 'iPhone' }, locationApi: { protocol: 'https:', hostname: 'windpeek.nl' } }).reason).toBe('desktop-required')
+    expect(getSerialSupport({ navigatorApi: { serial: { requestPort }, userAgent: 'Chrome' }, locationApi: { protocol: 'http:', hostname: 'windpeek.nl' } }).reason).toBe('secure-context-required')
+    expect(getSerialSupport({ navigatorApi: { userAgent: 'Safari' }, locationApi: { protocol: 'https:', hostname: 'windpeek.nl' } }).reason).toBe('browser-not-supported')
     expect(requestPort).not.toHaveBeenCalled()
   })
 

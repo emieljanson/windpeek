@@ -35,7 +35,7 @@ describe('installer diagnostics', () => {
       boardId: 'seeedstudio_reterminal_e1002',
       selectedBoardId: 'seeedstudio_reterminal_e1003',
       detectedBoardId: 'seeedstudio_reterminal_e1002',
-      decisionReason: 'different-windscout-model',
+      decisionReason: 'different-windpeek-model',
       configurationDigest: 'must-not-survive',
       arbitrary: 'also-drop-me',
     })
@@ -60,7 +60,7 @@ describe('installer diagnostics', () => {
         boardId: 'seeedstudio_reterminal_e1002',
         selectedBoardId: 'seeedstudio_reterminal_e1003',
         detectedBoardId: 'seeedstudio_reterminal_e1002',
-        decisionReason: 'different-windscout-model',
+        decisionReason: 'different-windpeek-model',
       },
       entries: [{ category: 'device', operation: 'test_wifi', status: 'failed', measurements: { elapsedMs: 20 } }],
     })

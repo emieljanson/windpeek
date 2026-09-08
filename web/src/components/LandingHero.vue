@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
     :data-forecast-spot="store.forecast?.spotId"
     :data-forecast-revision="store.forecastRevision"
   >
-    <a class="hero-link" href="?configure" aria-label="Open the Windscout configurator">
+    <a class="hero-link" href="?configure" aria-label="Open the Windpeek configurator">
       <div class="hero-scene">
         <div class="hero-media" :style="heroMediaStyle">
           <picture>
@@ -98,7 +98,7 @@ onBeforeUnmount(() => {
               :src="heroImage"
               width="1672"
               height="941"
-              alt="Windscout on a yellow designer sideboard showing a five-day e-ink forecast"
+              alt="Windpeek on a yellow designer sideboard showing a five-day e-ink forecast"
               fetchpriority="high"
             >
           </picture>

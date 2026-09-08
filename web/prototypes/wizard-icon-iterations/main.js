@@ -11,7 +11,7 @@ const steps = [
   { id: 'reconnect', title: 'Reconnect', note: 'The broken relation visibly returns or repairs itself.' },
   { id: 'wifi', title: 'Choose Wi-Fi', note: 'Recognisable Wi-Fi, explored with ten pixel constructions.' },
   { id: 'apply', title: 'Apply setup', note: 'Settings organise, stream, snap and lock into place.' },
-  { id: 'complete', title: 'Done', note: 'Flags, vanes and wind become the WindScout success moment.' },
+  { id: 'complete', title: 'Done', note: 'Flags, vanes and wind become the Windpeek success moment.' },
   { id: 'error', title: 'Error', note: 'Ten deliberately static crosses with different weight.' },
 ]
 
@@ -20,7 +20,7 @@ const summary = document.getElementById('selection-summary')
 const motionToggle = document.getElementById('motion-toggle')
 const clearChoices = document.getElementById('clear-choices')
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const storageKey = 'windscout-9x9-semantic-icon-choices-v2'
+const storageKey = 'windpeek-9x9-semantic-icon-choices-v2'
 let selections = JSON.parse(window.localStorage.getItem(storageKey) || '{}')
 let motionPaused = reduceMotion
 let frameIndex = 0

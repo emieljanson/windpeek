@@ -15,7 +15,7 @@ deepened: 2026-08-26
 
 ## Goal Capsule
 
-- **Objective:** A visitor can experience and judge the intended WindScout configurator through a convincing virtual E1002 whose screen and display controls respond immediately.
+- **Objective:** A visitor can experience and judge the intended Windpeek configurator through a convincing virtual E1002 whose screen and display controls respond immediately.
 - **Means:** Build the real Vue web foundation around a CAD-derived Three.js model, an 800 x 480 fixture preview, and the actual DialKit Vue controls.
 - **Authority:** This plan owns the first visual design slice. The origin plan remains the authority for the complete product, installation, runtime, and release.
 - **Execution profile:** A 3D-only local web prototype with responsive layouts, an honest model-error state, and automated interaction, accessibility, and build checks.
@@ -28,11 +28,11 @@ deepened: 2026-08-26
 
 ### Summary
 
-Build the exciting visual core of WindScout first: one accurately shaped E1002, one live e-ink screen, and a compact DialKit panel for display mode and wind threshold. Use stable fixture data so the prototype can focus on composition, interaction, materials, motion, and clarity.
+Build the exciting visual core of Windpeek first: one accurately shaped E1002, one live e-ink screen, and a compact DialKit panel for display mode and wind threshold. Use stable fixture data so the prototype can focus on composition, interaction, materials, motion, and clarity.
 
 ### Problem Frame
 
-The complete WindScout roadmap combines design, firmware installation, location selection, forecasts, and updates. Building those systems together would delay the part that is most uncertain and most distinctive: whether configuring a virtual WindScout feels desirable rather than technical or gimmicky.
+The complete Windpeek roadmap combines design, firmware installation, location selection, forecasts, and updates. Building those systems together would delay the part that is most uncertain and most distinctive: whether configuring a virtual Windpeek feels desirable rather than technical or gimmicky.
 
 ### Key Decisions
 
@@ -49,7 +49,7 @@ The complete WindScout roadmap combines design, firmware installation, location 
 - R1. The primary view shall present the E1002 as the visual focus rather than as decoration beside a conventional settings page.
 - R2. The model shall preserve the official 176 x 120 x 17 mm enclosure and 53 mm mounted-stand depth, plus its recognizable bezel, buttons, ports, and back.
 - R3. The optimized web model shall keep the body, screen, controls, and stand as independently addressable meshes.
-- R4. The E1002 screen shall display an unfiltered 800 x 480 WindScout preview with the correct aspect ratio and orientation.
+- R4. The E1002 screen shall display an unfiltered 800 x 480 Windpeek preview with the correct aspect ratio and orientation.
 - R5. Pointer users shall be able to rotate and modestly zoom the device without losing the intended hero composition.
 - R6. Camera limits, initial framing, lighting, materials, shadows, and one view-dependent screen glare shall make the object feel physical without adding scene chrome.
 
@@ -78,7 +78,7 @@ The complete WindScout roadmap combines design, firmware installation, location 
 
 ### Success Criteria
 
-- The first screen reads as a WindScout product experience within a few seconds, with the E1002 and its forecast screen clearly dominant.
+- The first screen reads as a Windpeek product experience within a few seconds, with the E1002 and its forecast screen clearly dominant.
 - Treatment and threshold changes feel immediate and visually legible on the 3D screen.
 - The normal desktop scene remains responsive during orbit interaction and does not visibly degrade the 800 x 480 screen texture.
 - A design review can judge composition, device realism, motion, DialKit fit, responsive behavior, and the transition toward installation without waiting for firmware work.
@@ -111,7 +111,7 @@ The complete WindScout roadmap combines design, firmware installation, location 
 - The standalone site's forecast SVG and visual language are useful references, but its Berkeley Mono files cannot be copied into a public build without redistribution permission.
 - [Seeed's E1002 documentation](https://wiki.seeedstudio.com/getting_started_with_reterminal_e1002/) records the enclosure dimensions and links the official exterior CAD asset.
 - [The official E1001/E1002 STEP model](https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp) is the geometry source. The project owner confirmed direct permission from Seeed Studio to use its derived GLB on 26 August 2026.
-- DialKit 1.4.3 and Three.js are MIT-licensed dependencies. DialKit remains isolated behind WindScout-owned Vue components.
+- DialKit 1.4.3 and Three.js are MIT-licensed dependencies. DialKit remains isolated behind Windpeek-owned Vue components.
 - [`occt-import-js`](https://github.com/kovacsv/occt-import-js) provides the local Node STEP importer under LGPL-2.1. Its runtime and WASM remain development-only.
 - [Three.js `GLTFExporter`](https://threejs.org/docs/pages/GLTFExporter.html) provides the final binary export through the same pinned Three.js dependency used by the scene.
 
@@ -125,7 +125,7 @@ The complete WindScout roadmap combines design, firmware installation, location 
 - KTD2. **Convert the official STEP model into a small GLB offline.** A Node asset script uses `occt-import-js` only as a development converter and Three.js `GLTFExporter` for the binary output. It inventories the assembly, keeps exterior geometry, creates a measured screen plane, verifies the exported GLB, and emits a provenance record. The permitted optimized GLB ships with the public app. This implements R2-R4.
 - KTD3. **Keep the product scene intentionally minimal.** Three.js owns the camera, lights, contact shadow, orbit constraints, and model loading. The page shell contains only the scene and one floating DialKit inspector. This implements R1, R5-R6, and R12-R14.
 - KTD4. **Use an 800 x 480 browser preview adapter for this slice.** The adapter renders the deterministic fixture into a crisp screen canvas and supports the three modes plus adjustable threshold. Its boundary is designed for later replacement by the shared WASM renderer without changing the scene or settings contract. This implements R4 and R7-R11.
-- KTD5. **Use DialKit directly but not as a second state owner.** WindScout Vue components translate DialKit changes into one Pinia store, and DialKit persistence remains disabled. This implements R9-R11 and R14.
+- KTD5. **Use DialKit directly but not as a second state owner.** Windpeek Vue components translate DialKit changes into one Pinia store, and DialKit persistence remains disabled. This implements R9-R11 and R14.
 - KTD6. **Keep this slice 3D-only.** Responsive layouts preserve the same scene and controls. WebGL and model-load failures expose a labelled error state, while reduced motion avoids ornamental animation rather than replacing the product. This implements R10 and R13-R15.
 - KTD7. **Self-host only redistributable fonts.** Use Inter and a compatible OFL mono face in the prototype rather than copying Berkeley Mono or its derived assets.
 
@@ -236,7 +236,7 @@ web/
 - **Goal:** Present the E1002 as a tactile product object whose live screen stays readable during controlled interaction.
 - **Requirements:** R1-R6, R10, R12-R14; AE1, AE4; KTD3-KTD4, KTD6.
 - **Dependencies:** U1-U2.
-- **Files:** `web/src/components/WindScoutScene.vue`, `web/src/configurator/sceneController.js`, `web/src/configurator/sceneLifetime.js`, `web/src/configurator/modelLoader.js`, `web/src/configurator/screenTexture.js`, `web/tests/scene-controller.test.js`, `web/tests/scene-lifetime.test.js`, `web/tests/model-loader.test.js`.
+- **Files:** `web/src/components/WindpeekScene.vue`, `web/src/configurator/sceneController.js`, `web/src/configurator/sceneLifetime.js`, `web/src/configurator/modelLoader.js`, `web/src/configurator/screenTexture.js`, `web/tests/scene-controller.test.js`, `web/tests/scene-lifetime.test.js`, `web/tests/model-loader.test.js`.
 - **Approach:**
   1. Load the GLB lazily and apply product materials, restrained studio lighting, and a contact shadow.
   2. Feed the preview canvas into the dedicated screen material without texture filtering, tone mapping, or scene lighting.
@@ -257,7 +257,7 @@ web/
 - **Goal:** Combine the scene, DialKit panel, error state, and next-slice continuation into one coherent design prototype.
 - **Requirements:** R1, R7-R15; AE2-AE5; KTD1, KTD3, KTD5-KTD7.
 - **Dependencies:** U1-U3.
-- **Files:** `web/src/views/ConfiguratorView.vue`, `web/src/components/WindScoutSettings.vue`, `web/src/components/InstallContinuation.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`, `web/playwright.config.js`.
+- **Files:** `web/src/views/ConfiguratorView.vue`, `web/src/components/WindpeekSettings.vue`, `web/src/components/InstallContinuation.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`, `web/playwright.config.js`.
 - **Approach:**
   1. Make the E1002 the dominant desktop region and place one compact DialKit display group beside it.
   2. Bind treatment and threshold controls through the canonical store and disable DialKit persistence.
@@ -265,7 +265,7 @@ web/
   4. Make the installation continuation reveal an inline explanation of the next product slice without offering USB behavior.
   5. Refine hierarchy, typography, spacing, material response, focus, and restrained transitions through browser screenshots.
 - **Execution note:** Use iterative browser screenshots to improve the composition. Stop adding detail when the device, screen, and two controls already communicate the product clearly.
-- **Patterns to follow:** The standalone WindScout site's restrained visual language, not its paid copy or restricted font files.
+- **Patterns to follow:** The standalone Windpeek site's restrained visual language, not its paid copy or restricted font files.
 - **Test scenarios:**
   - Covers AE2. Changing either DialKit control updates the preview while leaving the scene pose unchanged.
   - Covers AE3. A keyboard user can reach, understand, and change both settings and activate the continuation.

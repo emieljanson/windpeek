@@ -22,7 +22,7 @@ function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
         event_id: eventId,
         timestamp: 123,
         level: 'error',
-        exception: { values: [{ type: error.name, value: error.message, stacktrace: { frames: [{ filename: 'https://windscout.test/assets/app.js?secret=yes', function: 'run', lineno: 10, vars: { password: 'secret' }, context_line: 'password=secret' }] } }] },
+        exception: { values: [{ type: error.name, value: error.message, stacktrace: { frames: [{ filename: 'https://windpeek.test/assets/app.js?secret=yes', function: 'run', lineno: 10, vars: { password: 'secret' }, context_line: 'password=secret' }] } }] },
         tags: context.tags,
         contexts: context.contexts,
         extra: context.extra,
@@ -55,8 +55,8 @@ function reportInput(overrides = {}) {
         detectedFirmwareVersion: '2.0.0',
         releaseBoardId: 'seeedstudio_reterminal_e1003',
         releaseVersion: 'v1.2.3',
-        connectionKind: 'windscout',
-        decisionReason: 'different-windscout-model',
+        connectionKind: 'windpeek',
+        decisionReason: 'different-windpeek-model',
         chipFamily: 'ESP32-S3',
       },
       entries: [{ offsetMs: 20, category: 'flash', operation: 'write', status: 'failed', message: 'connection lost', measurements: { writtenBytes: 10 } }],
@@ -112,8 +112,8 @@ describe('Sentry installer reporter', () => {
         selected_board_id: 'seeedstudio_reterminal_e1003',
         detected_board_id: 'seeedstudio_reterminal_e1002',
         release_board_id: 'seeedstudio_reterminal_e1003',
-        connection_kind: 'windscout',
-        decision_reason: 'different-windscout-model',
+        connection_kind: 'windpeek',
+        decision_reason: 'different-windpeek-model',
       }),
     }))
   })
@@ -140,7 +140,7 @@ describe('Sentry installer reporter', () => {
       .resolves.toEqual({ status: 'sent', reference: expect.stringMatching(/^WS-/) })
 
     const serialized = JSON.stringify(envelope)
-    expect(serialized).toContain('windscout.reference')
+    expect(serialized).toContain('windpeek.reference')
     expect(serialized).not.toMatch(/planted@example\.test|2001:db8::1|request|cookies|user_agent/)
     await sdk.close()
   })
@@ -196,8 +196,8 @@ describe('filterInstallerEvent', () => {
       event_id: 'a'.repeat(32),
       timestamp: 123,
       tags: {
-        'windscout.diagnostic': 'installer',
-        'windscout.reference': 'WS-0123456789',
+        'windpeek.diagnostic': 'installer',
+        'windpeek.reference': 'WS-0123456789',
         phase: 'wifi',
         password: 'secret',
       },
@@ -211,7 +211,7 @@ describe('filterInstallerEvent', () => {
     const encoded = JSON.stringify(filtered)
     expect(encoded).not.toMatch(/password|secret@example|trace_id|context_line|vars|secret=yes/)
     expect(filtered).toMatchObject({
-      tags: { 'windscout.diagnostic': 'installer', 'windscout.reference': 'WS-0123456789', phase: 'wifi' },
+      tags: { 'windpeek.diagnostic': 'installer', 'windpeek.reference': 'WS-0123456789', phase: 'wifi' },
       contexts: { installer: { boardId: 'safe', selectedBoardId: 'selected', detectedBoardId: 'detected', decisionReason: 'mismatch' } },
       extra: { timeline: [{ category: 'wifi', operation: 'test', message: 'safe' }] },
     })

@@ -21,7 +21,7 @@
 #include "wind_clock.h"
 #include "wind_installer_service.h"
 
-static const char *TAG = "windscout";
+static const char *TAG = "windpeek";
 static volatile bool s_time_synchronized;
 
 static bool hardware_profile_allows_panel(void)
@@ -218,6 +218,6 @@ void app_main(void)
     }
 
     xTaskCreate(dashboard_task, "wind_dashboard", 8192, NULL, 5, NULL);
-    ESP_LOGI(TAG, "WindScout ready%s", connected ? "" : " (offline)");
+    ESP_LOGI(TAG, "Windpeek ready%s", connected ? "" : " (offline)");
     while (true) vTaskDelay(pdMS_TO_TICKS(60000));
 }

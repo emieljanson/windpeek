@@ -40,8 +40,8 @@ describe('configurator experience', () => {
         global: {
           plugins: [pinia],
           stubs: {
-            WindScoutScene: { template: '<div data-testid="3d-scene"></div>' },
-            WindScoutSettings: { template: '<div></div>' },
+            WindpeekScene: { template: '<div data-testid="3d-scene"></div>' },
+            WindpeekSettings: { template: '<div></div>' },
             InstallContinuation: { template: '<div></div>' },
           },
         },
@@ -66,7 +66,7 @@ describe('configurator experience', () => {
     const wrapper = mount(ConfiguratorView, {
       global: {
         plugins: [createPinia()],
-        stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+        stubs: { WindpeekScene: { template: '<div data-testid="3d-scene"></div>' } },
       },
     })
     expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
@@ -83,7 +83,7 @@ describe('configurator experience', () => {
     const wrapper = mount(ConfiguratorView, {
       global: {
         plugins: [createPinia()],
-        stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+        stubs: { WindpeekScene: { template: '<div data-testid="3d-scene"></div>' } },
       },
     })
     await vi.waitFor(() => expect(fetchForecast).toHaveBeenCalled())
@@ -97,7 +97,7 @@ describe('configurator experience', () => {
       global: {
         plugins: [createPinia()],
         stubs: {
-          WindScoutScene: {
+          WindpeekScene: {
             emits: ['error'],
             mounted() { this.$emit('error', 'The model is unavailable.') },
             template: '<div></div>',
@@ -122,7 +122,7 @@ describe('configurator experience', () => {
         global: {
           plugins: [createPinia()],
           stubs: {
-            WindScoutScene: {
+            WindpeekScene: {
               props: ['focusUsbConnection', 'showUsbCable'],
               template: '<div data-testid="3d-scene" :data-cable-visible="String(showUsbCable)" :data-usb-focused="String(focusUsbConnection)"></div>',
             },
@@ -183,8 +183,8 @@ describe('configurator experience', () => {
         global: {
           plugins: [createPinia()],
           stubs: {
-            WindScoutScene: { template: '<div data-testid="3d-scene"></div>' },
-            WindScoutSettings: { template: '<div data-testid="settings-surface"></div>' },
+            WindpeekScene: { template: '<div data-testid="3d-scene"></div>' },
+            WindpeekSettings: { template: '<div data-testid="settings-surface"></div>' },
             InstallContinuation: { template: '<button data-testid="install-continuation">Install</button>' },
           },
         },
@@ -228,7 +228,7 @@ describe('configurator experience', () => {
       const wrapper = mount(ConfiguratorView, {
         global: {
           plugins: [createPinia()],
-          stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+          stubs: { WindpeekScene: { template: '<div data-testid="3d-scene"></div>' } },
         },
       })
       scheduledCallback()

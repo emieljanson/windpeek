@@ -74,7 +74,7 @@ Files:
 
 Strengthen contract tests for Edam identity, five-day sample selection, the five agreed refresh boundaries, date rollover recovery, and unchanged-frame suppression. Covers R1, R2, R5–R7 and AE1, AE6, AE7.
 
-### U4 — Verify on the real WindScout
+### U4 — Verify on the real Windpeek
 
 Files:
 - `firmware/scripts/ota-upload.sh`
@@ -86,7 +86,7 @@ Run host tests and a complete E1002 build, install the new version over Wi-Fi, t
 - All registered host tests pass.
 - The E1002 firmware build succeeds with the intended version in its app descriptor and fits both OTA partitions.
 - A live provider request for Edam returns five valid local dates and the expected daytime sample hours.
-- Wi-Fi OTA validates, reboots and reports the new version at `windscout.local`.
+- Wi-Fi OTA validates, reboots and reports the new version at `windpeek.local`.
 - Renderer tests cover fresh, offline-with-cache, aged, stale and unavailable states without clipped primitives.
 
 ## Definition of Done
@@ -95,7 +95,7 @@ Run host tests and a complete E1002 build, install the new version over Wi-Fi, t
 - A failed scheduled refresh is visible without deleting usable cached data.
 - Day rollover and all five boundaries remain timezone/DST-safe.
 - Identical frames remain suppressed.
-- The tested firmware is running on the user's WindScout.
+- The tested firmware is running on the user's Windpeek.
 
 ## Deferred
 

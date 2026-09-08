@@ -10,7 +10,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['open', 'close', 'installer-phase-change', 'usb-step-change'])
 const testSessionFactory = import.meta.env.DEV
-  ? globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__
+  ? globalThis.__WINDPEEK_INSTALLER_SESSION_FACTORY__
   : undefined
 const demoEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).get('installerDemo') === '1'
 const sessionFactory = demoEnabled ? createInstallerDemoSession : testSessionFactory

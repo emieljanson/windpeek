@@ -50,7 +50,7 @@
   <header>
     <div class="eyebrow">Product ideation</div>
     <h1>Donation in the wizard Done step</h1>
-    <p class="lead">A donation ask can work here because value has just become tangible. The winning version should feel like an invitation to keep Windscout alive—not a toll booth placed after success.</p>
+    <p class="lead">A donation ask can work here because value has just become tangible. The winning version should feel like an invitation to keep Windpeek alive—not a toll booth placed after success.</p>
     <div class="meta">
       <span class="pill">Date · 2026-08-30</span>
       <span class="pill">Topic · donation-in-wizard-done-step</span>
@@ -81,16 +81,16 @@
     <div class="eyebrow">6 survivors from 24 candidates</div>
     <h2>Ranked Ideas</h2>
     <ol class="jump">
-      <li><a href="#idea-1">A two-stage “Keep Windscout flying” goal</a></li>
+      <li><a href="#idea-1">A two-stage “Keep Windpeek flying” goal</a></li>
       <li><a href="#idea-2">Celebrate first, ask second</a></li>
       <li><a href="#idea-3">Public feature unlocks</a></li>
-      <li><a href="#idea-4">Let people choose what Windscout was worth</a></li>
+      <li><a href="#idea-4">Let people choose what Windpeek was worth</a></li>
       <li><a href="#idea-5">Show supporters, not a vanity total</a></li>
       <li><a href="#idea-6">A playful wind-powered thank-you</a></li>
     </ol>
 
     <article id="idea-1">
-      <div class="idea-head"><span class="rank">1</span><div><h3>A two-stage “Keep Windscout flying” goal</h3><div class="metrics"><span class="pill">Goal &amp; transparency</span><span class="pill">Confidence 88%</span><span class="pill">Complexity Medium</span></div></div></div>
+      <div class="idea-head"><span class="rank">1</span><div><h3>A two-stage “Keep Windpeek flying” goal</h3><div class="metrics"><span class="pill">Goal &amp; transparency</span><span class="pill">Confidence 88%</span><span class="pill">Complexity Medium</span></div></div></div>
       <p><strong>Description.</strong> Show one small annual funding bar with a meaningful first marker: “Running costs covered”. Money after that marker funds a named stretch outcome such as “next device support” or “better forecasts”. The marker makes break-even understandable; the bar gives surplus a positive purpose.</p>
       <div class="bar-wrap" aria-label="Illustrative funding bar: running costs marker at 55 percent, progress at 68 percent">
         <div class="bar"><div class="fill"></div></div><div class="marker"><span>Running costs covered</span></div>
@@ -105,7 +105,7 @@
 
     <article id="idea-2">
       <div class="idea-head"><span class="rank">2</span><div><h3>Celebrate first, ask second</h3><div class="metrics"><span class="pill">Ask timing &amp; hierarchy</span><span class="pill">Confidence 94%</span><span class="pill">Complexity Low</span></div></div></div>
-      <p><strong>Description.</strong> Keep “Done” as the primary, focused action. Place a compact support card above it with a secondary “Support Windscout” link or button. The success confirmation remains the emotional headline; donation never becomes the price of leaving the wizard.</p>
+      <p><strong>Description.</strong> Keep “Done” as the primary, focused action. Place a compact support card above it with a secondary “Support Windpeek” link or button. The success confirmation remains the emotional headline; donation never becomes the price of leaving the wizard.</p>
       <dl>
         <dt>Basis</dt><dd><strong>direct:</strong> The current state autofocuses a single primary Done button (<code>InstallerComplete.vue:11–12</code>), and the stylesheet already has a visually subordinate secondary-button treatment (<code>installer.css:127–145</code>).</dd>
         <dt>Rationale</dt><dd>Preserving an obvious exit protects the generosity of the product. The ask benefits from the completion high without taking the completion hostage.</dd>
@@ -115,7 +115,7 @@
 
     <article id="idea-3">
       <div class="idea-head"><span class="rank">3</span><div><h3>Public feature unlocks</h3><div class="metrics"><span class="pill">Goal &amp; transparency</span><span class="pill">Confidence 86%</span><span class="pill">Complexity Medium</span></div></div></div>
-      <p><strong>Description.</strong> Put one or two feature markers after the operating-cost marker: when collective donations reach a marker, you commit to building and publicly releasing that feature for every Windscout owner. Good candidates are bounded and visible, such as multi-spot button navigation or support for an additional display—not open-ended promises like “a better app”.</p>
+      <p><strong>Description.</strong> Put one or two feature markers after the operating-cost marker: when collective donations reach a marker, you commit to building and publicly releasing that feature for every Windpeek owner. Good candidates are bounded and visible, such as multi-spot button navigation or support for an additional display—not open-ended promises like “a better app”.</p>
       <dl>
         <dt>Basis</dt><dd><strong>direct:</strong> The repo already contains a bounded multi-spot/button-navigation plan and the installer currently targets one reTerminal E1002. These are tangible feature shapes whose work and user value can be explained without inventing a vague roadmap.</dd>
         <dt>Rationale</dt><dd>This makes donating feel collective: supporters are not buying private access, they are helping everyone get the next capability. It is more motivating than a generic total because progress has a visible consequence.</dd>
@@ -125,8 +125,8 @@
     </article>
 
     <article id="idea-4">
-      <div class="idea-head"><span class="rank">4</span><div><h3>Let people choose what Windscout was worth</h3><div class="metrics"><span class="pill">Donation action &amp; choice</span><span class="pill">Confidence 78%</span><span class="pill">Complexity Low</span></div></div></div>
-      <p><strong>Description.</strong> Open the donation page with three friendly presets—roughly a coffee, a lunch, and a “back the project” amount—plus custom. In the wizard, keep only one CTA: “Support Windscout”. Avoid forcing the amount decision into the already compact panel.</p>
+      <div class="idea-head"><span class="rank">4</span><div><h3>Let people choose what Windpeek was worth</h3><div class="metrics"><span class="pill">Donation action &amp; choice</span><span class="pill">Confidence 78%</span><span class="pill">Complexity Low</span></div></div></div>
+      <p><strong>Description.</strong> Open the donation page with three friendly presets—roughly a coffee, a lunch, and a “back the project” amount—plus custom. In the wizard, keep only one CTA: “Support Windpeek”. Avoid forcing the amount decision into the already compact panel.</p>
       <dl>
         <dt>Basis</dt><dd><strong>reasoned:</strong> The user has just completed a meaningful hardware installation, so a value-framed contribution is easier to answer than an abstract “donate”. Moving amount choice to the payment surface avoids crowding the 13.5rem copy area.</dd>
         <dt>Rationale</dt><dd>Presets reduce decision friction while preserving agency. The wording can remain human: “Worth a coffee?” rather than “Choose a tier”.</dd>
@@ -136,7 +136,7 @@
 
     <article id="idea-5">
       <div class="idea-head"><span class="rank">5</span><div><h3>Show supporters, not a vanity total</h3><div class="metrics"><span class="pill">Goal &amp; transparency</span><span class="pill">Confidence 75%</span><span class="pill">Complexity Medium</span></div></div></div>
-      <p><strong>Description.</strong> Pair the goal with a modest human signal: “Supported by 37 Windscout owners this year.” Keep the euro total tied to the cost goal; use people-count only to show community participation.</p>
+      <p><strong>Description.</strong> Pair the goal with a modest human signal: “Supported by 37 Windpeek owners this year.” Keep the euro total tied to the cost goal; use people-count only to show community participation.</p>
       <dl>
         <dt>Basis</dt><dd><strong>reasoned:</strong> A lifetime euro total can look boastful or suspiciously small. A bounded supporter count provides social reassurance without implying that popularity itself is the reason to donate.</dd>
         <dt>Rationale</dt><dd>It makes a solo/open maker project feel alive, especially when the count is still small enough to feel personal.</dd>
@@ -146,10 +146,10 @@
 
     <article id="idea-6">
       <div class="idea-head"><span class="rank">6</span><div><h3>A playful wind-powered thank-you</h3><div class="metrics"><span class="pill">Delight &amp; personality</span><span class="pill">Confidence 68%</span><span class="pill">Complexity Medium</span></div></div></div>
-      <p><strong>Description.</strong> Make the funding bar visually Windscout-native: a tiny gust fills the line toward the operating-cost marker, or the existing completion flag gains a subtle extra flourish beside the support invitation. The data stays literal; only the presentation is playful.</p>
+      <p><strong>Description.</strong> Make the funding bar visually Windpeek-native: a tiny gust fills the line toward the operating-cost marker, or the existing completion flag gains a subtle extra flourish beside the support invitation. The data stays literal; only the presentation is playful.</p>
       <dl>
         <dt>Basis</dt><dd><strong>direct:</strong> The complete phase already uses an animated state icon, while the installer uses a 3px pill-shaped progress language (<code>installer.css:200–216</code>). A restrained funding visualization can reuse those conventions.</dd>
-        <dt>Rationale</dt><dd>The moment becomes memorable and feels designed for Windscout rather than pasted in from a fundraising template.</dd>
+        <dt>Rationale</dt><dd>The moment becomes memorable and feels designed for Windpeek rather than pasted in from a fundraising template.</dd>
         <dt>Downsides</dt><dd>Easy to over-polish. Motion must not delay exit, obscure the actual numbers or run for reduced-motion users.</dd>
       </dl>
     </article>
@@ -171,7 +171,7 @@
         <tr><td>8</td><td>Unlock a feature after donating</td><td>Changes the product model from optional support to a paywall.</td></tr>
         <tr><td>9</td><td>Random confetti plus donate CTA</td><td>Decoration without a stronger funding story.</td></tr>
         <tr><td>10</td><td>Ask for a donation before verification</td><td>Requests money before the product has proven success.</td></tr>
-        <tr><td>11</td><td>One generic “Buy me a coffee” link</td><td>Easy, but less specific and trustworthy than a real Windscout goal.</td></tr>
+        <tr><td>11</td><td>One generic “Buy me a coffee” link</td><td>Easy, but less specific and trustworthy than a real Windpeek goal.</td></tr>
         <tr><td>12</td><td>Donation checkbox enabled by default</td><td>Dark pattern; consent must be explicit.</td></tr>
         <tr><td>13</td><td>Show individual donor names</td><td>Administrative and consent burden exceeds likely value.</td></tr>
         <tr><td>14</td><td>Ask for card details inside the wizard</td><td>High implementation, security and trust cost for little benefit.</td></tr>
@@ -183,7 +183,7 @@
     </table>
   </section>
 
-  <footer class="composition-signal">Composed 2026-08-30T18:11:11Z by ce-ideate from the user’s donation-in-completion-step prompt and the current Windscout installer surface.</footer>
+  <footer class="composition-signal">Composed 2026-08-30T18:11:11Z by ce-ideate from the user’s donation-in-completion-step prompt and the current Windpeek installer surface.</footer>
 </main>
 </body>
 </html>

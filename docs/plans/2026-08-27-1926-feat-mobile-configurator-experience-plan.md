@@ -13,7 +13,7 @@ execution: code
 
 ## Goal Capsule
 
-- **Objective:** Mobile visitors can understand and explore WindScout by configuring the live display comfortably on a phone, without mistaking the mobile experience for the device-installation flow.
+- **Objective:** Mobile visitors can understand and explore Windpeek by configuring the live display comfortably on a phone, without mistaking the mobile experience for the device-installation flow.
 - **Means:** Extend the current inspector and scene-composition patterns with a local, height-driven mobile sheet state machine and compact control variants (KTD1-KTD4).
 - **Product authority:** This plan owns the mobile configurator experience. Existing desktop inspector behavior and the eventual installation journey remain separate authority.
 - **Open blockers:** None for planning this mobile experience. The location and wording of future desktop-install guidance are deliberately deferred.
@@ -32,7 +32,7 @@ The configurator becomes a full interactive mobile demo built around a full-widt
 
 The current inspector was shaped for pointer input and desktop density. On a phone, its small targets, custom dropdown behavior, and fixed panel shape make the demo harder to operate and leave too little room for the display itself.
 
-Mobile still has meaningful demo value even when device installation happens elsewhere. Removing configuration or spot selection would make the preview less personal and would hide the product's core flexibility from visitors who first encounter WindScout on a phone.
+Mobile still has meaningful demo value even when device installation happens elsewhere. Removing configuration or spot selection would make the preview less personal and would hide the product's core flexibility from visitors who first encounter Windpeek on a phone.
 
 ### Key Decisions
 
@@ -66,7 +66,7 @@ flowchart TB
 
 **Spot search**
 
-- R6. Mobile spot search must return and select existing WindScout spots but must not offer custom spot creation.
+- R6. Mobile spot search must return and select existing Windpeek spots but must not offer custom spot creation.
 - R7. Spot search must not autofocus on page load, so the mobile keyboard does not cover the initial demo.
 - R8. Focusing spot search must move the sheet to its full position and show matching results inline below the field while the visitor types.
 - R9. Selecting a result must update the preview, dismiss the keyboard, and return the sheet to its half position.
@@ -136,7 +136,7 @@ flowchart TB
 
 - Existing configurator direction: `docs/plans/2026-08-26-0630-feat-public-3d-configurator-plan.md`
 - Existing 3D prototype direction: `docs/plans/2026-08-26-0724-feat-3d-configurator-prototype-plan.md`
-- Existing inspector controls direction: `docs/plans/2026-08-27-0007-refactor-windscout-settings-controls-plan.md`
+- Existing inspector controls direction: `docs/plans/2026-08-27-0007-refactor-windpeek-settings-controls-plan.md`
 - Touch target guidance: [Apple UI Design Dos and Don'ts](https://developer.apple.com/design/tips/) and [WCAG 2.2 target size guidance](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
 - Native control reference: [MDN `<select>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/select)
 
@@ -164,7 +164,7 @@ flowchart TB
   VV[Visual viewport] --> CV[Compact viewport state]
   CV --> VS[Configurator view shell]
   VS --> MS[Mobile settings sheet]
-  MS --> WS[WindScout settings]
+  MS --> WS[Windpeek settings]
   WS --> PS[Pinia configuration store]
   MS --> PB[Measured panel bounds]
   PB --> SC[Scene composition]
@@ -241,9 +241,9 @@ sequenceDiagram
 ### Sources and Research
 
 - Responsive panel and safe-area pattern: `web/src/styles/configurator.css`
-- Settings ownership and spot search: `web/src/components/WindScoutSettings.vue`
+- Settings ownership and spot search: `web/src/components/WindpeekSettings.vue`
 - Shared control semantics: `web/src/components/settings/SettingCombobox.vue`, `web/src/components/settings/SettingSelect.vue`, `web/src/components/settings/SettingSwitch.vue`, `web/src/components/settings/SettingNumberInput.vue`
-- Panel-aware scene composition: `web/src/components/WindScoutScene.vue`, `web/src/configurator/sceneController.js`
+- Panel-aware scene composition: `web/src/components/WindpeekScene.vue`, `web/src/configurator/sceneController.js`
 - Current responsive browser coverage: `web/tests/e2e/configurator.spec.js`
 - No `docs/solutions/` corpus exists for this area; current code and tests are the implementation authority.
 
@@ -292,13 +292,13 @@ sequenceDiagram
 - **Requirements:** R6-R10; F3, F4; AE3, AE4.
 - **Dependencies:** U1.
 - **Files:**
-  - Modify `web/src/components/WindScoutSettings.vue`
+  - Modify `web/src/components/WindpeekSettings.vue`
   - Modify `web/src/components/settings/SettingCombobox.vue`
   - Modify `web/src/styles/settings-controls.css`
   - Modify `web/tests/settings.test.js`
   - Modify `web/tests/settings-controls.test.js`
 - **Approach:**
-  1. Pass compact mode and search lifecycle events through `WindScoutSettings` without moving the query draft into Pinia.
+  1. Pass compact mode and search lifecycle events through `WindpeekSettings` without moving the query draft into Pinia.
   2. Extend the shared combobox with inline versus portalled content and blur-after-select versus refocus behavior under KTD4.
   3. Disable initial autofocus, create actions, and `SpotCreationDialog` rendering only in compact mode.
   4. Preserve the current two-character threshold, ranking, de-duplication, personal-spot inclusion, and result cap.
@@ -336,7 +336,7 @@ sequenceDiagram
   4. Preserve the two-column label/control alignment where it fits and constrain controls with `min-width: 0` so 320 CSS-pixel layouts do not overflow.
   5. Request a search keyboard for spot search and an integer numeric keyboard for the one-knot threshold input.
   6. Keep segmented Show/Hide semantics and disabled Tide explanation behavior unchanged.
-- **Patterns to follow:** Row-provided labeling in `SettingRow`; shared option data in `WindScoutSettings`; existing focus-visible styling and compact tokens in `settings-controls.css`.
+- **Patterns to follow:** Row-provided labeling in `SettingRow`; shared option data in `WindpeekSettings`; existing focus-visible styling and compact tokens in `settings-controls.css`.
 - **Test scenarios:**
   - Covers AE5. Compact Model and Temperature render real `select` elements with the expected labels, options, values, disabled state, and update events.
   - Desktop Model and Temperature continue to render Reka combobox triggers and keyboard-operable popovers.
@@ -352,7 +352,7 @@ sequenceDiagram
 - **Requirements:** R1, R3, R5; F1-F3; AE2, AE3, AE6.
 - **Dependencies:** U1, U2.
 - **Files:**
-  - Modify `web/src/components/WindScoutScene.vue`
+  - Modify `web/src/components/WindpeekScene.vue`
   - Modify `web/src/configurator/sceneController.js`
   - Modify `web/src/App.vue`
   - Modify `web/src/styles/configurator.css`
@@ -365,7 +365,7 @@ sequenceDiagram
   3. Keep the product centered in measured free space and apply the same region to the WebGL failure surface.
   4. Switch Sonner to top-center with a safe-area offset in compact mode and preserve bottom-right on desktop.
   5. Keep toast z-index above the full sheet without changing forecast or tide error sources.
-- **Patterns to follow:** `calculateSceneComposition` as the single scene-fitting function; render-on-demand and resize observation in `WindScoutScene`; the existing global Sonner error watcher in `App.vue`.
+- **Patterns to follow:** `calculateSceneComposition` as the single scene-fitting function; render-on-demand and resize observation in `WindpeekScene`; the existing global Sonner error watcher in `App.vue`.
 - **Execution note:** Measure render behavior during real drag and keep the existing request-animation-frame coalescing; do not add a continuous render loop.
 - **Test scenarios:**
   - Covers AE2. Low, half, and full bounds produce stable available-height, view-offset, and zoom results without hiding the device.

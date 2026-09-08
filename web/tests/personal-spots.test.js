@@ -46,7 +46,7 @@ describe('personal spots', () => {
     expect(writePersonalSpot({ ...spot, name: 'Edam water' }, storage)).toBe(true)
     expect(readPersonalSpots(storage)).toEqual([{ ...spot, name: 'Edam water' }])
 
-    storage.setItem('windscout.personal-spots', '{"version":1,"spots":[{"id":"bad"}]}')
+    storage.setItem('windpeek.personal-spots', '{"version":1,"spots":[{"id":"bad"}]}')
     expect(readPersonalSpots(storage)).toEqual([])
   })
 

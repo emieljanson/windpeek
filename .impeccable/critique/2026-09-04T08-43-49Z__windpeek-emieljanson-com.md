@@ -1,14 +1,14 @@
 ---
-target: windscout.emieljanson.com landing page + emieljanson.com/windscout configurator
+target: windpeek.emieljanson.com landing page + emieljanson.com/windpeek configurator
 total_score: 25
 max_score: 40
 na_heuristics: 
 p0_count: 0
 p1_count: 4
 timestamp: 2026-09-04T08-43-49Z
-slug: windscout-emieljanson-com
+slug: windpeek-emieljanson-com
 ---
-# Windscout launch critique
+# Windpeek launch critique
 
 ## Design Health Score
 
@@ -30,7 +30,7 @@ slug: windscout-emieljanson-com
 
 **De losse pagina's voelen eigen; de totale klantreis nog niet.**
 
-- De configurator is uitgesproken Windscout: live e-ink preview, echt hardwaremodel en sterke USB-installatieflow.
+- De configurator is uitgesproken Windpeek: live e-ink preview, echt hardwaremodel en sterke USB-installatieflow.
 - De landing heeft goede fotografie en een authentiek verhaal.
 - Samen missen ze gedeelde navigatie, een herkenbaar merkanker en een expliciete overdracht.
 - De detector vond 10 waarschuwingen: 9 font-herhalingen en 1 em-dash-waarschuwing. Eén fontmelding komt uit de spot-review buiten deze journey; de overige meldingen zijn grotendeels stijlclusters, geen tien losse problemen.
@@ -39,11 +39,11 @@ slug: windscout-emieljanson-com
 
 ## Overall Impression
 
-Windscout oogt al als een echt, zorgvuldig product. De live configurator verkoopt het idee beter dan de landingpage, maar is verborgen. De grootste kans is daarom geen visuele redesign: maak één heldere route van **begrijpen → persoonlijk proberen → hardware kiezen → installeren**.
+Windpeek oogt al als een echt, zorgvuldig product. De live configurator verkoopt het idee beter dan de landingpage, maar is verborgen. De grootste kans is daarom geen visuele redesign: maak één heldere route van **begrijpen → persoonlijk proberen → hardware kiezen → installeren**.
 
 ## Wat werkt
 
-- **De live preview bewijst de waarde.** Je ziet direct hoe Windscout thuis werkt.
+- **De live preview bewijst de waarde.** Je ziet direct hoe Windpeek thuis werkt.
 - **De interface voelt rustig en premium.** Het fysieke object blijft centraal.
 - **De installer bouwt vertrouwen.** Het apparaat draait naar de USB-poort en de volgende stap is helder.
 
@@ -52,7 +52,7 @@ Windscout oogt al als een echt, zorgvuldig product. De live configurator verkoop
 ### [P1] De funnel is onderbroken
 
 - **Waarom:** de landing heeft alleen `Notify me`; geen link naar de configurator. Andersom ontbreekt context.
-- **Fix:** primaire CTA `Try it with your spot`, secundair `What you need`, plus een teruglink `About Windscout` in de configurator. Kies overal dezelfde launchstatus.
+- **Fix:** primaire CTA `Try it with your spot`, secundair `What you need`, plus een teruglink `About Windpeek` in de configurator. Kies overal dezelfde launchstatus.
 - **Suggested command:** `$impeccable shape`
 
 ### [P1] De kernbelofte en doelgroep zijn te breed

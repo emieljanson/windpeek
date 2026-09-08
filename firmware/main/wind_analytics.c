@@ -10,8 +10,8 @@
 #define WIND_ANALYTICS_POSTHOG_URL "https://us.i.posthog.com/i/v0/e/"
 #define WIND_ANALYTICS_PAYLOAD_SIZE 512
 
-#ifndef WINDSCOUT_POSTHOG_PROJECT_TOKEN
-#define WINDSCOUT_POSTHOG_PROJECT_TOKEN ""
+#ifndef WINDPEEK_POSTHOG_PROJECT_TOKEN
+#define WINDPEEK_POSTHOG_PROJECT_TOKEN ""
 #endif
 
 #ifdef ESP_PLATFORM
@@ -74,7 +74,7 @@ esp_err_t wind_analytics_build_payload(const char *project_token, const char *da
     }
     int written = snprintf(
         payload, payload_size,
-        "{\"api_key\":\"%s\",\"event\":\"windscout_dashboard_heartbeat\","
+        "{\"api_key\":\"%s\",\"event\":\"windpeek_dashboard_heartbeat\","
         "\"distinct_id\":\"%s\",\"properties\":{\"$process_person_profile\":false,"
         "\"firmware_version\":\"%s\",\"device_type\":\"%s\"}}",
         project_token, dashboard_id, firmware_version, device_type);
@@ -147,7 +147,7 @@ esp_err_t wind_analytics_run(const wind_analytics_dependencies_t *dependencies, 
 esp_err_t wind_analytics_maybe_send(time_t now)
 {
 #ifdef ESP_PLATFORM
-    if (WINDSCOUT_POSTHOG_PROJECT_TOKEN[0] == '\0') return ESP_OK;
+    if (WINDPEEK_POSTHOG_PROJECT_TOKEN[0] == '\0') return ESP_OK;
 
     const wind_analytics_dependencies_t dependencies = {
         .context = NULL,
@@ -202,7 +202,7 @@ static esp_err_t send_event(void *context, const char *dashboard_id)
     (void) context;
     char payload[WIND_ANALYTICS_PAYLOAD_SIZE];
     esp_err_t result = wind_analytics_build_payload(
-        WINDSCOUT_POSTHOG_PROJECT_TOKEN, dashboard_id, FIRMWARE_VERSION, WINDSCOUT_BOARD_ID,
+        WINDPEEK_POSTHOG_PROJECT_TOKEN, dashboard_id, FIRMWARE_VERSION, WINDPEEK_BOARD_ID,
         payload, sizeof(payload));
     if (result != ESP_OK) return result;
 

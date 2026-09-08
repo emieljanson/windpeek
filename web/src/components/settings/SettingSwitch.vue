@@ -15,7 +15,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const row = inject('windscout-setting-row', null)
+const row = inject('windpeek-setting-row', null)
 const pointerFocus = ref(false)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const tooltipId = `setting-switch-tooltip-${useId()}`

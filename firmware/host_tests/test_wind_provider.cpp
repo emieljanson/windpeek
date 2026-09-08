@@ -147,7 +147,7 @@ TEST(WindProvider, RejectsPartialAndOversizedResponsesWithoutOutputMutation)
               ESP_ERR_INVALID_ARG);
 }
 
-TEST(WindProvider, UsesTheWindScoutOpenMeteoService)
+TEST(WindProvider, UsesTheWindpeekOpenMeteoService)
 {
     auto config = ::config();
     EXPECT_TRUE(open_meteo_knmi_config_valid(&config));

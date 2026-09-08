@@ -1,6 +1,6 @@
-# WindScout firmware licensing
+# Windpeek firmware licensing
 
-The combined WindScout firmware source and binaries that include the UC8179
+The combined Windpeek firmware source and binaries that include the UC8179
 E1001 driver are distributed under the **GNU General Public License, version
 3.0 only (GPL-3.0-only)**.
 

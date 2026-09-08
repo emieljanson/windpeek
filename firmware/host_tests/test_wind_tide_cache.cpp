@@ -39,7 +39,7 @@ class WindTideCacheTest : public testing::Test {
   protected:
     void SetUp() override
     {
-        root = std::filesystem::temp_directory_path() / "windscout-tide-cache-test";
+        root = std::filesystem::temp_directory_path() / "windpeek-tide-cache-test";
         std::filesystem::remove_all(root);
         std::filesystem::create_directories(root);
     }

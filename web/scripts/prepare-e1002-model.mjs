@@ -390,7 +390,7 @@ async function verifyExport(binary) {
 }
 
 async function main() {
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'windscout-e1002-'))
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'windpeek-e1002-'))
   try {
     await mkdir(outputDirectory, { recursive: true })
     const sourcePath = join(temporaryDirectory, 'e1002.stp')

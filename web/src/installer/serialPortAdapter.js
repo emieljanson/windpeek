@@ -22,13 +22,13 @@ export function getSerialSupport({
 export async function requestInstallerPort(navigatorApi = globalThis.navigator) {
   const support = getSerialSupport({ navigatorApi })
   if (!support.supported) {
-    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windscout in a current desktop version of Firefox, Chrome, or Edge.', { recoverable: false })
+    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windpeek in a current desktop version of Firefox, Chrome, or Edge.', { recoverable: false })
   }
   try {
     return await navigatorApi.serial.requestPort()
   } catch (error) {
     if (isChooserCancellation(error)) return null
-    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.', { cause: error })
+    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.', { cause: error })
   }
 }
 

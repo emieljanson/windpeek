@@ -31,14 +31,14 @@
         "timezone": "geoapify-reverse"
       },
       "rights": {
-        "license": "Direct permission for Windscout",
+        "license": "Direct permission for Windpeek",
         "redistribution": true,
         "attribution": "Varun spot dataset",
         "permission": {
           "recorded": "2026-08-27",
           "grantedBy": "Varun maintainer",
-          "scope": "Use and publish spot names and coordinates in Windscout",
-          "evidence": "Permission relayed directly to the Windscout project owner"
+          "scope": "Use and publish spot names and coordinates in Windpeek",
+          "evidence": "Permission relayed directly to the Windpeek project owner"
         }
       }
     }

@@ -46,7 +46,7 @@ function submit() {
 <template>
   <form class="installer-step installer-wifi" @submit.prevent="submit">
     <div class="installer-step__copy">
-      <h2 id="installer-title">Select a network for Windscout</h2>
+      <h2 id="installer-title">Select a network for Windpeek</h2>
       <p id="installer-wifi-help">The device uses this connection to update its forecast.</p>
     </div>
     <div class="installer-fields">

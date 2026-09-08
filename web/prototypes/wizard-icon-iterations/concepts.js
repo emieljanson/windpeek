@@ -202,7 +202,7 @@ const apply = [
 
 const pole = v(3, 2, 8)
 const complete = [
-  concept('Waving flag', 'A finish flag waves in the WindScout breeze.', [
+  concept('Waving flag', 'A finish flag waves in the Windpeek breeze.', [
     frame(pole, h(2, 4, 7), pt(7, 3), h(4, 4, 7)),
     frame(pole, h(2, 4, 6), pt(7, 1), pt(7, 3), h(4, 4, 6)),
     frame(pole, h(2, 4, 5), pt(6, 1), pt(7, 2), h(4, 4, 6)),

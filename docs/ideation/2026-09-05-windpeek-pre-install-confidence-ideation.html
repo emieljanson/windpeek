@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ideation: Windscout pre-install confidence</title>
+  <title>Ideation: Windpeek pre-install confidence</title>
   <style>
     :root { color-scheme: light; --bg:#f4f4f0; --ink:#151512; --muted:#696963; --line:#d5d5ce; --soft:#e9e9e3; --warm:#f6e7d5; }
     * { box-sizing:border-box; }
@@ -50,10 +50,10 @@
   <header>
     <p class="eyebrow">Ideation</p>
     <h1>Remove the fear before setup</h1>
-    <p class="lede">Windscout should feel like choosing a spot and installing an app on a ready-made display — not like starting an electronics project.</p>
+    <p class="lede">Windpeek should feel like choosing a spot and installing an app on a ready-made display — not like starting an electronics project.</p>
     <dl class="meta">
       <div><dt>Date</dt><dd><time datetime="2026-09-05">2026-09-05</time></dd></div>
-      <div><dt>Topic</dt><dd>windscout-pre-install-confidence</dd></div>
+      <div><dt>Topic</dt><dd>windpeek-pre-install-confidence</dd></div>
       <div><dt>Focus</dt><dd>Remove purchase and installation reservations without redesigning the page</dd></div>
       <div><dt>Mode</dt><dd>repo-grounded</dd></div>
     </dl>
@@ -62,10 +62,10 @@
   <section aria-labelledby="grounding">
     <h2 id="grounding">Grounding Context</h2>
     <div class="context">
-      <article><h3>The old copy created fear</h3><p>“Build your Windscout” implied assembly, coding and technical risk. This historical concern is resolved: the shipped page now uses “Configure &amp; install” for the guided browser installer.</p></article>
+      <article><h3>The old copy created fear</h3><p>“Build your Windpeek” implied assembly, coding and technical risk. This historical concern is resolved: the shipped page now uses “Configure &amp; install” for the guided browser installer.</p></article>
       <article><h3>The product already does the hard safety work</h3><p>The installer checks the device, verifies firmware, chooses the safe write path, reports when USB can be disconnected and confirms the first rendered forecast.</p></article>
       <article><h3>People ask practical questions</h3><p>Reddit responses ask about price, shipping, data sources, models, multiple locations, tides and whether API changes could make the device useless.</p></article>
-      <article><h3>The hardware is already a finished product</h3><p>Seeed positions reTerminal as a ready-to-use e-paper display and itself offers browser-based firmware flashing. Windscout is software for that display, not a hardware kit.</p></article>
+      <article><h3>The hardware is already a finished product</h3><p>Seeed positions reTerminal as a ready-to-use e-paper display and itself offers browser-based firmware flashing. Windpeek is software for that display, not a hardware kit.</p></article>
     </div>
     <p>Evidence: <a href="https://www.reddit.com/r/Kiteboarding/comments/1vxutb5/i_made_an_eink_screen_that_shows_the_wind_forecast/">Kiteboarding discussion</a>, <a href="https://www.reddit.com/r/wingfoil/comments/1vxuw3k/i_built_an_eink_screen_that_shows_the_wind/">Wingfoil discussion</a>, <a href="https://www.reddit.com/r/windsurfing/comments/1vxuxj4/built_an_eink_display_that_shows_the_wind_forecast/">Windsurfing discussion</a>, <code>web/src/components/installer/InstallerPanel.vue</code>, <code>docs/recovery.md</code>, and the <a href="https://wiki.seeedstudio.com/reterminal_e10xx_main_page/">Seeed reTerminal overview</a>.</p>
   </section>
@@ -90,8 +90,8 @@
 
     <article class="idea" id="idea-1">
       <span class="rank">1</span><h3>Guided setup, not “build”</h3>
-      <p>Remove maker-language at the decision point. Present Windscout as software that turns a supported reTerminal into a wind display.</p>
-      <div class="copy"><strong>Suggested landing copy</strong>Set up Windscout — no coding or soldering. Choose your spot, connect a supported reTerminal with USB-C, and the browser guides you through the rest.</div>
+      <p>Remove maker-language at the decision point. Present Windpeek as software that turns a supported reTerminal into a wind display.</p>
+      <div class="copy"><strong>Suggested landing copy</strong>Set up Windpeek — no coding or soldering. Choose your spot, connect a supported reTerminal with USB-C, and the browser guides you through the rest.</div>
       <dl><dt>Axis</dt><dd>Commitment language</dd><dt>Basis</dt><dd><strong>resolved historical finding:</strong> An earlier <code>LandingView.vue</code> said “Build,” while <code>InstallerPanel.vue</code> implemented a guided sequence. The shipped page now says “Configure &amp; install.”</dd><dt>Rationale</dt><dd>This removes the largest imagined burden before explaining details.</dd><dt>Downsides</dt><dd>“No soldering” is slightly defensive; use it once, near commitment.</dd><dt>Confidence</dt><dd>96%</dd><dt>Complexity</dt><dd>Low</dd></dl>
     </article>
 
@@ -106,7 +106,7 @@
       <span class="rank">3</span><h3>Try before buying</h3>
       <p>Frame the configurator as a zero-commitment preview. People can choose a spot and see their exact display before owning hardware.</p>
       <div class="copy"><strong>Suggested CTA</strong>Choose your spot <span aria-hidden="true">→</span><br><small>No device needed to explore.</small></div>
-      <dl><dt>Axis</dt><dd>Purchase readiness</dd><dt>Basis</dt><dd><strong>direct:</strong> The configurator loads forecast and screen previews before any USB connection or purchase.</dd><dt>Rationale</dt><dd>The current “Configure Windscout” sounds like setup begins now. “Choose your spot” offers immediate value with no risk.</dd><dt>Downsides</dt><dd>The configurator must clearly separate preview from the later install action.</dd><dt>Confidence</dt><dd>92%</dd><dt>Complexity</dt><dd>Low</dd></dl>
+      <dl><dt>Axis</dt><dd>Purchase readiness</dd><dt>Basis</dt><dd><strong>direct:</strong> The configurator loads forecast and screen previews before any USB connection or purchase.</dd><dt>Rationale</dt><dd>The current “Configure Windpeek” sounds like setup begins now. “Choose your spot” offers immediate value with no risk.</dd><dt>Downsides</dt><dd>The configurator must clearly separate preview from the later install action.</dd><dt>Confidence</dt><dd>92%</dd><dt>Complexity</dt><dd>Low</dd></dl>
     </article>
 
     <article class="idea" id="idea-4">
@@ -118,14 +118,14 @@
     <article class="idea" id="idea-5">
       <span class="rank">5</span><h3>Prove the safety system</h3>
       <p>Do not merely call installation safe. Name two or three protections the product actually provides: it checks the connected device before writing, verifies the software download, and finishes only after the forecast appears.</p>
-      <div class="copy"><strong>Suggested reassurance</strong>Windscout checks your device before changing anything and confirms setup only after the first forecast appears. If USB is interrupted, the installer guides you into repair.</div>
+      <div class="copy"><strong>Suggested reassurance</strong>Windpeek checks your device before changing anything and confirms setup only after the first forecast appears. If USB is interrupted, the installer guides you into repair.</div>
       <dl><dt>Axis</dt><dd>Installation safety</dd><dt>Basis</dt><dd><strong>direct:</strong> <code>InstallerPanel.vue:55–60</code>, <code>firmwareManifest.js</code>, and <code>docs/recovery.md</code> implement these protections.</dd><dt>Rationale</dt><dd>Concrete mechanisms answer “can I break it?” better than confidence adjectives.</dd><dt>Downsides</dt><dd>Avoid promising zero risk or easy factory restoration until every supported model has public, verified recovery evidence.</dd><dt>Confidence</dt><dd>88%</dd><dt>Complexity</dt><dd>Low</dd></dl>
     </article>
 
     <article class="idea" id="idea-6">
       <span class="rank">6</span><h3>Explain ongoing ownership</h3>
-      <p>Answer the quiet fear that a hobby project or API change leaves useless hardware. State only settled facts: no Windscout account or subscription, forecasts come directly from Open-Meteo, rendering happens on the device, and the last forecast is cached.</p>
-      <div class="copy"><strong>Suggested reassurance</strong>No account or subscription. Windscout fetches forecast data directly and keeps the last forecast available if the connection drops.</div>
+      <p>Answer the quiet fear that a hobby project or API change leaves useless hardware. State only settled facts: no Windpeek account or subscription, forecasts come directly from Open-Meteo, rendering happens on the device, and the last forecast is cached.</p>
+      <div class="copy"><strong>Suggested reassurance</strong>No account or subscription. Windpeek fetches forecast data directly and keeps the last forecast available if the connection drops.</div>
       <dl><dt>Axis</dt><dd>Ongoing trust</dd><dt>Basis</dt><dd><strong>direct:</strong> Reddit explicitly raises API-death risk; <code>README.md</code> and firmware implement direct retrieval, local rendering and caching.</dd><dt>Rationale</dt><dd>This distinguishes a durable local product from a screen dependent on a paid cloud dashboard.</dd><dt>Downsides</dt><dd>Do not imply permanent maintenance or open-source availability until those promises are decided.</dd><dt>Confidence</dt><dd>84%</dd><dt>Complexity</dt><dd>Low</dd></dl>
     </article>
   </section>
@@ -150,7 +150,7 @@
     </tbody></table>
   </section>
 
-  <footer>Composed 2026-09-05T19:30Z by ce-ideate from the current Windscout landing page, installer implementation, setup/recovery docs, and linked Reddit discussions.</footer>
+  <footer>Composed 2026-09-05T19:30Z by ce-ideate from the current Windpeek landing page, installer implementation, setup/recovery docs, and linked Reddit discussions.</footer>
 </main>
 </body>
 </html>

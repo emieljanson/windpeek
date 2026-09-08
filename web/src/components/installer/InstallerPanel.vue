@@ -36,7 +36,7 @@ const deviceLabel = computed(() => ({
   [BOARD_IDS.E1002]: 'reTerminal E1002',
   [BOARD_IDS.E1003]: 'reTerminal E1003',
 })[props.configuration.boardId || BOARD_IDS.E1002] ?? 'supported reTerminal')
-const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windscout over USB.')
+const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windpeek over USB.')
 const displayPhase = computed(() => unsupportedReason.value && state.value.phase === 'ready' ? 'error' : state.value.phase)
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
 
@@ -51,14 +51,14 @@ watch(
 
 const critical = computed(() => !state.value.safeToDisconnect)
 const progressCopy = computed(() => ({
-  ready: ['Install Windscout', `Ready to connect a ${deviceLabel.value}.`],
-  'checking-device': ['Checking device', 'Windscout is identifying the device and the safest setup path.'],
-  downloading: ['Preparing firmware', 'The verified Windscout release is being prepared before any write starts.'],
+  ready: ['Install Windpeek', `Ready to connect a ${deviceLabel.value}.`],
+  'checking-device': ['Checking device', 'Windpeek is identifying the device and the safest setup path.'],
+  downloading: ['Preparing firmware', 'The verified Windpeek release is being prepared before any write starts.'],
   'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
-  reconnecting: ['Finding Windscout', 'Waiting for the device to restart over USB.'],
+  reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
   configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
-  verifying: ['Checking the forecast', 'Windscout is confirming Wi-Fi, configuration and the first rendered forecast.'],
-}[state.value.phase] ?? ['Working…', 'Windscout is continuing setup.']))
+  verifying: ['Checking the forecast', 'Windpeek is confirming Wi-Fi, configuration and the first rendered forecast.'],
+}[state.value.phase] ?? ['Working…', 'Windpeek is continuing setup.']))
 
 async function focusStep() {
   await nextTick()
@@ -190,14 +190,14 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
               <p>Make sure this is a {{ deviceLabel }}. Installing will replace its software and saved setup.</p>
             </div>
             <div class="installer-actions">
-              <button data-autofocus class="installer-primary" type="button" @click="session.confirmDevice()">Install Windscout</button>
+              <button data-autofocus class="installer-primary" type="button" @click="session.confirmDevice()">Install Windpeek</button>
             </div>
           </div>
 
           <div v-else-if="state.phase === 'reconnect'" class="installer-step">
             <div class="installer-step__copy">
               <h2 id="installer-title">Select your reTerminal again</h2>
-              <p>Windscout could not reconnect. Keep the cable connected and select it again to finish setup.</p>
+              <p>Windpeek could not reconnect. Keep the cable connected and select it again to finish setup.</p>
             </div>
             <div class="installer-actions">
               <p v-if="state.error" class="installer-message is-error">{{ state.error.message }}</p>
@@ -211,7 +211,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
           <div v-else-if="state.phase === 'error'" class="installer-step installer-step--error">
             <div class="installer-step__copy">
-              <h2 id="installer-title">Windscout could not continue</h2>
+              <h2 id="installer-title">Windpeek could not continue</h2>
               <p role="alert">{{ state.error?.message }}</p>
               <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" />
               <p class="installer-connection-state">{{ state.safeToDisconnect ? 'It is safe to disconnect the USB cable.' : 'Keep the cable connected while the writer stops.' }}</p>

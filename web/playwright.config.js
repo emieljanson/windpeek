@@ -28,7 +28,7 @@ export default defineConfig({
     env: {
       ...process.env,
       VITE_GEOAPIFY_API_KEY: 'playwright-key',
-      VITE_NEARBY_LOCATION_URL: '/__windscout-location',
+      VITE_NEARBY_LOCATION_URL: '/__windpeek-location',
     },
   },
   projects: [

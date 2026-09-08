@@ -30,13 +30,13 @@ describe('installer demo session', () => {
     const distinctInstallPhases = phases.filter((phase, index) => phase !== phases[index - 1])
     expect(distinctInstallPhases.slice(-4)).toEqual(['downloading', 'installing-firmware', 'reconnecting', 'wifi'])
     expect(phases.at(-1)).toBe('wifi')
-    await expect(session.scanNetworks()).resolves.toContainEqual(expect.objectContaining({ ssid: 'Windscout Studio' }))
+    await expect(session.scanNetworks()).resolves.toContainEqual(expect.objectContaining({ ssid: 'Windpeek Studio' }))
     await expect(session.scanNetworks()).resolves.toContainEqual(expect.objectContaining({
       ssid: 'North Sea Guest',
       secured: false,
     }))
 
-    await session.submitWifi({ ssid: 'Windscout Studio', password: 'demo-only' })
+    await session.submitWifi({ ssid: 'Windpeek Studio', password: 'demo-only' })
     const distinctWifiPhases = phases.filter((phase, index) => phase !== phases[index - 1])
     expect(distinctWifiPhases.slice(-3)).toEqual(['configuring', 'verifying', 'complete'])
   })

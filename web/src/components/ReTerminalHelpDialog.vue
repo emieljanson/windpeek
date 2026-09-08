@@ -47,9 +47,9 @@ const devices = Object.freeze([
       <DialogOverlay class="reterminal-help__overlay" />
       <DialogContent class="reterminal-help">
         <header>
-          <DialogTitle class="reterminal-help__title">Windscout for reTerminal</DialogTitle>
+          <DialogTitle class="reterminal-help__title">Windpeek for reTerminal</DialogTitle>
           <DialogDescription class="reterminal-help__description">
-            Choose your reTerminal by screen size and colour. Windscout only uses colour for the threshold line. Direct installation supports E1001, E1002 and E1003.
+            Choose your reTerminal by screen size and colour. Windpeek only uses colour for the threshold line. Direct installation supports E1001, E1002 and E1003.
           </DialogDescription>
         </header>
 

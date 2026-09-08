@@ -5,7 +5,7 @@ import InstallerComplete from '../../src/components/installer/InstallerComplete.
 afterEach(() => vi.restoreAllMocks())
 
 describe('installer completion step', () => {
-  it('uses the live Windscout donation link by default', async () => {
+  it('uses the live Windpeek donation link by default', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null)
     const wrapper = mount(InstallerComplete)
 
@@ -26,7 +26,7 @@ describe('installer completion step', () => {
 
     expect(wrapper.get('h2').text()).toBe('Ready for the wind')
     expect(wrapper.get('.installer-step__copy p').text()).toBe(
-      'Windscout is free, so you can decide what it’s worth to you. If it’s useful, a donation can help make future features possible.',
+      'Windpeek is free, so you can decide what it’s worth to you. If it’s useful, a donation can help make future features possible.',
     )
 
     const actions = wrapper.findAll('.installer-primary')

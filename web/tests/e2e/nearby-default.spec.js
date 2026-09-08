@@ -38,7 +38,7 @@ async function locationGate(page) {
   let release
   let markRequested
   const requested = new Promise((resolve) => { markRequested = resolve })
-  await page.route('**/__windscout-location', async (route) => {
+  await page.route('**/__windpeek-location', async (route) => {
     markRequested()
     await new Promise((releaseRequest) => { release = releaseRequest })
     await route.fulfill({
@@ -81,7 +81,7 @@ test('homepage shows Brouwersdam immediately, then requests a popular nearby sur
 
 test('nearby configurator spot does not fill the search field', async ({ page }) => {
   await mockWeather(page)
-  await page.route('**/__windscout-location', (route) => route.fulfill({
+  await page.route('**/__windpeek-location', (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify(EDAM),
@@ -100,7 +100,7 @@ test('failed location lookup quietly keeps Brouwersdam', async ({ page }) => {
   await mockWeather(page)
   let locationRequested
   const requestSeen = new Promise((resolve) => { locationRequested = resolve })
-  await page.route('**/__windscout-location', async (route) => {
+  await page.route('**/__windpeek-location', async (route) => {
     locationRequested()
     await route.fulfill({ status: 503, body: '' })
   })

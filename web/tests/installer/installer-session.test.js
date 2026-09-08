@@ -111,7 +111,7 @@ describe('installer session', () => {
       phase: 'error',
       error: {
         code: INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED,
-        message: 'This USB device is already in use. Close other Windscout tabs or serial tools, then try again.',
+        message: 'This USB device is already in use. Close other Windpeek tabs or serial tools, then try again.',
       },
     })
   })
@@ -145,7 +145,7 @@ describe('installer session', () => {
     expect(session.getState().phase).toBe('error')
   })
 
-  it('completes immediately when an installed WindScout is current', async () => {
+  it('completes immediately when an installed Windpeek is current', async () => {
     const protocol = appProtocol()
     const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release, protocolFactory: () => protocol })
     await session.connect()
@@ -271,8 +271,8 @@ describe('installer session', () => {
           detectedFirmwareVersion: '2.4.1',
           releaseBoardId: BOARD_IDS.E1003,
           releaseVersion: '3.0.0',
-          connectionKind: 'windscout',
-          decisionReason: 'different-windscout-model',
+          connectionKind: 'windpeek',
+          decisionReason: 'different-windpeek-model',
         },
       },
     })
@@ -498,7 +498,7 @@ describe('installer session', () => {
     expect(session.getState().phase).toBe('reconnect')
   })
 
-  it('repairs a recognized Windscout without a redundant confirmation', async () => {
+  it('repairs a recognized Windpeek without a redundant confirmation', async () => {
     const protocol = appProtocol({ firmwareLayoutVersion: 2 })
     const partsLoader = vi.fn(async () => ({ eraseFlash: true, parts: [] }))
     const esptool = {
@@ -992,7 +992,7 @@ describe('installer session', () => {
       safeToDisconnect: true,
       error: {
         code: INSTALLER_ERROR_CODES.INVALID_RESPONSE,
-        message: 'Windscout could not save the selected screen model.',
+        message: 'Windpeek could not save the selected screen model.',
       },
     })
     const commands = rejectedProtocol.request.mock.calls.map(([command]) => command)

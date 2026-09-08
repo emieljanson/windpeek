@@ -1,21 +1,21 @@
 ---
-title: WindScout Settings Controls - Plan
+title: Windpeek Settings Controls - Plan
 type: refactor
 date: 2026-08-27
 deepened: 2026-08-27
-topic: windscout-settings-controls
+topic: windpeek-settings-controls
 artifact_contract: ce-unified-plan/v1
 artifact_readiness: implementation-ready
 product_contract_source: ce-brainstorm
 execution: code
 ---
 
-# WindScout Settings Controls - Plan
+# Windpeek Settings Controls - Plan
 
 ## Goal Capsule
 
-- **Objective:** People can configure WindScout through a compact, consistent, keyboard-friendly settings panel that feels native to the product rather than like a generic control inspector.
-- **Means:** Replace DialKit with WindScout-owned wrappers around Reka UI, make the browser preview use solid bars with an optional threshold line, and make the existing spot catalog searchable without changing the shared renderer ABI.
+- **Objective:** People can configure Windpeek through a compact, consistent, keyboard-friendly settings panel that feels native to the product rather than like a generic control inspector.
+- **Means:** Replace DialKit with Windpeek-owned wrappers around Reka UI, make the browser preview use solid bars with an optional threshold line, and make the existing spot catalog searchable without changing the shared renderer ABI.
 - **Product authority:** This plan owns the settings-control replacement and the current-catalog spot picker. External place search, map pin placement, and personal spot creation are a separate follow-up.
 - **Open blockers:** None.
 
@@ -25,15 +25,15 @@ execution: code
 
 ### Summary
 
-Replace DialKit with a small WindScout settings system inspired by Framer's property panels: Inter typography, section headings and dividers, labels on the left, and compact controls on the right. Keep solid bars as the only display treatment, make the threshold line optional, and provide searchable selection for the existing spot catalog.
+Replace DialKit with a small Windpeek settings system inspired by Framer's property panels: Inter typography, section headings and dividers, labels on the left, and compact controls on the right. Keep solid bars as the only display treatment, make the threshold line optional, and provide searchable selection for the existing spot catalog.
 
 ### Problem Frame
 
-The current DialKit surface presents settings through one generic inspector system and needs DOM-level accessibility repairs for behavior WindScout does not own. Its layout also makes controls read as broad rows rather than a calm label-and-control form. This limits the ability to distinguish a typed input, a fixed selection, and a searchable selection while keeping the panel visually specific to WindScout.
+The current DialKit surface presents settings through one generic inspector system and needs DOM-level accessibility repairs for behavior Windpeek does not own. Its layout also makes controls read as broad rows rather than a calm label-and-control form. This limits the ability to distinguish a typed input, a fixed selection, and a searchable selection while keeping the panel visually specific to Windpeek.
 
 ### Key Decisions
 
-- **Own the WindScout control layer.** (session-settled: user-approved — chosen over styling or extending DialKit: WindScout needs a different layout and clearer control behavior.) Governs R1-R5 and R16-R19.
+- **Own the Windpeek control layer.** (session-settled: user-approved — chosen over styling or extending DialKit: Windpeek needs a different layout and clearer control behavior.) Governs R1-R5 and R16-R19.
 - **Use Reka UI as the accessible behavior layer.** (session-settled: user-approved — chosen over implementing every popup and keyboard interaction from scratch: unstyled Vue primitives preserve visual ownership without giving up mature focus behavior.) Governs R5-R10 and R16-R19.
 - **Remove Treatment and Gradient.** (session-settled: user-directed — chosen over keeping a reduced treatment dropdown: the display should have one solid-bar foundation and only an optional threshold line.) Governs R12-R15.
 - **Use a toggle and exact number for threshold.** (session-settled: user-directed — chosen over a slider or treating zero as off: the state and value should be explicit and precise.) Governs R14-R15.
@@ -52,7 +52,7 @@ The current DialKit surface presents settings through one generic inspector syst
 
 **Selection and display settings**
 
-- R6. Spot shall be an editable combobox that filters the existing WindScout spot catalog as the person types.
+- R6. Spot shall be an editable combobox that filters the existing Windpeek spot catalog as the person types.
 - R7. Spot text shall not become configuration by itself; a catalog result must be selected before the spot changes.
 - R8. Model shall be a Select with typeahead so a person can jump to a forecast model by typing while the control is focused.
 - R9. Weather and Tide shall be independent toggles, and Tide shall preserve a clear unavailable state when the selected spot has no supported tide data.
@@ -76,7 +76,7 @@ The current DialKit surface presents settings through one generic inspector syst
 <!-- ce-section: work-relationships -->
 ### How This Work Fits Together
 
-This plan owns the WindScout control system and the first searchable Spot picker. The broader breakdown is current context, not a committed roadmap.
+This plan owns the Windpeek control system and the first searchable Spot picker. The broader breakdown is current context, not a committed roadmap.
 
 - **Custom Spot flow follows this work.**
   - **Depends on:** The Spot combobox and shared input, dialog, focus, and popup patterns established here.
@@ -117,20 +117,20 @@ This plan owns the WindScout control system and the first searchable Spot picker
 
 - External place search and geocoding are deferred to the Custom Spot work package.
 - Map display, pin placement, spot naming, and personal spot persistence are deferred to the Custom Spot work package.
-- A public or automatically crowdsourced WindScout spot database is not part of this work package or yet committed for the follow-up.
+- A public or automatically crowdsourced Windpeek spot database is not part of this work package or yet committed for the follow-up.
 - Firmware defaults, persisted device settings, physical device buttons, and NVS migration are outside this web-control refactor. The single development unit may be reflashed or reconfigured separately when device installation is implemented.
 - This work does not redesign the 3D product scene, forecast status messaging, installation continuation, forecast models, or tide-availability rules beyond integrating them with the new controls.
 
 ### Dependencies and Assumptions
 
 - The existing Vue configurator remains the product surface and its store remains the authority for active settings.
-- Reka UI can supply the unstyled Select, Combobox, Switch, and popup behavior needed by the WindScout-owned controls.
+- Reka UI can supply the unstyled Select, Combobox, Switch, and popup behavior needed by the Windpeek-owned controls.
 - The existing local spot catalog remains the complete Spot data source for this work package.
 - Browser-locale time notation is an acceptable default even though it represents locale convention rather than a guaranteed read of every operating-system preference.
 
 ### Sources and Research
 
-- `web/src/components/WindScoutSettings.vue` — current DialKit controls, store bindings, and accessibility adaptations.
+- `web/src/components/WindpeekSettings.vue` — current DialKit controls, store bindings, and accessibility adaptations.
 - `web/src/styles/configurator.css` — current floating panel dimensions and DialKit-specific styling.
 - `web/src/config/configuration.js` and `web/src/renderer/contract.js` — current treatment, threshold, time, and temperature contracts.
 - `web/src/spots.js` and `web/src/forecast/models.js` — current catalog choices.
@@ -147,7 +147,7 @@ This plan owns the WindScout control system and the first searchable Spot picker
 
 ### Key Technical Decisions
 
-- **KTD1. Put Reka UI behind WindScout-owned control wrappers.** `SettingSelect`, `SettingCombobox`, and `SettingSwitch` own the product API and appearance while Reka owns focus, popup, selection, and keyboard mechanics. This prevents Reka component details from spreading through the settings panel and keeps a later visual adjustment local. Governs R1-R10 and R16-R19.
+- **KTD1. Put Reka UI behind Windpeek-owned control wrappers.** `SettingSelect`, `SettingCombobox`, and `SettingSwitch` own the product API and appearance while Reka owns focus, popup, selection, and keyboard mechanics. This prevents Reka component details from spreading through the settings panel and keeps a later visual adjustment local. Governs R1-R10 and R16-R19.
 - **KTD2. Make Pinia the only committed form state.** Reka controls are controlled components: they emit candidate values, and `configurator.js` validates and commits them. Search text and temporarily invalid numeric text remain local drafts and never become active configuration. Governs R6-R10 and R14-R16.
 - **KTD3. Keep `showThreshold` internal until installation has a real contract.** Pinia replaces its UI-facing `treatment` state with `showThreshold` and retains the last valid `threshold`. The preview derives the existing renderer mode, while `displayConfigurationFromStore` keeps its current version-2 output and derives the existing `treatment` field if that helper remains useful. No persisted browser input or new transfer schema is introduced. Temperature remains stored as the existing visibility-plus-unit pair, with one combined UI adapter. Governs R10 and R12-R16.
 - **KTD4. Preserve the shared renderer ABI while removing Gradient from the configurator.** `DISPLAY_MODES` and the C/WASM renderer continue to understand background fade for binary and test compatibility, but the browser preview emits only solid or threshold mode. Deleting the low-level mode is deliberately outside this refactor. Governs R12-R13 and AE4.
@@ -158,7 +158,7 @@ This plan owns the WindScout control system and the first searchable Spot picker
 
 ```mermaid
 flowchart LR
-    A[WindScoutSettings] --> B[WindScout control wrappers]
+    A[WindpeekSettings] --> B[Windpeek control wrappers]
     B -->|valid selected value| C[Pinia configurator store]
     B -.->|search / invalid draft only| B
     C --> D[Existing v2 output adapter]
@@ -180,7 +180,7 @@ The settings panel remains a composition layer. It does not know forecast loadin
 
 ### Risks and Dependencies
 
-- **Reka UI 2.x behavior:** Vue 3.5 satisfies the current peer requirement, but wrapper-level tests must pin the keyboard and focus behavior WindScout depends on rather than trusting a package upgrade implicitly.
+- **Reka UI 2.x behavior:** Vue 3.5 satisfies the current peer requirement, but wrapper-level tests must pin the keyboard and focus behavior Windpeek depends on rather than trusting a package upgrade implicitly.
 - **Popup positioning inside the floating panel:** Select and Combobox content must be portalled above the 3D canvas and use the trigger width variable so desktop and bottom-sheet layouts align.
 - **Future installer boundary:** Installation work must define and version its real transfer contract end to end instead of treating this internal Pinia state as an already-promised device format.
 - **Combined temperature control:** Hiding temperature must not discard the previously selected unit; choosing a unit must always make the row visible.
@@ -190,7 +190,7 @@ The settings panel remains a composition layer. It does not know forecast loadin
 
 - **Delete background-fade from the renderer enum immediately:** rejected because the same numeric renderer contract is shared by firmware, WASM, and fixtures. Keeping it unreachable from the configurator makes this UI refactor safer and smaller.
 - **Add a new renderer-level `showThreshold` boolean:** rejected because solid and threshold modes already encode the rendered result; an extra renderer parameter would duplicate state across both implementations.
-- **Use Reka primitives directly in `WindScoutSettings.vue`:** rejected because styling, labels, popup sizing, validation wiring, and future custom-spot behavior would become duplicated and coupled to a third-party API.
+- **Use Reka primitives directly in `WindpeekSettings.vue`:** rejected because styling, labels, popup sizing, validation wiring, and future custom-spot behavior would become duplicated and coupled to a third-party API.
 - **Commit every number-input keystroke:** rejected because an empty or half-typed number is a normal editing state but not a valid renderer configuration.
 
 ---
@@ -223,20 +223,20 @@ The settings panel remains a composition layer. It does not know forecast loadin
 - **Goal:** Make solid/threshold the only configurator modes while leaving shared renderer and device behavior untouched.
 - **Requirements:** R11-R16; AE3, AE4, AE6, AE7.
 - **Dependencies:** U1.
-- **Files:** `web/src/configurator/screenTexture.js`, `web/src/components/WindScoutScene.vue`, `web/src/renderer/contract.js`, `web/tests/screen-texture.test.js`.
+- **Files:** `web/src/configurator/screenTexture.js`, `web/src/components/WindpeekScene.vue`, `web/src/renderer/contract.js`, `web/tests/screen-texture.test.js`.
 - **Approach:**
   1. Change `screenTexture.js` to derive renderer mode solely from `showThreshold`: threshold when true, solid when false. Continue passing the numeric threshold and existing row/time/unit fields.
-  2. Update `WindScoutScene.vue` reactivity to watch `showThreshold` instead of `treatment`, retaining the current in-place texture update so scene pose is untouched.
+  2. Update `WindpeekScene.vue` reactivity to watch `showThreshold` instead of `treatment`, retaining the current in-place texture update so scene pose is untouched.
   3. Remove UI-facing treatment choices from `contract.js` when no longer referenced, but retain all three low-level `DISPLAY_MODES` numeric values and the WASM bridge contract.
   4. Do not edit firmware configuration, physical mode controls, renderer drawing code, enum numbering, WASM bridge signatures, or background-mode golden fixtures in this unit.
-- **Patterns to follow:** Current immediate `screenSource.update` path in `WindScoutScene.vue`; existing renderer-contract boundary in `screenTexture.js`.
+- **Patterns to follow:** Current immediate `screenSource.update` path in `WindpeekScene.vue`; existing renderer-contract boundary in `screenTexture.js`.
 - **Tests:**
   - Assert browser `showThreshold=false` renders solid; true renders threshold at the retained value (AE3, AE4).
   - Assert optional Weather, Temperature, Tide, unit, and time fields still cross the screen-texture boundary unchanged (AE6, AE7).
   - Keep the existing shared-renderer parity suite green, proving ABI and historical renderer-mode capability were not changed.
 - **Verification outcome:** The browser preview exposes only solid/threshold while the shared renderer remains compatible and device behavior is explicitly unchanged.
 
-### U3. Build the reusable WindScout control layer
+### U3. Build the reusable Windpeek control layer
 
 - **Goal:** Provide one compact, accessible visual standard for settings controls before assembling product rows.
 - **Requirements:** R2-R8 and R17-R19; AE1, AE2.
@@ -257,14 +257,14 @@ The settings panel remains a composition layer. It does not know forecast loadin
   - Assert a query with no catalog matches announces `No existing spots found`, leaves the current spot unchanged, and restores its label on dismissal (AE2).
   - Assert every wrapper exposes its visible label programmatically, and disabled Switch/Select state is announced (R18).
   - Assert number input emits only valid 5-35 values, associates and announces the range error while invalid, and rolls back transient invalid drafts without mutating the committed value.
-- **Verification outcome:** Product rows can use a small, tested WindScout API without knowing Reka internals or repairing generated DOM.
+- **Verification outcome:** Product rows can use a small, tested Windpeek API without knowing Reka internals or repairing generated DOM.
 
 ### U4. Recompose the settings panel and live interactions
 
 - **Goal:** Replace the DialKit panel with the approved Framer-inspired layout and simplified settings set.
 - **Requirements:** R1-R19; F1-F3; AE1-AE7.
 - **Dependencies:** U1-U3.
-- **Files:** `web/src/components/WindScoutSettings.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`.
+- **Files:** `web/src/components/WindpeekSettings.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`.
 - **Approach:**
   1. Compose a `Forecast` section with Spot Combobox and Model Select, and a `Display` section with Show threshold, conditional Threshold value, Weather, Temperature, and Tide rows. Do not render Treatment or Time format rows.
   2. Filter the catalog objects from `spots.js` in a panel-level adapter and feed the resulting list to the Spot Combobox; only call the existing asynchronous `selectSpot` action after an actual option selection. Show and announce `No existing spots found` for an empty list, and keep the previous spot while a search draft is edited or dismissed.
@@ -274,7 +274,7 @@ The settings panel remains a composition layer. It does not know forecast loadin
   6. Bind Temperature Select through the combined adapter and remove the separate show/unit UI. Keep the preview update path immediate for every valid change.
   7. Replace DialKit-specific CSS with stable settings classes. On wide layouts use a consistent label/control grid; at the supported narrow bottom-panel width keep labels left, reduce the label column, allow long option text to truncate safely, make the panel body scroll, and keep popups outside overflow through portals.
   8. Preserve all content outside the control surface: panel title/close behavior, forecast status/warning copy, and installation continuation.
-- **Patterns to follow:** Existing store actions and async forecast feedback in `WindScoutSettings.vue`; existing desktop and `max-width: 56rem` panel modes in `configurator.css`; the supplied Framer screenshot for visual hierarchy, not as an exact copy.
+- **Patterns to follow:** Existing store actions and async forecast feedback in `WindpeekSettings.vue`; existing desktop and `max-width: 56rem` panel modes in `configurator.css`; the supplied Framer screenshot for visual hierarchy, not as an exact copy.
 - **Tests:**
   - Mount the complete panel and execute AE1-AE3 and AE5-AE6 using roles and labels rather than implementation selectors.
   - Assert Treatment and Time format are absent, all specified rows are present in order, and locale-derived time is still sent to preview/configuration (AE4, AE7).
@@ -321,7 +321,7 @@ The settings panel remains a composition layer. It does not know forecast loadin
 
 - U1-U5 are complete in dependency order, with their focused tests added before or alongside implementation.
 - The settings panel contains only Spot, Model, Show threshold, conditional Threshold, Weather, Temperature, and Tide controls; Time format and Treatment are not visible.
-- Inputs, Selects, Combobox, and Switches use the WindScout visual language with Inter, left labels, compact right controls, matching heights, and a chevron only for fixed-choice Selects.
+- Inputs, Selects, Combobox, and Switches use the Windpeek visual language with Inter, left labels, compact right controls, matching heights, and a chevron only for fixed-choice Selects.
 - Spot and Model are fully keyboard-operable; arbitrary Spot text cannot commit configuration.
 - Solid bars are the only configurator base treatment and threshold visibility is independent from its retained exact value; no unsupported browser or firmware migration is claimed.
 - Temperature's three UI states, browser-locale time resolution, Tide capability behavior, and immediate preview updates preserve the existing generated configuration fields.

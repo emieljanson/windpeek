@@ -51,7 +51,7 @@ static UWORD display_white(void) {
 }
 
 void display_manager_initialize_paint(void) {
-    /* WindScout keeps one byte per logical pixel until the selected backend. */
+    /* Windpeek keeps one byte per logical pixel until the selected backend. */
 }
 
 esp_err_t display_manager_init(void) {

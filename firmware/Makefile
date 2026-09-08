@@ -4,7 +4,7 @@
 # On macOS: brew install llvm@18 && brew link llvm@18
 # On Ubuntu: sudo apt-get install clang-format-18
 CLANG_FORMAT := $(shell which clang-format-18 2>/dev/null || which /opt/homebrew/opt/llvm@18/bin/clang-format 2>/dev/null || echo clang-format)
-HOST_TEST_BUILD ?= host_tests/build-windscout
+HOST_TEST_BUILD ?= host_tests/build-windpeek
 
 # Find all C and H files in main/ and components/ directories
 # Exclude build/, managed_components/, etc.
