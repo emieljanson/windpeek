@@ -7,7 +7,7 @@
 }
 
 .setting-row__help {
-  --help-dot-color: #b8b8ba;
+  --help-dot-color: var(--settings-control-muted);
   position: absolute;
   inset-block-start: 50%;
   inset-inline-start: 0;
@@ -35,9 +35,9 @@
   background-repeat: repeat-x;
 }
 
-.setting-row__help:hover { --help-dot-color: #000; }
+.setting-row__help:hover { --help-dot-color: var(--settings-control-ink); }
 .setting-row__help:focus-visible {
-  --help-dot-color: #000;
+  --help-dot-color: var(--settings-control-ink);
   outline: 1px solid var(--settings-focus, #000);
   outline-offset: 0.2rem;
 }
@@ -46,7 +46,7 @@
   position: fixed;
   z-index: 3000;
   inset: 0;
-  background: rgba(18, 23, 21, 0.34);
+  background: rgb(4 7 5 / 54%);
   backdrop-filter: blur(4px);
 }
 
@@ -62,8 +62,8 @@
   padding: 1.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  color: #000;
-  background: #fff;
+  color: var(--settings-control-ink);
+  background: var(--panel-background);
   border: 0;
   border-radius: 1rem;
   box-shadow:
@@ -80,7 +80,7 @@
 .reterminal-help__description {
   max-inline-size: 34rem;
   margin-block-start: 0.375rem;
-  color: #747474;
+  color: var(--settings-control-muted);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
@@ -103,7 +103,7 @@
   align-items: start;
   padding: 0.75rem;
   overflow: visible;
-  background: #f7f7f7;
+  background: var(--settings-control-surface);
   border-radius: 0.75rem;
 }
 
@@ -120,13 +120,13 @@
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  color: #616161;
+  color: var(--settings-control-muted);
   font-size: 0.8125rem;
   line-height: 1.4;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.reterminal-help__device strong { color: #000; font-weight: 550; }
+.reterminal-help__device strong { color: var(--settings-control-ink); font-weight: 550; }
 .reterminal-help__buy {
   grid-column: 1;
   display: inline-flex;
@@ -135,8 +135,8 @@
   align-items: center;
   justify-content: center;
   align-self: end;
-  color: #fff;
-  background: #000;
+  color: var(--panel-primary-ink);
+  background: var(--panel-primary-background);
   border-radius: 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -145,7 +145,7 @@
   white-space: nowrap;
   transition: background-color 120ms ease-out, scale 120ms ease-out;
 }
-.reterminal-help__buy:hover { background: #202020; }
+.reterminal-help__buy:hover { background: var(--panel-primary-hover); }
 .reterminal-help__buy:active { scale: 0.97; }
 .reterminal-help__buy:focus-visible {
   outline: 2px solid var(--settings-focus, #000);
@@ -161,14 +161,14 @@
   block-size: 2rem;
   padding: 0;
   place-items: center;
-  color: #747474;
-  background: #f7f7f7;
+  color: var(--settings-control-muted);
+  background: var(--settings-control-surface);
   border: 0;
   border-radius: 50%;
   cursor: pointer;
   transition: color 120ms ease-out, background-color 120ms ease-out, scale 120ms ease-out;
 }
-.reterminal-help__close:hover { color: #000; background: #f1f1f1; }
+.reterminal-help__close:hover { color: var(--settings-control-ink); background: var(--settings-control-surface-hover); }
 .reterminal-help__close:active { scale: 0.94; }
 .reterminal-help__close:focus-visible {
   outline: 2px solid var(--settings-focus, #000);

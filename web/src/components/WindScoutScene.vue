@@ -538,7 +538,12 @@ async function initialize() {
     const lighting = PRODUCT_LIGHTING
     RectAreaLightUniformsLib.init()
     scene = new THREE.Scene()
-    scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
+    const studioBackground = getComputedStyle(document.documentElement)
+      .getPropertyValue('--studio-background')
+      .trim()
+    scene.background = props.captureMode
+      ? null
+      : new THREE.Color(studioBackground || lighting.background)
     camera = new THREE.PerspectiveCamera(29, 1, 0.01, 10)
     renderer = new THREE.WebGLRenderer({
       antialias: true,
