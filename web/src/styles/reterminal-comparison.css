@@ -1,0 +1,152 @@
+.reterminal-comparison { min-width: 0; }
+.reterminal-comparison p { margin: 0; }
+
+.reterminal-comparison .hardware-model__buy {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--landing-button-background);
+  color: var(--landing-button-text);
+  font: 500 14px/1 'Inter Variable', Inter, sans-serif;
+  text-decoration: none;
+  transition: background-color 120ms ease-out, scale 120ms ease-out;
+}
+
+.reterminal-comparison .hardware-model__buy:hover { background: var(--landing-button-hover); }
+.reterminal-comparison .hardware-model__buy:active { scale: 0.96; }
+.reterminal-comparison .hardware-model__buy:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--landing-text), 0 0 0 2px var(--landing-background), 0 0 0 4px var(--landing-text);
+}
+.reterminal-comparison .hardware-models {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reterminal-comparison .hardware-model {
+  display: grid;
+  grid-template-rows: 112px auto;
+  min-width: 0;
+  justify-items: start;
+}
+
+.reterminal-comparison .hardware-model__visual {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  place-items: center start;
+}
+
+.reterminal-comparison .hardware-model__visual img {
+  display: block;
+  width: 112%;
+  height: 108px;
+  object-fit: contain;
+  transform: translateX(-18%);
+  transform-origin: left center;
+}
+
+.reterminal-comparison .hardware-model:nth-child(3) .hardware-model__visual img {
+  width: 128%;
+  transform: translateX(-23%);
+}
+
+.reterminal-comparison .hardware-model__name {
+  width: 100%;
+  color: var(--landing-text);
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.reterminal-comparison .hardware-model__buy {
+  min-width: 112px;
+}
+
+.reterminal-comparison .hardware-specs {
+  margin: 10px 0 0;
+}
+
+.reterminal-comparison .hardware-spec {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  align-items: center;
+  padding: 9px 0;
+}
+
+.reterminal-comparison .hardware-spec + .hardware-spec {
+  border-top: var(--landing-rule-width) solid var(--landing-line);
+}
+
+.reterminal-comparison .hardware-spec dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.reterminal-comparison .hardware-spec dd {
+  margin: 0;
+  color: var(--landing-text);
+  font-size: 15px;
+  line-height: 1.35;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.reterminal-comparison .hardware-spec__line {
+  display: block;
+}
+
+.reterminal-comparison .hardware-spec__line + .hardware-spec__line {
+  margin-top: 2px;
+}
+
+.reterminal-comparison .hardware-spec__copy--mobile { display: none; }
+
+.reterminal-comparison .hardware-buys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .reterminal-comparison .hardware-models,
+  .reterminal-comparison .hardware-spec,
+  .reterminal-comparison .hardware-buys {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 8px;
+  }
+  .reterminal-comparison .hardware-model {
+    grid-template-rows: 76px auto;
+  }
+  .reterminal-comparison .hardware-model__visual img {
+    height: 72px;
+  }
+  .reterminal-comparison .hardware-model__name { font-size: 15px; }
+  .reterminal-comparison .hardware-model__buy {
+    width: 100%;
+    min-width: 0;
+    padding: 0 5px;
+  }
+  .reterminal-comparison .hardware-spec dd { font-size: 13px; }
+  .reterminal-comparison .hardware-spec__copy--desktop { display: none; }
+  .reterminal-comparison .hardware-spec__copy--mobile { display: inline; }
+}
