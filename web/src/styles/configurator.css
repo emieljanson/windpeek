@@ -5,6 +5,7 @@
   background: var(--studio-background);
   color: var(--ink);
   --studio-background-rgb: 243 245 247;
+  --studio-status: #505a56;
   --config-copy: #4c5753;
   --config-status-surface: rgba(255, 255, 255, 0.52);
   --config-status-label: #505a56;
