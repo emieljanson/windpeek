@@ -1,6 +1,6 @@
 firmware/build*/
 firmware/host_tests/build/
-firmware/host_tests/build-windscout/
+firmware/host_tests/build*/
 firmware/sdkconfig
 firmware/sdkconfig.old
 firmware/main/wind_config.local.h

@@ -14,7 +14,7 @@ deepened: 2026-08-26
 
 ## Goal Capsule
 
-- **Objective:** Let a WindScout owner choose which supporting forecast information appears while the browser preview remains compositionally identical to the physical display.
+- **Objective:** Let a Windpeek owner choose which supporting forecast information appears while the browser preview remains compositionally identical to the physical display.
 - **Means:** Use a fixed dashboard stack in which wind always occupies the remaining height and weather, air temperature, and tide are independent optional rows.
 - **Product authority:** This plan owns forecast-row behavior, its shared configuration, and browser/device rendering parity. The wider installation journey remains governed by `docs/plans/2026-08-26-0630-feat-public-3d-configurator-plan.md`.
 - **Open blockers:** None.
@@ -25,7 +25,7 @@ deepened: 2026-08-26
 
 ### Summary
 
-WindScout gains a compact, configurable forecast stack without becoming a general dashboard builder. Owners can preview weather, air temperature, and tide choices live, then see the same composition on the E1002.
+Windpeek gains a compact, configurable forecast stack without becoming a general dashboard builder. Owners can preview weather, air temperature, and tide choices live, then see the same composition on the E1002.
 
 ### Problem Frame
 
@@ -64,8 +64,8 @@ The current display already includes weather, but the owner cannot decide which 
 
 - R11. Browser preview and device firmware shall compose all forecast rows through the same layout and drawing logic from the same normalized inputs.
 - R12. Every accepted setting change shall update the forecast shown in the 3D preview immediately.
-- R13. Weather, temperature, and tide visibility shall be part of the versioned WindScout configuration so the settings can later travel through the USB configuration flow without reinterpretation.
-- R14. The production settings panel shall expose the three visibility controls through DialKit while keeping forecast-specific availability guidance in WindScout UI.
+- R13. Weather, temperature, and tide visibility shall be part of the versioned Windpeek configuration so the settings can later travel through the USB configuration flow without reinterpretation.
+- R14. The production settings panel shall expose the three visibility controls through DialKit while keeping forecast-specific availability guidance in Windpeek UI.
 - R15. Straight rules, borders, bars, and grid marks shall snap to whole output pixels and render without antialiasing; only text, icons, and the curved tide graph may use grayscale edges that require the device's final dither pass.
 
 The fixed composition is:
@@ -80,7 +80,7 @@ flowchart TB
 
 ### Actors
 
-- A1. **WindScout owner:** Chooses the information shown and judges the live preview.
+- A1. **Windpeek owner:** Chooses the information shown and judges the live preview.
 - A2. **Online configurator:** Fetches forecast data, validates availability, and renders the shared output inside the 3D device.
 - A3. **E1002 firmware:** Fetches equivalent data and renders the persisted configuration on the physical panel.
 - A4. **Forecast provider:** Supplies weather, air-temperature, and marine sea-level series directly to browser or device.
@@ -132,7 +132,7 @@ This plan owns the configurable forecast stack. The surrounding breakdown is con
 - No water temperature or tide height in the first version.
 - No spot-search redesign, curated spot database, map-pin workflow, or coastal geocoding.
 - No USB installation, Wi-Fi provisioning, OTA, or recovery-flow implementation in this work unit.
-- No WindScout-hosted forecast proxy; browser and device retrieve forecast data directly.
+- No Windpeek-hosted forecast proxy; browser and device retrieve forecast data directly.
 
 ### Dependencies and Assumptions
 
@@ -305,14 +305,14 @@ The data contracts land before layout work. The provider paths can then feed det
 - **Goal:** Let an owner change weather, temperature, and tide visibility and see the accepted configuration immediately on the virtual E1002.
 - **Requirements:** R2-R7, R12-R14; implements F1 and AE1-AE3.
 - **Dependencies:** U1-U3.
-- **Files:** `web/src/stores/configurator.js`, `web/src/components/WindScoutSettings.vue`, `web/src/configurator/screenTexture.js`, `web/src/config/configuration.js`, `web/src/fixtures/brouwersdam.js`, `web/tests/configurator-store.test.js`, `web/tests/settings.test.js`, `web/tests/screen-texture.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`.
+- **Files:** `web/src/stores/configurator.js`, `web/src/components/WindpeekSettings.vue`, `web/src/configurator/screenTexture.js`, `web/src/config/configuration.js`, `web/src/fixtures/brouwersdam.js`, `web/tests/configurator-store.test.js`, `web/tests/settings.test.js`, `web/tests/screen-texture.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`.
 - **Approach:**
   1. Make Pinia the owner of the three visibility preferences and marine capability state.
   2. Add DialKit boolean controls with the settled defaults, while keeping DialKit persistence disabled.
-  3. Check marine capability when the spot changes. Keep the tide toggle visible, preserve its saved preference, and pair its disabled state with a WindScout loading, unsupported, or failed explanation when it is not actionable.
+  3. Check marine capability when the spot changes. Keep the tide toggle visible, preserve its saved preference, and pair its disabled state with a Windpeek loading, unsupported, or failed explanation when it is not actionable.
   4. Rebuild the renderer input from the published forecast, current tide series, and current display configuration after every accepted change.
   5. Keep the last published bitmap if a new forecast or renderer input fails validation.
-- **Patterns to follow:** `WindScoutSettings.vue` as a DialKit-to-Pinia adapter, `screenTexture.js` as the renderer boundary, and the existing pending-versus-published forecast state.
+- **Patterns to follow:** `WindpeekSettings.vue` as a DialKit-to-Pinia adapter, `screenTexture.js` as the renderer boundary, and the existing pending-versus-published forecast state.
 - **Test scenarios:**
   - Covers AE1. The initial panel shows weather on, temperature off, and tide off, and each change redraws without an apply action.
   - DialKit values update Pinia once and never become a second persistence owner.
@@ -326,7 +326,7 @@ The data contracts land before layout work. The provider paths can then feed det
 
 ### U5. Persist display choices and integrate tide on the device
 
-- **Goal:** Make the E1002 fetch and render the same configured rows without requiring a WindScout forecast service.
+- **Goal:** Make the E1002 fetch and render the same configured rows without requiring a Windpeek forecast service.
 - **Requirements:** R2-R13, R15; implements F2-F3 and AE2-AE5.
 - **Dependencies:** U1-U3.
 - **Files:** `firmware/main/config.h`, `firmware/main/config_manager.h`, `firmware/main/config_manager.c`, `firmware/main/wind_app.h`, `firmware/main/wind_app.c`, `firmware/main/wind_cache.h`, `firmware/main/wind_cache.c`, `firmware/main/wind_config.example.h`, `firmware/main/CMakeLists.txt`, `firmware/host_tests/stubs/fake_config_manager.c`, `firmware/host_tests/test_wind_app.cpp`, `firmware/host_tests/test_wind_config.cmake`, `firmware/host_tests/test_wind_cache.cpp`.
@@ -389,7 +389,7 @@ The data contracts land before layout work. The provider paths can then feed det
 | Risk or dependency | Impact | Mitigation |
 |---|---|---|
 | Marine coverage returns null inland or near complex coasts | Tide can appear absent or misleading | Use returned usable values for capability, keep unsupported separate from failure, and retain the warning from R9. |
-| Marine API failure delays the main refresh | WindScout feels unreliable | Keep provider calls, caches, and publication states independent per KTD2. |
+| Marine API failure delays the main refresh | Windpeek feels unreliable | Keep provider calls, caches, and publication states independent per KTD2. |
 | Optional rows compress the wind chart too far | Wind loses visual priority | Keep fixed compact row bands and validate the all-rows composition on the physical panel. |
 | Tide labels collide on narrow day columns | Times become unreadable | Limit labels to one daily high and low, measure text bounds, and cover collision fixtures. |
 | Contract versions drift between C, WASM, and JavaScript | Preview fails or lies | Reject mismatched versions and require regenerated WASM plus byte-parity tests. |

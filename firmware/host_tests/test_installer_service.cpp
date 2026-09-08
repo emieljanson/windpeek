@@ -144,7 +144,7 @@ TEST(InstallerServiceTest, HelloAndStateAreRedacted)
     FakeDevice fake;
     auto service = make_service(&fake);
     const std::string hello = request(&service, R"({"command":"hello"})");
-    EXPECT_NE(hello.find(WINDSCOUT_BOARD_ID), std::string::npos);
+    EXPECT_NE(hello.find(WINDPEEK_BOARD_ID), std::string::npos);
     EXPECT_EQ(hello.find("password"), std::string::npos);
     EXPECT_NE(hello.find("clock-sync"), std::string::npos);
     EXPECT_TRUE(service.wake_lock_held);

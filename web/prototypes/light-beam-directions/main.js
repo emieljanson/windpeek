@@ -65,7 +65,7 @@ try {
   })
   sceneController.setVariant(initial)
 } catch (error) {
-  loading.textContent = error instanceof Error ? error.message : 'The WindScout scene could not load.'
+  loading.textContent = error instanceof Error ? error.message : 'The Windpeek scene could not load.'
 }
 
 requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')))

@@ -16,7 +16,7 @@ those paths, recovery, or a build target the repository still exposes.
 - Deleted `firmware/main/png_decoder.c` and its header and CMake entry. Its only
   exported function had no caller, including in the legacy firmware. The active
   PNG/image pipeline in `image_processor.c` remains covered by host tests.
-- WindScout E1002, universal E1001/E1002 and E1003 builds now default to the
+- Windpeek E1002, universal E1001/E1002 and E1003 builds now default to the
   firmware step. Their CMake branch embeds neither the photo-frame webapp nor
   generated splash screens. Explicit `--step` requests and legacy board defaults
   retain their behavior.
@@ -32,7 +32,7 @@ those paths, recovery, or a build target the repository still exposes.
   production, test and prototype callers. Hidden geometry remains attached for
   resource disposal.
 - Updated the root build example to the universal installer target and replaced
-  obsolete WindScout Wi-Fi OTA instructions with the actual USB update path.
+  obsolete Windpeek Wi-Fi OTA instructions with the actual USB update path.
 
 Review categories: one reuse improvement, five deletion/quality improvements,
 one removal of unnecessary build work, and one adjacent error-handler fix.

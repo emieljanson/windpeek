@@ -10,11 +10,11 @@ import { brouwersdamTide } from '../fixtures/brouwersdam'
 import { getSerialSupport } from '../installer/serialPortAdapter'
 import { deviceTimezone } from '../timezone'
 import InstallContinuation from '../components/InstallContinuation.vue'
-import WindScoutSettings from '../components/WindScoutSettings.vue'
+import WindpeekSettings from '../components/WindpeekSettings.vue'
 import { useCompactViewport } from '../composables/useCompactViewport'
 import { useConfiguratorStore } from '../stores/configurator'
 
-const WindScoutScene = defineAsyncComponent(() => import('../components/WindScoutScene.vue'))
+const WindpeekScene = defineAsyncComponent(() => import('../components/WindpeekScene.vue'))
 
 const store = useConfiguratorStore()
 const currentDeviceTimezone = deviceTimezone()
@@ -112,8 +112,8 @@ onBeforeUnmount(() => {
     }"
   >
     <main id="main-content" class="configurator-layout">
-      <section class="product-stage" aria-label="Windscout 3D preview">
-        <WindScoutScene
+      <section class="product-stage" aria-label="Windpeek 3D preview">
+        <WindpeekScene
           v-if="!sceneFailed"
           :key="previewBoardId || store.selectedBoardId"
           class="device-scene"
@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
         />
 
         <div v-else class="scene-error" data-testid="scene-error" role="alert">
-          <h2>The virtual Windscout could not start.</h2>
+          <h2>The virtual Windpeek could not start.</h2>
           <p>{{ sceneError }} Refresh the page to try again.</p>
         </div>
       </section>
@@ -134,9 +134,9 @@ onBeforeUnmount(() => {
         v-if="!captureMode"
         class="settings-panel"
         :class="{ 'settings-panel--compact': isCompact }"
-        aria-label="Windscout settings"
+        aria-label="Windpeek settings"
       >
-        <WindScoutSettings :compact="isCompact" />
+        <WindpeekSettings :compact="isCompact" />
         <InstallContinuation
           v-if="showInstaller"
           :configuration="installationConfiguration"

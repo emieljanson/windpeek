@@ -10,7 +10,7 @@ TEST(InstalledConfigurationTest, DefaultIsValidAndStable)
     installed_configuration_default(&config);
 
     EXPECT_TRUE(installed_configuration_validate(&config));
-    EXPECT_STREQ(config.board_id, WINDSCOUT_BOARD_ID);
+    EXPECT_STREQ(config.board_id, WINDPEEK_BOARD_ID);
     EXPECT_STREQ(config.device_timezone, "Europe/Amsterdam");
     EXPECT_STREQ(config.spot.id, "brouwersdam");
     EXPECT_EQ(installed_configuration_digest(&config), UINT64_C(0x1cb353796dfceaac));

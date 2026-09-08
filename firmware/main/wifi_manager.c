@@ -18,7 +18,7 @@
 #include "nvs_flash.h"
 #include "installed_configuration.h"
 #include "storage.h"
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
 #include "utils.h"
 #endif
 
@@ -110,8 +110,8 @@ esp_err_t wifi_manager_update_hostname(void)
     // DHCP hostname from the device name (CamelCase, shown in router device
     // lists). The router picks it up at the next DHCP negotiation (reconnect).
     char hostname[64];
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
-    strncpy(hostname, "windscout", sizeof(hostname));
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
+    strncpy(hostname, "windpeek", sizeof(hostname));
 #else
     sanitize_dhcp_hostname(config_manager_get_device_name(), hostname, sizeof(hostname));
 #endif
@@ -131,9 +131,9 @@ esp_err_t wifi_manager_init(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    // WindScout is configured over USB and only needs a station interface.
+    // Windpeek is configured over USB and only needs a station interface.
     s_sta_netif = esp_netif_create_default_wifi_sta();
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
     esp_netif_create_default_wifi_ap();
 #endif
 
@@ -142,7 +142,7 @@ esp_err_t wifi_manager_init(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     // Candidate credentials from the USB installer must never be persisted by
-    // the Wi-Fi driver. WindScout commits credentials through its own
+    // the Wi-Fi driver. Windpeek commits credentials through its own
     // transactional configuration record only after setup succeeds.
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
@@ -171,7 +171,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
         return ESP_ERR_INVALID_STATE;
     }
 
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     esp_netif_dhcpc_start(s_sta_netif);
     return ESP_OK;
 #else
@@ -205,7 +205,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
 // only DNS source (defaults to the gateway when unset).
 static void apply_dns_override(void)
 {
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     return;
 #else
     const char *dns = config_manager_get_dns_server();
@@ -350,7 +350,7 @@ esp_err_t wifi_manager_get_ip(char *ip_str, size_t len)
 
 esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
 {
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     installed_configuration_t active;
     esp_err_t installed_result = installed_configuration_load(&active);
     if (installed_result != ESP_OK) return installed_result;
@@ -391,7 +391,7 @@ esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
                                                  password, WIFI_PASS_MAX_LEN) == ESP_OK) {
         return ESP_OK;
     }
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     return ESP_ERR_NOT_FOUND;
 #else
     nvs_handle_t nvs_handle;

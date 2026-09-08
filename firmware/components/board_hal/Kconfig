@@ -1,6 +1,6 @@
 menu "Board Configuration"
 
-    config BOARD_CAP_WINDSCOUT
+    config BOARD_CAP_WINDPEEK
         bool
 
     choice BOARD_TYPE
@@ -61,7 +61,7 @@ menu "Board Configuration"
             select SENSOR_DRIVER_SHT40
             select RTC_DRIVER_PCF8563
             select EP_DRIVER_ED2208_GCA
-            select BOARD_CAP_WINDSCOUT
+            select BOARD_CAP_WINDPEEK
             help
                 Driver for Seeed reTerminal E1002 with 7.3" Spectra E6 display.
                 Includes battery monitoring and deep sleep support.
@@ -74,7 +74,7 @@ menu "Board Configuration"
             select RTC_DRIVER_PCF8563
             select EP_DRIVER_ED2208_GCA
             select EP_DRIVER_UC8179_GRAY4_EXPERIMENTAL
-            select BOARD_CAP_WINDSCOUT
+            select BOARD_CAP_WINDPEEK
             help
                 Shared reTerminal E1001/E1002 carrier. The persisted hardware
                 profile selects exactly one panel driver at runtime.
@@ -85,7 +85,7 @@ menu "Board Configuration"
             select SENSOR_DRIVER_SHT40
             select RTC_DRIVER_PCF8563
             select EP_DRIVER_IT8951
-            select BOARD_CAP_WINDSCOUT
+            select BOARD_CAP_WINDPEEK
             help
                 Driver for Seeed reTerminal E1003 with 10.3" grayscale display
                 (1872x1404, 16-level / GC16) driven by an IT8951 T-CON over SPI.

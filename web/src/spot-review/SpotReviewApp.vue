@@ -74,13 +74,13 @@ async function save(action) {
   saving.value = true
   error.value = ''
   try {
-    const previousId = current.value.previousDecision?.windscoutId
+    const previousId = current.value.previousDecision?.windpeekId
     const decision = createReviewDecision(current.value, current.value.validation, {
       action,
       name: name.value,
       latitude: Number(latitude.value),
       longitude: Number(longitude.value),
-      windscoutId: previousId,
+      windpeekId: previousId,
       reason: rejectionReason.value,
     })
     const response = await fetch('/api/spot-review/decision', {
@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
   <main class="review-shell">
     <header class="review-header">
       <div>
-        <p class="review-eyebrow">Windscout data tools</p>
+        <p class="review-eyebrow">Windpeek data tools</p>
         <h1>Spot review</h1>
       </div>
       <span class="review-progress">{{ progress }}</span>

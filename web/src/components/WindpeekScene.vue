@@ -818,7 +818,7 @@ onBeforeUnmount(() => {
     :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"
   >
-    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windscout…</span>
+    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windpeek…</span>
     <aside v-if="cableLabEnabled" class="cable-lab" aria-label="Cable motion lab">
       <header>
         <strong>Cable motion lab</strong>

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://windscout.app/contracts/windscout-config.schema.json",
-  "title": "WindScout installed configuration",
+  "$id": "https://windpeek.app/contracts/windpeek-config.schema.json",
+  "title": "Windpeek installed configuration",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "boardId", "deviceTimezone", "spot", "forecastModel", "display", "digest"],

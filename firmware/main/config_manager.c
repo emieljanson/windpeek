@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "nvs.h"
 #include "storage.h"
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
 #include "wind_timezone.h"
 #endif
 
@@ -18,7 +18,7 @@ static const char *TAG = "config_manager";
 
 // General
 static char device_name[DEVICE_NAME_MAX_LEN] = {0};
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
 static char tz_string[TIMEZONE_MAX_LEN] = "UTC";
 #else
 static char tz_string[TIMEZONE_MAX_LEN] = {0};
@@ -78,7 +78,7 @@ static bool apply_timezone(const char *timezone)
     if (!timezone || timezone[0] == '\0' || strlen(timezone) >= sizeof(tz_string)) {
         return false;
     }
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     if (!wind_timezone_is_supported(timezone)) return false;
 #else
     if (setenv("TZ", timezone, 1) != 0) return false;
@@ -90,7 +90,7 @@ static bool apply_timezone(const char *timezone)
 
 static const char *default_timezone(void)
 {
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     return "UTC";
 #else
     return DEFAULT_TIMEZONE;
@@ -177,7 +177,7 @@ esp_err_t config_manager_init(void)
 {
     ESP_LOGI(TAG, "Initializing config manager");
     wind_display_config_default(&wind_display_config);
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
     esp_err_t timezone_result = wind_timezone_init();
     if (timezone_result != ESP_OK) {
         ESP_LOGE(TAG, "Could not initialize timezone database");
@@ -298,9 +298,9 @@ esp_err_t config_manager_init(void)
             }
             if (wind_display_config_validate(&stored)) {
                 wind_display_config = stored;
-                ESP_LOGI(TAG, "Loaded WindScout display configuration");
+                ESP_LOGI(TAG, "Loaded Windpeek display configuration");
             } else {
-                ESP_LOGW(TAG, "Ignoring invalid WindScout display configuration");
+                ESP_LOGW(TAG, "Ignoring invalid Windpeek display configuration");
             }
         }
 
@@ -475,7 +475,7 @@ esp_err_t config_manager_init(void)
         ESP_LOGI(TAG, "No rotation schedule in NVS, using default: %s", DEFAULT_ROTATE_CRON);
     }
 
-    // Erase superseded power-management keys. WindScout now has one battery
+    // Erase superseded power-management keys. Windpeek now has one battery
     // policy: it sleeps between forecast wakes. Cron rules replace the old
     // quiet-hours settings, and USB power is the only supported always-awake
     // state.
@@ -563,7 +563,7 @@ bool config_manager_set_timezone_transient(const char *tz)
 const char *config_manager_get_timezone(void)
 {
     if (tz_string[0] == '\0') {
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
         return "UTC";
 #else
         return "UTC0";

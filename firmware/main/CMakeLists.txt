@@ -44,12 +44,12 @@ set(LEGACY_SOURCES
     "wind_analytics.c"
 )
 
-set(WINDSCOUT_SOURCES
+set(WINDPEEK_SOURCES
     "config_manager.c"
     "cron.c"
     "debug_log.c"
-    "windscout_display_manager.c"
-    "windscout_main.c"
+    "windpeek_display_manager.c"
+    "windpeek_main.c"
     "power_manager.c"
     "storage.c"
     "wifi_manager.c"
@@ -109,7 +109,7 @@ set(LEGACY_PRIV_REQUIRES
     espcoredump
 )
 
-set(WINDSCOUT_PRIV_REQUIRES
+set(WINDPEEK_PRIV_REQUIRES
     acetimec
     board_hal
     epaper
@@ -133,9 +133,9 @@ set(WINDSCOUT_PRIV_REQUIRES
     joltwallet__littlefs
 )
 
-if(CONFIG_BOARD_CAP_WINDSCOUT)
-    set(SOURCES ${WINDSCOUT_SOURCES})
-    set(PRIV_REQUIRES ${WINDSCOUT_PRIV_REQUIRES})
+if(CONFIG_BOARD_CAP_WINDPEEK)
+    set(SOURCES ${WINDPEEK_SOURCES})
+    set(PRIV_REQUIRES ${WINDPEEK_PRIV_REQUIRES})
     set(EMBED_FILES)
 else()
     set(SOURCES ${LEGACY_SOURCES})
@@ -158,23 +158,23 @@ idf_component_register(
     EMBED_FILES ${EMBED_FILES}
 )
 
-set(WINDSCOUT_POSTHOG_PROJECT_TOKEN "$ENV{WINDSCOUT_POSTHOG_PROJECT_TOKEN}")
-if(WINDSCOUT_POSTHOG_PROJECT_TOKEN AND
-   NOT WINDSCOUT_POSTHOG_PROJECT_TOKEN MATCHES "^[A-Za-z0-9_]+$")
-    message(FATAL_ERROR "WINDSCOUT_POSTHOG_PROJECT_TOKEN contains unsupported characters")
+set(WINDPEEK_POSTHOG_PROJECT_TOKEN "$ENV{WINDPEEK_POSTHOG_PROJECT_TOKEN}")
+if(WINDPEEK_POSTHOG_PROJECT_TOKEN AND
+   NOT WINDPEEK_POSTHOG_PROJECT_TOKEN MATCHES "^[A-Za-z0-9_]+$")
+    message(FATAL_ERROR "WINDPEEK_POSTHOG_PROJECT_TOKEN contains unsupported characters")
 endif()
-if(WINDSCOUT_POSTHOG_PROJECT_TOKEN)
+if(WINDPEEK_POSTHOG_PROJECT_TOKEN)
     target_compile_definitions(
         ${COMPONENT_LIB}
-        PRIVATE WINDSCOUT_POSTHOG_PROJECT_TOKEN="${WINDSCOUT_POSTHOG_PROJECT_TOKEN}"
+        PRIVATE WINDPEEK_POSTHOG_PROJECT_TOKEN="${WINDPEEK_POSTHOG_PROJECT_TOKEN}"
     )
 endif()
 
-if(CONFIG_BOARD_CAP_WINDSCOUT)
+if(CONFIG_BOARD_CAP_WINDPEEK)
     target_include_directories(${COMPONENT_LIB} PRIVATE "../components/acetimec/src")
 endif()
 
-if(NOT CONFIG_BOARD_CAP_WINDSCOUT)
+if(NOT CONFIG_BOARD_CAP_WINDPEEK)
     # Legacy photo-frame boards retain their generated setup screens.
     target_add_binary_data(${COMPONENT_LIB} "splash_data/splash.epdgz" BINARY)
     target_add_binary_data(${COMPONENT_LIB} "splash_data/setup_complete.epdgz" BINARY)

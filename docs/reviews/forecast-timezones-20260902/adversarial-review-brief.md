@@ -6,7 +6,7 @@ Paths: web/src/timezone.js, web/src/forecast/, web/src/config/, web/src/views/Co
 
 Risk division 2 - Installer contract and firmware persistence migration
 Reason: Version 4 must agree across JSON schema, web digest generation, firmware validation, and v2/v3 migration.
-Paths: contracts/windscout-config.schema.json, firmware/main/installed_configuration.*, firmware/main/wind_installer_service.c
+Paths: contracts/windpeek-config.schema.json, firmware/main/installed_configuration.*, firmware/main/wind_installer_service.c
 
 Risk division 3 - Firmware display boundary
 Reason: The device timezone belongs only to the retrieval timestamp; forecast dates and hourly values must continue using the spot timezone.

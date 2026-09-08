@@ -18,7 +18,7 @@ const describedBy = computed(() => [
   props.error ? errorId : '',
 ].filter(Boolean).join(' ') || undefined)
 
-provide('windscout-setting-row', {
+provide('windpeek-setting-row', {
   controlId,
   labelId,
   describedBy,

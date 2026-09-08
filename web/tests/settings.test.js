@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 
-import WindScoutSettings from '../src/components/WindScoutSettings.vue'
+import WindpeekSettings from '../src/components/WindpeekSettings.vue'
 import ReTerminalHelpDialog from '../src/components/ReTerminalHelpDialog.vue'
 import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
 import SettingCombobox from '../src/components/settings/SettingCombobox.vue'
@@ -13,7 +13,7 @@ import { useConfiguratorStore } from '../src/stores/configurator'
 let wrapper
 
 function mountSettings(props = {}) {
-  wrapper = mount(WindScoutSettings, { props, attachTo: document.body })
+  wrapper = mount(WindpeekSettings, { props, attachTo: document.body })
   return wrapper
 }
 
@@ -29,7 +29,7 @@ function bodyOption(label) {
     .find((candidate) => candidate.textContent.includes(label))
 }
 
-describe('WindScout settings panel', () => {
+describe('Windpeek settings panel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
@@ -155,8 +155,8 @@ describe('WindScout settings panel', () => {
     expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
     const dialog = document.body.querySelector('[role="dialog"]')
     expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy()
-    expect(dialog?.textContent).toContain('Windscout for reTerminal')
-    expect(dialog?.textContent).toContain('Windscout only uses colour for the threshold line')
+    expect(dialog?.textContent).toContain('Windpeek for reTerminal')
+    expect(dialog?.textContent).toContain('Windpeek only uses colour for the threshold line')
     expect(dialog?.textContent).toContain('Direct installation supports E1001, E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
     expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')

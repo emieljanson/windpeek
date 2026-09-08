@@ -25,7 +25,7 @@
 #include "wifi_manager.h"
 #include "wind_app.h"
 
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
 #include "ha_integration.h"
 #include "periodic_tasks.h"
 #include "utils.h"
@@ -43,14 +43,14 @@ static time_t wake_target_boundary = 0;
 static const char *TAG = "power_manager";
 
 static TaskHandle_t sleep_timer_task_handle = NULL;
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
 static TaskHandle_t rotation_timer_task_handle = NULL;
 #endif
 static int64_t next_sleep_time = 0;  // Use absolute time for sleep timer
 static uint32_t auto_sleep_timeout_sec = AUTO_SLEEP_TIMEOUT_SEC;
 static volatile bool installer_active;
 static wakeup_source_t wakeup_source = WAKEUP_SOURCE_NONE;
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
 static int64_t next_rotation_time = 0;  // Use absolute time for rotation
 #endif
 static uint64_t ext1_wakeup_pin_mask = 0;
@@ -58,8 +58,8 @@ static uint32_t requested_sleep_seconds;
 
 static bool scheduled_wake_enabled(void)
 {
-#ifdef CONFIG_BOARD_CAP_WINDSCOUT
-    // WindScout is a forecast appliance. Its refresh schedule is product
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
+    // Windpeek is a forecast appliance. Its refresh schedule is product
     // behavior, not the legacy photo-frame auto-rotation preference.
     return true;
 #else
@@ -67,7 +67,7 @@ static bool scheduled_wake_enabled(void)
 #endif
 }
 
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
 static void rotation_timer_task(void *arg)
 {
     while (1) {
@@ -248,7 +248,7 @@ esp_err_t power_manager_init(void)
             // If drift exceeds 30 seconds, force NTP sync
             if (drift > 30 || drift < -30) {
                 ESP_LOGW(TAG, "Time drift exceeds 30s, will force NTP sync");
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
                 periodic_tasks_force_run(SNTP_TASK_NAME);
 #endif
             }
@@ -325,7 +325,7 @@ esp_err_t power_manager_init(void)
     } else {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
     xTaskCreate(rotation_timer_task, "rotation_timer", 16384, NULL, 5, &rotation_timer_task_handle);
 #endif
 
@@ -355,7 +355,7 @@ void power_manager_enter_sleep(void)
     // uninitialized network stack, resetting the device into normal-init with no
     // rotation (#105). wifi_manager_is_connected() reads a static bool, so it is
     // safe to call before WiFi init.
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
     if (wifi_manager_is_connected()) {
         ha_notify_offline();
     }
@@ -453,14 +453,14 @@ void power_manager_set_auto_sleep_timeout(uint32_t seconds)
 
 void power_manager_reset_rotate_timer(void)
 {
-#ifndef CONFIG_BOARD_CAP_WINDSCOUT
+#ifndef CONFIG_BOARD_CAP_WINDPEEK
     int seconds_until_next = get_seconds_until_next_wakeup();
 
     next_rotation_time = esp_timer_get_time() + (seconds_until_next * 1000000LL);
     ESP_LOGI(TAG, "Rotation timer reset, next rotation in %d seconds (%s)", seconds_until_next,
              "cron");
 #else
-    // WindScout recalculates its forecast wake from the persisted schedule;
+    // Windpeek recalculates its forecast wake from the persisted schedule;
     // it does not run the legacy in-process photo rotation timer.
     ESP_LOGD(TAG, "Forecast schedule owns the next E1002 wake");
 #endif

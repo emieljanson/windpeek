@@ -8,11 +8,11 @@ import { resolveLocalBundle, selectLocalFirmwareBuild } from '../../scripts/loca
 const temporaryDirectories = []
 
 function fixture() {
-  const root = mkdtempSync(path.join(tmpdir(), 'windscout-local-build-'))
+  const root = mkdtempSync(path.join(tmpdir(), 'windpeek-local-build-'))
   temporaryDirectories.push(root)
   const firmware = path.join(root, 'firmware')
   mkdirSync(path.join(firmware, 'main'), { recursive: true })
-  writeFileSync(path.join(firmware, 'main', 'windscout_main.c'), 'void app_main(void) {}')
+  writeFileSync(path.join(firmware, 'main', 'windpeek_main.c'), 'void app_main(void) {}')
   return { root, firmware }
 }
 
@@ -24,7 +24,7 @@ function build(firmware, directory, version, timestamp, {
   mkdirSync(path.join(buildDirectory, 'bootloader'), { recursive: true })
   mkdirSync(path.join(buildDirectory, 'partition_table'), { recursive: true })
   mkdirSync(path.join(buildDirectory, 'config'), { recursive: true })
-  writeFileSync(path.join(buildDirectory, 'windscout.bin'), version)
+  writeFileSync(path.join(buildDirectory, 'windpeek.bin'), version)
   writeFileSync(path.join(buildDirectory, 'bootloader', 'bootloader.bin'), 'unchanged bootloader')
   writeFileSync(path.join(buildDirectory, 'partition_table', 'partition-table.bin'), 'partition table')
   writeFileSync(path.join(buildDirectory, 'ota_data_initial.bin'), 'boot selection')
@@ -33,18 +33,18 @@ function build(firmware, directory, version, timestamp, {
       '0x0': 'bootloader/bootloader.bin',
       '0x8000': 'partition_table/partition-table.bin',
       '0xf000': 'ota_data_initial.bin',
-      '0x20000': 'windscout.bin',
+      '0x20000': 'windpeek.bin',
     },
   }))
   writeFileSync(path.join(buildDirectory, 'project_description.json'), JSON.stringify({
     project_version: version,
-    app_bin: 'windscout.bin',
+    app_bin: 'windpeek.bin',
   }))
   writeFileSync(path.join(buildDirectory, 'config', 'sdkconfig.json'), JSON.stringify({
     BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X: universal,
   }))
   for (const file of [
-    'windscout.bin', 'partition_table/partition-table.bin', 'ota_data_initial.bin',
+    'windpeek.bin', 'partition_table/partition-table.bin', 'ota_data_initial.bin',
     'flasher_args.json', 'project_description.json', 'config/sdkconfig.json',
   ]) {
     utimesSync(path.join(buildDirectory, file), timestamp, timestamp)
@@ -61,7 +61,7 @@ describe('local installer firmware build', () => {
   it('selects the newest complete build and uses its embedded firmware version', () => {
     const { root, firmware } = fixture()
     const sourceTime = new Date('2026-08-30T10:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), sourceTime, sourceTime)
     build(firmware, 'build', 'old-version', new Date('2026-08-30T11:00:00Z'))
     const newest = build(firmware, 'build-local', 'dev-current', new Date('2026-08-30T12:00:00Z'))
 
@@ -75,7 +75,7 @@ describe('local installer firmware build', () => {
     const { root, firmware } = fixture()
     build(firmware, 'build', 'stale-version', new Date('2026-08-30T10:00:00Z'))
     const sourceTime = new Date('2026-08-30T11:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), sourceTime, sourceTime)
 
     expect(() => selectLocalFirmwareBuild(root)).toThrow(/older than the firmware source/i)
   })
@@ -83,7 +83,7 @@ describe('local installer firmware build', () => {
   it('accepts an incremental build when only an unchanged helper binary is older', () => {
     const { root, firmware } = fixture()
     const sourceTime = new Date('2026-08-30T11:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), sourceTime, sourceTime)
     const current = build(firmware, 'build-local', 'dev-current', new Date('2026-08-30T12:00:00Z'), {
       auxiliaryTimestamp: new Date('2026-08-29T08:00:00Z'),
     })
@@ -97,7 +97,7 @@ describe('local installer firmware build', () => {
   it('ignores a model-specific build that cannot install E1001', () => {
     const { root, firmware } = fixture()
     const sourceTime = new Date('2026-08-30T10:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), sourceTime, sourceTime)
     const universal = build(
       firmware,
       'build-local',
@@ -114,7 +114,7 @@ describe('local installer firmware build', () => {
   it('refuses a different build with the same embedded firmware version', () => {
     const { root, firmware } = fixture()
     const timestamp = new Date('2026-08-30T12:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), timestamp, timestamp)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), timestamp, timestamp)
     const buildDirectory = build(firmware, 'build-local', 'dev-current', timestamp)
     const selected = selectLocalFirmwareBuild(root)
     const output = path.join(root, 'web', 'public', 'firmware')
@@ -148,7 +148,7 @@ describe('local installer firmware build', () => {
   it('reuses an immutable version when every published part matches the selected build', () => {
     const { root, firmware } = fixture()
     const timestamp = new Date('2026-08-30T12:00:00Z')
-    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), timestamp, timestamp)
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), timestamp, timestamp)
     build(firmware, 'build-local', 'dev-current', timestamp)
     const selected = selectLocalFirmwareBuild(root)
     const output = path.join(root, 'web', 'public', 'firmware')
@@ -158,7 +158,7 @@ describe('local installer firmware build', () => {
       'bootloader/bootloader.bin': 'bootloader',
       'partition_table/partition-table.bin': 'partition-table',
       'ota_data_initial.bin': 'boot-selection',
-      'windscout.bin': 'application',
+      'windpeek.bin': 'application',
     }
     const parts = selected.flashFiles.map(([, sourceName], index) => {
       const kind = kinds[sourceName]

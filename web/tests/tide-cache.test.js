@@ -46,7 +46,7 @@ describe('tide cache', () => {
 
   it('rejects old schemas and corrupt values', () => {
     const target = storage()
-    target.setItem('windscout.tides', JSON.stringify({ version: 0, spots: {} }))
+    target.setItem('windpeek.tides', JSON.stringify({ version: 0, spots: {} }))
     expect(readCachedTide('brouwersdam', 'Europe/Amsterdam', target)).toBeNull()
     expect(writeCachedTide({ ...tide(), schemaVersion: 0 }, target)).toBe(false)
   })

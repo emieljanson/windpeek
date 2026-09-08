@@ -1,4 +1,4 @@
-# Contributing to WindScout
+# Contributing to Windpeek
 
 Contributions are welcome. Bug reports, design proposals, documentation fixes,
 and focused pull requests all help the project.
@@ -17,8 +17,8 @@ and focused pull requests all help the project.
 
 By submitting a contribution, you agree that it may be distributed under the
 GNU General Public License version 3.0 only (`GPL-3.0-only`), together with the
-rest of the WindScout-owned source code. This does not change the terms of
+rest of the Windpeek-owned source code. This does not change the terms of
 third-party components or assets.
 
-The WindScout name and visual identity are handled separately from the software
+The Windpeek name and visual identity are handled separately from the software
 license. See [`TRADEMARKS.md`](TRADEMARKS.md) when publishing a modified version.

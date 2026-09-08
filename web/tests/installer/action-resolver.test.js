@@ -3,7 +3,7 @@ import { INSTALL_ACTIONS, resolveInstallAction } from '../../src/installer/actio
 
 const release = { boardId: 'seeedstudio_reterminal_e1002', chipFamily: 'ESP32-S3', firmwareLayoutVersion: 1, version: '2.0.0' }
 const current = {
-  kind: 'windscout',
+  kind: 'windpeek',
   verifiedBoard: true,
   boardId: release.boardId,
   chipFamily: release.chipFamily,
@@ -44,7 +44,7 @@ describe('installer action resolver', () => {
 
   it('blocks known different boards and chips', () => {
     expect(resolveInstallAction({ device: { ...current, boardId: 'seeedstudio_reterminal_e1001' }, release, configurationDigest: 'wanted' }).action).toBe(INSTALL_ACTIONS.BLOCKED)
-    expect(resolveInstallAction({ device: { ...current, hardwareModelMismatch: true }, release, configurationDigest: 'wanted' })).toEqual({ action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' })
+    expect(resolveInstallAction({ device: { ...current, hardwareModelMismatch: true }, release, configurationDigest: 'wanted' })).toEqual({ action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windpeek-model' })
     expect(resolveInstallAction({ device: { kind: 'rom', chipFamily: 'ESP32-C3' }, release, configurationDigest: 'wanted' }).action).toBe(INSTALL_ACTIONS.BLOCKED)
   })
 })

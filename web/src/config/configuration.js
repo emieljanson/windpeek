@@ -141,7 +141,7 @@ export function createInstalledConfiguration({
   }
   configuration.digest = installedConfigurationDigest(configuration)
   if (!allowInvalid && !validateInstalledConfiguration(configuration)) {
-    throw new TypeError('Invalid Windscout installation configuration')
+    throw new TypeError('Invalid Windpeek installation configuration')
   }
   return configuration
 }

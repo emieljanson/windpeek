@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 async function installFakeDevice(page) {
   await page.addInitScript(() => {
-    globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__ = () => {
+    globalThis.__WINDPEEK_INSTALLER_SESSION_FACTORY__ = () => {
       let state = { phase: 'ready', progress: 0, safeToDisconnect: true, error: null }
       const listeners = new Set()
       const update = (patch) => { state = { ...state, ...patch }; listeners.forEach((listener) => listener(state)) }
@@ -20,7 +20,7 @@ async function installFakeDevice(page) {
           }, 5000)
         },
         async reconnect() { update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true }) },
-        async scanNetworks() { return [{ ssid: 'Windscout Test Network With A Very Long Name', rssi: -40, secured: true }] },
+        async scanNetworks() { return [{ ssid: 'Windpeek Test Network With A Very Long Name', rssi: -40, secured: true }] },
         async submitWifi() { update({ phase: 'complete', progress: 1, safeToDisconnect: true }) },
         async cancel() { state = { phase: 'ready', progress: 0, safeToDisconnect: true, error: null } },
       }
@@ -30,7 +30,7 @@ async function installFakeDevice(page) {
 
 async function installFailingDevice(page) {
   await page.addInitScript(() => {
-    globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__ = () => {
+    globalThis.__WINDPEEK_INSTALLER_SESSION_FACTORY__ = () => {
       let state = { phase: 'ready', progress: 0, safeToDisconnect: true, error: null, diagnosticStatus: 'idle', diagnosticReference: null }
       const listeners = new Set()
       const update = (patch) => { state = { ...state, ...patch }; listeners.forEach((listener) => listener(state)) }
@@ -39,7 +39,7 @@ async function installFailingDevice(page) {
         async connect() {
           update({
             phase: 'error',
-            error: { message: 'Windscout could not access the selected USB device.' },
+            error: { message: 'Windpeek could not access the selected USB device.' },
             diagnosticStatus: 'sent',
             diagnosticReference: 'WS-TEST123456',
           })
@@ -52,7 +52,7 @@ async function installFailingDevice(page) {
 
 async function installWifiFailure(page) {
   await page.addInitScript(() => {
-    globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__ = () => {
+    globalThis.__WINDPEEK_INSTALLER_SESSION_FACTORY__ = () => {
       let state = { phase: 'ready', progress: 0, safeToDisconnect: true, error: null, diagnosticStatus: 'idle', diagnosticReference: null }
       const listeners = new Set()
       const update = (patch) => { state = { ...state, ...patch }; listeners.forEach((listener) => listener(state)) }
@@ -62,14 +62,14 @@ async function installWifiFailure(page) {
           update({
             phase: 'wifi',
             progress: 0.8,
-            error: { message: 'Windscout could not scan for Wi-Fi networks.' },
+            error: { message: 'Windpeek could not scan for Wi-Fi networks.' },
             diagnosticStatus: 'sent',
             diagnosticReference: 'WS-TEST123456',
           })
         },
         async scanNetworks() {
           return [
-            { ssid: 'Windscout Studio', rssi: -35, secured: true },
+            { ssid: 'Windpeek Studio', rssi: -35, secured: true },
             { ssid: 'North Sea Guest', rssi: -58, secured: false },
           ]
         },
@@ -110,7 +110,7 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   await expectCopyAligned()
   await expect(stateIcon).toHaveAttribute('data-phase', 'confirm-device')
   expect(await stateIcon.boundingBox()).toMatchObject({ x: iconOrigin.x, y: iconOrigin.y })
-  await page.getByRole('button', { name: 'Install Windscout' }).click()
+  await page.getByRole('button', { name: 'Install Windpeek' }).click()
   await expect(page.getByRole('heading', { name: 'Writing firmware' })).toBeVisible()
   await expect(stateIcon).toHaveAttribute('data-phase', 'installing-firmware')
   await expect(page.getByText('Keep the USB cable connected until writing is complete.')).toBeVisible()
@@ -118,19 +118,19 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
 
   // Seven parallel 3D scenes can heavily delay browser timers in CI even
   // though the demo's configured firmware duration remains three seconds.
-  await expect(page.getByRole('heading', { name: 'Finding Windscout' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: 'Finding Windpeek' })).toBeVisible({ timeout: 30_000 })
   await expectCopyAligned()
-  await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
   await expectCopyAligned()
   await expect(page.locator('.installer-field').first()).toHaveCSS('font-size', '13px')
   const network = page.getByRole('combobox', { name: 'Wi-Fi network' })
   await network.click()
-  const networkOption = page.getByRole('option', { name: 'Windscout Test Network With A Very Long Name' })
+  const networkOption = page.getByRole('option', { name: 'Windpeek Test Network With A Very Long Name' })
   await expect(networkOption.locator('.setting-option__text')).toHaveCSS('text-overflow', 'ellipsis')
   await networkOption.click()
   const networkValue = network.locator('.setting-select__value')
   await expect(networkValue).toHaveCSS('text-overflow', 'ellipsis')
-  const panelBounds = await page.getByRole('complementary', { name: 'Windscout settings' }).boundingBox()
+  const panelBounds = await page.getByRole('complementary', { name: 'Windpeek settings' }).boundingBox()
   const networkBounds = await network.boundingBox()
   expect(networkBounds.x + networkBounds.width).toBeLessThanOrEqual(panelBounds.x + panelBounds.width - 12)
   const password = page.getByLabel('Password')
@@ -169,7 +169,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/?installerDemo=1')
 
-  const panel = page.getByRole('complementary', { name: 'Windscout settings' })
+  const panel = page.getByRole('complementary', { name: 'Windpeek settings' })
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
   await expect(panel).toHaveCSS('transition-duration', '0.18s')
   const regularHeight = (await panel.boundingBox()).height
@@ -178,9 +178,9 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   await expect(page.getByText('Make sure this is a reTerminal E1002. Installing will replace its software and saved setup.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Install Windscout' }).click()
-  await expect(page.getByRole('heading', { name: 'Finding Windscout' })).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
+  await page.getByRole('button', { name: 'Install Windpeek' }).click()
+  await expect(page.getByRole('heading', { name: 'Finding Windpeek' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()
   await expect(continueButton).toHaveCSS('cursor', 'default')
@@ -191,7 +191,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   }).toBeCloseTo(12, 0)
 
   await page.getByRole('combobox', { name: 'Wi-Fi network' }).click()
-  await page.getByRole('option', { name: 'Windscout Studio' }).click()
+  await page.getByRole('option', { name: 'Windpeek Studio' }).click()
   await page.getByLabel('Password').fill('demo-only')
   const wifiHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
@@ -231,16 +231,16 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
   await page.getByRole('button', { name: 'Install', exact: true }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
 
-  const panel = page.getByRole('complementary', { name: 'Windscout settings' })
+  const panel = page.getByRole('complementary', { name: 'Windpeek settings' })
   const scanAgain = page.getByRole('button', { name: 'Scan again' })
   const continueButton = page.getByRole('button', { name: 'Continue' })
-  await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
   await expect(page.getByText('Diagnostic reference: WS-TEST123456').first()).toBeVisible()
   await expect(scanAgain).toBeVisible()
   await expect(scanAgain).toBeEnabled()
 
   await page.getByRole('combobox', { name: 'Wi-Fi network' }).click()
-  await page.getByRole('option', { name: 'Windscout Studio' }).click()
+  await page.getByRole('option', { name: 'Windpeek Studio' }).click()
   await page.getByLabel('Password').fill('layout-only')
   await expect(continueButton).toBeVisible()
   await expect(continueButton).toBeEnabled()
@@ -257,7 +257,7 @@ test('keeps the inspector height when the installer opens with threshold hidden 
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/?configure')
 
-  const panel = page.getByRole('complementary', { name: 'Windscout settings' })
+  const panel = page.getByRole('complementary', { name: 'Windpeek settings' })
   const install = page.getByRole('button', { name: 'Install', exact: true })
   const threshold = page.getByRole('switch', { name: 'Wind threshold' })
   const panelHeight = async () => (await panel.boundingBox()).height
@@ -271,7 +271,7 @@ test('keeps the inspector height when the installer opens with threshold hidden 
     expect(await panelHeight()).toBe(settingsHeight)
 
     await page.getByRole('button', { name: 'Continue' }).click()
-    const confirmation = page.getByRole('button', { name: 'Install Windscout' })
+    const confirmation = page.getByRole('button', { name: 'Install Windpeek' })
     await expect(confirmation).toBeVisible()
     expect(await panelHeight()).toBe(settingsHeight)
 

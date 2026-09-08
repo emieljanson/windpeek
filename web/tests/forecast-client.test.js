@@ -103,7 +103,7 @@ describe('Open-Meteo forecast client', () => {
     expect(url.searchParams.get('timezone')).toBe('Europe/Lisbon')
   })
 
-  it('fetches and normalizes a successful response without a WindScout backend', async () => {
+  it('fetches and normalizes a successful response without a Windpeek backend', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => minimalResponse() })
     const forecasts = await fetchOpenMeteoForecasts(SPOTS[1], {
       fetchImpl,

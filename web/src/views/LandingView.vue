@@ -50,13 +50,13 @@ const hardwareSpecs = [
     <main id="main-content">
       <header>
         <h1>The always-on wind forecast for your favorite spot</h1>
-        <p class="intro">Windscout turns a reTerminal into a quiet e-ink display that keeps the next five days visible at home.</p>
+        <p class="intro">Windpeek turns a reTerminal into a quiet e-ink display that keeps the next five days visible at home.</p>
       </header>
 
       <LandingHero />
 
-      <section class="story" aria-label="About Windscout">
-        <p>Wind forecasts change. You check once, it looks like nothing, and later discover it turned into a great session. Windscout keeps the whole forecast in sight, so you catch the change instead of hearing about it afterwards.</p>
+      <section class="story" aria-label="About Windpeek">
+        <p>Wind forecasts change. You check once, it looks like nothing, and later discover it turned into a great session. Windpeek keeps the whole forecast in sight, so you catch the change instead of hearing about it afterwards.</p>
       </section>
 
       <section class="landing-section personalize" id="build">
@@ -71,7 +71,7 @@ const hardwareSpecs = [
 
       <section class="landing-section purchase" id="setup">
         <h2>Choose your reTerminal</h2>
-        <p>Windscout is free software for all three models. Choose the screen size and display type that suits you.</p>
+        <p>Windpeek is free software for all three models. Choose the screen size and display type that suits you.</p>
 
         <ul class="hardware-models">
           <li v-for="device in hardwareModels" :key="device.model" class="hardware-model">
@@ -111,7 +111,7 @@ const hardwareSpecs = [
 
         <div class="configure-step">
           <h2>Configure &amp; install</h2>
-          <p>Installing Windscout is simple: choose your spot, connect your reTerminal with USB and press Install.</p>
+          <p>Installing Windpeek is simple: choose your spot, connect your reTerminal with USB and press Install.</p>
           <a class="button configure-action configure-action--desktop" href="?configure">Configure &amp; install</a>
           <button class="button configure-action configure-action--mobile" type="button" disabled>Configure &amp; install on desktop</button>
         </div>
@@ -133,25 +133,25 @@ const hardwareSpecs = [
             <p>Wind, gusts and direction are always included. You can also show weather, temperature, tide and a wind threshold, and choose your units.</p>
           </details>
           <details>
-            <summary>Will Windscout show swell?</summary>
-            <p>Not yet. Swell support is planned, so Windscout can eventually show more of the conditions that determine whether a session is worth it.</p>
+            <summary>Will Windpeek show swell?</summary>
+            <p>Not yet. Swell support is planned, so Windpeek can eventually show more of the conditions that determine whether a session is worth it.</p>
           </details>
           <details>
-            <summary>What do I need to install Windscout?</summary>
+            <summary>What do I need to install Windpeek?</summary>
             <p>A reTerminal E1001, E1002 or E1003, a USB data cable, 2.4 GHz Wi-Fi and a current desktop version of Firefox, Chrome or Edge. Configure the screen, connect the device and press Install.</p>
           </details>
           <details>
-            <summary>What does Windscout need after installation?</summary>
-            <p>Only Wi-Fi for forecast updates and occasional charging. It needs no Windscout account or subscription. Firmware updates are installed again over USB.</p>
+            <summary>What does Windpeek need after installation?</summary>
+            <p>Only Wi-Fi for forecast updates and occasional charging. It needs no Windpeek account or subscription. Firmware updates are installed again over USB.</p>
           </details>
           <details>
-            <summary>How can I help Windscout?</summary>
-            <p>Share Windscout with other wind and watersports communities, report what could be better, or <a href="https://donate.stripe.com/6oU14o3Hy1Xg5C02291wY00" target="_blank" rel="noopener noreferrer">make a donation</a> to support hosting and future development.</p>
+            <summary>How can I help Windpeek?</summary>
+            <p>Share Windpeek with other wind and watersports communities, report what could be better, or <a href="https://donate.stripe.com/6oU14o3Hy1Xg5C02291wY00" target="_blank" rel="noopener noreferrer">make a donation</a> to support hosting and future development.</p>
           </details>
         </div>
       </section>
 
-      <footer>Windscout is an independent project by <a href="https://emieljanson.com/">Emiel Janson</a>.</footer>
+      <footer>Windpeek is an independent project by <a href="https://emieljanson.com/">Emiel Janson</a>.</footer>
     </main>
 
   </div>

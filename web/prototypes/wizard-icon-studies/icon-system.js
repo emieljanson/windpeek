@@ -2,7 +2,7 @@ const rows = (...values) => values
 
 export const steps = [
   {
-    id: 'connect', title: 'Connect device', description: 'Plug the USB data cable into WindScout.', motion: 'step in',
+    id: 'connect', title: 'Connect device', description: 'Plug the USB data cable into Windpeek.', motion: 'step in',
     pattern: rows('00011000', '00011000', '01111110', '01111110', '00011000', '00111100', '00100100', '00000000'),
   },
   {
@@ -18,7 +18,7 @@ export const steps = [
     pattern: rows('00111100', '01000010', '01011010', '01011010', '01000010', '01100110', '01000010', '00111100'),
   },
   {
-    id: 'review', title: 'Review install', description: 'Show whether WindScout will install, update or repair.', motion: 'drop',
+    id: 'review', title: 'Review install', description: 'Show whether Windpeek will install, update or repair.', motion: 'drop',
     pattern: rows('00011000', '00011000', '01111110', '00111100', '00011000', '00000000', '01111110', '00111100'),
   },
   {
@@ -30,11 +30,11 @@ export const steps = [
     pattern: rows('00111100', '01111110', '11011011', '11111111', '11011011', '11111111', '01111110', '00111100'),
   },
   {
-    id: 'reconnect', title: 'Reconnect', description: 'Select WindScout again after its restart.', motion: 'join', loop: true,
+    id: 'reconnect', title: 'Reconnect', description: 'Select Windpeek again after its restart.', motion: 'join', loop: true,
     pattern: rows('00000000', '11000011', '11100111', '01111110', '01111110', '11100111', '11000011', '00000000'),
   },
   {
-    id: 'wifi', title: 'Choose Wi-Fi', description: 'Give WindScout a network for forecast updates.', motion: 'radiate',
+    id: 'wifi', title: 'Choose Wi-Fi', description: 'Give Windpeek a network for forecast updates.', motion: 'radiate',
     pattern: rows('00000000', '01111110', '10000001', '00111100', '01000010', '00011000', '00011000', '00000000'),
   },
   {
@@ -135,7 +135,7 @@ export function studyMarkup(config) {
     <section class="study-shell variant-${config.familyClass ?? config.className} variant-${config.className}">
       <header class="study-header">
         <div>
-          <p class="study-kicker">WindScout wizard icons · ${config.name}</p>
+          <p class="study-kicker">Windpeek wizard icons · ${config.name}</p>
           <h1 class="study-title">${config.headline}</h1>
         </div>
         <div>

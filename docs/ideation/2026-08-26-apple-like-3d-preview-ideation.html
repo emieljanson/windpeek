@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ideation: Apple-like WindScout 3D preview</title>
+  <title>Ideation: Apple-like Windpeek 3D preview</title>
   <style>
     :root { --ink:#171918; --muted:#626966; --paper:#f4f5f2; --card:#fff; --line:#dfe2de; --soft:#e9ece8; --accent:#62766d; }
     * { box-sizing:border-box; }
@@ -46,12 +46,12 @@
 <main>
   <header>
     <p class="eyebrow">Ideation · 12 ranked directions</p>
-    <h1>Apple-like product presence for WindScout</h1>
-    <p class="lede">The quality gap is no longer primarily layout. The next leap comes from making geometry, materials, light and motion agree about the same physical object. Updated with a focused study of cable cutaways and flowing-data effects that can survive WindScout’s light product scene.</p>
+    <h1>Apple-like product presence for Windpeek</h1>
+    <p class="lede">The quality gap is no longer primarily layout. The next leap comes from making geometry, materials, light and motion agree about the same physical object. Updated with a focused study of cable cutaways and flowing-data effects that can survive Windpeek’s light product scene.</p>
     <ul class="meta">
       <li>Date: <time datetime="2026-08-29">2026-08-29</time></li>
       <li>Topic: apple-like-3d-preview</li>
-      <li>Focus: WindScout configurator 3D product quality and USB data-flow language</li>
+      <li>Focus: Windpeek configurator 3D product quality and USB data-flow language</li>
       <li>Mode: repo-grounded</li>
     </ul>
   </header>
@@ -144,7 +144,7 @@
         <dt>Basis</dt><dd><strong>external:</strong> Codrops’ <a href="https://tympanus.net/codrops/2019/11/13/high-speed-light-trails-in-three-js/">High-speed Light Trails</a> demonstrates thousands of frame-rate-independent realtime trails and smooth speed changes. Its <a href="https://github.com/Anemolo/Infinite-Lights">source repository</a> explicitly permits integration and adaptation in personal or commercial projects, but forbids reselling or redistributing the resource unchanged.</dd>
         <dt>Rationale</dt><dd>The reference succeeds because the eye reads continuous motion and direction before it notices individual objects. This directly addresses the rejected “ants” effect while retaining visible speed.</dd>
         <dt>Downsides</dt><dd>The original reference is a dark cyberpunk road. We should borrow its trail proportions, timing and instancing architecture—not its black scene, rainbow density or camera rush.</dd>
-        <dt>Reuse</dt><dd>Adaptable code with attribution/license conditions; safe as a technical starting point after retaining the license notice and substantially integrating it into WindScout.</dd>
+        <dt>Reuse</dt><dd>Adaptable code with attribution/license conditions; safe as a technical starting point after retaining the license notice and substantially integrating it into Windpeek.</dd>
       </dl>
       <div class="metrics"><span>Confidence 95%</span><span>Complexity Medium</span></div>
     </article>
@@ -154,7 +154,7 @@
       <dl>
         <dt>Description</dt><dd>Render each signal as three coordinated layers: a hairline HDR core, a long low-opacity coloured envelope and a travelling reflection/light response on the copper itself. The glow should appear to emerge from the bundle rather than float above it.</dd>
         <dt>Axis</dt><dd>Cinematography and reflections</dd>
-        <dt>Basis</dt><dd><strong>external:</strong> Blender’s CC-BY <a href="https://download.blender.org/archive/gallery/gleb-alexandrov/light-trails/">Light Trails</a> study uses emissive splines with procedural brightness breakup; Apple’s product language consistently lets highlights describe geometry. <strong>direct:</strong> WindScout’s current white streaks remain visually separable from the copper even when bloom is increased.</dd>
+        <dt>Basis</dt><dd><strong>external:</strong> Blender’s CC-BY <a href="https://download.blender.org/archive/gallery/gleb-alexandrov/light-trails/">Light Trails</a> study uses emissive splines with procedural brightness breakup; Apple’s product language consistently lets highlights describe geometry. <strong>direct:</strong> Windpeek’s current white streaks remain visually separable from the copper even when bloom is increased.</dd>
         <dt>Rationale</dt><dd>A light-mode scene cannot rely on a dark backdrop for contrast. Material response—warm copper catching cyan or mint spill—is what makes the signal feel genuinely luminous.</dd>
         <dt>Downsides</dt><dd>Needs selective bloom or a second glow buffer; globally increasing bloom will wash out the white enclosure and e-paper surface.</dd>
         <dt>Reuse</dt><dd>The Blender gallery asset is CC-BY and can be downloaded or adapted with attribution; its spline/material logic is more useful than its road scene.</dd>
@@ -196,7 +196,7 @@
         <dt>Basis</dt><dd><strong>reasoned:</strong> a continuous loop has no narrative destination and quickly becomes decoration. Apple-style explanatory motion usually establishes cause, response and rest. The official USB-IF specification describes directional transmit and receive differential pairs, which supports a clear directional handoff metaphor without claiming literal visible light.</dd>
         <dt>Rationale</dt><dd>The viewer understands why the camera followed the cable and why it can return to the front. The scene gains a beginning, destination and quiet end.</dd>
         <dt>Downsides</dt><dd>Needs a real setup state on the display; a fake success animation would weaken trust.</dd>
-        <dt>Reuse</dt><dd>No external asset required; this combines the reference techniques with WindScout’s installation story.</dd>
+        <dt>Reuse</dt><dd>No external asset required; this combines the reference techniques with Windpeek’s installation story.</dd>
       </dl>
       <div class="metrics"><span>Confidence 84%</span><span>Complexity Low</span></div>
     </article>
@@ -216,7 +216,7 @@
       <tr><td>8</td><td>Dense dots or repeated micro-pulses</td><td>Already tested; reads as ants moving over the cable rather than data flowing through it.</td></tr>
       <tr><td>9</td><td>Lightning bolts through the copper</td><td>Suggests arcing, danger or an electrical fault rather than controlled digital communication.</td></tr>
       <tr><td>10</td><td>Literal fibre-optic treatment</td><td>USB-C signalling uses electrical differential pairs; presenting the conductors as optical fibres would be technically misleading.</td></tr>
-      <tr><td>11</td><td>Dark neon cyberpunk scene</td><td>Many references depend on black backgrounds; copying that look would replace WindScout’s calm light identity.</td></tr>
+      <tr><td>11</td><td>Dark neon cyberpunk scene</td><td>Many references depend on black backgrounds; copying that look would replace Windpeek’s calm light identity.</td></tr>
       <tr><td>12</td><td>Stock footage mapped onto the cable</td><td>Would not follow orbiting, lighting or the real cable geometry and would break the interactive 3D illusion.</td></tr>
       <tr><td>13</td><td>Copy Behance or studio assets directly</td><td>Useful as inspiration only unless a specific commercial license is purchased; visual similarity alone does not grant reuse rights.</td></tr>
     </tbody></table>
@@ -226,8 +226,8 @@
     <p class="eyebrow">Sources &amp; References</p>
     <h2>Grounding used</h2>
     <ul>
-      <li><a href="https://github.com/emieljanson/windscout/blob/main/web/src/components/WindScoutScene.vue">Current WindScout scene composition</a></li>
-      <li><a href="https://github.com/emieljanson/windscout/blob/main/web/src/configurator/deviceSurface.js">Current WindScout surface materials</a></li>
+      <li><a href="https://github.com/emieljanson/windpeek/blob/main/web/src/components/WindpeekScene.vue">Current Windpeek scene composition</a></li>
+      <li><a href="https://github.com/emieljanson/windpeek/blob/main/web/src/configurator/deviceSurface.js">Current Windpeek surface materials</a></li>
       <li><a href="https://www.apple.com/studio-display/">Apple Studio Display — glass, anti-reflective treatment and product presentation</a></li>
       <li><a href="https://developer.apple.com/videos/play/wwdc2025/219/?time=89">Apple — highlights that respond to geometry and motion</a></li>
       <li><a href="https://developer.apple.com/videos/play/wwdc2023/10078/">Apple — depth cues and comfortable motion</a></li>
@@ -244,7 +244,7 @@
     </ul>
   </section>
 
-  <footer>Updated 2026-08-29 by ce-ideate from the WindScout 3D configurator and USB cable-flow prototype discussion.</footer>
+  <footer>Updated 2026-08-29 by ce-ideate from the Windpeek 3D configurator and USB cable-flow prototype discussion.</footer>
 </main>
 </body>
 </html>

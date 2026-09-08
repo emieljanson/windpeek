@@ -1,4 +1,4 @@
-# WindScout USB recovery
+# Windpeek USB recovery
 
 The installer always states whether it is safe to disconnect USB.
 
@@ -17,10 +17,10 @@ Firmware remains bootable because configuration and credentials are committed to
 
 ## USB disconnected during firmware writing
 
-Do not assume the device can boot. Reconnect USB and start **Repair WindScout**. If the browser cannot detect the device automatically, put the E1002 into its documented ESP32-S3 download/bootloader mode, then choose it again. A repair uses the verified clean-install bundle.
+Do not assume the device can boot. Reconnect USB and start **Repair Windpeek**. If the browser cannot detect the device automatically, put the E1002 into its documented ESP32-S3 download/bootloader mode, then choose it again. A repair uses the verified clean-install bundle.
 
 ## Wrong device selected
 
-WindScout blocks known E1001 and non-ESP32-S3 devices. A generic ESP32-S3 cannot prove which enclosure it is in, so no destructive write is available until the owner explicitly confirms an E1002.
+Windpeek blocks known E1001 and non-ESP32-S3 devices. A generic ESP32-S3 cannot prove which enclosure it is in, so no destructive write is available until the owner explicitly confirms an E1002.
 
 The existing captive-portal recovery path remains enabled until the physical USB acceptance matrix is complete.

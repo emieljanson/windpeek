@@ -1,7 +1,7 @@
 import { isNormalizedTide } from './normalizeTide'
 import { availableStorage } from '../storage'
 
-export const TIDE_CACHE_KEY = 'windscout.tides'
+export const TIDE_CACHE_KEY = 'windpeek.tides'
 export const TIDE_CACHE_VERSION = 2
 
 function readEnvelope(storage) {

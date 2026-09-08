@@ -12,7 +12,7 @@ const spots = [
   { value: 'brouwersdam', label: 'Brouwersdam' },
 ]
 
-describe('WindScout setting controls', () => {
+describe('Windpeek setting controls', () => {
   it('associates a visible row label and description with a Select', async () => {
     const wrapper = mount({
       components: { SettingRow, SettingSelect },

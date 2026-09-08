@@ -33,16 +33,16 @@ describe('spot review state', () => {
       .toEqual([expect.objectContaining({ previousDecision: stale })])
   })
 
-  it('preserves a stable Windscout id while correcting name and position', () => {
+  it('preserves a stable Windpeek id while correcting name and position', () => {
     const first = createReviewDecision(candidate, result, { action: 'approve' })
     const corrected = createReviewDecision(candidate, result, {
       action: 'approve',
       name: 'Corrected Club', latitude: 52.1, longitude: 5.1,
-      windscoutId: first.windscoutId,
+      windpeekId: first.windpeekId,
     })
     expect(corrected).toMatchObject({
       candidateId: 'osm:node/1', action: 'approve', name: 'Corrected Club',
-      latitude: 52.1, longitude: 5.1, windscoutId: first.windscoutId,
+      latitude: 52.1, longitude: 5.1, windpeekId: first.windpeekId,
     })
   })
 

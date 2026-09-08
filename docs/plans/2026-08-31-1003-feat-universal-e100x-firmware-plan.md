@@ -14,7 +14,7 @@ execution: code
 
 ## Goal Capsule
 
-- **Objective:** An owner can install the same WindScout release on a supported reTerminal E1001 or E1002 without routinely identifying the model, while an unrecognized device remains safe.
+- **Objective:** An owner can install the same Windpeek release on a supported reTerminal E1001 or E1002 without routinely identifying the model, while an unrecognized device remains safe.
 - **Means:** One firmware image contains both display drivers and selects one through a persisted hardware profile backed by a small accepted-source flow.
 - **Product authority:** This plan owns E1001/E1002 runtime display selection, installer behavior, grayscale output, recovery, and the experiment that determines how far automatic detection can go. It does not extend support to other reTerminal models.
 - **Open blockers:** None before planning. A real E1001 and E1002 are required before production support can be declared.
@@ -25,33 +25,33 @@ execution: code
 
 ### Summary
 
-WindScout will ship one universal E1001/E1002 firmware release that contains both screen drivers, automatically selects the supported display when trustworthy evidence exists, and leaves the display untouched when the hardware profile is unknown. E1002, E1001, and each automatic evidence source advance through independent support gates.
+Windpeek will ship one universal E1001/E1002 firmware release that contains both screen drivers, automatically selects the supported display when trustworthy evidence exists, and leaves the display untouched when the hardware profile is unknown. E1002, E1001, and each automatic evidence source advance through independent support gates.
 
 ### Problem Frame
 
-The current installer can identify an ESP32-S3 through its ROM, but that identifies the processor rather than the surrounding reTerminal model. WindScout therefore asks an owner to confirm an E1002 before a clean flash and blocks a known E1001.
+The current installer can identify an ESP32-S3 through its ROM, but that identifies the processor rather than the surrounding reTerminal model. Windpeek therefore asks an owner to confirm an E1002 before a clean flash and blocks a known E1001.
 
 E1001 and E1002 share the same 800×480 layout surface but require different display controllers and refresh protocols. Treating the E1001 as a color-limited E1002 would not provide a safe fallback; the firmware must select the matching low-level driver before touching the panel.
 
 ### Key Decisions
 
-- **Ship one firmware containing both drivers.** (session-settled: user-approved — chosen over separate model-specific releases: owners get one install and update path while WindScout maintains one release.) Governs R1-R3, R10-R12.
+- **Ship one firmware containing both drivers.** (session-settled: user-approved — chosen over separate model-specific releases: owners get one install and update path while Windpeek maintains one release.) Governs R1-R3, R10-R12.
 - **Use a detection ladder instead of a single heuristic.** Trusted existing identity has priority when accepted sources agree; disagreement remains `unknown`. Other evidence is admitted only after it is characterized and proven safe. Governs R4-R7, R14, R19.
 - **Unknown means no display access.** Safety takes precedence over a zero-question installer when the model cannot be proven. Governs R3, R5-R7, R13.
 - **Treat E1001 support as an experiment until physical acceptance passes.** Automated evidence can prepare the implementation but cannot establish panel behavior, sleep quality, or recovery safety. Governs R15-R17.
 
 ### Actors
 
-- A1. **Device owner:** Connects a reTerminal, installs WindScout, supplies Wi-Fi credentials, and may answer one fallback hardware question when detection cannot prove the model.
+- A1. **Device owner:** Connects a reTerminal, installs Windpeek, supplies Wi-Fi credentials, and may answer one fallback hardware question when detection cannot prove the model.
 - A2. **Browser installer:** Collects trustworthy identity evidence, installs the universal release, provisions the hardware profile and configuration, and explains recovery without guessing.
-- A3. **Universal WindScout firmware:** Starts safely without a selected panel, persists the hardware profile, exposes its identity over USB, and dispatches display operations to the selected driver.
+- A3. **Universal Windpeek firmware:** Starts safely without a selected panel, persists the hardware profile, exposes its identity over USB, and dispatches display operations to the selected driver.
 - A4. **Physical acceptance tester:** Exercises E1001 and E1002 installation, rendering, sleep, update, interruption, and restoration before support is published.
 
 ### Requirements
 
 **Universal runtime and profile**
 
-- R1. One release artifact shall run the shared WindScout application on both reTerminal E1001 and E1002 and shall contain the low-level display support required by both models.
+- R1. One release artifact shall run the shared Windpeek application on both reTerminal E1001 and E1002 and shall contain the low-level display support required by both models.
 - R2. The firmware shall represent the hardware profile as `unknown`, `e1001`, or `e1002` and shall retain a confirmed profile across normal firmware updates.
 - R3. When the hardware profile is `unknown`, the firmware shall expose the installer protocol but shall not initialize, refresh, sleep, or otherwise command the e-paper controller.
 
@@ -66,14 +66,14 @@ E1001 and E1002 share the same 800×480 layout surface but require different dis
 
 **Display behavior**
 
-- R8. E1001 shall render the shared 800×480 WindScout composition as four intentional grayscale levels, while E1002 shall retain the existing six-color output.
+- R8. E1001 shall render the shared 800×480 Windpeek composition as four intentional grayscale levels, while E1002 shall retain the existing six-color output.
 - R9. Each selected driver shall own its complete panel lifecycle, including initialization, framebuffer transport, full refresh, busy handling, power-off, and deep sleep.
 
 **Installer and compatibility**
 
 - R10. The public installer shall download the same universal firmware release for E1001 and E1002 and shall no longer validate all configuration and release contracts against one compile-time E1002 identity.
 - R11. A clean installation shall flash the universal firmware before Wi-Fi provisioning, resolve and persist the hardware profile before the first display operation, then continue through Wi-Fi, configuration, and transport-verified first render; visual correctness is proven only by physical acceptance.
-- R12. A previously configured E1001 or E1002 shall report its persisted model over the WindScout protocol so updates and configuration-only changes require no model question.
+- R12. A previously configured E1001 or E1002 shall report its persisted model over the Windpeek protocol so updates and configuration-only changes require no model question.
 - R20. While the profile is `unknown`, the protocol shall allow identity, state, diagnostics, clock, profile selection, and cancellation only; Wi-Fi, configuration, dashboard refresh, scheduled refresh, and panel-cache actions shall return a typed refusal.
 
 **Safety, evidence, and release**
@@ -91,7 +91,7 @@ E1001 and E1002 share the same 800×480 layout surface but require different dis
 
 ```mermaid
 flowchart TB
-  Connect[Connect reTerminal] --> Existing{Valid WindScout identity?}
+  Connect[Connect reTerminal] --> Existing{Valid Windpeek identity?}
   Existing -->|yes| Profile[Use reported hardware profile]
   Existing -->|no| Evidence{Accepted automatic evidence?}
   Evidence -->|yes| Profile
@@ -109,7 +109,7 @@ flowchart TB
 ### Key Flows
 
 - F1. Clean installation with trustworthy automatic evidence
-  - **Trigger:** A1 connects a supported device that does not yet run the universal WindScout release.
+  - **Trigger:** A1 connects a supported device that does not yet run the universal Windpeek release.
   - **Actors:** A1, A2, A3
   - **Steps:** A2 collects read-only evidence, flashes the universal release, reconnects to A3, provisions the proven profile, then continues with Wi-Fi and configuration.
   - **Outcome:** The matching driver renders the first forecast without a model question.
@@ -121,7 +121,7 @@ flowchart TB
   - **Outcome:** Installation continues safely, or stops without commanding the panel when A1 cannot confirm.
   - **Covered by:** R2-R7, R11, R13-R14, R18.
 - F3. Update of an installed supported device
-  - **Trigger:** A1 connects or updates a universal WindScout installation with a confirmed profile.
+  - **Trigger:** A1 connects or updates a universal Windpeek installation with a confirmed profile.
   - **Actors:** A1, A2, A3
   - **Steps:** A3 reports its model and capabilities; A2 installs the same universal update or sends configuration only; A3 retains the profile and dispatches to the same driver.
   - **Outcome:** The owner is never asked for the model again.
@@ -159,13 +159,13 @@ flowchart TB
 
 ### Acceptance Examples
 
-- AE1. **Covers R3, R5, R7, R13.** Given a blank compatible ESP32-S3 with no accepted model evidence, when universal WindScout boots, then USB setup is available and no command is sent to either display controller.
-- AE2. **Covers R4, R7, R12.** Given a valid installed WindScout identity reporting E1001, when the owner updates it, then the universal release retains E1001 and does not ask a model question.
+- AE1. **Covers R3, R5, R7, R13.** Given a blank compatible ESP32-S3 with no accepted model evidence, when universal Windpeek boots, then USB setup is available and no command is sent to either display controller.
+- AE2. **Covers R4, R7, R12.** Given a valid installed Windpeek identity reporting E1001, when the owner updates it, then the universal release retains E1001 and does not ask a model question.
 - AE3. **Covers R6.** Given a proposed automatic hardware probe that misclassifies once or changes panel state, when its evidence is reviewed, then it is rejected from the supported detection ladder.
 - AE4. **Covers R7, R11, R13.** Given inconclusive automatic evidence and an owner who confirms a monochrome E1001, when setup continues, then the profile is persisted before the UC8179 driver performs the first display operation.
 - AE5. **Covers R7, R13.** Given inconclusive evidence and no owner confirmation, when setup is cancelled, then the device remains recoverable and its display remains untouched.
 - AE6. **Covers R8-R9.** Given the same dashboard inputs on E1001 and E1002, when both devices render, then their geometry and content agree while E1001 uses four grayscale levels and E1002 uses the six-color palette.
-- AE7. **Covers R10-R12.** Given an E1001 and E1002 on the same WindScout version, when an update is offered, then both receive the same release artifact and resume with their original driver selection.
+- AE7. **Covers R10-R12.** Given an E1001 and E1002 on the same Windpeek version, when an update is offered, then both receive the same release artifact and resume with their original driver selection.
 - AE8. **Covers R14.** Given a selection or refusal, when diagnostics are exported, then they identify the evidence path and active driver without Wi-Fi credentials or other secrets.
 - AE9. **Covers R16-R17.** Given automated tests pass but no physical E1001 acceptance run exists, when release readiness is evaluated, then E1001 remains experimental.
 - AE10. **Covers R13, R20-R21.** Given E1001 was mistakenly stored on an E1002, when the owner holds both side buttons at boot, then USB-only recovery starts with zero backend calls and permits a confirmed correction followed by reboot.
@@ -192,7 +192,7 @@ flowchart TB
 - A single-question fallback remains acceptable when automatic detection cannot be proven safe.
 - Wi-Fi is provisioned after the universal firmware is running and is not a hardware-identification mechanism.
 - Factory-firmware fingerprinting and electrical probing are candidate evidence sources, not promised detection methods.
-- Partial-refresh optimization and redesigning the WindScout dashboard specifically for monochrome are deferred unless physical E1001 evidence makes them necessary for acceptable output.
+- Partial-refresh optimization and redesigning the Windpeek dashboard specifically for monochrome are deferred unless physical E1001 evidence makes them necessary for acceptable output.
 
 ### Dependencies / Assumptions
 
@@ -212,9 +212,9 @@ flowchart TB
 - `docs/plans/2026-08-27-2152-feat-usb-device-installer-plan.md` — current installer identity, safety, sequencing, and acceptance decisions.
 - `docs/plans/2026-08-26-0630-feat-public-3d-configurator-plan.md` — E1001 deferral and the requirement to characterize factory serial metadata before claiming detection.
 - `firmware/components/board_hal/` — compile-time board and display-driver selection.
-- `firmware/main/windscout_display_manager.c` and `firmware/components/epaper_src/GUI_ColorMap.h` — existing Spectra6 versus GC16 runtime mapping boundary.
+- `firmware/main/windpeek_display_manager.c` and `firmware/components/epaper_src/GUI_ColorMap.h` — existing Spectra6 versus GC16 runtime mapping boundary.
 - `web/src/installer/` and `web/src/config/configuration.js` — current E1002-only installer, manifest, and configuration contracts.
-- `contracts/windscout-serial-protocol.md` and `contracts/windscout-config.schema.json` — current E1002-only external contracts.
+- `contracts/windpeek-serial-protocol.md` and `contracts/windpeek-config.schema.json` — current E1002-only external contracts.
 - [Seeed Studio E1001 documentation](https://wiki.seeedstudio.com/getting_started_with_reterminal_e1001/) — processor, resolution, grayscale panel, storage, and physical behavior.
 - [Seeed GxEPD2 E1001 Gray4 example at pinned commit](https://github.com/Seeed-Projects/Seeed_GxEPD2/blob/1100ea37c16b910fd79152f4250c13d802b9c20b/examples/GxEPD2_reTerminal_E1001_Gray4/GxEPD2_reTerminal_E1001_Gray4.ino) — UC8179 transport, four-level rendering, two-plane packing, LUTs, and lifecycle.
 - [Seeed_GFX E1001 preset at pinned commit](https://github.com/Seeed-Studio/Seeed_GFX/blob/79afc12a29a8a689896fd78732ce11a46a8f8cab/User_Setups/Setup520_Seeed_reTerminal_E1001.h) and [E1002 preset](https://github.com/Seeed-Studio/Seeed_GFX/blob/79afc12a29a8a689896fd78732ce11a46a8f8cab/User_Setups/Setup521_Seeed_reTerminal_E1002.h) — matching geometry and pins with different compile-time drivers.
@@ -237,7 +237,7 @@ flowchart TB
 - KTD7. **Extend protocol v1 through capabilities and add configuration schema v4.** Protocol v1 gains optional `hardware-profile` fields and commands without firmware-version guessing. Configuration v4 uses the E100x family ID, while hardware identity stays outside the weather configuration digest. Legacy E1002 configuration remains migratable. Governs R10-R12, R14-R15.
 - KTD8. **Ship one four-part installer bundle with model capabilities.** The manifest names the E100x family and lists `e1001` and `e1002` as supported hardware models. Preserving updates must not overlap NVS or storage. The ESP-IDF application image must leave at least 256 KiB free in each `0x380000` OTA slot. Governs R1-R2, R10-R13, R15.
 - KTD9. **Use a human-friendly fallback when evidence is inconclusive.** The browser asks whether the screen is “color” or “black/gray,” persists the answer, waits for the controlled reboot, and then continues to Wi-Fi. It never exposes controller names to the owner. Governs R7, R11, R13.
-- KTD10. **Keep version 1 identity evidence concrete.** Source order is persisted universal profile, a live pre-flash legacy WindScout E1002 hello, then owner confirmation. A stored legacy configuration alone is not hardware evidence. Any disagreement enters `profile-conflict`; no source silently overrides another. Fingerprints and probes remain experiment results until a follow-up plan admits one under R6. Governs R4-R7, R14, R19.
+- KTD10. **Keep version 1 identity evidence concrete.** Source order is persisted universal profile, a live pre-flash legacy Windpeek E1002 hello, then owner confirmation. A stored legacy configuration alone is not hardware evidence. Any disagreement enters `profile-conflict`; no source silently overrides another. Fingerprints and probes remain experiment results until a follow-up plan admits one under R6. Governs R4-R7, R14, R19.
 - KTD11. **Bind pre-flash evidence to one device and session.** The browser keeps an allowlisted source ID and model in memory across erase and reconnect. The token binds the pre-flash ROM chip identity to a firmware boot nonce and profile revision; these fields prove continuity only, never the model. Mismatch, replay, expiry, or reload destroys the token and requires a new probe or fallback. Raw factory bytes never enter firmware or diagnostics. Governs R4-R5, R14, R19, R22.
 - KTD12. **Gate model support independently in the manifest.** Each hardware-model entry has a versioned `disabled`, `beta`, or `ga` support level, and missing or unknown values fail closed. E1002 stays `ga`; E1001 fallback stays `beta` until its physical matrix passes. Experimental detection candidates are not manifest entries. Governs R6, R16-R17.
 - KTD13. **Persist panel failure as a recovery latch.** A backend failure records the model, stage, and typed error. The next boot exposes USB recovery without initializing a panel until the owner explicitly retries the same driver or enters profile correction. Governs R13-R14, R20-R21.
@@ -260,7 +260,7 @@ flowchart TB
   Carrier --> Dispatch{Runtime e-paper dispatcher}
   Dispatch -->|e1001| Gray[UC8179: Gray4 two-plane transport]
   Dispatch -->|e1002| Color[ED2208: Spectra6 packed transport]
-  Gray --> App[Shared WindScout renderer and app]
+  Gray --> App[Shared Windpeek renderer and app]
   Color --> App
   App --> Wifi[Wi-Fi, forecast, render, sleep]
 ```
@@ -347,7 +347,7 @@ stateDiagram-v2
 - **Goal:** Establish a durable hardware identity and make `unknown` a safe first-class boot mode.
 - **Requirements:** R2-R7, R11-R15; F1-F3; AE1-AE5, AE8.
 - **Dependencies:** None.
-- **Files:** `firmware/main/hardware_profile.h` (new), `firmware/main/hardware_profile.c` (new), `firmware/main/windscout_main.c`, `firmware/main/CMakeLists.txt`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/host_tests/test_hardware_profile.cpp` (new), `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/CMakeLists.txt`.
+- **Files:** `firmware/main/hardware_profile.h` (new), `firmware/main/hardware_profile.c` (new), `firmware/main/windpeek_main.c`, `firmware/main/CMakeLists.txt`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/host_tests/test_hardware_profile.cpp` (new), `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/CMakeLists.txt`.
 - **Approach:**
   1. Add the KTD3 record with model, accepted source, format version, integrity data, and committed state in a dedicated NVS namespace.
   2. Load NVS and the effective profile before any path can reach panel initialization.
@@ -375,7 +375,7 @@ stateDiagram-v2
 - **Files:** `firmware/boards/boards.json`, `firmware/boards/sdkconfig.defaults.seeedstudio_reterminal_e100x` (new), `firmware/components/board_hal/Kconfig`, `firmware/components/board_hal/CMakeLists.txt`, `firmware/components/board_hal/include/board_hal.h`, `firmware/components/board_hal/include/board_seeedstudio_reterminal_e100x.h` (new), `firmware/components/board_hal/src/driver_seeedstudio_reterminal_e100x.c` (new), `firmware/components/epaper/include/epaper.h`, `firmware/components/epaper/CMakeLists.txt`, `firmware/components/epaper/epaper_dispatcher.c` (new), `firmware/components/epaper_driver_ed2208_gca/src/driver_ed2208_gca.c`, `firmware/main/CMakeLists.txt`, `firmware/main/config_manager.c`, `firmware/main/power_manager.c`, `firmware/main/storage.c`, `firmware/main/wifi_manager.c`, `firmware/main/wind_app.c`, `firmware/host_tests/test_epaper_contract.cpp`, `firmware/host_tests/test_epaper_dispatcher.cpp` (new), `firmware/host_tests/CMakeLists.txt`.
 - **Approach:**
   1. Add the KTD1 carrier target by extracting the current shared E1002 pins and peripherals from panel selection.
-  2. Replace E1002 model-equality compile guards with one explicit E100x WindScout capability across source selection, power, Wi-Fi, storage, configuration, timezone, and application paths.
+  2. Replace E1002 model-equality compile guards with one explicit E100x Windpeek capability across source selection, power, Wi-Fi, storage, configuration, timezone, and application paths.
   3. Convert the current ED2208 exports into a namespaced backend and register it behind KTD2.
   4. Make the public facade select one backend from U1 before panel initialization.
   5. Return typed invalid-state and bounded timeout errors instead of silent no-ops or unbounded `BUSY` loops.
@@ -386,15 +386,15 @@ stateDiagram-v2
   - Selecting E1002 delegates each lifecycle operation exactly once to ED2208.
   - A second backend selection in one boot is rejected.
   - A stuck `BUSY` signal returns a timeout and does not hang the task.
-  - Covers AE7. The universal carrier compiles the WindScout source set without the old E1002-only application condition.
+  - Covers AE7. The universal carrier compiles the Windpeek source set without the old E1002-only application condition.
 - **Verification:** Dispatcher fakes prove exclusivity and refusal. A universal firmware build links both backends with no duplicate symbols and preserves all common carrier peripherals.
 
 ### U3. Implement UC8179 Gray4 and model-aware rendering
 
-- **Goal:** Render the shared WindScout dashboard correctly on E1001 without changing E1002 output.
+- **Goal:** Render the shared Windpeek dashboard correctly on E1001 without changing E1002 output.
 - **Requirements:** R1, R8-R9, R15-R17; F4; AE3, AE6, AE9.
 - **Dependencies:** U2.
-- **Files:** `firmware/components/epaper_driver_uc8179/CMakeLists.txt` (new), `firmware/components/epaper_driver_uc8179/Kconfig` (new), `firmware/components/epaper_driver_uc8179/src/driver_uc8179.c` (new), `firmware/components/epaper_src/GUI_ColorMap.h`, `firmware/main/windscout_display_manager.c`, `firmware/main/wind_renderer.c`, `firmware/main/wind_renderer.h`, `firmware/main/CMakeLists.txt`, `firmware/UPSTREAM.md`, `firmware/host_tests/test_epaper_dispatcher.cpp`, `firmware/host_tests/test_wind_renderer.cpp`, `firmware/host_tests/fixtures/e1001-gray4-*.bin` (new), `firmware/host_tests/fixtures/e1002-spectra6-*.bin` (new), `firmware/host_tests/CMakeLists.txt`, `shared/renderer-fixtures/`.
+- **Files:** `firmware/components/epaper_driver_uc8179/CMakeLists.txt` (new), `firmware/components/epaper_driver_uc8179/Kconfig` (new), `firmware/components/epaper_driver_uc8179/src/driver_uc8179.c` (new), `firmware/components/epaper_src/GUI_ColorMap.h`, `firmware/main/windpeek_display_manager.c`, `firmware/main/wind_renderer.c`, `firmware/main/wind_renderer.h`, `firmware/main/CMakeLists.txt`, `firmware/UPSTREAM.md`, `firmware/host_tests/test_epaper_dispatcher.cpp`, `firmware/host_tests/test_wind_renderer.cpp`, `firmware/host_tests/fixtures/e1001-gray4-*.bin` (new), `firmware/host_tests/fixtures/e1002-spectra6-*.bin` (new), `firmware/host_tests/CMakeLists.txt`, `shared/renderer-fixtures/`.
 - **Approach:**
   1. Pin and port the official UC8179 lifecycle from Seeed_GxEPD2 commit `1100ea37c16b910fd79152f4250c13d802b9c20b`, recording source files, LUT bytes or hash, license, and local deviations.
   2. Characterize external-LUT and official internal-OTP waveform selection after the profile is confirmed as E1001; support only revisions whose chosen path passes U7.
@@ -444,14 +444,14 @@ stateDiagram-v2
 - **Goal:** Make the hardware profile observable and provisionable without coupling it to editable weather settings.
 - **Requirements:** R2, R4, R7, R10-R15, R19-R20; F1-F3; AE2, AE4, AE7-AE8, AE13-AE14.
 - **Dependencies:** U1, U2, U7.
-- **Files:** `contracts/windscout-serial-protocol.md`, `contracts/windscout-config.schema.json`, `firmware/main/wind_usb_protocol.c`, `firmware/main/wind_usb_protocol.h`, `firmware/main/wind_installer_service.c`, `firmware/main/wind_installer_service.h`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/host_tests/test_wind_usb_protocol.cpp`, `firmware/host_tests/test_installer_service.cpp`, `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/CMakeLists.txt`, `web/src/config/configuration.js`, `web/tests/configuration.test.js`.
+- **Files:** `contracts/windpeek-serial-protocol.md`, `contracts/windpeek-config.schema.json`, `firmware/main/wind_usb_protocol.c`, `firmware/main/wind_usb_protocol.h`, `firmware/main/wind_installer_service.c`, `firmware/main/wind_installer_service.h`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/host_tests/test_wind_usb_protocol.cpp`, `firmware/host_tests/test_installer_service.cpp`, `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/CMakeLists.txt`, `web/src/config/configuration.js`, `web/tests/configuration.test.js`.
 - **Approach:**
   1. Implement KTD7 with an E100x family ID, a separate `hardwareModel`, and the `hardware-profile` capability.
   2. Add model, persisted source, current activation status, active driver, accepted source IDs, and refusal reason to allowlisted hello/state diagnostics.
   3. Add a profile command that accepts only U1 transitions, commits the record, returns a reboot-required result, and never triggers a preview render in the same boot.
   4. Align the JSON schema and firmware configuration version at v4 and migrate valid E1002 v2/v3 records.
   5. Keep credentials and raw factory bytes outside every response, error, diagnostic, and digest.
-- **Patterns to follow:** Capability negotiation and redaction rules in `contracts/windscout-serial-protocol.md`; configuration migrations in `firmware/main/installed_configuration.c`.
+- **Patterns to follow:** Capability negotiation and redaction rules in `contracts/windpeek-serial-protocol.md`; configuration migrations in `firmware/main/installed_configuration.c`.
 - **Test scenarios:**
   - Old E1002 firmware remains identifiable without the new capability and receives only supported commands.
   - Covers AE2. A universal device reports a persisted E1001 or E1002 profile and needs no confirmation.
@@ -470,7 +470,7 @@ stateDiagram-v2
 - **Dependencies:** U4.
 - **Files:** `web/src/installer/createInstallerSession.js`, `web/src/installer/esptoolAdapter.js`, `web/src/installer/serialPortAdapter.js`, `web/src/installer/actionResolver.js`, `web/src/installer/firmwareManifest.js`, `web/src/installer/installerDiagnostics.js`, `web/src/installer/installerErrors.js`, `web/src/components/installer/InstallerPanel.vue`, `web/src/components/installer/InstallerProgress.vue`, `web/src/components/installer/InstallerComplete.vue`, `web/src/styles/installer.css`, `web/tests/installer/installer-session.test.js`, `web/tests/installer/esptool-adapter.test.js`, `web/tests/installer/action-resolver.test.js`, `web/tests/installer/firmware-manifest.test.js`, `web/tests/installer/installer-diagnostics.test.js`, `web/tests/installer/installer-panel.test.js`, `web/tests/e2e/installer.spec.js`.
 - **Approach:**
-  1. Probe existing WindScout identity first, then collect only approved read-only pre-flash evidence.
+  1. Probe existing Windpeek identity first, then collect only approved read-only pre-flash evidence.
   2. When ROM is the only identity, show a recognizable reTerminal enclosure illustration and physical button hints, require one affirmative family action before erase, and provide “Not this device / I’m not sure” as the safe exit.
   3. Flash the KTD8 bundle and reconnect to the universal firmware in either confirmed or `unknown` state.
   4. Apply KTD10 and KTD11 without building generic fingerprint or probe admission machinery.
@@ -507,7 +507,7 @@ stateDiagram-v2
 | Evidence conflict | Sources disagree; the installer will not guess | Review and confirm in safe recovery | `unknown` profile |
 | Profile refused | The requested transition is unsafe or stale | Enter profile recovery | `unknown` profile |
 | Driver or render failed | The selected driver failed and the alternate was not tried | Retry same driver or safe recovery | Recovery-only boot |
-| ROM repair | WindScout cannot boot, but the ESP bootloader is reachable | Clean universal reinstall | Universal `unknown` boot |
+| ROM repair | Windpeek cannot boot, but the ESP bootloader is reachable | Clean universal reinstall | Universal `unknown` boot |
 
 ### U6. Package and validate one universal release
 

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" role="img" aria-labelledby="title desc">
   <title id="title">reTerminal E1001 or E1002</title>
-  <desc id="desc">A white rectangular WindScout display with a black and white wind forecast.</desc>
+  <desc id="desc">A white rectangular Windpeek display with a black and white wind forecast.</desc>
   <defs>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
       <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#26302c" flood-opacity=".18"/>
@@ -10,7 +10,7 @@
     <path fill="#f5f6f2" stroke="#d5d9d4" stroke-width="3" d="M53 44h334a19 19 0 0 1 19 19v184a19 19 0 0 1-19 19H53a19 19 0 0 1-19-19V63a19 19 0 0 1 19-19Z"/>
     <path fill="#e7ebe4" stroke="#aeb6ad" stroke-width="2" d="M66 70h308v151H66z"/>
     <path fill="#101210" d="M79 85h282v28H79z"/>
-    <text x="90" y="105" fill="#f3f5f0" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="17">WINDSCOUT</text>
+    <text x="90" y="105" fill="#f3f5f0" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="17">WINDPEEK</text>
     <g fill="#171917">
       <path d="M80 128h280v2H80zM80 157h280v1H80zM80 190h280v1H80z" opacity=".35"/>
       <path d="M95 177h14v30H95zm25-10h14v40h-14zm25-22h14v62h-14zm25 12h14v50h-14zm25-34h14v84h-14zm25 16h14v68h-14zm25-29h14v97h-14zm25 19h14v78h-14zm25-6h14v84h-14zm25 27h14v57h-14zm25-17h14v74h-14z"/>

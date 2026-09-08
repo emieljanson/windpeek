@@ -335,13 +335,13 @@ export async function loadSharedRenderer({
       height !== RENDERER_HEIGHT ||
       paletteBytes !== RENDERER_PALETTE_BYTES
     ) {
-      fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the Windscout display')
+      fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the Windpeek display')
     }
     return new SharedRenderer(exports)
   } catch (error) {
     if (error instanceof SharedRendererError) throw error
-    if (didTimeout) fail('LOAD_TIMEOUT', 'The Windscout screen renderer took too long to load', error)
-    fail('LOAD_FAILED', 'The Windscout screen renderer could not be loaded', error)
+    if (didTimeout) fail('LOAD_TIMEOUT', 'The Windpeek screen renderer took too long to load', error)
+    fail('LOAD_FAILED', 'The Windpeek screen renderer could not be loaded', error)
   } finally {
     if (timeout) clearTimeout(timeout)
   }

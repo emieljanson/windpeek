@@ -552,7 +552,7 @@ async function verifyExport(binary) {
 }
 
 async function main() {
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'windscout-e1003-'))
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'windpeek-e1003-'))
   try {
     await mkdir(outputDirectory, { recursive: true })
     const response = await fetch(E1003_MODEL.sourceUrl, { signal: AbortSignal.timeout(30_000) })

@@ -229,7 +229,7 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "\"hardware-profile\"],\"hardwareModel\":\"%s\","
               "\"storedHardwareModel\":\"%s\",\"hardwareProfileRevision\":%" PRIu32 ","
               "\"safeBootOverride\":%s,\"driverFailureLatched\":%s}",
-              WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION,
+              WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION,
               hardware_model, stored_hardware_model, profile.revision,
               profile.safe_boot_override ? "true" : "false",
               profile.driver_failure_latched ? "true" : "false")
@@ -239,7 +239,7 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
               "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
               "\"configuration\",\"render-verification\",\"clock-sync\"]}",
-              WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
+              WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -323,7 +323,7 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
         "{\"status\":\"ok\",\"boardId\":\"%s\",\"configurationDigest\":"
         "\"%016" PRIx64 "\",\"wifi\":\"%s\",\"wifiConfigured\":%s,"
         "\"render\":\"%s\",\"apply\":\"%s\"}",
-        WINDSCOUT_BOARD_ID, installed_configuration_digest(&active),
+        WINDPEEK_BOARD_ID, installed_configuration_digest(&active),
         service->dependencies.wifi_connected &&
                 service->dependencies.wifi_connected(service->dependencies.context)
             ? "connected" : "disconnected",

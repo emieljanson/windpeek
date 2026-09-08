@@ -58,7 +58,7 @@ describe('forecast cache', () => {
     JSON.stringify({ version: 2, spots: { brouwersdam: { best_match: { schemaVersion: 1 } } } }),
   ])('rejects malformed or incompatible cache content', (value) => {
     const storage = memoryStorage()
-    storage.setItem('windscout.forecasts', value)
+    storage.setItem('windpeek.forecasts', value)
     expect(readCachedForecast('brouwersdam', 'best_match', storage)).toBeNull()
   })
 
@@ -67,11 +67,11 @@ describe('forecast cache', () => {
     const bestMatch = forecast()
     const gfs = forecast('ncep_gfs_seamless', 'NOAA GFS')
     expect(writeCachedForecasts({ best_match: bestMatch, ncep_gfs_seamless: gfs }, storage)).toBe(true)
-    const cached = storage.getItem('windscout.forecasts')
+    const cached = storage.getItem('windpeek.forecasts')
     expect(readCachedForecast('brouwersdam', 'ncep_gfs_seamless', storage)).toEqual(gfs)
 
     expect(writeCachedForecasts([bestMatch, { ...gfs, days: [] }], storage)).toBe(false)
-    expect(storage.getItem('windscout.forecasts')).toBe(cached)
+    expect(storage.getItem('windpeek.forecasts')).toBe(cached)
   })
 
   it('rejects structurally valid data that cannot cross the renderer bridge', () => {

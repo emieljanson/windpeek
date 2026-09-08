@@ -14,8 +14,8 @@ execution: code
 
 ## Goal Capsule
 
-- **Objective:** An E1002 owner can turn the configured browser preview into a working physical WindScout through one guided desktop USB flow, then return later to update settings without reinstalling unnecessarily.
-- **Means:** Push a first-party installer layer into the existing inspector and use a browser-based Espressif flashing engine beneath WindScout-owned device detection, progress, Wi-Fi, configuration, and verification states.
+- **Objective:** An E1002 owner can turn the configured browser preview into a working physical Windpeek through one guided desktop USB flow, then return later to update settings without reinstalling unnecessarily.
+- **Means:** Push a first-party installer layer into the existing inspector and use a browser-based Espressif flashing engine beneath Windpeek-owned device detection, progress, Wi-Fi, configuration, and verification states.
 - **Product authority:** This plan owns first installation, USB configuration updates, and USB reinstallation for the E1002. It does not own the surrounding configurator, automatic OTA, or other device models.
 - **Open blockers:** None at product scope. Planning must bind the experience to physically verified E1002 behavior before implementation is considered shippable.
 
@@ -25,7 +25,7 @@ execution: code
 
 ### Summary
 
-WindScout shall provide one first-party USB installer that changes its path according to the connected E1002's state. New devices are installed and provisioned, existing WindScouts are updated without unnecessary flashing, and damaged installations can be reinstalled through the same focused interface.
+Windpeek shall provide one first-party USB installer that changes its path according to the connected E1002's state. New devices are installed and provisioned, existing Windpeeks are updated without unnecessary flashing, and damaged installations can be reinstalled through the same focused interface.
 
 **Product Contract preservation:** changed R14 to confirm that the browser-selected spot becomes the device's single installed spot. This user-approved clarification does not expand the installer beyond the active configuration already owned by R14.
 
@@ -44,7 +44,7 @@ The browser cannot silently trust every connected ESP32-S3 as an E1002. It also 
 - **Lock navigation only during critical writes.** (session-settled: user-directed — chosen over always allowing cancellation or locking the entire flow: normal navigation remains flexible without inviting unsafe interruption.) Governs R10.
 - **Reinstall inside the normal installer.** (session-settled: user-directed — chosen over a separate recovery experience: repeating the familiar route is sufficient for the first release.) Governs R18-R19.
 - **Support E1002 first.** (session-settled: user-directed — chosen over launching E1001 and E1002 together: one physical target can reach reliable identification and acceptance sooner.) Governs R3-R4, R20.
-- **Install one active spot.** (session-settled: user-approved — chosen over preserving the firmware's current rotating built-in spot set: the physical WindScout should match the one spot configured in the browser.) Governs R8, R14, R17.
+- **Install one active spot.** (session-settled: user-approved — chosen over preserving the firmware's current rotating built-in spot set: the physical Windpeek should match the one spot configured in the browser.) Governs R8, R14, R17.
 
 <!-- ce-section: work-relationships -->
 ### How This Work Fits Together
@@ -58,8 +58,8 @@ This plan owns the USB installer slice of the broader public configurator descri
 
 ### Actors
 
-- A1. **First-time E1002 owner:** Has configured a WindScout preview and wants to install WindScout on a new or unknown device.
-- A2. **Returning WindScout owner:** Reconnects an installed E1002 to update its spot, display settings, firmware, or Wi-Fi.
+- A1. **First-time E1002 owner:** Has configured a Windpeek preview and wants to install Windpeek on a new or unknown device.
+- A2. **Returning Windpeek owner:** Reconnects an installed E1002 to update its spot, display settings, firmware, or Wi-Fi.
 - A3. **Browser installer:** Requests serial permission, identifies capabilities, flashes firmware, transfers configuration, and presents progress without retaining secrets.
 - A4. **E1002 device:** Reports identity and state when possible, accepts validated changes, joins Wi-Fi, retrieves a forecast, and reports a verifiable result.
 
@@ -69,31 +69,31 @@ This plan owns the USB installer slice of the broader public configurator descri
 
 - R1. Installation shall begin only in a secure desktop browser context with the required serial capability, while unsupported browsers receive a clear desktop-browser requirement before any device action.
 - R2. Activating `Install` shall push the installer into the existing inspector before or alongside the unavoidable system serial-port chooser, and cancellation shall leave a recoverable connect state.
-- R3. After permission, the installer shall classify the target as a verified WindScout E1002, an unverified compatible ESP32-S3, or an unsupported device without presenting chip detection as enclosure detection.
+- R3. After permission, the installer shall classify the target as a verified Windpeek E1002, an unverified compatible ESP32-S3, or an unsupported device without presenting chip detection as enclosure detection.
 - R4. An unverified compatible ESP32-S3 shall require an illustrated E1002 confirmation before any destructive operation, while an unsupported device shall remain blocked.
 
 **Installation and preservation**
 
-- R5. All product-facing connection, flash, progress, and error states shall remain inside WindScout's installer chrome, except for browser-owned permission UI.
+- R5. All product-facing connection, flash, progress, and error states shall remain inside Windpeek's installer chrome, except for browser-owned permission UI.
 - R6. A first installation shall write the approved E1002 firmware, verify the written result, reset the device, and continue the same installer journey after reconnection.
 - R7. The installer shall show useful progress during firmware preparation, writing, and verification without exposing raw serial logs as the primary experience.
-- R8. A verified WindScout that only needs configuration changes shall update without reflashing, and an unchanged compatible device shall report `Up to date`.
-- R9. A normal WindScout update shall preserve valid Wi-Fi data, while a clean install or required full erase shall state that Wi-Fi must be configured again before the destructive action begins.
+- R8. A verified Windpeek that only needs configuration changes shall update without reflashing, and an unchanged compatible device shall report `Up to date`.
+- R9. A normal Windpeek update shall preserve valid Wi-Fi data, while a clean install or required full erase shall state that Wi-Fi must be configured again before the destructive action begins.
 - R10. Back navigation shall work before and after firmware writing but remain unavailable while flash writing or verification is in its critical section.
 
 **Wi-Fi and configuration**
 
 - R11. After a reboot, the installer shall guide the owner to reconnect the same device while preserving the non-secret configuration selected in the current browser session.
-- R12. A verified WindScout with valid working Wi-Fi shall skip Wi-Fi entry, while a device without a working connection shall offer device-scanned networks and a manual network-name fallback.
+- R12. A verified Windpeek with valid working Wi-Fi shall skip Wi-Fi entry, while a device without a working connection shall offer device-scanned networks and a manual network-name fallback.
 - R13. Wi-Fi credentials shall travel only between the active browser session and the connected device, shall remain in memory only as long as needed, and shall never enter website persistence, URLs, analytics, or diagnostic output.
-- R14. The installer shall replace the device's installed spot with the browser's one active WindScout spot, transfer its display configuration, validate device acknowledgement, and retry rejected or interrupted configuration without reflashing.
+- R14. The installer shall replace the device's installed spot with the browser's one active Windpeek spot, transfer its display configuration, validate device acknowledgement, and retry rejected or interrupted configuration without reflashing.
 
 **Interaction, completion, and reinstallation**
 
 - R15. Forward and backward user navigation shall push only the inspector's inner layer horizontally, while automatic progress shall update within the current layer and reduced-motion users shall receive an equivalent non-sliding transition.
 - R16. A waiting state shall identify the active operation, show determinate progress when available, explain whether disconnecting is safe, and present one primary recovery action when it fails.
-- R17. Installation shall report success only after the device has working Wi-Fi, has accepted the active WindScout configuration, and has retrieved and rendered its first valid forecast.
-- R18. A compatible device with missing or damaged WindScout firmware shall offer `Reinstall` through the normal installer rather than entering a separate recovery product.
+- R17. Installation shall report success only after the device has working Wi-Fi, has accepted the active Windpeek configuration, and has retrieved and rendered its first valid forecast.
+- R18. A compatible device with missing or damaged Windpeek firmware shall offer `Reinstall` through the normal installer rather than entering a separate recovery product.
 - R19. An interruption during flash shall return to a bootloader or reinstall instruction, while an interruption during Wi-Fi or configuration shall preserve the last committed working device state.
 - R20. The first release shall install only on the reTerminal E1002 and shall not offer a destructive route for the E1001 or another ESP32 device.
 
@@ -105,9 +105,9 @@ flowchart TB
   B --> C{Target confidence}
   C -->|Unsupported| D[Block and explain]
   C -->|Compatible, unverified| E[Confirm physical E1002]
-  C -->|Verified WindScout| F{Changes needed}
+  C -->|Verified Windpeek| F{Changes needed}
   E --> G[Install and verify firmware]
-  G --> H[Reconnect WindScout]
+  G --> H[Reconnect Windpeek]
   F -->|Firmware missing or damaged| G
   F -->|Configuration only| I[Keep firmware and valid Wi-Fi]
   F -->|No changes| J[Up to date]
@@ -123,19 +123,19 @@ flowchart TB
 - F1. First installation
   - **Trigger:** A1 activates `Install` and grants access to a new or unknown compatible ESP32-S3.
   - **Actors:** A1, A3, A4
-  - **Steps:** Preflight checks the browser, classifies the device, obtains physical E1002 confirmation when needed, flashes and verifies WindScout, reconnects, provisions Wi-Fi, transfers the active configuration, and verifies the first forecast.
+  - **Steps:** Preflight checks the browser, classifies the device, obtains physical E1002 confirmation when needed, flashes and verifies Windpeek, reconnects, provisions Wi-Fi, transfers the active configuration, and verifies the first forecast.
   - **Outcome:** The physical E1002 runs the configuration shown in the browser.
   - **Covers:** R1-R7, R9-R17, R20.
 
 - F2. Returning configuration update
-  - **Trigger:** A2 reconnects a verified WindScout after changing the browser configuration.
+  - **Trigger:** A2 reconnects a verified Windpeek after changing the browser configuration.
   - **Actors:** A2, A3, A4
   - **Steps:** The installer detects the installed state, changes the action to `Update`, preserves working Wi-Fi, transfers only the required configuration, and verifies the resulting forecast.
   - **Outcome:** The device is updated without unnecessary firmware writing or Wi-Fi entry.
   - **Covers:** R3, R8-R9, R11-R17.
 
-- F3. Reinstall a damaged WindScout
-  - **Trigger:** A3 can reach a compatible E1002 bootloader but cannot validate working WindScout firmware.
+- F3. Reinstall a damaged Windpeek
+  - **Trigger:** A3 can reach a compatible E1002 bootloader but cannot validate working Windpeek firmware.
   - **Actors:** A2, A3, A4
   - **Steps:** The existing installer offers `Reinstall`, explains any data that must be reset, writes and verifies firmware, then resumes the normal Wi-Fi and configuration path.
   - **Outcome:** The owner restores the device without entering a separate recovery application.
@@ -151,10 +151,10 @@ flowchart TB
 ### Acceptance Examples
 
 - AE1. **Covers R3-R4, R6, R20.** Given a blank compatible ESP32-S3, when the owner selects it, then the installer labels the enclosure as unverified and performs no write until the owner confirms an illustrated E1002 check.
-- AE2. **Covers R8-R9, R12, R14.** Given a working WindScout with stored Wi-Fi, when the owner changes only the active spot, then the action becomes `Update`, no firmware or Wi-Fi step runs, and the device acknowledges the new configuration.
-- AE3. **Covers R9, R12-R13.** Given a clean installation, when WindScout restarts without valid Wi-Fi, then the owner selects or enters a network, the browser transfers the credentials over the active USB session, and no browser persistence contains the password afterward.
+- AE2. **Covers R8-R9, R12, R14.** Given a working Windpeek with stored Wi-Fi, when the owner changes only the active spot, then the action becomes `Update`, no firmware or Wi-Fi step runs, and the device acknowledges the new configuration.
+- AE3. **Covers R9, R12-R13.** Given a clean installation, when Windpeek restarts without valid Wi-Fi, then the owner selects or enters a network, the browser transfers the credentials over the active USB session, and no browser persistence contains the password afterward.
 - AE4. **Covers R10, R16, R19.** Given firmware writing is active, when the owner views the installer, then back navigation is unavailable and the state says disconnecting is unsafe; if USB is lost, the next state offers the relevant reconnect or reinstall action.
-- AE5. **Covers R12, R14, R19.** Given the owner enters an incorrect Wi-Fi password, when the device rejects the connection, then the installer retains the non-secret WindScout configuration, accepts a credential retry, and does not flash again.
+- AE5. **Covers R12, R14, R19.** Given the owner enters an incorrect Wi-Fi password, when the device rejects the connection, then the installer retains the non-secret Windpeek configuration, accepts a credential retry, and does not flash again.
 - AE6. **Covers R17.** Given firmware, Wi-Fi, and configuration have completed, when the device has not yet rendered a valid forecast, then the installer remains in a finishing or specific failure state rather than showing success.
 - AE7. **Covers R1-R2.** Given the configurator is open in Safari, Firefox without the required capability, or a mobile browser, when the owner reaches installation, then the UI explains the supported desktop route and requests no serial permission.
 - AE8. **Covers R3, R20.** Given an E1001 or incompatible ESP chip is selected, when preflight completes, then the installer blocks every destructive operation and never labels the target as an E1002.
@@ -165,7 +165,7 @@ flowchart TB
 - A configuration-only update preserves working Wi-Fi and performs no firmware write.
 - Wrong Wi-Fi, denied permission, port cancellation, disconnect during flash, disconnect after reboot, and an unsupported target each end in one truthful recoverable state.
 - Network inspection, browser persistence, analytics, logs, and surfaced diagnostics contain no Wi-Fi password.
-- The final physical display reflects the same selected WindScout configuration as the browser preview.
+- The final physical display reflects the same selected Windpeek configuration as the browser preview.
 
 ### Scope Boundaries
 
@@ -180,10 +180,10 @@ flowchart TB
 ### Dependencies and Assumptions
 
 - The public installer is served over HTTPS and its supported desktop browsers expose the required serial API.
-- Espressif's browser flasher can be used as the low-level engine while WindScout owns the interface and release artifacts.
-- WindScout firmware can report a versioned device identity, Wi-Fi status, configuration acknowledgement, and first-forecast result after installation.
+- Espressif's browser flasher can be used as the low-level engine while Windpeek owns the interface and release artifacts.
+- Windpeek firmware can report a versioned device identity, Wi-Fi status, configuration acknowledgement, and first-forecast result after installation.
 - Factory firmware is not assumed to expose a trustworthy E1002 model identity or reusable Wi-Fi credentials.
-- The E1002 firmware keeps Wi-Fi and WindScout configuration in a data partition that normal updates can preserve.
+- The E1002 firmware keeps Wi-Fi and Windpeek configuration in a data partition that normal updates can preserve.
 - At least one physical E1002 remains available for destructive first-install and reinstall testing throughout implementation.
 
 ### Sources and Existing Foundations
@@ -203,10 +203,10 @@ flowchart TB
 
 ### Key Technical Decisions
 
-- KTD1. **Use a framed WindScout protocol on a clean USB Serial/JTAG channel.** A fixed binary header carries magic, protocol version, payload length, request ID, message type, and CRC32 around a bounded UTF-8 JSON payload. The E1002 release build moves normal console output to UART and gives USB Serial/JTAG exclusively to the installer service. This prevents logs from corrupting protocol frames and keeps credential-bearing payloads out of console output. The protocol supports hello, redacted state, network scan, Wi-Fi test, configuration transaction, verification status, reboot, and structured errors. Governs R3, R7, R11-R17, R19-R20.
+- KTD1. **Use a framed Windpeek protocol on a clean USB Serial/JTAG channel.** A fixed binary header carries magic, protocol version, payload length, request ID, message type, and CRC32 around a bounded UTF-8 JSON payload. The E1002 release build moves normal console output to UART and gives USB Serial/JTAG exclusively to the installer service. This prevents logs from corrupting protocol frames and keeps credential-bearing payloads out of console output. The protocol supports hello, redacted state, network scan, Wi-Fi test, configuration transaction, verification status, reboot, and structured errors. Governs R3, R7, R11-R17, R19-R20.
 - KTD2. **Promote one staged setup only after the new configuration renders successfully.** The non-secret record contains the single spot, forecast model, display settings, schema version, and digest. Wi-Fi credentials use a separate write-only candidate tied to the same transaction generation. Firmware tests the candidate network and runs the candidate configuration without replacing the active generation. It promotes the configuration and credentials together only after the first valid forecast renders, so every failure can resume the last-known-good setup. This extends the configuration validation and NVS patterns already used by `firmware/main/config_manager.c` and implements R8-R9, R12-R14, R17, and R19.
-- KTD3. **Pin `esptool-js` 0.6.1 behind a WindScout adapter and load it only when installation needs the ROM bootloader.** The version is current as of 2026-08-27 and includes connection cleanup, device-loss handling, progress, reset strategies, flash reads, and `Uint8Array` writes. Vue components never import its transport classes directly. A small browser adapter owns port selection, app-protocol probing, bootloader connection, flashing, reset, and reconnect so unit and browser tests can substitute deterministic fake devices. Governs R1-R8, R10-R11, R18-R20.
-- KTD4. **Classify the connected device before choosing an action.** A valid WindScout hello with board ID `seeedstudio_reterminal_e1002` is verified. A ROM-level ESP32-S3 without a valid hello is compatible but unverified and requires the illustrated E1002 confirmation. Any other reported WindScout board or chip is unsupported. Verified state, firmware compatibility, Wi-Fi health, and configuration digest then resolve `Install`, `Update`, `Up to date`, or `Reinstall` without asking the owner to choose a mode. Governs R3-R4, R8, R18, and R20.
+- KTD3. **Pin `esptool-js` 0.6.1 behind a Windpeek adapter and load it only when installation needs the ROM bootloader.** The version is current as of 2026-08-27 and includes connection cleanup, device-loss handling, progress, reset strategies, flash reads, and `Uint8Array` writes. Vue components never import its transport classes directly. A small browser adapter owns port selection, app-protocol probing, bootloader connection, flashing, reset, and reconnect so unit and browser tests can substitute deterministic fake devices. Governs R1-R8, R10-R11, R18-R20.
+- KTD4. **Classify the connected device before choosing an action.** A valid Windpeek hello with board ID `seeedstudio_reterminal_e1002` is verified. A ROM-level ESP32-S3 without a valid hello is compatible but unverified and requires the illustrated E1002 confirmation. Any other reported Windpeek board or chip is unsupported. Verified state, firmware compatibility, Wi-Fi health, and configuration digest then resolve `Install`, `Update`, `Up to date`, or `Reinstall` without asking the owner to choose a mode. Governs R3-R4, R8, R18, and R20.
 - KTD5. **Publish immutable, checksummed flash parts instead of a padded merged image.** The release packager derives offsets and filenames from ESP-IDF build metadata and publishes bootloader, partition table, boot-selection metadata, application, sizes, SHA-256 values, board ID, firmware version, and supported protocol/configuration ranges in one installer manifest. A clean install or explicit full reset erases all flash before writing the approved parts. A normal firmware update writes only the release-declared bootable ranges without whole-chip erase, so NVS and user storage remain intact and the new application becomes the selected boot target. The browser verifies every downloaded part before opening the critical write section and verifies the written ranges through the adapter's supported write-verification path or bounded readback before reset. Governs R6-R10 and R18-R20.
 - KTD6. **Keep secrets inside the active installer session.** Wi-Fi passwords exist only in component memory and outbound protocol buffers. They never enter Pinia persistence, local or session storage, URLs, analytics, Sonner messages, protocol diagnostics, or release logs. The UI clears password fields and drops references after acknowledgement, cancellation, disconnect, and page unload; mutable byte buffers are zeroed where the runtime permits, without claiming JavaScript can erase every internal string copy. While credentials exist, the installer performs no map, forecast, analytics, or third-party requests; firmware assets come from the first-party release origin. Governs R12-R14 and R16-R17.
 - KTD7. **Model the inspector flow as an explicit interruptible state machine.** User-driven forward and back navigation pushes one inner inspector layer. Automatic operations update within that layer. Only firmware writing and verification are critical states that block navigation and page-exit without confirmation. Reconnect, provisioning, and configuration failures retain the non-secret browser configuration and return one relevant recovery action. Reduced motion replaces lateral movement with an immediate or opacity-only transition. Governs R2, R5, R10-R11, and R15-R19.
@@ -241,7 +241,7 @@ stateDiagram-v2
   Preflight --> ChoosePort: Install activated
   ChoosePort --> ConnectReady: Chooser cancelled
   ChoosePort --> ProbeApp: Port granted
-  ProbeApp --> Classify: Valid WindScout hello
+  ProbeApp --> Classify: Valid Windpeek hello
   ProbeApp --> ProbeBootloader: No valid hello
   ProbeBootloader --> ConfirmE1002: ESP32-S3 detected
   ProbeBootloader --> Unsupported: Other chip or no device
@@ -253,7 +253,7 @@ stateDiagram-v2
   ResolveAction --> Flash: Install, firmware update, or reinstall
   Flash --> Reconnect: Write and verification complete
   Flash --> RecoverFlash: Port lost or write failed
-  Reconnect --> Configure: WindScout hello returns
+  Reconnect --> Configure: Windpeek hello returns
   Configure --> VerifyDevice: Wi-Fi and configuration acknowledged
   Configure --> RecoverSetup: Validation or Wi-Fi fails
   VerifyDevice --> Complete: First forecast rendered
@@ -290,8 +290,8 @@ sequenceDiagram
 
 ```text
 contracts/
-├── windscout-config.schema.json
-└── windscout-serial-protocol.md
+├── windpeek-config.schema.json
+└── windpeek-serial-protocol.md
 web/
 ├── src/
 │   ├── components/installer/
@@ -348,7 +348,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 
 ### Alternative Approaches Considered
 
-- **Keep the ESP Web Tools modal:** Rejected because it owns critical terminology, board selection, progress, and recovery outside the WindScout inspector.
+- **Keep the ESP Web Tools modal:** Rejected because it owns critical terminology, board selection, progress, and recovery outside the Windpeek inspector.
 - **Use a padded merged firmware image for every write:** Rejected because it can erase the NVS sector even when whole-chip erase is disabled.
 - **Send commands through the ordinary logging console:** Rejected because mixed logs and commands create ambiguous framing and a larger secret-exposure surface.
 - **Keep multiple built-in spots and mark one active:** Rejected by the confirmed one-spot product model; it would preserve firmware behavior the configurator does not expose.
@@ -360,7 +360,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 - The deployed configurator must use HTTPS and permit Web Serial from its top-level origin.
 - The production release origin must serve immutable firmware assets with correct CORS and cache headers.
 - Before UI polish, a thin physical spike must confirm E1002 reset, ROM entry, app reconnect, and exclusive USB Serial/JTAG protocol behavior on macOS and Windows.
-- The physical spike must record the factory, ROM, and WindScout USB vendor/product identifiers on each supported OS. Port filters may ship only when those identifiers are stable across all three modes; otherwise classification remains protocol- and chip-based after the owner selects a port.
+- The physical spike must record the factory, ROM, and Windpeek USB vendor/product identifiers on each supported OS. Port filters may ship only when those identifiers are stable across all three modes; otherwise classification remains protocol- and chip-based after the owner selects a port.
 - Reconnect timeouts and reset timing remain implementation-time tuning values. They must be measured on the physical matrix and represented as named policy constants rather than scattered delays.
 - Exact transition curves and durations remain implementation-time polish. R15 and KTD7 constrain their meaning, interruption behavior, and reduced-motion fallback.
 
@@ -368,7 +368,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 
 - `docs/plans/2026-08-26-0630-feat-public-3d-configurator-plan.md` already establishes one active spot, a versioned configuration, target-confidence ladder, and framed USB protocol. This focused plan supersedes its broad U6 installer outline where the two differ.
 - `web/src/components/InstallContinuation.vue` is the current truthful placeholder that becomes the installer entry.
-- `web/src/components/WindScoutSettings.vue`, `web/src/views/ConfiguratorView.vue`, and `web/src/styles/settings-controls.css` define the existing inspector, responsive boundary, focus treatment, and control polish to preserve.
+- `web/src/components/WindpeekSettings.vue`, `web/src/views/ConfiguratorView.vue`, and `web/src/styles/settings-controls.css` define the existing inspector, responsive boundary, focus treatment, and control polish to preserve.
 - `web/src/stores/configurator.js` and `web/src/config/configuration.js` are the browser authority for the active spot and display configuration.
 - `firmware/main/config_manager.c`, `firmware/main/wifi_manager.c`, `firmware/main/wind_spots.c`, and `firmware/main/wind_app.c` provide the storage, Wi-Fi, static-spot, forecast, render, and result patterns the installer must extend.
 - `firmware/partitions.csv` keeps NVS at `0x9000` and user storage separate from application partitions; artifact range validation must preserve those regions on normal updates.
@@ -389,7 +389,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 - **Goal:** Give browser, firmware, release tooling, and tests one versioned definition of the installed E1002 state and USB exchange.
 - **Requirements:** R3, R8-R9, R11-R14, R17, R20; F1-F4; AE1-AE3, AE8; KTD1-KTD2, KTD4.
 - **Dependencies:** None.
-- **Files:** `contracts/windscout-config.schema.json`, `contracts/windscout-serial-protocol.md`, `web/src/config/configuration.js`, `web/tests/configuration.test.js`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/main/wind_spots.c`, `firmware/main/wind_spots.h`, `firmware/main/wind_app.c`, `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/test_wind_spots.cpp`, `firmware/host_tests/CMakeLists.txt`.
+- **Files:** `contracts/windpeek-config.schema.json`, `contracts/windpeek-serial-protocol.md`, `web/src/config/configuration.js`, `web/tests/configuration.test.js`, `firmware/main/installed_configuration.c`, `firmware/main/installed_configuration.h`, `firmware/main/wind_spots.c`, `firmware/main/wind_spots.h`, `firmware/main/wind_app.c`, `firmware/host_tests/test_installed_configuration.cpp`, `firmware/host_tests/test_wind_spots.cpp`, `firmware/host_tests/CMakeLists.txt`.
 - **Approach:**
   1. Define one shared configuration version with board ID, one spot, coordinates, IANA timezone, forecast model, display settings, and a canonical digest.
   2. Replace the firmware's compile-time rotating spot authority with a validated installed record while retaining deterministic defaults for migration and tests.
@@ -408,7 +408,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 
 ### U2. Add the E1002 installer service to firmware
 
-- **Goal:** Let a running WindScout identify itself, accept safe Wi-Fi and configuration transactions, stay awake, and report truthful completion over USB.
+- **Goal:** Let a running Windpeek identify itself, accept safe Wi-Fi and configuration transactions, stay awake, and report truthful completion over USB.
 - **Requirements:** R3, R7-R9, R11-R19, R20; F1-F4; AE2-AE6, AE8; KTD1-KTD2, KTD6, KTD8.
 - **Dependencies:** U1.
 - **Files:** `firmware/boards/sdkconfig.defaults.seeedstudio_reterminal_e1002`, `firmware/main/CMakeLists.txt`, `firmware/main/main.c`, `firmware/main/wind_usb_protocol.c`, `firmware/main/wind_usb_protocol.h`, `firmware/main/wind_installer_service.c`, `firmware/main/wind_installer_service.h`, `firmware/main/config_manager.c`, `firmware/main/config_manager.h`, `firmware/main/wifi_manager.c`, `firmware/main/wifi_manager.h`, `firmware/main/power_manager.c`, `firmware/main/power_manager.h`, `firmware/main/wind_app.c`, `firmware/main/wind_app.h`, `firmware/host_tests/test_wind_usb_protocol.cpp`, `firmware/host_tests/test_installer_service.cpp`, `firmware/host_tests/CMakeLists.txt`.
@@ -462,7 +462,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 - **Approach:**
   1. Feature-detect secure desktop Web Serial before loading `esptool-js` or requesting permission.
   2. Keep `requestPort()` inside the Install user gesture, treat chooser cancellation as a normal connect state, and use prior grants only for reconnect.
-  3. Probe the running WindScout protocol first; fall back to ROM chip detection only when no valid hello is available, then apply KTD4's confidence gate.
+  3. Probe the running Windpeek protocol first; fall back to ROM chip detection only when no valid hello is available, then apply KTD4's confidence gate.
   4. Fetch and validate the first-party manifest and bytes before entering the critical write state; verify each written range before reset and map byte progress to stable product stages.
   5. Close the bootloader transport cleanly, reset, observe loss/reconnect, reacquire the granted device, and continue through Wi-Fi, configuration, and final device verification.
   6. Represent every transition and error as typed session state so Vue renders facts rather than interpreting raw exceptions.
@@ -471,7 +471,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 - **Test scenarios:**
   - Covers AE7. Insecure context, missing Web Serial, Safari, Firefox, and mobile stop before a permission prompt and report the supported desktop route.
   - Covers AE1. A ROM-detected ESP32-S3 remains unverified and cannot write until E1002 confirmation; a verified E1001 or non-S3 remains blocked.
-  - An older WindScout build without the framed hello follows the same unverified E1002 confirmation and clean-install path as another compatible ESP32-S3; the UI warns that its existing Wi-Fi and configuration will be replaced.
+  - An older Windpeek build without the framed hello follows the same unverified E1002 confirmation and clean-install path as another compatible ESP32-S3; the UI warns that its existing Wi-Fi and configuration will be replaced.
   - Factory, ROM, and installed E1002 identifiers that differ across reconnect are treated as one session only after protocol or chip classification succeeds; an unrelated previously granted port is ignored.
   - Chooser cancellation returns to connect-ready with no error toast, no retained port, and no manifest download.
   - A verified current E1002 with equal configuration and healthy Wi-Fi resolves `Up to date`; configuration drift resolves `Update` without loading `esptool-js`.
@@ -484,10 +484,10 @@ The tree declares ownership, not exact final filenames. The implementation may c
 
 ### U5. Replace the placeholder with the guided inspector flow
 
-- **Goal:** Present the installer as one polished WindScout-owned inspector journey with truthful progress, recovery, keyboard behavior, and reduced motion.
+- **Goal:** Present the installer as one polished Windpeek-owned inspector journey with truthful progress, recovery, keyboard behavior, and reduced motion.
 - **Requirements:** R1-R2, R4-R5, R7, R10-R12, R15-R19; F1-F4; AE1, AE3-AE7; KTD6-KTD7.
 - **Dependencies:** U4, with U2 available for integration.
-- **Files:** `web/src/components/InstallContinuation.vue`, `web/src/components/WindScoutSettings.vue`, `web/src/components/installer/InstallerPanel.vue`, `web/src/components/installer/InstallerConnect.vue`, `web/src/components/installer/InstallerProgress.vue`, `web/src/components/installer/InstallerWifi.vue`, `web/src/components/installer/InstallerComplete.vue`, `web/src/views/ConfiguratorView.vue`, `web/src/styles/installer.css`, `web/src/styles/configurator.css`, `web/src/App.vue`, `web/public/devices/e1002/`, `web/tests/installer/installer-panel.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/installer.spec.js`.
+- **Files:** `web/src/components/InstallContinuation.vue`, `web/src/components/WindpeekSettings.vue`, `web/src/components/installer/InstallerPanel.vue`, `web/src/components/installer/InstallerConnect.vue`, `web/src/components/installer/InstallerProgress.vue`, `web/src/components/installer/InstallerWifi.vue`, `web/src/components/installer/InstallerComplete.vue`, `web/src/views/ConfiguratorView.vue`, `web/src/styles/installer.css`, `web/src/styles/configurator.css`, `web/src/App.vue`, `web/public/devices/e1002/`, `web/tests/installer/installer-panel.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/installer.spec.js`.
 - **Approach:**
   1. Replace the explanatory placeholder with an Install entry that snapshots the active browser configuration and pushes KTD7's first inspector layer before the system chooser appears.
   2. Render connection, illustrated E1002 target confirmation, Wi-Fi, progress, reconnect, completion, and recovery from the session state without duplicating orchestration inside components; source the recognisable enclosure image from a versioned first-party asset.
@@ -516,7 +516,7 @@ The tree declares ownership, not exact final filenames. The implementation may c
 - **Files:** `web/tests/e2e/installer.spec.js`, `firmware/host_tests/`, `docs/setup.md`, `docs/recovery.md`, `docs/release.md`, `README.md`, `.github/workflows/firmware-release.yml`.
 - **Approach:**
   1. Run all automated contracts together and retain a deterministic fake-device E2E route for every branch that cannot be induced safely in CI.
-  2. Execute the physical matrix with a clean E1002, verified current WindScout, damaged app, wrong Wi-Fi, cancelled chooser, and disconnects during flash and configuration.
+  2. Execute the physical matrix with a clean E1002, verified current Windpeek, damaged app, wrong Wi-Fi, cancelled chooser, and disconnects during flash and configuration.
   3. Inspect browser storage, URLs, network traffic, console output, firmware logs, protocol diagnostics, crash output, and toasts for credential leakage.
   4. Record the validated browser/OS combinations, cable and bootloader recovery instructions, release artifact version, and known unsupported paths.
   5. Keep the captive portal enabled and documented until every USB Wi-Fi and recovery acceptance case passes; removing it remains follow-up work.

@@ -11,7 +11,7 @@ import {
   ComboboxViewport,
 } from 'reka-ui'
 
-const CREATE_VALUE = '__windscout-create-option__'
+const CREATE_VALUE = '__windpeek-create-option__'
 
 const props = defineProps({
   modelValue: { type: [String, Number, Object], default: undefined },
@@ -57,7 +57,7 @@ const emit = defineEmits([
   'focus',
   'dismiss',
 ])
-const row = inject('windscout-setting-row', null)
+const row = inject('windpeek-setting-row', null)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const canOpen = computed(() => props.searchTerm.trim().length >= props.minSearchLength)
 const open = ref(false)

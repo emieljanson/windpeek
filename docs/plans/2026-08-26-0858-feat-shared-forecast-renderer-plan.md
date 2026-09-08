@@ -13,7 +13,7 @@ deepened: 2026-08-26
 
 ## Goal Capsule
 
-- **Objective:** WindScout owners see a trustworthy, current device preview whose forecast interface is pixel-for-pixel identical to the physical e-ink display for the same inputs.
+- **Objective:** Windpeek owners see a trustworthy, current device preview whose forecast interface is pixel-for-pixel identical to the physical e-ink display for the same inputs.
 - **Means:** Compile the existing device renderer for ESP32 and WebAssembly behind one versioned render contract (KTD1-KTD2).
 - **Product authority:** This plan owns forecast rendering parity and live forecast preview behavior. Spot discovery, device installation, new display designs, tides, and exceptional device-state previews remain separate work.
 - **Open blockers:** None.
@@ -26,13 +26,13 @@ deepened: 2026-08-26
 
 ### Summary
 
-WindScout will use one forecast renderer for both the physical device and the browser configurator. The configurator will show current forecast data inside the 3D device preview and must produce the same final 800 × 480 bitmap as the device when given identical inputs.
+Windpeek will use one forecast renderer for both the physical device and the browser configurator. The configurator will show current forecast data inside the 3D device preview and must produce the same final 800 × 480 bitmap as the device when given identical inputs.
 
 ### Problem Frame
 
 The current device firmware and browser configurator draw similar forecast screens through separate implementations. Visual changes can therefore reach one surface without reaching the other, and the browser preview can suggest an outcome that the physical device will not reproduce.
 
-The configurator is also limited to fixed example data. A prospective owner cannot yet choose a spot and see the forecast the configured WindScout would display.
+The configurator is also limited to fixed example data. A prospective owner cannot yet choose a spot and see the forecast the configured Windpeek would display.
 
 ### Key Decisions
 
@@ -54,8 +54,8 @@ The configurator is also limited to fixed example data. A prospective owner cann
 **Live configurator preview**
 
 - R6. The configurator shall show Brouwersdam with current forecast data when no other spot has been selected.
-- R7. Selecting another spot shall fetch its current forecast in the browser and update the 3D device preview without requiring an attached WindScout.
-- R8. Browser forecast retrieval shall not require a WindScout-hosted forecast or rendering service.
+- R7. Selecting another spot shall fetch its current forecast in the browser and update the 3D device preview without requiring an attached Windpeek.
+- R8. Browser forecast retrieval shall not require a Windpeek-hosted forecast or rendering service.
 - R9. Provider-specific forecast data shall be normalized before it enters the shared renderer.
 - R10. Configurator settings that affect the screen shall update the shared renderer input and the 3D texture from its resulting bitmap.
 - R13. A failed forecast refresh shall retain the last successful preview and show a subtle freshness warning outside the device screen.
@@ -68,9 +68,9 @@ The configurator is also limited to fixed example data. A prospective owner cann
 
 ### Actors
 
-- A1. **Prospective or existing WindScout owner:** explores a realistic forecast and configures how it will appear.
+- A1. **Prospective or existing Windpeek owner:** explores a realistic forecast and configures how it will appear.
 - A2. **Browser configurator:** obtains current forecast data, normalizes it, invokes the shared renderer, and presents the bitmap on the 3D model.
-- A3. **WindScout firmware:** obtains or restores forecast data, invokes the same renderer, and publishes its bitmap to the e-ink panel.
+- A3. **Windpeek firmware:** obtains or restores forecast data, invokes the same renderer, and publishes its bitmap to the e-ink panel.
 
 ### Key Flows
 
@@ -78,13 +78,13 @@ The configurator is also limited to fixed example data. A prospective owner cann
   - **Trigger:** A1 opens the configurator with no saved spot selection.
   - **Actors:** A1, A2
   - **Steps:** A2 selects Brouwersdam, retrieves its current forecast, normalizes the response, renders the final bitmap, and applies it to the 3D model.
-  - **Outcome:** A1 immediately sees a realistic current WindScout screen.
+  - **Outcome:** A1 immediately sees a realistic current Windpeek screen.
   - **Covered by:** R3-R4, R6, R8-R10
 - F2. Preview another spot
   - **Trigger:** A1 selects a different supported location.
   - **Actors:** A1, A2
   - **Steps:** A2 retrieves and normalizes that location's current forecast, passes it with the current settings to the shared renderer, and replaces the preview texture.
-  - **Outcome:** The 3D preview shows what a WindScout would render for that input.
+  - **Outcome:** The 3D preview shows what a Windpeek would render for that input.
   - **Covered by:** R3-R4, R7-R10
 - F3. Change a display setting
   - **Trigger:** A1 changes a setting that affects the forecast screen.
@@ -108,7 +108,7 @@ The configurator is also limited to fixed example data. A prospective owner cann
 ### Acceptance Examples
 
 - AE1. **Covers R1-R5.** Given the same normalized 25-sample forecast, settings, status, and renderer version, when firmware and browser render it, then their 800 × 480 final bitmap bytes are identical.
-- AE2. **Covers R6, R8-R9.** Given a first-time visitor with no attached device or saved spot, when the configurator opens online, then it displays a current Brouwersdam forecast without contacting a WindScout-owned backend.
+- AE2. **Covers R6, R8-R9.** Given a first-time visitor with no attached device or saved spot, when the configurator opens online, then it displays a current Brouwersdam forecast without contacting a Windpeek-owned backend.
 - AE3. **Covers R7-R10.** Given a visitor selects another supported location, when its forecast succeeds, then the values and screen texture change to that location without reloading the page or attaching hardware.
 - AE4. **Covers R1-R5, R10.** Given the same forecast and a changed threshold treatment, when both targets rerender, then the treatment changes identically and their final bitmaps still match byte for byte.
 - AE5. **Covers R4, R10.** Given unchanged forecast data and a display-setting change, when the preview updates, then no new forecast request is required.
@@ -120,7 +120,7 @@ The configurator is also limited to fixed example data. A prospective owner cann
 
 - Every shared golden forecast fixture produces one byte-identical firmware and browser bitmap.
 - The configurator no longer contains an independently maintained forecast drawing implementation.
-- Brouwersdam and a newly selected supported location both display current forecasts in the 3D preview without an attached device or WindScout backend.
+- Brouwersdam and a newly selected supported location both display current forecasts in the 3D preview without an attached device or Windpeek backend.
 - Existing device rendering behavior remains valid on physical hardware after the renderer becomes shared.
 
 ### Scope Boundaries
@@ -135,7 +135,7 @@ The configurator is also limited to fixed example data. A prospective owner cann
 **Outside this work**
 
 - Firmware flashing, Wi-Fi provisioning, OTA delivery, and device installation.
-- Hosting forecast responses or rendered images for installed WindScout devices.
+- Hosting forecast responses or rendered images for installed Windpeek devices.
 - Replacing the current forecast provider strategy.
 
 ### Product Contract preservation
@@ -288,9 +288,9 @@ sequenceDiagram
 - **Goal:** Make the 3D screen texture consume only canonical renderer output.
 - **Requirements:** R1-R5, R10; F3; AE4-AE5.
 - **Dependencies:** U2.
-- **Files:** `web/src/configurator/screenTexture.js`, `web/src/components/WindScoutScene.vue`, `web/src/renderer/sharedRenderer.js`, `web/src/renderer/previewRenderer.js`, `web/src/fixtures/brouwersdam.js`, `web/tests/preview-renderer.test.js`, `web/tests/scene-lifetime.test.js`, `web/tests/e2e/configurator.spec.js`.
+- **Files:** `web/src/configurator/screenTexture.js`, `web/src/components/WindpeekScene.vue`, `web/src/renderer/sharedRenderer.js`, `web/src/renderer/previewRenderer.js`, `web/src/fixtures/brouwersdam.js`, `web/tests/preview-renderer.test.js`, `web/tests/scene-lifetime.test.js`, `web/tests/e2e/configurator.spec.js`.
 - **Approach:** Convert palette bytes to image data for the Three.js texture, rerender from cached forecast input when settings change, and remove the canvas drawing implementation and its implementation-specific tests.
-- **Patterns to follow:** Texture lifetime and update boundary in `web/src/configurator/screenTexture.js`; render-on-demand scene lifecycle in `web/src/components/WindScoutScene.vue`.
+- **Patterns to follow:** Texture lifetime and update boundary in `web/src/configurator/screenTexture.js`; render-on-demand scene lifecycle in `web/src/components/WindpeekScene.vue`.
 - **Test scenarios:**
   1. The initial screen texture comes from WebAssembly output.
   2. Covers AE5. Changing a threshold or treatment rerenders without a forecast request.
@@ -304,11 +304,11 @@ sequenceDiagram
 - **Goal:** Show current Brouwersdam data by default and current data for another supported spot when selected.
 - **Requirements:** R6-R10, R13-R14; F1-F3, F5; AE2-AE3, AE5, AE7-AE8.
 - **Dependencies:** U2-U3.
-- **Files:** `web/src/forecast/openMeteo.js`, `web/src/forecast/normalizeForecast.js`, `web/src/forecast/forecastCache.js`, `web/src/spots.js`, `web/src/stores/configurator.js`, `web/src/components/WindScoutSettings.vue`, `web/src/views/ConfiguratorView.vue`, `web/src/styles/configurator.css`, `web/tests/forecast-client.test.js`, `web/tests/forecast-normalizer.test.js`, `web/tests/forecast-cache.test.js`, `web/tests/configurator-store.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`.
+- **Files:** `web/src/forecast/openMeteo.js`, `web/src/forecast/normalizeForecast.js`, `web/src/forecast/forecastCache.js`, `web/src/spots.js`, `web/src/stores/configurator.js`, `web/src/components/WindpeekSettings.vue`, `web/src/views/ConfiguratorView.vue`, `web/src/styles/configurator.css`, `web/tests/forecast-client.test.js`, `web/tests/forecast-normalizer.test.js`, `web/tests/forecast-cache.test.js`, `web/tests/configurator-store.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`.
 - **Approach:** Start with the three existing firmware spots as the supported set. Fetch the required hourly variables directly in the browser, normalize five fixed local samples for five days, and persist a versioned last-good forecast. Keep warning and demo labels outside the device screen per R13-R14.
-- **Patterns to follow:** Validation rules in `firmware/main/open_meteo_knmi_provider.c`; existing spot coordinates in `firmware/main/wind_spots.c`; compact DialKit inspector in `web/src/components/WindScoutSettings.vue`.
+- **Patterns to follow:** Validation rules in `firmware/main/open_meteo_knmi_provider.c`; existing spot coordinates in `firmware/main/wind_spots.c`; compact DialKit inspector in `web/src/components/WindpeekSettings.vue`.
 - **Test scenarios:**
-  1. Covers AE2. A first online visit renders current Brouwersdam data without an attached device or WindScout backend.
+  1. Covers AE2. A first online visit renders current Brouwersdam data without an attached device or Windpeek backend.
   2. Covers AE3. Selecting Edam or Castricum updates values, coordinates, and texture without a page reload.
   3. Missing hourly arrays, invalid units, incomplete target hours, a timeout, or a non-success response never replaces last-good data.
   4. Covers AE7. A refresh failure after success keeps the previous bitmap and shows a subtle warning outside the screen.

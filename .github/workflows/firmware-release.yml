@@ -1,4 +1,4 @@
-name: WindScout release
+name: Windpeek release
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 concurrency:
   # Pull requests may replace older runs, but a versioned publication must
   # never be cancelled by a main-branch deployment that happens to overlap it.
-  group: windscout-${{ github.event_name == 'pull_request' && github.ref || github.ref_type == 'tag' && github.ref || 'production' }}
+  group: windpeek-${{ github.event_name == 'pull_request' && github.ref || github.ref_type == 'tag' && github.ref || 'production' }}
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
       - name: Upload generated device previews
         uses: actions/upload-artifact@v7
         with:
-          name: windscout-device-previews
+          name: windpeek-device-previews
           path: web/public/devices/previews/*.png
           if-no-files-found: error
 
@@ -77,7 +77,7 @@ jobs:
     name: Verify and build E1002 + E1003 firmware
     runs-on: ubuntu-latest
     env:
-      WINDSCOUT_POSTHOG_PROJECT_TOKEN: ${{ github.event_name != 'pull_request' && vars.WINDSCOUT_POSTHOG_PROJECT_TOKEN || '' }}
+      WINDPEEK_POSTHOG_PROJECT_TOKEN: ${{ github.event_name != 'pull_request' && vars.WINDPEEK_POSTHOG_PROJECT_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -105,8 +105,8 @@ jobs:
       - name: Verify dashboard analytics configuration
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         run: |
-          test -n "$WINDSCOUT_POSTHOG_PROJECT_TOKEN" || {
-            echo "::error::Set the WINDSCOUT_POSTHOG_PROJECT_TOKEN repository variable before releasing firmware."
+          test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" || {
+            echo "::error::Set the WINDPEEK_POSTHOG_PROJECT_TOKEN repository variable before releasing firmware."
             exit 1
           }
 
@@ -123,7 +123,7 @@ jobs:
       - name: Prepare E1001/E1002 release bundles
         run: |
           mkdir -p release
-          cp firmware/build/windscout.bin release/windscout-seeedstudio_reterminal_e1002.bin
+          cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1002.bin
           python3 firmware/scripts/generate_installer_manifest.py \
             --build-dir firmware/build \
             --partitions firmware/partitions.csv \
@@ -148,7 +148,7 @@ jobs:
 
       - name: Prepare E1003 release bundles
         run: |
-          cp firmware/build/windscout.bin release/windscout-seeedstudio_reterminal_e1003.bin
+          cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1003.bin
           python3 firmware/scripts/generate_installer_manifest.py \
             --build-dir firmware/build \
             --partitions firmware/partitions.csv \
@@ -166,14 +166,14 @@ jobs:
       - name: Upload GitHub Release files
         uses: actions/upload-artifact@v7
         with:
-          name: windscout-firmware-release
+          name: windpeek-firmware-release
           path: release/
           if-no-files-found: error
 
       - name: Upload website firmware files
         uses: actions/upload-artifact@v7
         with:
-          name: windscout-site-firmware
+          name: windpeek-site-firmware
           path: site-firmware/
           if-no-files-found: error
 
@@ -196,7 +196,7 @@ jobs:
       - name: Download firmware built by this release
         uses: actions/download-artifact@v7
         with:
-          name: windscout-site-firmware
+          name: windpeek-site-firmware
           path: web/public/firmware
 
       - name: Install web dependencies
@@ -206,7 +206,7 @@ jobs:
       - name: Download device previews rendered by verification
         uses: actions/download-artifact@v7
         with:
-          name: windscout-device-previews
+          name: windpeek-device-previews
           path: web/public/devices/previews
 
       - name: Verify Geoapify configuration
@@ -273,7 +273,7 @@ jobs:
 
   deploy-site:
     name: Deploy website
-    if: vars.WINDSCOUT_PAGES_ENABLED == 'true'
+    if: vars.WINDPEEK_PAGES_ENABLED == 'true'
     needs: build-site
     runs-on: ubuntu-latest
     permissions:
@@ -299,21 +299,21 @@ jobs:
       - name: Download release files
         uses: actions/download-artifact@v7
         with:
-          name: windscout-firmware-release
+          name: windpeek-firmware-release
           path: release
 
       - name: Package board-specific installer archives
         run: |
-          tar --exclude=e1003 -czf "$GITHUB_WORKSPACE/release/windscout-installer-e1002.tar.gz" -C release/installer .
-          tar -czf "$GITHUB_WORKSPACE/release/windscout-installer-e1003.tar.gz" -C release/installer/e1003 .
+          tar --exclude=e1003 -czf "$GITHUB_WORKSPACE/release/windpeek-installer-e1002.tar.gz" -C release/installer .
+          tar -czf "$GITHUB_WORKSPACE/release/windpeek-installer-e1003.tar.gz" -C release/installer/e1003 .
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           draft: false
           files: |
-            release/windscout-seeedstudio_reterminal_e1002.bin
-            release/windscout-seeedstudio_reterminal_e1003.bin
-            release/windscout-installer-e1002.tar.gz
-            release/windscout-installer-e1003.tar.gz
+            release/windpeek-seeedstudio_reterminal_e1002.bin
+            release/windpeek-seeedstudio_reterminal_e1003.bin
+            release/windpeek-installer-e1002.tar.gz
+            release/windpeek-installer-e1003.tar.gz
           generate_release_notes: true

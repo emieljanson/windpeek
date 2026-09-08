@@ -11,7 +11,7 @@
 The dependent control is inserted instantly:
 
 ```vue
-<!-- web/src/components/WindScoutSettings.vue:149 — current -->
+<!-- web/src/components/WindpeekSettings.vue:149 — current -->
 <SettingRow v-if="showThreshold" class="setting-row--compact-control" label="Minimum wind">
   <SettingNumberInput ... />
 </SettingRow>
@@ -45,7 +45,7 @@ Use Vue's built-in `<Transition>`; the app has no motion dependency. Input modal
 
 ## Steps
 
-1. Import `ref` in `WindScoutSettings.vue` and add `const animateMinimumWind = ref(false)`.
+1. Import `ref` in `WindpeekSettings.vue` and add `const animateMinimumWind = ref(false)`.
 2. On the `SettingRow` containing Wind threshold, add `@pointerdown="animateMinimumWind = true"` and `@keydown="animateMinimumWind = false"`. These events bubble from the actual switch.
 3. Wrap the conditional Minimum wind row in `<Transition :name="animateMinimumWind ? 'minimum-wind' : undefined" @after-enter="animateMinimumWind = false">`.
 4. Add the target enter-only CSS to `settings-controls.css`. Define no leave-active rule; removal must be immediate.

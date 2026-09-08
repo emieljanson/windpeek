@@ -1,6 +1,6 @@
-# WindScout firmware
+# Windpeek firmware
 
-WindScout is an 800 x 480 wind forecast dashboard for the Seeed Studio
+Windpeek is an 800 x 480 wind forecast dashboard for the Seeed Studio
 reTerminal E1001 and E1002. It fetches a five-day forecast directly, caches the
 last valid result, renders locally and only refreshes the E-ink panel when the
 final bitmap changed.
@@ -17,7 +17,7 @@ final bitmap changed.
 
 ## Forecast service
 
-WindScout uses Open-Meteo directly for wind, weather, temperature and optional
+Windpeek uses Open-Meteo directly for wind, weather, temperature and optional
 sea-level forecasts. The website installs the spot, timezone and forecast model;
 every firmware build uses the same fixed Open-Meteo endpoints.
 
@@ -38,14 +38,14 @@ E1002, universal E1001/E1002 and E1003 builds run only the firmware step by
 default. Other boards still build the photo-frame webapp and setup screens.
 Use `--step` to request individual build steps explicitly.
 
-The E1002 build contains only the WindScout dashboard, USB installer, Wi-Fi
+The E1002 build contains only the Windpeek dashboard, USB installer, Wi-Fi
 client, forecast cache and battery/deep-sleep runtime. The upstream photo-frame
 UI, albums, captive portal, Home Assistant and photo OTA runtime are excluded.
 See `UPSTREAM.md` for origin and license details.
 
 ## Licensing
 
-The combined WindScout firmware source that includes the UC8179 E1001 driver is
+The combined Windpeek firmware source that includes the UC8179 E1001 driver is
 distributed under GNU GPL v3.0 only. Existing MIT-licensed portions retain their
 MIT notices. See `LICENSING.md` for the exact boundary and third-party assets
 that require separate distribution rights.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HOST="${WINDSCOUT_HOST:-windscout.local}"
-FIRMWARE="${1:-build/windscout.bin}"
+HOST="${WINDPEEK_HOST:-windpeek.local}"
+FIRMWARE="${1:-build/windpeek.bin}"
 BASE_URL="http://${HOST}"
 
 if [[ ! -f "$FIRMWARE" ]]; then
@@ -28,16 +28,16 @@ curl --fail --show-error \
   --data-binary "@${FIRMWARE}" \
   "${BASE_URL}/api/ota/upload"
 echo
-echo "Firmware accepted. Waiting for WindScout to restart..."
+echo "Firmware accepted. Waiting for Windpeek to restart..."
 
 for _ in $(seq 1 60); do
   sleep 2
   if NEW_STATUS="$(curl --fail --silent --connect-timeout 2 "${BASE_URL}/api/ota/status" 2>/dev/null)"; then
     VERSION="$(printf '%s' "$NEW_STATUS" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("current_version", "unknown"))')"
-    echo "WindScout is online with firmware ${VERSION}."
+    echo "Windpeek is online with firmware ${VERSION}."
     exit 0
   fi
 done
 
-echo "Upload succeeded, but WindScout did not return within 120 seconds." >&2
+echo "Upload succeeded, but Windpeek did not return within 120 seconds." >&2
 exit 3

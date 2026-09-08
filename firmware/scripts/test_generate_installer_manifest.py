@@ -18,7 +18,7 @@ class InstallerManifestTest(unittest.TestCase):
             "bootloader/bootloader.bin": b"bootloader",
             "partition_table/partition-table.bin": b"partitions",
             "ota_data_initial.bin": b"ota-data",
-            "windscout.bin": b"windscout-app",
+            "windpeek.bin": b"windpeek-app",
         }
         for name, content in fixtures.items():
             (self.build / name).write_bytes(content)
@@ -30,7 +30,7 @@ class InstallerManifestTest(unittest.TestCase):
                         "0x0": "bootloader/bootloader.bin",
                         "0x8000": "partition_table/partition-table.bin",
                         "0xf000": "ota_data_initial.bin",
-                        "0x20000": "windscout.bin",
+                        "0x20000": "windpeek.bin",
                     },
                     "extra_esptool_args": {"chip": "esp32s3"},
                 }
@@ -160,7 +160,7 @@ class InstallerManifestTest(unittest.TestCase):
         with self.assertRaises(ManifestError):
             validate_manifest(manifest, manifest_path.parent, self.partitions)
 
-        (manifest_path.parent / app["file"]).write_bytes(b"windscout-app")
+        (manifest_path.parent / app["file"]).write_bytes(b"windpeek-app")
         manifest["preservingUpdate"]["parts"][1]["offset"] = 0x9000
         with self.assertRaises(ManifestError):
             validate_manifest(manifest, manifest_path.parent, self.partitions)

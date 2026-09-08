@@ -34,7 +34,7 @@ class BuildStepsTest(unittest.TestCase):
             build.main()
         return calls
 
-    def test_windscout_defaults_do_not_require_photo_frame_tools(self):
+    def test_windpeek_defaults_do_not_require_photo_frame_tools(self):
         for board in (
             "seeedstudio_reterminal_e1002",
             "seeedstudio_reterminal_e100x",

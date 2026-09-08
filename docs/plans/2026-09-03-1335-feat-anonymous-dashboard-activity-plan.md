@@ -14,7 +14,7 @@ deepened: 2026-09-03
 
 ## Goal Capsule
 
-- **Objective:** Give the maintainer a useful weekly estimate of how many WindScout dashboards are still running.
+- **Objective:** Give the maintainer a useful weekly estimate of how many Windpeek dashboards are still running.
 - **Means:** After a successful forecast refresh, each dashboard sends at most one small anonymous heartbeat per week to the existing PostHog project.
 - **Product authority:** This plan covers device activity analytics only. It does not authorize website analytics, installation analytics, location tracking, or a public counter.
 - **Open blockers:** Before release, the shared PostHog project must be confirmed to discard IP addresses. If that conflicts with the existing side project, this integration does not ship until the privacy boundary is revised explicitly.
@@ -25,17 +25,17 @@ deepened: 2026-09-03
 
 ### Summary
 
-WindScout firmware will send one minimal `windscout_dashboard_heartbeat` event after a real forecast update, no more than once every seven days. The event goes directly to the existing PostHog project and powers an internal dashboard showing active units, firmware versions, and device types.
+Windpeek firmware will send one minimal `windpeek_dashboard_heartbeat` event after a real forecast update, no more than once every seven days. The event goes directly to the existing PostHog project and powers an internal dashboard showing active units, firmware versions, and device types.
 
 ### Problem Frame
 
-There is currently no reliable way to know whether two, twenty, or two hundred WindScout dashboards are still operating. Install counts are insufficient: a configured device may be offline, retired, or never successfully updating. A successful forecast refresh is the smallest meaningful signal that the dashboard is alive and doing its job.
+There is currently no reliable way to know whether two, twenty, or two hundred Windpeek dashboards are still operating. Install counts are insufficient: a configured device may be offline, retired, or never successfully updating. A successful forecast refresh is the smallest meaningful signal that the dashboard is alive and doing its job.
 
 ### Actors
 
-- A1. **Dashboard owner:** Uses a WindScout that refreshes normally without any new controls or interruptions.
-- A2. **WindScout dashboard:** Decides locally whether a heartbeat is due and sends the minimal event after a successful refresh.
-- A3. **WindScout maintainer:** Views aggregate activity in the existing PostHog project.
+- A1. **Dashboard owner:** Uses a Windpeek that refreshes normally without any new controls or interruptions.
+- A2. **Windpeek dashboard:** Decides locally whether a heartbeat is due and sends the minimal event after a successful refresh.
+- A3. **Windpeek maintainer:** Views aggregate activity in the existing PostHog project.
 - A4. **PostHog:** Receives personless events and provides aggregate insights.
 
 ### Key Decisions
@@ -43,7 +43,7 @@ There is currently no reliable way to know whether two, twenty, or two hundred W
 - **Measure active dashboards, not installations.** (session-settled: user-directed — a successful online forecast update is the useful proof that a dashboard is running.) Governs R1-R3.
 - **Send weekly, not daily or live.** (session-settled: user-directed — a rough active count is enough and should add minimal traffic.) Governs R2, R8, R9.
 - **Use the existing PostHog project.** (session-settled: user-directed — the free account cannot add another project and a separate backend is unnecessary for this first version.) Governs R4, R10-R12.
-- **Keep the first version internal.** (session-settled: user-directed — a public count might be useful later, but WindScout does not expose one now.) Governs R13.
+- **Keep the first version internal.** (session-settled: user-directed — a public count might be useful later, but Windpeek does not expose one now.) Governs R13.
 - **Add no button or setting.** (session-settled: user-directed — the signal should be automatic and unobtrusive.) Governs R1, R14.
 - **Send only a dashboard ID, firmware version, and device type.** (session-settled: user-directed — location, weather choices, Wi-Fi, and configuration data are unnecessary.) Governs R5-R7.
 
@@ -71,7 +71,7 @@ There is currently no reliable way to know whether two, twenty, or two hundred W
 **Operations and product boundary**
 
 - R11. Official release firmware shall receive the public PostHog project token from the build environment; local and pull-request builds may compile with analytics disabled.
-- R12. The shared PostHog project shall discard source IP addresses before enabled firmware is released, and the WindScout event shall not create a PostHog person profile.
+- R12. The shared PostHog project shall discard source IP addresses before enabled firmware is released, and the Windpeek event shall not create a PostHog person profile.
 - R13. PostHog shall contain an internal saved insight for unique active dashboards over the last nine days, plus breakdowns by firmware version and device type. Nine days gives a weekly heartbeat room for offline days and timing drift.
 - R14. This work shall add no dashboard UI, public counter, consent control, web autocapture, session replay, or broader analytics SDK.
 - R15. Public documentation shall plainly disclose the weekly anonymous activity signal and the exact fields sent, without adding an in-product control.
@@ -114,13 +114,13 @@ There is currently no reliable way to know whether two, twenty, or two hundred W
 - AE7. **Covers R8-R9.** Given the clock is invalid, moves backwards, or stored timestamps are corrupt, then the module fails closed without repeated requests and normal refresh behavior continues.
 - AE8. **Covers R8, R11.** Given a build has no PostHog project token, then analytics is compiled as a no-op and no endpoint, ID, or payload is logged.
 - AE9. **Covers R12-R13.** Given two dashboard IDs report during the nine-day window, one of them more than once due to a delivery ambiguity, then the saved insight reports two unique active dashboards and can break them down by firmware and device type.
-- AE10. **Covers R13-R15.** Given a visitor uses WindScout or the website, then no public counter, control, pageview, replay, or other analytics behavior appears; the repository documentation does describe the heartbeat.
+- AE10. **Covers R13-R15.** Given a visitor uses Windpeek or the website, then no public counter, control, pageview, replay, or other analytics behavior appears; the repository documentation does describe the heartbeat.
 
 ### Success Criteria
 
 - The internal PostHog insight answers “how many dashboards were active recently?” with a unique-device count over nine days.
 - A normal dashboard attempts about one event per week; repeated refreshes are suppressed and delivery ambiguity does not inflate the unique-dashboard insight.
-- Captured WindScout events contain only the approved allowlist and create no person profiles.
+- Captured Windpeek events contain only the approved allowlist and create no person profiles.
 - PostHog outages and missing analytics configuration cause no user-visible change and no refresh or sleep regression.
 - Both supported release board builds pass automated tests and a physical-device smoke test.
 
@@ -145,8 +145,8 @@ There is currently no reliable way to know whether two, twenty, or two hundred W
 
 - `firmware/main/wind_app.c:122-140` marks `published_forecast` only after fetch, validation, coverage checking, and cache storage succeed.
 - `firmware/main/wind_app.c:810-839` is the one refresh-cycle seam that sees every spot outcome and can aggregate to one heartbeat.
-- `firmware/main/windscout_main.c:115-130` shows that refreshes already run while connected and that analytics must not add a wake.
-- `firmware/main/CMakeLists.txt:47-78` defines the current WindScout firmware sources and already links the HTTP/TLS/NVS dependencies used elsewhere.
+- `firmware/main/windpeek_main.c:115-130` shows that refreshes already run while connected and that analytics must not add a wake.
+- `firmware/main/CMakeLists.txt:47-78` defines the current Windpeek firmware sources and already links the HTTP/TLS/NVS dependencies used elsewhere.
 - `firmware/CMakeLists.txt:19-31` establishes the existing build-time firmware version pattern.
 - `.github/workflows/firmware-release.yml` builds both supported board families and is the release configuration seam.
 - `docs/plans/2026-08-29-0649-feat-installer-sentry-diagnostics-plan.md` explicitly excludes general analytics from Sentry.
@@ -168,9 +168,9 @@ Product Contract unchanged.
 - KTD3. **Use a separate NVS namespace and random 128-bit ID.** Store a lowercase 32-hex-character value generated from ESP's random source plus `last_success_unix` and `last_attempt_unix` in namespace `wind_analytics`. Never read the MAC address, installed configuration, or spot identity. Write a newly generated ID before first transmission. A weekly rotating ID was rejected because one device could then count twice inside the nine-day active window; factory-reset rotation provides the intended lifecycle boundary. This implements R5-R7 and R10.
 - KTD4. **Use a seven-day success gate plus a 24-hour failure cooldown.** Send only when time is valid, `now >= last_success`, at least 604800 seconds passed since success, `now >= last_attempt`, and at least 86400 seconds passed since an unsuccessful attempt. Missing success is due; corrupt/future timestamps fail closed for that boot and produce no request. Store attempt before HTTPS and success only after an accepted response. This implements R2, R8-R10 and AE7.
 - KTD5. **Post one explicit allowlisted event without an SDK.** Use `esp_http_client` and the ESP certificate bundle to POST JSON to the fixed US endpoint `https://us.i.posthog.com/i/v0/e/`. The body shall be built from constants and trusted build/state values only: `api_key`, `event`, `distinct_id`, and properties `$process_person_profile: false`, `firmware_version`, and `device_type`. Do not serialize a general application object. Treat only 2xx as transport acceptance, cap the body, disable redirects, and use a five-second total timeout. A direct client was chosen over a new backend because the metric is internal and approximate; the public token means this design is unsuitable for a trusted public counter. This implements R4-R6, R8 and R12.
-- KTD6. **Compile analytics off unless the public token exists.** Read `WINDSCOUT_POSTHOG_PROJECT_TOKEN` from the CMake process environment and escape it into a private compile definition only when non-empty; otherwise expose one disabled code path. Keep the US host as a source constant and do not pass the token as a printed command-line argument: `build.py` currently prints CMake arguments. The token is public by design but must not appear in build or device logs. This implements R8 and R11.
+- KTD6. **Compile analytics off unless the public token exists.** Read `WINDPEEK_POSTHOG_PROJECT_TOKEN` from the CMake process environment and escape it into a private compile definition only when non-empty; otherwise expose one disabled code path. Keep the US host as a source constant and do not pass the token as a printed command-line argument: `build.py` currently prints CMake arguments. The token is public by design but must not appear in build or device logs. This implements R8 and R11.
 - KTD7. **Enable only official distributable builds.** Expose the GitHub repository variable as a step environment value for both E1002 and E1003 builds. Pull-request builds leave it empty because untrusted PR workflows should not emit production events; main and tag publication must fail before packaging when the variable is absent. This implements R11 and prevents accidentally shipping unconfigured or logged telemetry.
-- KTD8. **Treat the PostHog setup as part of release correctness.** Before enabling the build variables, verify the shared project is configured to discard IP addresses, create a saved insight counting unique `distinct_id` values for `windscout_dashboard_heartbeat` over nine days, and add firmware/device-type breakdowns. Do not call `identify`, create person properties, or enable another PostHog product. This implements R12-R14.
+- KTD8. **Treat the PostHog setup as part of release correctness.** Before enabling the build variables, verify the shared project is configured to discard IP addresses, create a saved insight counting unique `distinct_id` values for `windpeek_dashboard_heartbeat` over nine days, and add firmware/device-type breakdowns. Do not call `identify`, create person properties, or enable another PostHog product. This implements R12-R14.
 - KTD9. **Document the signal without adding product UI.** Add a short README privacy note naming the weekly trigger, random persistent ID, two build properties, PostHog destination, and factory-reset behavior; add maintainer setup and verification steps to `docs/release.md`. This implements R15 while preserving the no-control decision.
 
 ### High-Level Technical Design
@@ -242,7 +242,7 @@ stateDiagram-v2
 - **Purpose:** Make official firmware consistently configured and make the aggregate useful and transparent.
 - **Files:** Modify `.github/workflows/firmware-release.yml`, `docs/release.md`, and `README.md`.
 - **Contracts:** Supply the repository variable as a non-printed environment value to both board builds; fail main/tag packaging when it is missing; keep PR builds disabled; document the shared-project IP gate and exact PostHog insight; disclose the exact fields and lifecycle publicly.
-- **Error semantics:** A release configuration error blocks distributable packaging with a clear setup message. A conflict with the side project's IP policy blocks enablement rather than silently weakening the WindScout boundary.
+- **Error semantics:** A release configuration error blocks distributable packaging with a clear setup message. A conflict with the side project's IP policy blocks enablement rather than silently weakening the Windpeek boundary.
 - **Test scenarios:** PR build with no token; main/tag preflight with a missing variable; both board processes receive the same token without printing it; manual project-setting check; event appears in the saved insight and breaks down correctly.
 - **Traceability:** R11-R15; F4; AE8-AE10; KTD7-KTD9.
 - **Depends on:** U2-U3.
@@ -283,7 +283,7 @@ stateDiagram-v2
 
 - Confirm **Settings → Project → General → IP data capture** is set to discard before enabling official builds.
 - Confirm the test event has no person profile and only the allowlisted properties.
-- Confirm the saved “Active WindScout dashboards” insight counts unique IDs over the last nine days and the two breakdowns work.
+- Confirm the saved “Active Windpeek dashboards” insight counts unique IDs over the last nine days and the two breakdowns work.
 - Send the same dashboard ID twice in a test window and confirm the unique insight remains one while raw events show two.
 - Confirm the project's event allowance and spike protection are suitable; label the insight as approximate because a public client token can be imitated.
 

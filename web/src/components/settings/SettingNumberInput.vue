@@ -15,7 +15,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const row = inject('windscout-setting-row', null)
+const row = inject('windpeek-setting-row', null)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const draft = ref(String(props.modelValue))
 const invalid = ref(false)

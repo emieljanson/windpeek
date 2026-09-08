@@ -1,6 +1,6 @@
-# WindScout
+# Windpeek
 
-This is the WindScout monorepo. The production configurator, browser installer,
+This is the Windpeek monorepo. The production configurator, browser installer,
 device firmware, shared renderer, tests, and release workflow all live here.
 The former `windscout-site` repository is legacy and is not a build or release
 dependency.
@@ -34,7 +34,7 @@ Starting the web configurator with `npm run dev` prepares this local installer
 bundle automatically when a firmware build is available. You can also run it
 explicitly with `npm run installer:prepare` from `web/`.
 
-WindScout turns a Seeed Studio reTerminal E1002 into a quiet, battery-efficient
+Windpeek turns a Seeed Studio reTerminal E1002 into a quiet, battery-efficient
 wind forecast dashboard. The device downloads forecast data itself and renders
 the complete interface locally; no map service or rendering backend is
 required. The browser configurator compiles that same renderer to WebAssembly.
@@ -125,5 +125,5 @@ Reconnect the device over USB-C and open the browser installer. It chooses a
 configuration-only update, a preserving firmware update, or repair based on the
 connected device and release. Preserving updates retain Wi-Fi and user storage.
 
-The WindScout runtime excludes the upstream photo-frame HTTP and OTA services;
+The Windpeek runtime excludes the upstream photo-frame HTTP and OTA services;
 the retained OTA upload script applies to legacy photo-frame builds.

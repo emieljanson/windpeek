@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isConfiguratorLocation } from '../src/routes'
 
-describe('Windscout entry route', () => {
+describe('Windpeek entry route', () => {
   it('shows the landing page at the root', () => {
     expect(isConfiguratorLocation({ search: '' })).toBe(false)
   })

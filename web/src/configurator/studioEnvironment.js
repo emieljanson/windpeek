@@ -15,7 +15,7 @@ function createReflectionCard(name, color, width, height, position) {
 
 export function createProductStudioScene(palette = {}) {
   const studio = new THREE.Scene()
-  studio.name = 'WINDSCOUT_REFLECTION_STUDIO'
+  studio.name = 'WINDPEEK_REFLECTION_STUDIO'
   studio.background = new THREE.Color(palette.background ?? 0xc0c7cf)
 
   studio.add(

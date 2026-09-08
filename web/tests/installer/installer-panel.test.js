@@ -163,7 +163,7 @@ describe('installer inspector panel', () => {
     expect(wrapper.text()).toContain('Confirm your reTerminal')
     expect(wrapper.text()).toContain('reTerminal E1002')
     expect(wrapper.text()).toContain('replace its software and saved setup')
-    expect(wrapper.get('.installer-primary').text()).toBe('Install Windscout')
+    expect(wrapper.get('.installer-primary').text()).toBe('Install Windpeek')
     expect(wrapper.find('.installer-secondary').exists()).toBe(false)
     expect(wrapper.find('.installer-device').exists()).toBe(false)
     await wrapper.get('.installer-primary').trigger('click')
@@ -276,8 +276,8 @@ describe('installer inspector panel', () => {
 
   it.each([
     ['error', 'USB access failed.'],
-    ['reconnect', 'Windscout disconnected.'],
-    ['wifi', 'Windscout could not connect.'],
+    ['reconnect', 'Windpeek disconnected.'],
+    ['wifi', 'Windpeek could not connect.'],
   ])('shows diagnostic delivery beside a %s recovery state', async (phase, message) => {
     const session = fakeSession({
       phase,

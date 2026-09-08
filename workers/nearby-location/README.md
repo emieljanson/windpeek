@@ -1,7 +1,7 @@
-# Windscout nearby-location Worker
+# Windpeek nearby-location Worker
 
 This small Cloudflare Worker turns Cloudflare's approximate request location
-into the latitude and longitude Windscout uses to choose its nearest bundled
+into the latitude and longitude Windpeek uses to choose its nearest bundled
 spot. It does not use browser GPS, store coordinates, or log location data.
 
 ## Deploy
@@ -24,4 +24,4 @@ build, set `VITE_NEARBY_LOCATION_URL` to the Wrangler development URL before
 starting Vite.
 
 The browser acceptance suite uses its own intercepted
-`/__windscout-location` endpoint and never calls the deployed Worker.
+`/__windpeek-location` endpoint and never calls the deployed Worker.

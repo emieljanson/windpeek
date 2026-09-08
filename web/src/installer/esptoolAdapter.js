@@ -61,7 +61,7 @@ export function createEsptoolAdapter({
           transport: identity.transport,
         }
       } catch (error) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This USB device is not a compatible Windscout.', { cause: error })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This USB device is not a compatible Windpeek.', { cause: error })
       }
     },
     async flash({ loader, transport, bundle, onProgress = () => {} }) {

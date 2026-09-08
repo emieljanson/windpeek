@@ -95,7 +95,7 @@ static const struct {
     {"canada_hrdps", "cmc_gem_hrdps", "ENVIRONMENT CANADA HRDPS"},
     {"jma_msm", "jma_msm", "JMA MSM"},
     {"kma_ldps", "kma_ldps", "KMA LDPS"},
-    /* Keep accepting configurations installed by older WindScout versions. */
+    /* Keep accepting configurations installed by older Windpeek versions. */
     {"knmi_seamless", "knmi_seamless", "KNMI SEAMLESS"},
     {"ecmwf_ifs025", "ecmwf_ifs025", "ECMWF IFS"},
     {"gfs_seamless", "gfs_seamless", "NOAA GFS"},

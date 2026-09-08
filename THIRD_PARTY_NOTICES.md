@@ -1,8 +1,8 @@
 # Third-party notices
 
-The root [`LICENSE`](LICENSE) applies to source code created for Windscout.
+The root [`LICENSE`](LICENSE) applies to source code created for Windpeek.
 Third-party components and assets retain their own terms and are not relicensed
-by the Windscout GPL notice.
+by the Windpeek GPL notice.
 
 ## Firmware sources
 

@@ -53,11 +53,11 @@ describe('landing hero nearby default', () => {
     )
     await vi.waitFor(() => expect(projectiveScreen.setFrame).toHaveBeenCalledWith(frame))
     const photo = wrapper.get('picture source')
-    expect(wrapper.get('picture img').attributes('src')).toContain('windscout-hero-yellow-v17-1672w.jpg')
-    expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-960w.webp 960w')
-    expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-1672w.webp 1672w')
-    expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-2508w.webp 2508w')
-    expect(photo.attributes('srcset')).toContain('windscout-hero-yellow-v17-2x.webp 3344w')
+    expect(wrapper.get('picture img').attributes('src')).toContain('windpeek-hero-yellow-v17-1672w.jpg')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-960w.webp 960w')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-1672w.webp 1672w')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-2508w.webp 2508w')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-2x.webp 3344w')
     // Account for the calibrated 1.2x photo zoom, not just the visible crop.
     expect(photo.attributes('sizes')).toBe('(max-width: 666px) calc(120vw - 28.8px), 770.4px')
     expect(projectiveScreen.draw).toHaveBeenCalledWith(
