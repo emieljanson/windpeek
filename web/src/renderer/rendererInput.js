@@ -107,4 +107,3 @@ export function createRendererInput(forecast, config) {
     })),
   }
 }
-

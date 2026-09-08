@@ -5,9 +5,9 @@ import {
 } from '../renderer/sharedRenderer'
 import { RENDERER_DISPLAYS } from '../renderer/contract'
 import { createRendererInput } from '../renderer/rendererInput'
+import { BOARD_IDS } from '../config/configuration'
 
 export { createRendererInput } from '../renderer/rendererInput'
-import { BOARD_IDS } from '../config/configuration'
 
 const BOARD_RENDERER_DISPLAYS = Object.freeze({
   [BOARD_IDS.E1001]: RENDERER_DISPLAYS.E1001_GRAY4,
