@@ -35,3 +35,18 @@ export const PRODUCT_LIGHTING = Object.freeze({
     backdrop: 0xd2d7dc,
   }),
 })
+
+// A lit product in a dark studio: the display remains a reflective material.
+export const DARK_PRODUCT_LIGHTING = {
+  ...PRODUCT_LIGHTING,
+  background: 0x101012,
+  hemisphere: { sky: 0xb9b9bb, ground: 0x28282a, intensity: 0.035 },
+  key: { ...PRODUCT_LIGHTING.key, color: 0xffffff, intensity: 0.2058, position: [0, 0.16, 0.16], target: [0, 0.025, 0], angle: 0.55, penumbra: 1 },
+  softbox: { ...PRODUCT_LIGHTING.softbox, color: 0xffffff, intensity: 0.4, width: 0.20, height: 0.18, position: [0, 0.25, 0.35] },
+  accent: { ...PRODUCT_LIGHTING.accent, color: 0xfafafc, intensity: 2.8, width: 0.10, height: 0.12, position: [0, 0.14, -0.16] },
+  rim: { ...PRODUCT_LIGHTING.rim, color: 0xe7e7e9, intensity: 0.22, position: [0.34, 0.10, -0.06] },
+  environment: {
+    background: 0x0c0c0e, key: 0x555557, top: 0x49494b,
+    rim: 0x727274, rimWidth: 0.18, backdrop: 0x0c0c0e, floor: 0x151517,
+  },
+}

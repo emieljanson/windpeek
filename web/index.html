@@ -11,8 +11,8 @@
         || routeParams.has('installerDemo')
       const colorScheme = matchMedia('(prefers-color-scheme: dark)')
       const applyPageSurface = ({ matches: dark }) => {
-        const studioBackground = '#f3f5f7'
-        const landingBackground = dark ? '#101210' : '#ffffff'
+        const studioBackground = dark && !routeParams.has('devicePreview') ? '#101012' : '#f3f5f7'
+        const landingBackground = dark ? '#111113' : '#ffffff'
         const pageBackground = isConfigurator ? studioBackground : landingBackground
         document.documentElement.style.setProperty('--studio-background', studioBackground)
         document.documentElement.style.setProperty('--landing-page-background', landingBackground)

@@ -220,7 +220,7 @@ test('sizes the 3D canvas sharply while the CAD model is still loading', async (
   const canvas = page.locator('canvas')
   await expect(canvas).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-scene-status', 'loading')
-  await expect(page.locator('.scene-status')).toHaveCSS('color', 'rgb(80, 90, 86)')
+  await expect(page.locator('.scene-status')).toHaveCSS('color', 'rgb(170, 170, 172)')
 
   const dimensions = await canvas.evaluate((element) => ({
     width: element.width,

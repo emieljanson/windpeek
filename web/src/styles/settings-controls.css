@@ -562,22 +562,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --settings-control-surface: #303431;
-    --settings-control-surface-hover: #393e3a;
-    --settings-control-ink: #f2f4f0;
-    --settings-control-muted: #a2aaa4;
+    --settings-control-surface: #323234;
+    --settings-control-surface-hover: #3c3c3e;
+    --settings-control-ink: #f2f2f4;
+    --settings-control-muted: #a6a6a8;
     --settings-control-danger: #ff8a73;
     --settings-focus: #ffffff;
-    --settings-popup-surface: #292d2a;
-    --settings-divider: rgba(242, 244, 240, 0.1);
-    --settings-strong-surface: #454b46;
-    --settings-pill-ink: rgba(242, 244, 240, 0.66);
-    --settings-pill-surface: rgba(242, 244, 240, 0.09);
-    --settings-pill-hover: rgba(242, 244, 240, 0.15);
-    --settings-pill-active-ink: #171a18;
-    --settings-pill-active: #f1f3ef;
-    --settings-pill-disabled-ink: rgba(242, 244, 240, 0.34);
-    --settings-pill-disabled: rgba(242, 244, 240, 0.05);
+    --settings-popup-surface: #2b2b2d;
+    --settings-divider: rgba(242, 242, 244, 0.1);
+    --settings-strong-surface: #48484a;
+    --settings-pill-ink: rgba(242, 242, 244, 0.66);
+    --settings-pill-surface: rgba(242, 242, 244, 0.09);
+    --settings-pill-hover: rgba(242, 242, 244, 0.15);
+    --settings-pill-active-ink: #18181a;
+    --settings-pill-active: #f1f1f3;
+    --settings-pill-disabled-ink: rgba(242, 242, 244, 0.34);
+    --settings-pill-disabled: rgba(242, 242, 244, 0.05);
   }
 }
 
