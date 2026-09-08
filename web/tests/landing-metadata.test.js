@@ -80,15 +80,15 @@ describe('landing share metadata', () => {
     })
     expect(applySurface('', true)).toEqual({
       page: '#101210',
-      studio: '#181b19',
+      studio: '#f3f5f7',
       landing: '#101210',
       theme: '#101210',
     })
     expect(applySurface('?configure', true)).toEqual({
-      page: '#181b19',
-      studio: '#181b19',
+      page: '#f3f5f7',
+      studio: '#f3f5f7',
       landing: '#101210',
-      theme: '#181b19',
+      theme: '#f3f5f7',
     })
 
     let applySchemeChange
@@ -101,7 +101,7 @@ describe('landing share metadata', () => {
     applySchemeChange({ matches: true })
     expect(currentSurface()).toEqual({
       page: '#101210',
-      studio: '#181b19',
+      studio: '#f3f5f7',
       landing: '#101210',
       theme: '#101210',
     })
@@ -117,10 +117,10 @@ describe('landing share metadata', () => {
     })
     applyStudioSchemeChange({ matches: true })
     expect(currentSurface()).toEqual({
-      page: '#181b19',
-      studio: '#181b19',
+      page: '#f3f5f7',
+      studio: '#f3f5f7',
       landing: '#101210',
-      theme: '#181b19',
+      theme: '#f3f5f7',
     })
   })
 })

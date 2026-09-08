@@ -327,7 +327,6 @@
 
 @media (prefers-color-scheme: dark) {
   .configurator-page {
-    --studio-background-rgb: 24 27 25;
     --config-copy: #c1c8c2;
     --config-status-surface: rgba(255, 255, 255, 0.06);
     --config-status-label: #4b534d;
