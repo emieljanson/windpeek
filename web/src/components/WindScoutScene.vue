@@ -927,7 +927,7 @@ onBeforeUnmount(() => {
 .scene-status {
   position: absolute;
   inset: 50% auto auto 50%;
-  color: var(--muted);
+  color: var(--studio-status);
   font: 500 0.7rem/1 'JetBrains Mono Variable', monospace;
   letter-spacing: 0.06em;
   text-transform: uppercase;

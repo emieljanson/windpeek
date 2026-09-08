@@ -206,6 +206,7 @@ test('loads the local CAD model into the constrained 3D scene', async ({ page })
 
 test('sizes the 3D canvas sharply while the CAD model is still loading', async ({ page }) => {
   await mockForecastApi(page)
+  await page.emulateMedia({ colorScheme: 'dark' })
   await page.setViewportSize({ width: 1200, height: 900 })
 
   let releaseModel
@@ -219,6 +220,7 @@ test('sizes the 3D canvas sharply while the CAD model is still loading', async (
   const canvas = page.locator('canvas')
   await expect(canvas).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-scene-status', 'loading')
+  await expect(page.locator('.scene-status')).toHaveCSS('color', 'rgb(80, 90, 86)')
 
   const dimensions = await canvas.evaluate((element) => ({
     width: element.width,
