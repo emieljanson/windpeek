@@ -24,11 +24,17 @@ function storeWith(browser, storage = null) {
 }
 
 describe('site entry and share URLs', () => {
-  it('uses hostname in production and a local preview flag', () => {
+  it('supports the swell link in production and preserves it when configuring', () => {
     expect(siteVariant(new URL('https://swellpeek.com/')).id).toBe('swell')
-    expect(siteVariant(new URL('https://windpeek.com/?site=swell')).id).toBe('wind')
+    expect(siteVariant(new URL('https://windpeek.com/?site=swell')).id).toBe('swell')
+    expect(siteVariant(new URL('https://windpeek.com/')).id).toBe('wind')
+    expect(siteVariant(new URL('https://windpeek.com/?site=unknown')).id).toBe('wind')
     expect(siteVariant(new URL('http://localhost:4174/?site=swell')).id).toBe('swell')
     expect(configuratorLink(new URL('http://127.0.0.1:4174/?site=swell'))).toContain('site=swell')
+    const landing = new URL('https://windpeek.com/?site=swell')
+    const configure = new URL(configuratorLink(landing), landing)
+    expect(configure.searchParams.get('site')).toBe('swell')
+    expect(storeWith(browserAt(configure.href)).swellSize).toBe('large')
   })
   it('starts each configurator with the same layout as its landing', () => {
     for (const site of ['wind', 'swell']) {
@@ -37,6 +43,25 @@ describe('site entry and share URLs', () => {
       expect(store.$state).toMatchObject(siteDisplayDefaults(siteVariant(browser.location)))
       expect(store.swellFocus).toBe(site === 'swell')
       expect(browser.location.searchParams.get('cfg')).toBe('1')
+    }
+  })
+  it('allows either variant on every host and keeps shared settings intact', () => {
+    for (const host of ['windpeek.com', 'www.windpeek.com', 'swellpeek.com', 'preview.example.org', 'localhost']) {
+      for (const site of ['wind', 'swell']) {
+        const landing = new URL(`https://${host}/?site=${site}`)
+        expect(siteVariant(landing).id).toBe(site)
+        const browser = browserAt(new URL(configuratorLink(landing), landing).href)
+        const source = storeWith(browser)
+        expect(source.$state).toMatchObject(siteDisplayDefaults(siteVariant(landing)))
+        source.$patch({ windSize: 'small', swellSize: 'large', showTemperature: false })
+        const shared = configurationUrl(source, browser.location.href)
+        expect(shared.searchParams.get('site')).toBe(site)
+        const restored = storeWith(browserAt(shared.href))
+        expect(restored.$state).toMatchObject({ windSize: 'small', swellSize: 'large', showTemperature: false })
+        shared.hostname = host === 'windpeek.com' ? 'swellpeek.com' : 'windpeek.com'
+        const transferred = storeWith(browserAt(shared.href))
+        expect(configurationUrl(transferred, shared.href).search).toBe(shared.search)
+      }
     }
   })
   it('round-trips all display choices, independent models, device and order', () => {
