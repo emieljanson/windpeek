@@ -73,7 +73,8 @@ export async function fetchOpenMeteoSwell(spot, options = {}) {
   for (const forecast of [...forecasts].reverse()) {
     for (const sample of forecast.hourly) {
       const key = `${sample.localDate}T${sample.time}`
-      if (!samples.has(key) || completeSwellSample(sample)) samples.set(key, sample)
+      if (!samples.has(key) || completeSwellSample(sample) ||
+          (samples.get(key).heightCm < 0 && sample.heightCm >= 0)) samples.set(key, sample)
     }
   }
   const hourly = [...samples.values()].sort((a, b) => `${a.localDate}${a.time}`.localeCompare(`${b.localDate}${b.time}`))

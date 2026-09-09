@@ -184,3 +184,70 @@ it('fills EWAM with global DWD swell while retaining one trace and the selected 
   expect(result.samples[24].heightCm).toBe(124)
   expect(result.samples.every(sample=>sample.secondaryHeightCm === -1)).toBe(true)
 })
+
+it('retains the last usable swell when a refresh has no coverage', async () => {
+  setActivePinia(createPinia())
+  const store = useConfiguratorStore()
+  const previous = normalizeSwell(response(), spot)
+  await store.refreshSwell({ fetcher: async () => previous })
+  await store.refreshSwell({ fetcher: async () => ({ ...previous, available: false, hourly: [], samples: [] }) })
+  expect(store.swell).toEqual(previous)
+  expect(store.swellStatus).toBe('failed')
+})
+
+it('keeps a measured height when both models lack a complete sample', async () => {
+  const result = await fetchOpenMeteoSwell(spot, { fetchImpl: async url => {
+    const r = response()
+    r.hourly.swell_wave_period.fill(null)
+    if (new URL(url).searchParams.get('models') !== 'best_match') r.hourly.swell_wave_height.fill(null)
+    return { ok: true, json: async () => r }
+  } })
+  expect(result.samples[0].heightCm).toBe(124)
+  expect(result.samples[0].periodTenths).toBe(-1)
+})
+
+it.each(['best_match', 'meteofrance_wave', 'ncep_gfswave025', 'dwd_ewam'])('does not invent waves when every source is empty: %s', async model => {
+  const result = await fetchOpenMeteoSwell(spot, { model, fetchImpl: async () => {
+    const r = response()
+    for (const field of ['swell_wave_height', 'swell_wave_period', 'swell_wave_direction']) r.hourly[field].fill(null)
+    return { ok: true, json: async () => r }
+  } })
+  expect(result.available).toBe(false)
+  expect(result.samples.every(sample => sample.heightCm === -1 && sample.periodTenths === -1)).toBe(true)
+})
+
+it.each(['http', 'units', 'timeout'])('uses the fallback after a preferred-source %s failure', async failure => {
+  const result = await fetchOpenMeteoSwell(spot, { timeoutMs: 5, fetchImpl: async (url, { signal }) => {
+    if (new URL(url).searchParams.get('models') === 'best_match') {
+      if (failure === 'http') return { ok: false, status: 503 }
+      if (failure === 'timeout') return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new Error('timeout'))))
+      const r = response(); r.hourly_units.swell_wave_height = 'ft'
+      return { ok: true, json: async () => r }
+    }
+    return { ok: true, json: async () => response() }
+  } })
+  expect(result.available).toBe(true)
+  expect(result.samples.every(sample => sample.heightCm === 124)).toBe(true)
+})
+
+it('discards a response from the previous wave model', async () => {
+  setActivePinia(createPinia())
+  const store = useConfiguratorStore()
+  let resolve
+  const pending = store.refreshSwell({ fetcher: () => new Promise(r => { resolve = r }) })
+  store.setSwellModel('meteofrance_wave')
+  resolve(normalizeSwell(response(), spot))
+  expect(await pending).toBe(false)
+  expect(store.swell).toBeNull()
+})
+
+it('discards a response from the previous spot', async () => {
+  setActivePinia(createPinia())
+  const store = useConfiguratorStore()
+  let resolve
+  const pending = store.refreshSwell({ fetcher: () => new Promise(r => { resolve = r }) })
+  store.selectedSpotId = 'different-spot'
+  resolve(normalizeSwell(response(), spot))
+  expect(await pending).toBe(false)
+  expect(store.swell).toBeNull()
+})
