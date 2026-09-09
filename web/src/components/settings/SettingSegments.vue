@@ -9,7 +9,7 @@ const row = inject('windpeek-setting-row', null)
 
 <template>
   <RadioGroupRoot :id="row?.controlId" class="setting-segments" :name="name"
-    :model-value="modelValue" :aria-labelledby="row?.labelId"
+    :model-value="modelValue" :disabled="row?.disabled?.value" :aria-labelledby="row?.labelId"
     :aria-describedby="row?.describedBy?.value" orientation="horizontal"
     @update:model-value="emit('update:modelValue', $event)">
     <RadioGroupItem v-for="option in options" :key="option.value" :value="option.value"

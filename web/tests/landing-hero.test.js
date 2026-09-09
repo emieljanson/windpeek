@@ -50,6 +50,10 @@ describe('landing hero nearby default', () => {
       expect.anything(),
     ))
     expect(wrapper.get('.hero-link').attributes('href')).toContain('site=swell')
+    store.swellStatus = 'failed'
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ refreshFailed: true }), expect.anything(),
+    ))
     wrapper.unmount()
     window.history.replaceState({}, '', '/')
   })

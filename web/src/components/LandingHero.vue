@@ -43,7 +43,7 @@ let unmounted = false
 
 function drawForecast(forecast) {
   if (!renderer || !projectiveScreen || !forecast) return
-  const input = createRendererInput(forecast, landingDisplayConfiguration(store.tide, variant, store.swell))
+  const input = createRendererInput(forecast, landingDisplayConfiguration(store.tide, variant, store.swell, store.swellStatus))
   const frame = renderer.renderPreviewForDisplay(input, RENDERER_DISPLAYS.E1002_SPECTRA6)
   projectiveScreen.setFrame(frame)
   projectiveScreen.draw(SCREEN_CORNERS, SCREEN_FINISH)
@@ -51,7 +51,7 @@ function drawForecast(forecast) {
 }
 
 watch(
-  [() => store.forecastRevision, () => store.tide, () => store.swell],
+  [() => store.forecastRevision, () => store.tide, () => store.swell, () => store.swellStatus],
   () => drawForecast(store.forecast),
 )
 

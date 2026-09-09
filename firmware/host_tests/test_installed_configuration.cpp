@@ -151,6 +151,7 @@ TEST(InstalledConfigurationTest, MigratesV4AndPreservesWifiAndTimezone) {
     EXPECT_STREQ(restored.display.swell_model, "best_match");
     char ssid[33], password[65];
     ASSERT_EQ(installed_configuration_load_credentials(ssid, sizeof(ssid), password, sizeof(password)), ESP_OK);
+    EXPECT_STREQ(ssid, "home");
     EXPECT_STREQ(password, "secret");
 }
 

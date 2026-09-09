@@ -1,3 +1,4 @@
+import { MIN_THRESHOLD, MAX_THRESHOLD } from '../renderer/contract'
 import { BOARD_IDS, TIME_FORMATS, TEMPERATURE_UNITS } from './configuration'
 import { validModuleOrder } from './modules'
 import { forecastModelsForSpot } from '../forecast/models'
@@ -51,6 +52,7 @@ export function readConfigurationUrl(search, spots) {
     if (!SWELL_MODELS.some(candidate => candidate.value === params.get('wave-model'))) return null
     const order = params.get('order')?.split(',')
     if (!validModuleOrder(order) || !/^\d{1,2}$/.test(params.get('minimum') ?? '')) return null
+    if (Number(params.get('minimum')) < MIN_THRESHOLD || Number(params.get('minimum')) > MAX_THRESHOLD) return null
     if (!TIME_FORMATS.includes(params.get('time')) || !TEMPERATURE_UNITS.includes(params.get('unit'))) return null
     const patch = {
       selectedSpotId: spot.id, hasUserSpotIntent: true,

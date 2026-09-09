@@ -129,7 +129,7 @@ esp_err_t wind_swell_cache_store(const char *path, const wind_swell_t *tide)
 esp_err_t wind_swell_cache_load(const char *path, const wind_swell_cache_identity_t *identity,
                                wind_swell_t *out_tide)
 {
-    if (!path || !identity || !identity->spot_id || !identity->timezone || !out_tide) {
+    if (!path || !identity || !identity->spot_id || !identity->timezone || !identity->model || !out_tide) {
         return ESP_ERR_INVALID_ARG;
     }
     char a[256], b[256];

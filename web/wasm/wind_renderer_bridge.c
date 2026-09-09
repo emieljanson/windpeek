@@ -301,13 +301,14 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(int display) {
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_module_order(int a, int b, int c, int d, int e) {
+    if (!input_ready || input_error) return -1;
     const int order[] = {a,b,c,d,e};
     unsigned seen = 0;
     for (int i = 0; i < 5; ++i) {
-        if (order[i] < 0 || order[i] >= 5 || (seen & (1u << order[i]))) return -1;
+        if (order[i] < 0 || order[i] >= 5 || (seen & (1u << order[i]))) return accept_result(-1);
         seen |= 1u << order[i];
     }
     renderer_input.ordered_modules = 1;
     memcpy(renderer_input.module_order, order, sizeof(order));
-    return 0;
+    return accept_result(0);
 }

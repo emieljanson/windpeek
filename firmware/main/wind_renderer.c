@@ -1228,7 +1228,7 @@ static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t 
     }
 }
 
-static void draw_wind_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
+static dashboard_layout_t draw_wind_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
                              int top, int bottom, int size) {
     dashboard_layout_t layout = {0};
     layout.wind_baseline = bottom - MODULE_PADDING;
@@ -1255,10 +1255,11 @@ static void draw_wind_module(canvas_t *canvas, const wind_renderer_dashboard_t *
             if (wind->available) snprintf(value, sizeof(value), "%d", wind->gust_kt);
             draw_centered_value(canvas, x, module_text_baseline(module_cell_center(top, 2)), WIND_FONT_SIZE_STATUS, value, CANVAS_BLACK);
         }
+    return layout;
 }
 
 static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
-                                  const dashboard_layout_t *layout) {
+                                  const dashboard_layout_t *layout, dashboard_layout_t *wind_layout) {
     const int sizes[2] = { dashboard->wind_size, dashboard->swell_size };
     const int large_count = (sizes[0] == 2) + (sizes[1] == 2);
     const int small_count = (sizes[0] == 1) + (sizes[1] == 1);
@@ -1271,7 +1272,7 @@ static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dash
             const int height = size == 1 ? MODULE_COMPACT_HEIGHT :
                 available / large_count + (large_count == 2 && module == 1 ? available % 2 : 0);
             if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
-            if (module == 0) draw_wind_module(canvas, dashboard, top, top + height, size);
+            if (module == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, size);
             else draw_swell_module(canvas, dashboard, top, top + height, size);
             top += height;
         }
@@ -1281,7 +1282,7 @@ static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dash
 }
 
 /* Explicit order is independent of module size. Small rows retain their height. */
-static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard) {
+static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard, dashboard_layout_t *wind_layout) {
     int sizes[] = { dashboard->wind_size, dashboard->swell_size,
         dashboard->show_weather, dashboard->show_temperature, dashboard->show_tide };
     int fixed[] = { MODULE_COMPACT_HEIGHT, MODULE_COMPACT_HEIGHT,
@@ -1313,7 +1314,7 @@ static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard
             height = available / large + (--remaining == 0 ? available % large : 0);
         }
         if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
-        if (id == 0) draw_wind_module(canvas, dashboard, top, top + height, sizes[id]);
+        if (id == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, sizes[id]);
         else if (id == 1) draw_swell_module(canvas, dashboard, top, top + height, sizes[id]);
         else if (id == 4) {
             const dashboard_layout_t row = { .tide_top = top, .tide_bottom = top + height - 1 };
@@ -1968,8 +1969,9 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         }
     }
 
-    if (dashboard->ordered_modules) draw_ordered_modules(&canvas, dashboard);
-    else if (dashboard->custom_modules) draw_modules(&canvas, dashboard, &layout);
+    dashboard_layout_t wind_overlay_layout = layout;
+    if (dashboard->ordered_modules) draw_ordered_modules(&canvas, dashboard, &wind_overlay_layout);
+    else if (dashboard->custom_modules) draw_modules(&canvas, dashboard, &layout, &wind_overlay_layout);
 
     if (!dashboard->ordered_modules && dashboard->state != WIND_RENDERER_UNAVAILABLE && dashboard->show_tide)
         draw_tide(&canvas, dashboard, &layout);
@@ -2016,13 +2018,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         dashboard->state != WIND_RENDERER_UNAVAILABLE) {
         if (!dashboard->custom_modules) draw_threshold_overlay(&canvas, &output, dashboard, &layout);
         else if (dashboard->wind_size == 2) {
-            dashboard_layout_t wind_layout = layout;
-            const int available = layout.modules_bottom - DAY_HEADER_BOTTOM - (dashboard->swell_size == 1 ? MODULE_COMPACT_HEIGHT : 0);
-            const int bottom = DAY_HEADER_BOTTOM + available / (dashboard->swell_size == 2 ? 2 : 1);
-            wind_layout.inset_labels = true;
-            wind_layout.wind_baseline = bottom - MODULE_PADDING;
-            wind_layout.chart_scale_height = wind_layout.wind_baseline - (DAY_HEADER_BOTTOM + MODULE_GRAPH_INSET);
-            draw_threshold_overlay(&canvas, &output, dashboard, &wind_layout);
+            draw_threshold_overlay(&canvas, &output, dashboard, &wind_overlay_layout);
         }
     }
     if (output_result == 0)

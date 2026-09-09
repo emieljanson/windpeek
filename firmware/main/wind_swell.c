@@ -132,10 +132,13 @@ static esp_err_t response_event(esp_http_client_event_t *event)
 static esp_err_t fetch_model(const open_meteo_marine_config_t *config, const char *model, int64_t retrieved_at, wind_swell_t *out_tide)
 {
     if (!open_meteo_marine_config_valid(config) || !out_tide) return ESP_ERR_INVALID_STATE;
+    const bool primary_only = !strcmp(model, "dwd_ewam") || !strcmp(model, "dwd_gwam");
+    const char *fields = primary_only ? "swell_wave_height,swell_wave_period,swell_wave_direction" :
+        "swell_wave_height,swell_wave_period,swell_wave_direction,secondary_swell_wave_height,secondary_swell_wave_period,secondary_swell_wave_direction";
     char url[640];
     int written = snprintf(url, sizeof(url),
-        "%s?latitude=%.6f&longitude=%.6f&hourly=swell_wave_height,swell_wave_period,swell_wave_direction,secondary_swell_wave_height,secondary_swell_wave_period,secondary_swell_wave_direction&timezone=%s&forecast_days=5&timeformat=unixtime&cell_selection=sea&models=%s",
-        OPEN_METEO_MARINE_ENDPOINT, config->latitude, config->longitude, config->timezone, model);
+        "%s?latitude=%.6f&longitude=%.6f&hourly=%s&timezone=%s&forecast_days=5&timeformat=unixtime&cell_selection=sea&models=%s",
+        OPEN_METEO_MARINE_ENDPOINT, config->latitude, config->longitude, fields, config->timezone, model);
     if (written <= 0 || (size_t) written >= sizeof(url)) return ESP_ERR_INVALID_SIZE;
     response_t response = {.body = calloc(1, OPEN_METEO_MARINE_RESPONSE_LIMIT + 1)};
     if (!response.body) return ESP_ERR_NO_MEM;

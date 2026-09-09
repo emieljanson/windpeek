@@ -1056,9 +1056,31 @@ bool wind_app_navigation_requires_network(int direction) {
     }
     const size_t target = wind_spots_offset(s_selected_index, direction);
     wind_forecast_t cached;
-    const bool requires_network =
+    bool requires_network =
         wind_cache_load(s_spots[target].forecast_path,
                         &s_spots[target].app.config.identity, &cached) != ESP_OK;
+    time_t now;
+    time(&now);
+    const wind_display_config_t display = config_manager_get_wind_display_config();
+    const wind_spot_runtime_t *runtime = &s_spots[target];
+    if (!requires_network && display.swell_size) {
+        char path[128];
+        snprintf(path, sizeof(path), "%s.swell", runtime->forecast_path);
+        const wind_swell_cache_identity_t identity = {
+            runtime->spot->id, runtime->spot->timezone, runtime->marine_config.swell_model
+        };
+        wind_swell_t *swell = malloc(sizeof(*swell));
+        requires_network = !swell || wind_swell_cache_load(path, &identity, swell) != ESP_OK ||
+            swell->retrieved_at > now || now - swell->retrieved_at >= 6 * 3600;
+        free(swell);
+    }
+    if (!requires_network && display.show_tide) {
+        const wind_tide_cache_identity_t identity = { runtime->spot->id, runtime->spot->timezone };
+        wind_tide_t *tide = malloc(sizeof(*tide));
+        requires_network = !tide || wind_tide_cache_load(runtime->tide_path, &identity, tide) != ESP_OK ||
+            tide->retrieved_at > now || now - tide->retrieved_at >= WIND_TIDE_REFRESH_INTERVAL_SECONDS;
+        free(tide);
+    }
     xSemaphoreGive(s_runtime_lock);
     return requires_network;
 }

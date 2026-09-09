@@ -106,6 +106,31 @@ describe('site entry and share URLs', () => {
     duplicate.searchParams.append('wind', 'hide')
     expect(readConfigurationUrl(duplicate.search, source.spots)).toBeNull()
   })
+  it('keeps capture and installer demos independent of saved drafts', async () => {
+    for (const query of ['devicePreview=seeedstudio_reterminal_e1003', 'installerDemo=1']) {
+      const browser = browserAt(`http://localhost/?${query}`)
+      const storage = storageWith({ windSize: 'off', threshold: 99 })
+      const before = storage.getItem('windpeek-configurator-v1')
+      const store = storeWith(browser, storage)
+      expect(store.windSize).toBe('large')
+      store.showWeather = false
+      await nextTick()
+      expect(browser.location.searchParams.has('cfg')).toBe(false)
+      expect(storage.getItem('windpeek-configurator-v1')).toBe(before)
+    }
+  })
+
+  it('rejects thresholds outside the supported range in drafts and shared links', () => {
+    const source = storeWith()
+    for (const threshold of [0, 4, 36, 99]) {
+      const target = storeWith(browserAt('http://localhost/?configure'), storageWith({ threshold }))
+      expect(target.threshold).toBe(17)
+      const url = configurationUrl(source, 'http://localhost/?configure')
+      url.searchParams.set('minimum', threshold)
+      expect(readConfigurationUrl(url.search, source.spots)).toBeNull()
+    }
+  })
+
   it('landing visits do not overwrite drafts or add configuration URL fields', async () => {
     const storage = storageWith({ windSize: 'off' })
     const before = storage.getItem('windpeek-configurator-v1')

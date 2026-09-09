@@ -805,7 +805,7 @@ async function initialize() {
         timeFormat.value !== initialConfig.timeFormat ||
         temperatureUnit.value !== initialConfig.temperatureUnit ||
         effectiveShowTide.value !== initialConfig.showTide || tide.value !== initialConfig.tide ||
-        swell.value !== initialConfig.swell || swellFocus.value !== initialConfig.swellFocus ||
+        swell.value !== initialConfig.swell || swellStatus.value !== initialConfig.swellStatus || swellFocus.value !== initialConfig.swellFocus ||
         moduleOrder.value.join() !== initialConfig.moduleOrder.join() ||
         windSize.value !== initialConfig.windSize || swellSize.value !== initialConfig.swellSize ||
         forecastRevision.value !== initialForecastRevision) {

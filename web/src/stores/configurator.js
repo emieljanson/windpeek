@@ -238,12 +238,6 @@ export const useConfiguratorStore = defineStore('configurator', {
       this.forecastLabel = 'Preview unchanged'
       this.forecastMessage = 'Could not apply that display change. Showing the last valid preview.'
     },
-    setSwellFocus(value) {
-      this.swellFocus = Boolean(value)
-      this.windSize = value ? 'small' : 'large'
-      this.swellSize = value ? 'large' : 'off'
-      if (value && this.swellStatus === 'idle') void this.refreshSwell()
-    },
     moveModule(id, targetIndex) {
       if (!this.moduleOrder.includes(id) || !Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= MODULE_IDS.length) return false
       const order = this.moduleOrder.filter(module => module !== id)

@@ -7,12 +7,13 @@ import { isConfiguratorLocation } from '../routes'
 export function initializeConfigurator(context, { browser = window, storage = availableStorage() } = {}) {
   const { store } = context
   if (store.$id !== 'configurator') return
-  const configuring = isConfiguratorLocation(browser.location)
+  const params = new URLSearchParams(browser.location.search)
+  const preview = params.has('devicePreview') || params.has('installerDemo')
+  const configuring = isConfiguratorLocation(browser.location) && !preview
   store.$patch(siteDisplayDefaults(siteVariant(browser.location)))
   // Restore first without subscribing, so a shared link cannot persist a half-applied draft.
-  persistConfigurator(context, storage, { subscribe: false })
+  if (!preview) persistConfigurator(context, storage, { subscribe: false })
   if (configuring) {
-    const params = new URLSearchParams(browser.location.search)
     if (!params.has('cfg') && params.get('swell') === '1') store.$patch({ windSize: 'small', swellSize: 'large' })
     applyConfigurationUrl(store, browser.location.search, storage)
   }

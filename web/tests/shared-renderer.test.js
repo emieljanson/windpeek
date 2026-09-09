@@ -205,7 +205,49 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
     expect(reset.data).toEqual(fresh.renderPreviewForDisplay(input, 2).data)
   })
 
-  it('renders explicit order independently of size and rejects malformed orders', async () => {
+  it('moves every threshold pixel with the ordered Wind graph', async () => {
+    const renderer = await loadRealRenderer()
+    const input = { ...fixtureInput(1, 17, 0), windSize: 2, swellSize: 2, moduleOrder: [0, 1, 2, 3, 4] }
+    input.days.forEach(day => day.samples.forEach(sample => Object.assign(sample, { swellHeightCm: 80, swellPeriodTenths: 90, swellDestinationDegrees: 270 })))
+    const redPixels = frame => {
+      const result = []
+      for (let offset = 0; offset < frame.data.length; offset += 4) {
+        if (frame.data[offset] === 255 && frame.data[offset + 1] === 0 && frame.data[offset + 2] === 0) result.push(offset / 4)
+      }
+      return result
+    }
+    const first = redPixels(renderer.renderPreviewForDisplay(input, 2))
+    input.moduleOrder = [1, 0, 2, 3, 4]
+    const second = redPixels(renderer.renderPreviewForDisplay(input, 2))
+    expect(first.length).toBeGreaterThan(700)
+    expect(second).toEqual(first.map(pixel => pixel + 168 * 800))
+  })
+
+  it('invalidates published frames when the module order changes', async () => {
+    const bytes = await readFile(wasmPath)
+    const compiled = await WebAssembly.instantiate(bytes, {})
+    const exports = compiled.instance.exports
+    expect(exports.wind_wasm_set_module_order(0, 1, 2, 3, 4)).not.toBe(0)
+    const renderer = await loadSharedRenderer({ wasmBytes: bytes, instantiate: async () => compiled })
+    renderer.renderPreviewForDisplay(fixtureInput(), 2)
+    expect(exports.wind_wasm_preview_output_ptr()).not.toBe(0)
+    expect(exports.wind_wasm_set_module_order(1, 0, 2, 3, 4)).toBe(0)
+    expect(exports.wind_wasm_preview_output_ptr()).toBe(0)
+    renderer.render(fixtureInput())
+    expect(exports.wind_wasm_output_ptr()).not.toBe(0)
+    expect(exports.wind_wasm_set_module_order(0, 0, 2, 3, 4)).not.toBe(0)
+    expect(exports.wind_wasm_output_ptr()).toBe(0)
+    expect(exports.wind_wasm_set_module_order(0, 1, 2, 3, 4)).not.toBe(0)
+  })
+
+  it('reports malformed swell arrays and module orders as invalid input', async () => {
+    const renderer = await loadRealRenderer()
+    for (const invalid of [{ swellHourly: {} }, { swellHourly: [null] }, { moduleOrder: [0, 0, 2, 3, 4] }]) {
+      expect(() => renderer.render({ ...fixtureInput(), ...invalid })).toThrow(expect.objectContaining({ code: 'INVALID_INPUT' }))
+    }
+  })
+
+  it('renders explicit module order and rejects malformed orders', async () => {
     const renderer = await loadRealRenderer()
     const input = { ...fixtureInput(2, 17, 7), windSize: 1, swellSize: 2, moduleOrder: [1, 0, 2, 3, 4] }
     input.days.forEach(day => day.samples.forEach(sample => Object.assign(sample, { swellHeightCm: 80, swellPeriodTenths: 90, swellDestinationDegrees: 270 })))

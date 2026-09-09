@@ -1,3 +1,4 @@
+import { MIN_THRESHOLD, MAX_THRESHOLD } from '../renderer/contract'
 import { SWELL_MODELS } from '../forecast/openMeteoSwell'
 import { availableStorage } from '../storage'
 import { MODULE_SIZES, validModuleOrder } from './modules'
@@ -17,7 +18,7 @@ export function persistConfigurator({ store }, storage = availableStorage(), { s
       for (const key of booleans) if (typeof saved[key] === 'boolean') patch[key] = saved[key]
       for (const key of ['windSize', 'swellSize']) if (MODULE_SIZES.includes(saved[key])) patch[key] = saved[key]
       if (validModuleOrder(saved.moduleOrder)) patch.moduleOrder = [...saved.moduleOrder]
-      if (Number.isInteger(saved.threshold) && saved.threshold >= 0 && saved.threshold <= 99) patch.threshold = saved.threshold
+      if (Number.isInteger(saved.threshold) && saved.threshold >= MIN_THRESHOLD && saved.threshold <= MAX_THRESHOLD) patch.threshold = saved.threshold
       if (SUPPORTED_BOARD_IDS.includes(saved.selectedBoardId)) patch.selectedBoardId = saved.selectedBoardId
       if (TIME_FORMATS.includes(saved.timeFormat)) patch.timeFormat = saved.timeFormat
       if (TEMPERATURE_UNITS.includes(saved.temperatureUnit)) {

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useConfiguratorStore } from '../../stores/configurator'
+import { MIN_THRESHOLD, MAX_THRESHOLD } from '../../renderer/contract'
 import { SWELL_MODELS } from '../../forecast/openMeteoSwell'
 import SettingRow from './SettingRow.vue'
 import ForecastModelHelpDialog from '../ForecastModelHelpDialog.vue'
@@ -80,7 +81,7 @@ const weatherModels = computed(() => {
           @update:model-value="store.setShowThreshold" />
       </SettingRow>
       <SettingRow v-if="store.windSize === 'large' && store.showThreshold" label="Minimum wind" class="setting-row--compact-control">
-        <SettingNumberInput :model-value="store.threshold" :min="0" :max="99" :step="1" unit="kt" name="threshold"
+        <SettingNumberInput :model-value="store.threshold" :min="MIN_THRESHOLD" :max="MAX_THRESHOLD" :step="1" unit="kt" name="threshold"
           @update:model-value="store.setThreshold" />
       </SettingRow>
       <SettingRow label="Temperature">

@@ -224,10 +224,12 @@ class SharedRenderer {
       this.#call('wind_wasm_set_modules', requireInteger(windSize, 'windSize'), requireInteger(swellSize, 'swellSize'))
     }
     if (input.moduleOrder) {
-      if (!Array.isArray(input.moduleOrder) || input.moduleOrder.length !== 5 || new Set(input.moduleOrder).size !== 5) throw new Error('Invalid module order')
+      if (!Array.isArray(input.moduleOrder) || input.moduleOrder.length !== 5 || new Set(input.moduleOrder).size !== 5) fail('INVALID_INPUT', 'Invalid module order')
       this.#call('wind_wasm_set_module_order', ...input.moduleOrder.map(id => requireInteger(id, 'moduleOrder')))
     }
+    if (input.swellHourly != null && !Array.isArray(input.swellHourly)) fail('INVALID_INPUT', 'swellHourly must be an array')
     for (const sample of input.swellHourly ?? []) {
+      if (!sample || typeof sample !== 'object') fail('INVALID_INPUT', 'Invalid swell hourly sample')
       this.#call('wind_wasm_set_swell_hour', requireInteger(sample.dayIndex, 'dayIndex'),
         requireInteger(sample.hour, 'hour'), requireInteger(sample.heightCm, 'heightCm'))
       this.#call('wind_wasm_set_secondary_swell_hour', requireInteger(sample.dayIndex, 'dayIndex'),
