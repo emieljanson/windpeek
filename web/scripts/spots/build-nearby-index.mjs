@@ -11,14 +11,12 @@ const dataRoot = path.join(webRoot, 'data/spots')
 const outputPath = path.join(webRoot, 'src/spots/nearby.generated.json')
 const checkOnly = process.argv.includes('--check')
 
-const [candidateData, catalog, popularData] = await Promise.all([
-  readJson(path.join(dataRoot, 'candidates.json')),
+const [catalog, popularData] = await Promise.all([
   readJson(path.join(webRoot, 'src/spots/catalog.generated.json')),
   readJson(path.join(dataRoot, 'popular-spots.json')),
 ])
 
 const index = buildNearbyIndex({
-  candidates: candidateData.candidates ?? [],
   catalog,
   popularSpots: popularData.spots ?? [],
   baselineSpotIds: ['edam', 'castricum-aan-zee'],

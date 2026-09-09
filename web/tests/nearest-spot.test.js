@@ -63,12 +63,12 @@ describe('findNearbyDefaultSpot', () => {
     { id: 'far-away-icon', priority: 4 },
   ]
 
-  it('prefers a more popular surf spot within the nearby region', () => {
+  it('chooses the nearest recommended spot even when another has higher priority', () => {
     expect(findNearbyDefaultSpot(
       { latitude: 52.1, longitude: 5.1 },
       nearbySpots,
       { recommendations },
-    )).toBe(nearbySpots[2])
+    )).toBe(nearbySpots[1])
   })
 
   it('uses distance when surf spots have the same popularity', () => {
@@ -81,24 +81,24 @@ describe('findNearbyDefaultSpot', () => {
     )).toBe(nearbySpots[1])
   })
 
-  it('does not apply a distant spot when the nearby region has no catalog coverage', () => {
+  it('chooses the nearest recommended spot regardless of distance', () => {
     expect(findNearbyDefaultSpot(
       { latitude: 0, longitude: 0 },
       nearbySpots,
       { recommendations },
-    )).toBeNull()
+    )).toBe(nearbySpots[1])
   })
 
   it.each([
     ['Bali', -8.65, 115.22],
     ['Honolulu', 21.31, -157.86],
-  ])('does not send an IP location in %s to another country or mainland', (_, latitude, longitude) => {
-    expect(findNearbyDefaultSpot({ latitude, longitude })).toBeNull()
+  ])('still selects a recommended spot when %s has no local catalog coverage', (_, latitude, longitude) => {
+    expect(nearbyIndex.some(({ id }) => id === findNearbyDefaultSpot({ latitude, longitude })?.id)).toBe(true)
   })
 
-  it('chooses IJmuiden for a broad Utrecht-region IP location', () => {
+  it('chooses the nearest curated spot for a broad Utrecht-region IP location', () => {
     expect(findNearbyDefaultSpot({ latitude: 52.09083, longitude: 5.12222 })?.name)
-      .toBe('IJmuiden')
+      .toBe('Edam')
   })
 
   it('chooses Third Avenue for San Francisco', () => {
@@ -115,7 +115,7 @@ describe('findNearbyDefaultSpot', () => {
     expect(priorities.has('spot-tecvwf')).toBe(false)
     expect(priorities.get('edam')).toBe(1)
     expect(priorities.get('castricum-aan-zee')).toBe(1)
-    expect(priorities.get('spot-xjkdwp')).toBe(1)
+    expect(priorities.has('spot-xjkdwp')).toBe(false)
   })
 })
 
