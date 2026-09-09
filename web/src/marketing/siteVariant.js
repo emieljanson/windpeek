@@ -17,9 +17,9 @@ const variants = {
 
 export function siteVariant(location = globalThis.location) {
   const hostname = location?.hostname ?? ''
-  const preview = ['localhost', '127.0.0.1', '[::1]'].includes(hostname)
-    ? new URLSearchParams(location?.search).get('site') : null
-  return variants[hostname === 'swellpeek.com' || hostname === 'www.swellpeek.com' || preview === 'swell' ? 'swell' : 'wind']
+  const requested = new URLSearchParams(location?.search).get('site')
+  if (requested === 'wind' || requested === 'swell') return variants[requested]
+  return variants[hostname === 'swellpeek.com' || hostname === 'www.swellpeek.com' ? 'swell' : 'wind']
 }
 
 export function siteDisplayDefaults(variant = siteVariant()) {
@@ -32,9 +32,6 @@ export function siteDisplayDefaults(variant = siteVariant()) {
 }
 
 export function configuratorLink(location = globalThis.location) {
-  const params = new URLSearchParams({ configure: '' })
-  if (['localhost', '127.0.0.1', '[::1]'].includes(location?.hostname)) {
-    params.set('site', siteVariant(location).id)
-  }
+  const params = new URLSearchParams({ configure: '', site: siteVariant(location).id })
   return `?${params}`
 }
