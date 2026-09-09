@@ -12,17 +12,38 @@ const char *wind_swell_preferred_model(const char *model, double latitude) {
         ? "ncep_gfswave016" : model;
 }
 
-void wind_swell_overlay(wind_swell_t *base, const wind_swell_t *preferred) {
-    size_t p = 0;
-    for (size_t b = 0; b < base->sample_count; ++b) {
-        while (p < preferred->sample_count && preferred->samples[p].timestamp < base->samples[b].timestamp) ++p;
-        if (p == preferred->sample_count) break;
-        const wind_swell_sample_t *s = &preferred->samples[p];
-        if (s->timestamp == base->samples[b].timestamp &&
-            (s->height_cm == 0 || (s->height_cm > 0 && s->period_tenths > 0 && s->destination_degrees >= 0))) {
-            base->samples[b] = *s;
-        }
+const char *wind_swell_base_model(const char *model) {
+    if (!model || !strcmp(model, "best_match") || !strcmp(model, "meteofrance_wave")) return "ncep_gfswave025";
+    return !strcmp(model, "dwd_ewam") ? "dwd_gwam" : model;
+}
+
+esp_err_t wind_swell_overlay(wind_swell_t *base, const wind_swell_t *preferred) {
+    if (!base || !preferred || base->sample_count > WIND_SWELL_MAX_SAMPLES ||
+        preferred->sample_count > WIND_SWELL_MAX_SAMPLES) return ESP_ERR_INVALID_ARG;
+    // Count the union before touching the cache candidate. Merge backwards so
+    // extra preferred hours cannot overwrite unread base samples.
+    size_t b = 0, p = 0, count = 0;
+    while (b < base->sample_count || p < preferred->sample_count) {
+        if (p == preferred->sample_count || (b < base->sample_count && base->samples[b].timestamp < preferred->samples[p].timestamp)) ++b;
+        else if (b == base->sample_count || preferred->samples[p].timestamp < base->samples[b].timestamp) ++p;
+        else { ++b; ++p; }
+        if (++count > WIND_SWELL_MAX_SAMPLES) return ESP_ERR_INVALID_SIZE;
     }
+    b = base->sample_count; p = preferred->sample_count;
+    base->sample_count = count;
+    while (count) {
+        wind_swell_sample_t sample;
+        if (!p || (b && base->samples[b-1].timestamp > preferred->samples[p-1].timestamp)) sample = base->samples[--b];
+        else if (!b || preferred->samples[p-1].timestamp > base->samples[b-1].timestamp) sample = preferred->samples[--p];
+        else {
+            sample = base->samples[--b];
+            const wind_swell_sample_t *s = &preferred->samples[--p];
+            if (s->height_cm == 0 || (s->height_cm > 0 && s->period_tenths > 0 && s->destination_degrees >= 0) ||
+                (sample.height_cm < 0 && s->height_cm >= 0)) sample = *s;
+        }
+        base->samples[--count] = sample;
+    }
+    return ESP_OK;
 }
 
 bool wind_swell_validate(const wind_swell_t *swell) {
@@ -32,6 +53,7 @@ bool wind_swell_validate(const wind_swell_t *swell) {
         (strcmp(swell->model, "best_match") && strcmp(swell->model, "meteofrance_wave") && strcmp(swell->model, "ncep_gfswave025") && strcmp(swell->model, "dwd_ewam")) ||
         swell->retrieved_at <= 0 || swell->sample_count == 0 || swell->sample_count > WIND_SWELL_MAX_SAMPLES) return false;
     int64_t previous = 0;
+    bool available = false;
     for (size_t i = 0; i < swell->sample_count; ++i) {
         const wind_swell_sample_t *s = &swell->samples[i];
         if (s->timestamp <= previous || s->height_cm < -1 || s->height_cm > 10000 ||
@@ -40,8 +62,9 @@ bool wind_swell_validate(const wind_swell_t *swell) {
             s->secondary_period_tenths < -1 || s->secondary_period_tenths > 1000 ||
             s->secondary_destination_degrees < -1 || s->secondary_destination_degrees >= 360) return false;
         previous = s->timestamp;
+        available |= s->height_cm >= 0;
     }
-    return true;
+    return available;
 }
 
 esp_err_t wind_swell_parse(const open_meteo_marine_config_t *config, const char *json, size_t length, int64_t now, wind_swell_t *out) {
@@ -166,7 +189,7 @@ static esp_err_t fetch_model(const open_meteo_marine_config_t *config, const cha
 esp_err_t wind_swell_fetch(const open_meteo_marine_config_t *config, int64_t now, wind_swell_t *out) {
     if (!open_meteo_marine_config_valid(config) || !out) return ESP_ERR_INVALID_STATE;
     const char *selected_model = config->swell_model ? config->swell_model : "best_match";
-    const char *base_model = !strcmp(selected_model, "dwd_ewam") ? "dwd_gwam" : selected_model;
+    const char *base_model = wind_swell_base_model(selected_model);
     const char *preferred_model = wind_swell_preferred_model(selected_model, config->latitude);
     esp_err_t base_result = fetch_model(config, base_model, now, out);
     if (!strcmp(base_model, preferred_model)) return base_result;
@@ -174,7 +197,10 @@ esp_err_t wind_swell_fetch(const open_meteo_marine_config_t *config, int64_t now
     if (!preferred) return base_result == ESP_OK ? ESP_OK : ESP_ERR_NO_MEM;
     esp_err_t preferred_result = fetch_model(config, preferred_model, now, preferred);
     if (preferred_result == ESP_OK) {
-        if (base_result == ESP_OK) wind_swell_overlay(out, preferred);
+        if (base_result == ESP_OK) {
+            esp_err_t merged = wind_swell_overlay(out, preferred);
+            if (merged != ESP_OK) { free(preferred); return merged; }
+        }
         else *out = *preferred;
     }
     free(preferred);

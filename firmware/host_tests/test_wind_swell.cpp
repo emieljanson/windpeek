@@ -48,6 +48,11 @@ TEST(WindSwell, PreservesSecondaryComponentAndCache) {
 }
 
 TEST(WindSwell, ChoosesFinestAvailableGfsGrid) {
+    EXPECT_STREQ(wind_swell_base_model("best_match"), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model(nullptr), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model("meteofrance_wave"), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model("dwd_ewam"), "dwd_gwam");
+    EXPECT_STREQ(wind_swell_base_model("ncep_gfswave025"), "ncep_gfswave025");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", 51.76), "ncep_gfswave016");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", -15), "ncep_gfswave016");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", 52.5), "ncep_gfswave016");
@@ -71,4 +76,51 @@ TEST(WindSwell, FillsShortForecastWithoutMixingSampleComponents) {
     EXPECT_EQ(base.samples[1].secondary_height_cm, 30);
     EXPECT_EQ(base.samples[2].height_cm, 0);
     EXPECT_EQ(base.samples[3].height_cm, 100);
+}
+
+TEST(WindSwell, PreservesPreferredHoursBeyondShortFallback) {
+    wind_swell_t base = {}, preferred = {};
+    base.sample_count = 1;
+    base.samples[0] = {100, 100, 90, 180, -1, -1, -1};
+    preferred.sample_count = 3;
+    for (int i = 0; i < 3; ++i) preferred.samples[i] = {100+i, 200, 100, 90, -1, -1, -1};
+    wind_swell_overlay(&base, &preferred);
+    ASSERT_EQ(base.sample_count, 3u);
+    EXPECT_EQ(base.samples[2].height_cm, 200);
+}
+
+TEST(WindSwell, RejectsEmptyForecastInsteadOfReplacingGoodCache) {
+    open_meteo_marine_config_t config = {"coast", 52, 4, "Europe/Amsterdam", "best_match"};
+    const char *json = R"({"timezone":"Europe/Amsterdam","hourly_units":{"time":"unixtime","swell_wave_height":"m","swell_wave_period":"s","swell_wave_direction":"°"},"hourly":{"time":[1788883200],"swell_wave_height":[null],"swell_wave_period":[null],"swell_wave_direction":[null]}})";
+    wind_swell_t swell;
+    EXPECT_NE(wind_swell_parse(&config, json, strlen(json), 1788883200, &swell), ESP_OK);
+}
+
+TEST(WindSwell, MergesEarlierHoursAndRetainsPartialHeights) {
+    wind_swell_t base = {}, preferred = {};
+    base.sample_count = 2;
+    base.samples[0] = {101, -1, -1, -1, -1, -1, -1};
+    base.samples[1] = {103, 100, 90, 180, 20, 70, 0};
+    preferred.sample_count = 3;
+    preferred.samples[0] = {100, 200, 100, 90, -1, -1, -1};
+    preferred.samples[1] = {101, 200, -1, -1, -1, -1, -1};
+    preferred.samples[2] = {103, 200, -1, -1, -1, -1, -1};
+    ASSERT_EQ(wind_swell_overlay(&base, &preferred), ESP_OK);
+    ASSERT_EQ(base.sample_count, 3u);
+    EXPECT_EQ(base.samples[0].timestamp, 100);
+    EXPECT_EQ(base.samples[1].height_cm, 200);
+    EXPECT_EQ(base.samples[1].period_tenths, -1);
+    EXPECT_EQ(base.samples[2].height_cm, 100);
+    EXPECT_EQ(base.samples[2].secondary_height_cm, 20);
+}
+
+TEST(WindSwell, OversizedMergeLeavesBaseUntouched) {
+    wind_swell_t base = {}, preferred = {};
+    base.sample_count = WIND_SWELL_MAX_SAMPLES;
+    for (size_t i = 0; i < base.sample_count; ++i) base.samples[i] = {100+(int64_t)i, 100, 90, 180, -1, -1, -1};
+    preferred.sample_count = 1;
+    preferred.samples[0] = {99, 200, 100, 90, -1, -1, -1};
+    const wind_swell_t before = base;
+    EXPECT_EQ(wind_swell_overlay(&base, &preferred), ESP_ERR_INVALID_SIZE);
+    EXPECT_EQ(memcmp(&base, &before, sizeof(base)), 0);
 }

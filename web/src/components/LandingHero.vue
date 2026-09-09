@@ -9,6 +9,8 @@ import { RENDERER_DISPLAYS } from '../renderer/contract'
 import { loadSharedRenderer } from '../renderer/sharedRenderer'
 import { useConfiguratorStore } from '../stores/configurator'
 import { createProjectiveScreen } from '../marketing/projectiveScreen'
+import { brouwersdamForecast, brouwersdamTide } from '../fixtures/brouwersdam'
+import { brouwersdamSwell } from '../fixtures/brouwersdamSwell'
 
 const {
   width: WIDTH,
@@ -43,7 +45,20 @@ let unmounted = false
 
 function drawForecast(forecast) {
   if (!renderer || !projectiveScreen || !forecast) return
-  const input = createRendererInput(forecast, landingDisplayConfiguration(store.tide, variant, store.swell, store.swellStatus))
+  const completeWind = store.forecastSource !== 'demo' && forecast.spotId === store.selectedSpotId &&
+    forecast.days.length === 5 && forecast.days.every(day =>
+      day.samples.length === 5 && day.samples.every(sample => sample.available))
+  const completeSwell = variant.id !== 'swell' || (store.swell?.available &&
+    store.swell.spotId === forecast.spotId && store.swell.timezone === forecast.timezone &&
+    forecast.days.every(day => day.samples.every(sample => store.swell.samples.some(wave =>
+      wave.localDate === day.localDate && wave.time === sample.time && wave.heightCm >= 0 &&
+      (wave.heightCm === 0 || (wave.periodTenths > 0 && wave.destinationDegrees >= 0))))))
+  // Use one coherent example for the whole photo, never mix invented waves
+  // with live weather. This stays local to the homepage, outside store/cache.
+  const example = !completeWind || !completeSwell
+  const input = createRendererInput(example ? brouwersdamForecast : forecast,
+    landingDisplayConfiguration(example ? brouwersdamTide : store.tide, variant,
+      example ? brouwersdamSwell : store.swell, example ? 'ready' : store.swellStatus))
   const frame = renderer.renderPreviewForDisplay(input, RENDERER_DISPLAYS.E1002_SPECTRA6)
   projectiveScreen.setFrame(frame)
   projectiveScreen.draw(SCREEN_CORNERS, SCREEN_FINISH)
@@ -51,7 +66,8 @@ function drawForecast(forecast) {
 }
 
 watch(
-  [() => store.forecastRevision, () => store.tide, () => store.swell, () => store.swellStatus],
+  [() => store.forecastRevision, () => store.forecastSource, () => store.selectedSpotId,
+    () => store.tide, () => store.swell, () => store.swellStatus],
   () => drawForecast(store.forecast),
 )
 

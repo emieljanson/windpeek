@@ -275,6 +275,10 @@ export const useConfiguratorStore = defineStore('configurator', {
       try {
         const swell = await fetcher(spot, { ...options, model: this.selectedSwellModelId })
         if (requestId !== this.swellRequestId || spot.id !== this.selectedSpotId) return false
+        if (!swell.available && this.swell?.available) {
+          this.swellStatus = 'failed'
+          return false
+        }
         this.swell = swell
         this.swellStatus = swell.available ? 'ready' : 'unavailable'
         return true
