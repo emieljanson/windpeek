@@ -87,7 +87,8 @@ function forecastStatus(page) {
 }
 
 async function selectWithKeyboard(page, name, search) {
-  const control = page.getByRole('combobox', { name })
+  if (name === 'Wind model') await page.locator('.forecast-advanced > summary').click()
+  const control = page.getByRole('combobox', { name, exact: true })
   await control.focus()
   await page.keyboard.press('Enter')
   await page.keyboard.type(search)
@@ -151,7 +152,7 @@ test('uses model typeahead and restores focus when its popup is dismissed', asyn
   await page.goto('/?configure')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
-  const model = await selectWithKeyboard(page, 'Wind model', 'noaa')
+  const model = await selectWithKeyboard(page, 'Wind model', 'gfs')
   await expect(model).toContainText('GFS')
   await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
   await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'ncep_gfs_seamless')
@@ -170,9 +171,8 @@ test('keeps threshold state explicit and redraws the live preview', async ({ pag
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   const before = await page.locator('canvas').screenshot()
 
+  await page.locator('.forecast-advanced > summary').click()
   const showThreshold = page.getByRole('switch', { name: 'Wind threshold' })
-  await showThreshold.focus()
-  await page.keyboard.press('Space')
   await expect(showThreshold).toBeChecked()
   const threshold = page.getByRole('spinbutton', { name: 'Minimum wind' })
   await threshold.click()
@@ -301,7 +301,7 @@ test('creates and remembers a personal spot only after the explicit map flow', a
   expect(forecastRequests.at(-1).searchParams.get('latitude')).toBe('52.943200')
 
   await page.reload()
-  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Hindeloopen', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await page.getByRole('combobox', { name: 'Search spot' }).fill('Hind')
   await expect(page.getByRole('option', { name: 'Hindeloopen', exact: true })).toBeVisible()
 })
@@ -321,11 +321,14 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'About reTerminal devices' })).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'reTerminal' })).toHaveCount(0)
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
-  const displayOptions = page.getByRole('group', { name: 'Show on Windpeek' })
-  await expect(displayOptions).toBeVisible()
-  await expect(displayOptions.getByRole('button')).toHaveCount(4)
-  await displayOptions.getByRole('button', { name: 'Threshold' }).click()
-  await expect(displayOptions.getByRole('button', { name: 'Threshold' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('combobox', { name: 'Wind', exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Waves', exact: true })).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Temperature', exact: true })).toBeChecked()
+  await page.locator('.forecast-advanced > summary').click()
+  const threshold = page.getByRole('switch', { name: 'Wind threshold' })
+  await expect(threshold).toBeChecked()
+  await threshold.press('Space')
+  await expect(threshold).not.toBeChecked()
   expect(requests).toHaveLength(1)
 })
 
@@ -341,14 +344,17 @@ test('recomposes the preview when Weather, Temperature, and Tide change', async 
   await page.keyboard.press('Space')
   await expect(weather).not.toBeChecked()
 
-  const temperature = await selectWithKeyboard(page, 'Temperature', 'fahrenheit')
-  await expect(temperature).toContainText('Fahrenheit')
+  await page.locator('.forecast-advanced > summary').click()
+  const temperature = page.getByRole('radio', { name: '°F', exact: true })
+  await temperature.click()
+  await expect(temperature).toBeChecked()
 
   const tide = page.getByRole('switch', { name: 'Tide' })
   await expect(tide).toBeEnabled()
+  await expect(tide).toBeChecked()
   await tide.focus()
   await page.keyboard.press('Space')
-  await expect(tide).toBeChecked()
+  await expect(tide).not.toBeChecked()
   const after = await page.locator('canvas').screenshot()
   expect(after.equals(before)).toBe(false)
 })
@@ -415,7 +421,7 @@ for (const viewport of [
     expect(panelMetrics.bottom).toBeLessThanOrEqual(viewport.height)
     expect(panelMetrics.documentWidth).toBeLessThanOrEqual(viewport.width)
     expect(splitShadows(panelMetrics.shadow)).toHaveLength(3)
-    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(410)
+    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(420)
 
     await expect(page.locator('.inspector-rows')).toHaveCSS('row-gap', '8px')
 
@@ -439,14 +445,14 @@ for (const viewport of [
     ])
     expect(searchBox.height).toBe(installBox.height)
 
-    const rowMetrics = await page.locator('.setting-row').evaluateAll((rows) => rows.map((row) => {
+    const rowMetrics = await page.locator('.setting-row:visible').evaluateAll((rows) => rows.map((row) => {
       const label = row.querySelector('.setting-row__label').getBoundingClientRect()
       const control = row.querySelector('.setting-row__control').getBoundingClientRect()
       return { labelLeft: Math.round(label.left), controlLeft: Math.round(control.left) }
     }))
     expect(new Set(rowMetrics.map(({ labelLeft }) => labelLeft)).size).toBe(1)
     expect(new Set(rowMetrics.map(({ controlLeft }) => controlLeft)).size).toBe(1)
-    const controlHeights = await page.locator('.setting-control').evaluateAll((controls) =>
+    const controlHeights = await page.locator('.setting-control:visible').evaluateAll((controls) =>
       controls.map((control) => ({
         height: control.getBoundingClientRect().height,
         search: control.closest('.inspector-search') != null,
@@ -456,14 +462,15 @@ for (const viewport of [
     expect(controlHeights.filter(({ search }) => search)
       .every(({ height }) => Math.abs(height - 38) < 0.5)).toBe(true)
 
-    const temperature = page.getByRole('combobox', { name: 'Temperature' })
-    await expect(temperature).toHaveCSS('color', 'rgb(148, 148, 150)')
+    const temperature = page.getByRole('switch', { name: 'Temperature', exact: true })
+    await expect(temperature).toBeChecked()
     const weatherHide = page.getByRole('switch', { name: 'Weather' }).locator('.setting-switch__segment--off')
     await expect(weatherHide).toHaveCSS('color', 'rgb(148, 148, 150)')
     await weatherHide.hover()
     await expect(weatherHide).toHaveCSS('color', 'rgb(0, 0, 0)')
 
-    const model = page.getByRole('combobox', { name: 'Wind model' })
+    await page.locator('.forecast-advanced > summary').click()
+    const model = page.getByRole('combobox', { name: 'Wind model', exact: true })
     const triggerBox = await model.boundingBox()
     const panelBeforeMenu = await panel.boundingBox()
     const bodyOverflowBeforeMenu = await page.locator('body').evaluate((element) => getComputedStyle(element).overflow)
@@ -521,11 +528,8 @@ for (const viewport of [
     expect(focusStyle.boxShadow).toBe('rgb(0, 0, 0) 0px 0px 0px 1px inset')
 
     await page.keyboard.press('Shift+Tab')
-    await expect(page.getByRole('combobox', { name: 'reTerminal', exact: true })).toBeFocused()
-    await page.keyboard.press('Shift+Tab')
-    await expect(page.getByRole('button', { name: 'About reTerminal devices' })).toBeFocused()
-    await page.keyboard.press('Shift+Tab')
-    await expect(initialSearch).toBeFocused()
+    await expect(page.getByRole('button', { name: 'About wind models' })).toBeFocused()
+    await initialSearch.focus()
     await expect(initialSearch).toHaveCSS('box-shadow', 'rgb(0, 0, 0) 0px 0px 0px 1px inset')
 
     const spot = initialSearch
@@ -637,20 +641,13 @@ test('keeps the compact inspector above the viewport edge without widening the p
   await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveCount(0)
   await expect(page.locator('select[name="model"]')).toHaveCount(0)
   await expect(page.locator('select[name="temperature"]')).toHaveCount(0)
-  const pills = page.locator('.mobile-display-pill')
-  await expect(pills).toHaveCount(4)
-  expect(await pills.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().height))).toEqual([36, 36, 36, 36])
-  await expect(pills.first()).toHaveCSS('touch-action', 'manipulation')
-  const weatherPill = page.getByRole('button', { name: 'Weather' })
-  await weatherPill.click()
-  await expect(weatherPill).toHaveAttribute('aria-pressed', 'false')
-  await expect(weatherPill).toHaveClass(/is-pointer-focus/)
-  await expect(weatherPill).toHaveCSS('outline-style', 'none')
+  const weather = page.getByRole('switch', { name: 'Weather', exact: true })
+  await weather.locator('.setting-switch__segment--off').click()
+  await expect(weather).not.toBeChecked()
+  await weather.focus()
   await page.keyboard.press('Tab')
-  const temperaturePill = page.getByRole('button', { name: 'Temp' })
-  await expect(temperaturePill).toBeFocused()
-  await expect(temperaturePill).not.toHaveClass(/is-pointer-focus/)
-  await expect(temperaturePill).toHaveCSS('outline-width', '2px')
+  const temperature = page.getByRole('switch', { name: 'Temperature', exact: true })
+  await expect(temperature).toBeFocused()
   await expect(panel).toHaveCSS('border-radius', '24px')
 
   await page.setViewportSize({ width: 844, height: 390 })

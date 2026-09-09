@@ -252,7 +252,7 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
   expect(actionsBounds.y + actionsBounds.height).toBeLessThanOrEqual(panelBounds.y + panelBounds.height - 12)
 })
 
-test('keeps the inspector height when the installer opens with threshold hidden or shown', async ({ page }) => {
+test('shrinks expanded Advanced for installation and returns to collapsed settings', async ({ page }) => {
   await installFakeDevice(page)
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/?configure')
@@ -262,18 +262,22 @@ test('keeps the inspector height when the installer opens with threshold hidden 
   const threshold = page.getByRole('switch', { name: 'Wind threshold' })
   const panelHeight = async () => (await panel.boundingBox()).height
 
+  const summary = page.locator('.forecast-advanced > summary')
+  await expect(summary).toBeVisible()
+  const collapsedHeight = await panelHeight()
   for (const showThreshold of [false, true]) {
-    if (showThreshold) await threshold.click()
-
-    const settingsHeight = await panelHeight()
+    await summary.click()
+    await threshold.locator(showThreshold ? '.setting-switch__segment--on' : '.setting-switch__segment--off').click()
+    await expect(threshold).toBeChecked({ checked: showThreshold })
+    await expect.poll(panelHeight).toBeGreaterThan(collapsedHeight)
     await install.click()
     await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
-    expect(await panelHeight()).toBe(settingsHeight)
+    await expect.poll(panelHeight).toBeCloseTo(collapsedHeight, 0)
 
     await page.getByRole('button', { name: 'Continue' }).click()
     const confirmation = page.getByRole('button', { name: 'Install Windpeek' })
     await expect(confirmation).toBeVisible()
-    expect(await panelHeight()).toBe(settingsHeight)
+    await expect.poll(panelHeight).toBeCloseTo(collapsedHeight, 0)
 
     const panelBounds = await panel.boundingBox()
     const confirmationBounds = await confirmation.boundingBox()
@@ -282,5 +286,8 @@ test('keeps the inspector height when the installer opens with threshold hidden 
     )
 
     await page.getByRole('button', { name: 'Back to configurator' }).click()
+    await expect(summary).toBeVisible()
+    await expect(page.locator('.forecast-advanced')).not.toHaveAttribute('open', '')
+    await expect.poll(panelHeight).toBeCloseTo(collapsedHeight, 0)
   }
 })
