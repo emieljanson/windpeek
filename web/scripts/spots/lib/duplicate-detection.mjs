@@ -21,7 +21,7 @@ const FEATURE_PRIORITY = new Map([
   ['sports-centre', 6],
 ])
 
-function placeName(value) {
+export function placeName(value) {
   return foldName(String(value).normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\b(praia|playa|plage|beach|de|da|do|del|la|le|the)\b/gi, ''))
 }

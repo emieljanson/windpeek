@@ -2,7 +2,7 @@ Release scope: no UI, styling, footer links or disclaimer changes. Source attrib
 
 ## Final progressive distance review — 9 September 2026
 
-Expanded candidate review through 2, 5, 10, 15 and 25 km. Scanned 33,514 centre pairs geometrically and assessed all 73 name/alias candidates. Added 14 reviewed merges; catalog is now **8,366 locations**, with all **222 IP defaults** preserved. Historical counts below describe earlier passes.
+Expanded candidate review through 2, 5, 10, 15 and 25 km. Scanned 33,514 centre pairs geometrically and assessed all 73 name/alias candidates. Added 14 reviewed merges; catalog is now **8,366 locations**, with all **222 IP defaults** preserved (220 entries in `popular-spots.json` plus two additional baseline defaults). Historical counts below describe earlier passes.
 
 | Distance ring | Name candidates | Additional merges |
 | --- | ---: | ---: |
@@ -130,3 +130,11 @@ Sequential main-agent review per repository instructions. Reviewed acquisition c
 - Catalog source-rights and nearby checks passed at 9,874 spots / 145 defaults.
 - Existing legacy OSM import failures (1,525) are unchanged; worldwide Surf-Forecast import has zero extraction failures.
 - Source data is pinned. The browser makes no Surf-Forecast requests. Normal regeneration uses the committed validation cache.
+
+## Release review follow-up
+
+Hardened import retries for network/body failures and both Retry-After formats, rejected blank/non-string correction evidence and duplicate curated canonical IDs, shared name normalization in the review script, added the Turkey country alias, and corrected OSM negative-tag/accented-school filtering. Tests cover retry budgets, malformed rows, evidence checks and canonical curated duplicates. The catalog stays at 8,366 / 222.
+
+Retained the deliberate unknown-country compatibility rule within 1 km and the same timezone: a missing country label is not proof of a boundary. Known conflicting countries stay separate. This matches the requested aggressive forecast-location grouping; the suggested stricter rule would change the accepted behavior.
+
+Clarified intermediate review totals, lesser-known import intent, and country assertion diagnostics. Worldwide forecast fixtures now use the requested local calendar date; marine samples are absolute UTC instants spanning the relevant days without a fixed Amsterdam daylight-saving offset.

@@ -13,10 +13,10 @@ describe('Surf-Forecast source', () => {
     expect(() => parseSurfForecastLocation({ ...location, lat: null }, 'Meioda-Praia', 'Brazil')).toThrow('coordinates')
   })
 
-  it('keeps public lesser-known spots and distinguishes source rights from extraction', () => {
+  it('imports records regardless of lesser-known status and gates release rights', () => {
     const record = parseSurfForecastLocation(location, 'Meioda-Praia', 'Brazil')
     const result = importSurfForecastRecords([record, { ...record, sourceId: 'LesserKnown', lesserKnown: true }])
-    expect(result.candidates).toHaveLength(2)
+    expect(result.candidates.map((candidate) => candidate.sourceId).sort()).toEqual(['LesserKnown', 'Meioda-Praia'])
     expect(result.candidates[0]).toMatchObject({ source: 'surf-forecast', activities: ['surfing'], releaseEligible: false })
     expect(result.exclusions).toHaveLength(0)
     expect(importSurfForecastRecords([record], { releaseEligible: true }).candidates[0].releaseEligible).toBe(true)
@@ -29,5 +29,8 @@ describe('Surf-Forecast source', () => {
       .toMatchObject({ candidates: [], exclusions: [exclusion], failures: [] })
     expect(importSurfForecastRecords([{ ...record, latitude: null }]))
       .toMatchObject({ candidates: [], failures: [{ sourceId: record.sourceId, reason: 'invalid-coordinates' }] })
+    const malformed = importSurfForecastRecords([null, undefined, record])
+    expect(malformed.candidates).toHaveLength(1)
+    expect(malformed.failures).toHaveLength(2)
   })
 })

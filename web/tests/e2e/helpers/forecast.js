@@ -1,8 +1,8 @@
 import { FORECAST_MODELS } from '../../../src/forecast/models'
 
-export function amsterdamDate(offset = 0) {
+export function amsterdamDate(offset = 0, timezone = 'Europe/Amsterdam') {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date())
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
   const date = new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + offset))
@@ -11,7 +11,7 @@ export function amsterdamDate(offset = 0) {
 
 export function forecastResponseForLatitude(latitude, timezone = 'Europe/Amsterdam') {
   const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
-    .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
+    .map((hour) => `${amsterdamDate(day, timezone)}T${String(hour).padStart(2, '0')}:00`)).flat()
   const offset = latitude > 52 ? 4 : 0
   const hourlyUnits = { time: 'iso8601' }
   const hourly = { time: times }

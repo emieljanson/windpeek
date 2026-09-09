@@ -22,12 +22,18 @@ const accepted = {
 }
 
 describe('runtime spot catalog', () => {
+  it('rejects the same curated location listed under both a current and former ID', () => {
+    expect(() => buildNearbyIndex({
+      catalog: [{ ...existing[0], aliasIds: ['old-edam'] }],
+      popularSpots: [{ id: 'edam', name: 'Edam', priority: 2 }, { id: 'old-edam', name: 'Edam', priority: 3 }],
+    })).toThrow('listed more than once')
+  })
   it('uses current country codes and preserves Hong Kong and Macau regions', () => {
     for (const [name, countryCode] of [
       ["Aber Wrac'h Point", 'fr'], ['Aberaeron', 'gb'], ['Adler - Mzymta River', 'ru'],
       ['Back Wash', 'bj'], ['Big Wave Bay', 'hk'], ['Macau Hacs Sa Beach', 'mo'],
       ['Portrush-West Strand', 'gb'], ['Vama Veche', 'ro'], ['Gaza Harbourmouth', 'ps'],
-    ]) expect(worldwideCatalog.find((spot) => spot.name === name || spot.aliases?.includes(name))?.countryCode).toBe(countryCode)
+    ]) expect(worldwideCatalog.find((spot) => spot.name === name || spot.aliases?.includes(name))?.countryCode, name).toBe(countryCode)
   })
 
   it('keeps existing ids and includes only accepted or currently approved records', () => {

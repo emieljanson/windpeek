@@ -27,7 +27,7 @@ for (const [name, code] of Object.entries({
   'Trinidad and Tobago': 'tt', 'Turks and Caicos Islands': 'tc',
   'Spain (Europe)': 'es', 'Spain (Africa)': 'es', 'East Timor': 'tl',
   'Cape Verde': 'cv', "Côte d'Ivoire": 'ci', 'Côte d&#39;Ivoire': 'ci',
-  'Republic of the Congo': 'cg', 'Reunion': 're', 'Brunei Darussalam': 'bn',
+  'Republic of the Congo': 'cg', 'Reunion': 're', 'Brunei Darussalam': 'bn', 'Turkey': 'tr',
 })) countries.set(name.toLowerCase(), code)
 
 let added = 0

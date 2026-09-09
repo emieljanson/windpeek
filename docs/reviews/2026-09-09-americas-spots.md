@@ -1,3 +1,5 @@
+Historical Americas-only intermediate review. The later worldwide pass supersedes these totals with 8,366 locations and 222 nearby defaults. See `2026-09-09-worldwide-spots.md`.
+
 # Americas spot expansion — 9 September 2026
 
 ## Result

@@ -20,8 +20,8 @@ for(const rawElement of raw.elements){
  if(!e.center&&e.bounds) e.center={lat:(e.bounds.minlat+e.bounds.maxlat)/2,lon:(e.bounds.minlon+e.bounds.maxlon)/2};
  const lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon;
  let reason= known.has(id)?'already-in-pinned-osm-source': !t.name?'unnamed':lat<0&&lon<-100?'outside-americas':manual.get(id);
- if(!reason && (['shop','office','school','club','building'].some(k=>t[k]) || ['hotel','camp_site','hostel','guest_house'].includes(t.tourism) || (t.amenity&&!['slipway'].includes(t.amenity)) || ['water_park','swimming_pool','whitewater_course','fitness_centre'].includes(t.leisure)))reason='business-facility-or-artificial-wave';
- if(!reason && /\b(school|escola|escuela|école|shop|club|lodge|lodging|hotel|dojo|fitness|whitewater|center|centre)\b/i.test(t.name))reason='business-facility-or-artificial-wave';
+ if(!reason && (['shop','office','school','club','building'].some(k=>t[k] && !['no','false','0'].includes(t[k])) || ['hotel','camp_site','hostel','guest_house'].includes(t.tourism) || (t.amenity&&!['no','false','0'].includes(t.amenity)&&!['slipway'].includes(t.amenity)) || ['water_park','swimming_pool','whitewater_course','fitness_centre'].includes(t.leisure)))reason='business-facility-or-artificial-wave';
+ if(!reason && /\b(school|escola|escuela|ecole|shop|club|lodge|lodging|hotel|dojo|fitness|whitewater|center|centre)\b/i.test(t.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'')))reason='business-facility-or-artificial-wave';
  if(!reason){ const r=importOsmElements([e]); if(!r.candidates.length)reason=r.exclusions[0]?.reason??r.failures[0]?.reason; else if(r.candidates[0].flags.length)reason=r.candidates[0].flags.join(','); }
  if(reason){exclusions.push({sourceId:id,name:t.name??'',reason});continue;}
  const keep=['name','sport','activity','sport:secondary','natural','leisure','waterway','man_made','amenity','addr:country','is_in:country_code','access'];

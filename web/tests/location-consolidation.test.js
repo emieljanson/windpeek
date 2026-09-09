@@ -58,6 +58,9 @@ describe('one kilometre forecast locations', () => {
     expect(() => consolidateLocations(input, { coordinateCorrections: [{ ...correction, id: 'missing' }] })).toThrow('Stale')
     expect(() => consolidateLocations(input, { coordinateCorrections: [{ ...correction, latitude: 91 }] })).toThrow('Invalid')
     expect(() => consolidateLocations(input, { coordinateCorrections: [{ ...correction, evidence: '' }] })).toThrow('Invalid')
+    for (const evidence of ['   ', 42, {}]) {
+      expect(() => consolidateLocations(input, { coordinateCorrections: [{ ...correction, evidence }] })).toThrow('Invalid')
+    }
   })
 
   it('resolves reviewed distant duplicate IDs and fixes the Damp beach location', () => {

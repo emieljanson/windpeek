@@ -3,14 +3,13 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { detectDuplicates, distanceMeters, selectDuplicateSuppressions } from './lib/duplicate-detection.mjs'
+import { detectDuplicates, distanceMeters, placeName, selectDuplicateSuppressions } from './lib/duplicate-detection.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data/spots')
 const { candidates } = JSON.parse(await readFile(path.join(root, 'candidates.json'), 'utf8'))
 const groups = detectDuplicates(candidates)
 const suppressed = selectDuplicateSuppressions(candidates, groups)
 const retained = candidates.filter((c) => !suppressed.has(c.id))
-const nameKey = (name) => name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  .replace(/\b(praia|playa|plage|beach|de|da|do|del|la|le|the)\b/g, '').replace(/[^\p{L}\p{N}]/gu, '')
+const nameKey = placeName
 const variants = []
 for (let i = 0; i < retained.length; i += 1) {
   const a = retained[i], key = nameKey(a.name)

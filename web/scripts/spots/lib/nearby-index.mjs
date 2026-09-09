@@ -17,12 +17,12 @@ export function buildNearbyIndex({ catalog, popularSpots, baselineSpotIds = [] }
   }
 
   for (const popularSpot of popularSpots) {
-    if (popularIds.has(popularSpot.id)) {
-      throw new Error(`Popular spot ${popularSpot.id} is listed more than once.`)
-    }
-    popularIds.add(popularSpot.id)
     const catalogSpot = catalogById.get(popularSpot.id)
     if (!catalogSpot) throw new Error(`Popular spot ${popularSpot.id} is missing from the catalog.`)
+    if (popularIds.has(catalogSpot.id)) {
+      throw new Error(`Popular spot ${popularSpot.id} is listed more than once.`)
+    }
+    popularIds.add(catalogSpot.id)
     if (!isPlaceName(catalogSpot.name)) {
       throw new Error(`Popular spot ${popularSpot.id} is not a geographic place name.`)
     }

@@ -1,26 +1,12 @@
 #!/usr/bin/env node
 // Fetch only spot metadata from the public country directory and map.
 import { writeFile, rename } from 'node:fs/promises'
+import { fetchPage } from './lib/fetch-page.mjs'
 import { parseSurfForecastLocation } from './lib/surf-forecast-source.mjs'
 
 const output = process.argv[2]
 if (!output) throw new Error('Usage: node scripts/spots/fetch-surf-forecast.mjs <snapshot.json>')
 const origin = 'https://www.surf-forecast.com'
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-async function fetchPage(url) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await sleep(350)
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'Windscout spot catalog (permission confirmed by project owner)' },
-      signal: AbortSignal.timeout(30000),
-    })
-    if (response.ok) return response.text()
-    if (![429, 500, 502, 503, 504].includes(response.status)) throw new Error(`HTTP ${response.status}: ${url}`)
-    await sleep(Math.max(3000 * (attempt + 1), Number(response.headers.get('retry-after') || 0) * 1000))
-  }
-  throw new Error(`Retries exhausted: ${url}`)
-}
-
 const index = await fetchPage(`${origin}/countries`)
 const countries = new Map([
   ['/countries/United-States/breaks', 'United States'],

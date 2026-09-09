@@ -17,9 +17,10 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
     ) })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
-    const firstDate = amsterdamDate()
-    const start = Math.floor(Date.parse(`${firstDate}T00:00:00+02:00`) / 1000)
-    const times = Array.from({ length: 120 }, (_, index) => start + index * 3600)
+    // Unix samples are absolute instants. Cover every timezone's current day
+    // and the next five days without assuming an Amsterdam/DST offset.
+    const start = Math.floor(Date.now() / 3600000) * 3600 - 24 * 3600
+    const times = Array.from({ length: 168 }, (_, index) => start + index * 3600)
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

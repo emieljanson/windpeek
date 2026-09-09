@@ -7,7 +7,7 @@ export function consolidateLocations(catalog, { preferred = [], protectedIds = [
   for (const correction of coordinateCorrections) {
     const spot = catalog.find((s) => s.id === correction.id)
     if (!spot) throw new Error(`Stale coordinate correction: ${correction.id}`)
-    if (!correction.evidence || !Number.isFinite(correction.latitude) || Math.abs(correction.latitude) > 90 ||
+    if (typeof correction.evidence !== 'string' || !correction.evidence.trim() || !Number.isFinite(correction.latitude) || Math.abs(correction.latitude) > 90 ||
       !Number.isFinite(correction.longitude) || Math.abs(correction.longitude) > 180) throw new Error('Invalid reviewed coordinate correction')
     spot.latitude = correction.latitude
     spot.longitude = correction.longitude
@@ -35,7 +35,7 @@ export function consolidateLocations(catalog, { preferred = [], protectedIds = [
   }
   for (const merge of reviewedMerges) {
     const limit = merge.maxDistanceMeters ?? 5000
-    if (!Number.isFinite(limit) || limit < 0 || limit > 25000 || (limit > 5000 && !merge.evidence?.trim())) {
+    if (!Number.isFinite(limit) || limit < 0 || limit > 25000 || (limit > 5000 && (typeof merge.evidence !== 'string' || !merge.evidence.trim()))) {
       throw new Error('Wider reviewed merges require evidence and a distance limit of at most 25 km')
     }
     const from = retained.find((s) => s.id === merge.fromId || s.aliasIds?.includes(merge.fromId))

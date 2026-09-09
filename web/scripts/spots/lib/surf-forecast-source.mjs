@@ -15,13 +15,13 @@ export function importSurfForecastRecords(records, { releaseEligible = false, ex
   const candidates = [], exclusions = [], failures = []
   const excluded = new Map(excludedRecords.map((record) => [record.sourceId, record]))
   for (const record of records ?? []) {
-    const sourceId = record.sourceId
+    const sourceId = record?.sourceId
     if (excluded.has(sourceId)) {
       exclusions.push(excluded.get(sourceId))
       continue
     }
     try {
-      if (!Number.isFinite(record.latitude) || !Number.isFinite(record.longitude)) throw new Error('invalid-coordinates')
+      if (!Number.isFinite(record?.latitude) || !Number.isFinite(record?.longitude)) throw new Error('invalid-coordinates')
       candidates.push(normalizeCandidate({
         source: 'surf-forecast', sourceId, name: record.name, country: record.country,
         latitude: record.latitude, longitude: record.longitude,
