@@ -130,3 +130,19 @@ describe('landing share metadata', () => {
     })
   })
 })
+
+it('ships swell metadata in HTML without requiring JavaScript', async () => {
+  const { swellPageHtml } = await import('../scripts/swell-page.mjs')
+  const { siteVariant } = await import('../src/marketing/siteVariant.js')
+  const html = swellPageHtml(readFileSync('index.html', 'utf8'))
+  const head = new DOMParser().parseFromString(html, 'text/html').head
+  expect(head.querySelector('[property="og:title"]').content).toContain('swell forecast')
+  expect(head.querySelector('[property="og:description"]').content).toContain('swell height')
+  expect(head.querySelector('link[rel="canonical"]').getAttribute('href')).toBe('https://windpeek.com/swell/')
+  expect(head.querySelector('[property="og:url"]').content).toBe('https://windpeek.com/swell/')
+  expect(head.querySelector('[property="og:image"]').content).toBe('https://windpeek.com/marketing/windpeek-social-swell-v1.jpg')
+  expect(existsSync('public/marketing/windpeek-social-swell-v1.jpg')).toBe(true)
+  expect(head.querySelector('base').getAttribute('href')).toBe('../')
+  expect(siteVariant({pathname:'/swell/'}).id).toBe('swell')
+  expect(siteVariant({pathname:'/swell/',search:'?site=wind'}).id).toBe('wind')
+})

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+import { swellPagePlugin } from './scripts/swell-page.mjs'
 
 export default defineConfig(({ mode }) => {
   const sentryUploadEnabled = mode === 'production' && Boolean(
@@ -12,6 +13,7 @@ export default defineConfig(({ mode }) => {
     base: './',
     plugins: [
       vue(),
+      swellPagePlugin(),
       ...(sentryUploadEnabled ? [sentryVitePlugin({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,

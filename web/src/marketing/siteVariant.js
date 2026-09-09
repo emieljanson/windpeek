@@ -19,6 +19,7 @@ export function siteVariant(location = globalThis.location) {
   const hostname = location?.hostname ?? ''
   const requested = new URLSearchParams(location?.search).get('site')
   if (requested === 'wind' || requested === 'swell') return variants[requested]
+  if (/\/swell\/?$/.test(location?.pathname ?? '')) return variants.swell
   return variants[hostname === 'swellpeek.com' || hostname === 'www.swellpeek.com' ? 'swell' : 'wind']
 }
 
