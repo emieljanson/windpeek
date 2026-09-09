@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { amsterdamDate, forecastResponseForLatitude } from './helpers/forecast'
+import { amsterdamDate, forecastResponseForLatitude, tideTimes } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
 
@@ -17,15 +17,13 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
     ) })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
-    // Unix samples are absolute instants. Cover every timezone's current day
-    // and the next five days without assuming an Amsterdam/DST offset.
-    const start = Math.floor(Date.now() / 3600000) * 3600 - 24 * 3600
-    const times = Array.from({ length: 168 }, (_, index) => start + index * 3600)
+    const timezone = new URL(route.request().url()).searchParams.get('timezone')
+    const times = tideTimes(timezone)
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        timezone: new URL(route.request().url()).searchParams.get('timezone'),
+        timezone,
         hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
         hourly: {
           time: times,

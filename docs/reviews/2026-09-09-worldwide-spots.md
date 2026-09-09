@@ -137,4 +137,4 @@ Hardened import retries for network/body failures and both Retry-After formats, 
 
 Retained the deliberate unknown-country compatibility rule within 1 km and the same timezone: a missing country label is not proof of a boundary. Known conflicting countries stay separate. This matches the requested aggressive forecast-location grouping; the suggested stricter rule would change the accepted behavior.
 
-Clarified intermediate review totals, lesser-known import intent, and country assertion diagnostics. Worldwide forecast fixtures now use the requested local calendar date; marine samples are absolute UTC instants spanning the relevant days without a fixed Amsterdam daylight-saving offset.
+Clarified intermediate review totals, lesser-known import intent, and country assertion diagnostics. Worldwide forecast fixtures now use the requested local calendar date; marine samples span exactly five local dates (119–121 hours across DST) and are validated against normalizeTide.

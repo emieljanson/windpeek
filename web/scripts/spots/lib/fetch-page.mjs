@@ -12,10 +12,11 @@ export async function fetchPage(url, {
     let body
     try {
       response = await fetcher(url, {
-        headers: { 'User-Agent': 'Windpeek spot catalog (permission confirmed by project owner)' },
+        headers: { 'User-Agent': 'Windscout spot catalog (permission confirmed by project owner)' },
         signal: AbortSignal.timeout(30000),
       })
-      body = await response.text()
+      if (response.ok) body = await response.text()
+      else await response.body?.cancel()
     } catch (error) {
       lastError = error
       response = undefined
@@ -26,6 +27,8 @@ export async function fetchPage(url, {
     const retryAfter = response?.headers.get('retry-after') ?? ''
     const seconds = Number(retryAfter)
     const delay = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retryAfter) - now()
+    // Stop this acquisition rather than retrying earlier than a long server cooldown.
+    if (delay > 60000) throw new Error(`Server requests a longer cooldown: ${url}`)
     if (attempt < 2) await sleep(Math.max(3000 * (attempt + 1), Number.isFinite(delay) ? delay : 0))
   }
   throw new Error(`Retries exhausted: ${url}`, { cause: lastError })

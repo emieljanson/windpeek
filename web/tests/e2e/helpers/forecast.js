@@ -9,6 +9,24 @@ export function amsterdamDate(offset = 0, timezone = 'Europe/Amsterdam') {
   return date.toISOString().slice(0, 10)
 }
 
+export function tideTimes(timezone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  })
+  const midnight = (offset) => {
+    const wallTime = Date.parse(`${amsterdamDate(offset, timezone)}T00:00:00Z`)
+    let timestamp = wallTime
+    for (let pass = 0; pass < 3; pass++) {
+      const p = Object.fromEntries(formatter.formatToParts(timestamp).map(({ type, value }) => [type, value]))
+      timestamp += wallTime - Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute))
+    }
+    return timestamp / 1000
+  }
+  const start = midnight(0), end = midnight(5)
+  return Array.from({ length: (end - start) / 3600 }, (_, index) => start + index * 3600)
+}
+
 export function forecastResponseForLatitude(latitude, timezone = 'Europe/Amsterdam') {
   const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
     .map((hour) => `${amsterdamDate(day, timezone)}T${String(hour).padStart(2, '0')}:00`)).flat()

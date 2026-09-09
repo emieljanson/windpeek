@@ -1,8 +1,25 @@
 import { describe, expect, it, vi } from 'vitest'
 import { FORECAST_MODELS } from '../src/forecast/models'
-import { forecastResponseForLatitude } from './e2e/helpers/forecast'
+import { forecastResponseForLatitude, tideTimes } from './e2e/helpers/forecast'
+import { normalizeTide, isNormalizedTide } from '../src/forecast/normalizeTide'
 
 describe('e2e forecast fixture', () => {
+  it.each(['Europe/Amsterdam', 'America/Los_Angeles', 'America/Santiago', 'Asia/Makassar', 'Asia/Kolkata'])('produces valid five-day tide data in %s including DST windows', (timezone) => {
+    vi.useFakeTimers()
+    try {
+      for (const date of ['2026-09-09T12:00:00Z', '2026-10-24T12:00:00Z', '2026-03-28T12:00:00Z']) {
+        vi.setSystemTime(new Date(date))
+        const times = tideTimes(timezone)
+        const normalized = normalizeTide({ timezone, hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
+          hourly: { time: times, sea_level_height_msl: times.map((_, i) => Math.sin(i / 6) * 0.8) },
+        }, { id: 'test', latitude: 0, longitude: 0, timezone })
+        expect(isNormalizedTide(normalized)).toBe(true)
+        expect(normalized.samples[0].localTime).toBe('00:00')
+      }
+    } finally {
+      vi.useRealTimers()
+    }
+  })
   it('starts the local forecast on the requested timezone day', () => {
     vi.useFakeTimers()
     try {

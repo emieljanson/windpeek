@@ -17,6 +17,7 @@ const manual=new Map([
 ]);
 for(const rawElement of raw.elements){
  const e=structuredClone(rawElement),id=`${e.type}/${e.id}`,t=e.tags??{};
+ for(const key of ['shop','office','school','club','building','amenity']) if(['no','false','0'].includes(t[key])) delete t[key];
  if(!e.center&&e.bounds) e.center={lat:(e.bounds.minlat+e.bounds.maxlat)/2,lon:(e.bounds.minlon+e.bounds.maxlon)/2};
  const lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon;
  let reason= known.has(id)?'already-in-pinned-osm-source': !t.name?'unnamed':lat<0&&lon<-100?'outside-americas':manual.get(id);
