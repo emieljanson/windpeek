@@ -60,8 +60,6 @@ export function findNearbyDefaultSpot(
   let bestSpot = null
   let bestPriority = Number.NEGATIVE_INFINITY
   let bestDistanceKm = Number.POSITIVE_INFINITY
-  let nearestSpot = null
-  let nearestDistanceKm = Number.POSITIVE_INFINITY
 
   for (const spot of spots) {
     const priority = priorityById.get(spot.id)
@@ -69,10 +67,6 @@ export function findNearbyDefaultSpot(
     if (!Number.isFinite(priority) || !candidate) continue
 
     const distanceKm = haversineDistance(origin, candidate) * EARTH_RADIUS_KM
-    if (distanceKm < nearestDistanceKm) {
-      nearestSpot = spot
-      nearestDistanceKm = distanceKm
-    }
     if (distanceKm > maxDistanceKm) continue
     if (priority > bestPriority || (priority === bestPriority && distanceKm < bestDistanceKm)) {
       bestSpot = spot
@@ -81,7 +75,7 @@ export function findNearbyDefaultSpot(
     }
   }
 
-  return bestSpot ?? nearestSpot
+  return bestSpot
 }
 
 function haversineDistance(origin, destination) {

@@ -81,12 +81,19 @@ describe('findNearbyDefaultSpot', () => {
     )).toBe(nearbySpots[1])
   })
 
-  it('falls back to the nearest surf spot outside the nearby region', () => {
+  it('does not apply a distant spot when the nearby region has no catalog coverage', () => {
     expect(findNearbyDefaultSpot(
       { latitude: 0, longitude: 0 },
       nearbySpots,
       { recommendations },
-    )).toBe(nearbySpots[1])
+    )).toBeNull()
+  })
+
+  it.each([
+    ['Bali', -8.65, 115.22],
+    ['Honolulu', 21.31, -157.86],
+  ])('does not send an IP location in %s to another country or mainland', (_, latitude, longitude) => {
+    expect(findNearbyDefaultSpot({ latitude, longitude })).toBeNull()
   })
 
   it('chooses IJmuiden for a broad Utrecht-region IP location', () => {
