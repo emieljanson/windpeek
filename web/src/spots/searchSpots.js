@@ -19,7 +19,12 @@ export function searchSpots(spots, query, { limit = 20 } = {}) {
   return spots
     .map((spot, index) => {
       const name = normalizeSpotQuery(spot.name)
-      const match = name === normalizedQuery ? 0 : name.startsWith(normalizedQuery) ? 1 : name.includes(normalizedQuery) ? 2 : -1
+      const matches = [spot.name, ...(spot.aliases ?? [])].map((value) => {
+        const key = normalizeSpotQuery(value)
+        return key === normalizedQuery ? 0 : key.startsWith(normalizedQuery) ? 1 : key.includes(normalizedQuery) ? 2 : 3
+      })
+      const score = Math.min(...matches)
+      const match = score === 3 ? -1 : score
       return { spot, index, match, name }
     })
     .filter(({ match }) => match >= 0)

@@ -1,0 +1,421 @@
+{
+  "merges": [
+    {
+      "fromId": "spot-cbr6sk",
+      "toId": "brouwersdam",
+      "fromName": "zeilschool Brouwersdam",
+      "toName": "Brouwersdam",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-ag88ti",
+      "toId": "spot-xvcufk",
+      "fromName": "Egmond Binnen/aan Zee",
+      "toName": "Egmond aan Zee",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-xjkdwp",
+      "toId": "spot-1ljalze",
+      "fromName": "Wijk aan Zee Bunker",
+      "toName": "Wijk aan zee: Pier",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1rzjtv0",
+      "toId": "spot-1ljalze",
+      "fromName": "Wijk aan Zee Noordpier",
+      "toName": "Wijk aan zee: Pier",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1g6jxy9",
+      "toId": "spot-111tcys",
+      "fromName": "Le Grand Crohot",
+      "toName": "Cap Ferret – Le Grand Crohot",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1d4f9c5",
+      "toId": "spot-1sf1vh3",
+      "fromName": "St Peter Ording",
+      "toName": "Sankt Peter Ording",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-frumks",
+      "toId": "spot-1g5m5r",
+      "fromName": "Dunbar/Belhaven Bay",
+      "toName": "Belhaven Bay",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-xysqai",
+      "toId": "spot-70pj56",
+      "fromName": "Anna Maria Key",
+      "toName": "Anna Maria Island",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1u2gtqm",
+      "toId": "spot-1mfquwr",
+      "fromName": "Bolonia windsurf center",
+      "toName": "Bolonia",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-csdjrx",
+      "toId": "spot-l9s1p",
+      "fromName": "Naneakite - Kitesurf School in Essaouira",
+      "toName": "Essaouira",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-8e7d50",
+      "toId": "spot-s4ham5",
+      "fromName": "Florencia Beach",
+      "toName": "Florencia Bay",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1iyw2xm",
+      "toId": "spot-12z16q2",
+      "fromName": "Club Náutico Oliva",
+      "toName": "Oliva",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-eyfvsx",
+      "toId": "spot-6hhum4",
+      "fromName": "Cotillo",
+      "toName": "El Cotillo (Fuerteventura, Canary Islands)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-tp8exy",
+      "toId": "spot-2g52g",
+      "fromName": "Delray Public Beach",
+      "toName": "Delray Beach",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1i31qdq",
+      "toId": "spot-h22xjf",
+      "fromName": "Gronhogen",
+      "toName": "Grönhögen (Öland)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1kbyhzo",
+      "toId": "spot-145u9of",
+      "fromName": "Nelscott Reef",
+      "toName": "Lincoln City Nelscott Reef",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-t98q2c",
+      "toId": "spot-9wi3q6",
+      "fromName": "Menorca - Son Bou",
+      "toName": "Son Bou (Menorca, Balearic Islands)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1c7vwgt",
+      "toId": "spot-vnplmw",
+      "fromName": "Penthievre",
+      "toName": "Quiberon – Penthièvre",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-amncpv",
+      "toId": "spot-rhxz98",
+      "fromName": "Pentrez Plage",
+      "toName": "Pentrez – Baie de Douarnenez",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-q11grc",
+      "toId": "spot-rde6tj",
+      "fromName": "Playa de Doninos",
+      "toName": "Praia de Doniños (Ferrol)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-yjkd39",
+      "toId": "spot-qjij8l",
+      "fromName": "Playa de Lanzada",
+      "toName": "Praia da Lanzada (O Grove)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1i3nmlq",
+      "toId": "spot-1g00h7w",
+      "fromName": "Playa de Somo",
+      "toName": "Somo (Santander)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-q4pukz",
+      "toId": "spot-h4pb7t",
+      "fromName": "Scheveningen Pier",
+      "toName": "Scheveningen",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-122gwf3",
+      "toId": "spot-h2dth9",
+      "fromName": "Katwijk",
+      "toName": "Katwijk aan Zee",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1u8js24",
+      "toId": "spot-sqj7cp",
+      "fromName": "Kite beach",
+      "toName": "Sal (Kite Beach)",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-18k7vfw",
+      "toId": "spot-1uobqca",
+      "fromName": "Kite Lagoon Le Morne",
+      "toName": "Le Morne",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1200q92",
+      "toId": "spot-12ttgsz",
+      "fromName": "Folly Beach Pier",
+      "toName": "Folly Beach",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-1ttbmp7",
+      "toId": "spot-4yjlx4",
+      "fromName": "Galveston - Flagship Pier",
+      "toName": "Galveston",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-uusr1",
+      "toId": "spot-5q4sb8",
+      "fromName": "Deerfield Park Pier",
+      "toName": "Deerfield Beach Pier",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-fetlpc",
+      "toId": "spot-qxgehf",
+      "fromName": "Huntington Pier",
+      "toName": "Huntington Beach",
+      "reason": "Reviewed overlapping named destination / forecast area"
+    },
+    {
+      "fromId": "spot-jpx0ka",
+      "toId": "spot-qf416m",
+      "fromName": "Conil",
+      "toName": "Conil de la Frontera",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-1itv9au",
+      "toId": "spot-18ot79c",
+      "fromName": "Playa di Catania",
+      "toName": "Catania, La Playa",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-1haf0dz",
+      "toId": "spot-mg90ta",
+      "fromName": "Sakarun (Dugi otok)",
+      "toName": "Sakarun",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-1vr6pgm",
+      "toId": "spot-10ur1mb",
+      "fromName": "Pembrey (Cefn Sidan)",
+      "toName": "Pembrey",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-zqbzu2",
+      "toId": "spot-19mk1ko",
+      "fromName": "Praia do Francês - Wavesurf Spot",
+      "toName": "Praia do Frances",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-14cnh5n",
+      "toId": "spot-1lwfxme",
+      "fromName": "Valdovino",
+      "toName": "Praia da Frouxeira (Valdoviño)",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-wuft6v",
+      "toId": "spot-finzq4",
+      "fromName": "Prestwick Sailing Club",
+      "toName": "Prestwick",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-9dkh65",
+      "toId": "spot-18kuqoq",
+      "fromName": "sycod oostduinkerke",
+      "toName": "Oostduinkerke",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-131g979",
+      "toId": "spot-1tdocq7",
+      "fromName": "Pärnu Jahtklubi",
+      "toName": "Pärnu",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-rnclhw",
+      "toId": "spot-1phssje",
+      "fromName": "Punta Umbria (Playa Camarón)",
+      "toName": "Punta Umbría",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-uoj7i3",
+      "toId": "spot-o3r4td",
+      "fromName": "Salcombe Yacht Club",
+      "toName": "Salcombe",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-1g1zmk6",
+      "toId": "spot-z94loh",
+      "fromName": "Playa de Lastres",
+      "toName": "Cabo Lastres",
+      "reason": "Reviewed named destination variant or facility serving the same forecast area"
+    },
+    {
+      "fromId": "spot-1wmlpj7",
+      "toId": "spot-1yd15c1",
+      "fromName": "Ramsgate",
+      "toName": "Ramsgate (The Wall)",
+      "reason": "Town/beach qualifier for the same Ramsgate forecast destination"
+    },
+    {
+      "fromId": "spot-g1l68s",
+      "toId": "spot-g7ub1f",
+      "fromName": "Poseidi",
+      "toName": "Possidi (Halkidiki)",
+      "reason": "Poseidi/Possidi spelling variant of the same cape destination"
+    },
+    {
+      "fromId": "spot-122z26y",
+      "toId": "spot-1f6b89c",
+      "fromName": "Appelviken",
+      "toName": "Apelviken (Varberg)",
+      "reason": "Appelviken misspelling of Apelviken; retain curated beach point"
+    },
+    {
+      "fromId": "spot-1nkzro1",
+      "toId": "spot-w5bpm7",
+      "fromName": "Petten",
+      "toName": "Petten (Pettemer Zeewering)",
+      "reason": "Same Petten destination with sea-wall qualifier"
+    },
+    {
+      "fromId": "spot-cxg8sr",
+      "toId": "spot-x7fc9n",
+      "fromName": "Aisling's Beach",
+      "toName": "Asling's Beach",
+      "reason": "Misspelled Aslings Beach with offshore pin; retain Eden beach point",
+      "maxDistanceMeters": 5000,
+      "evidence": "https://beachsafe.org.au/beach/nsw/bega-valley/eden/aslings"
+    },
+    {
+      "fromId": "spot-yqz49l",
+      "toId": "spot-1nkwulk",
+      "fromName": "Tofta",
+      "toName": "Tofta (Gotland)",
+      "reason": "Same Tofta destination; retain curated beach rather than offshore pin"
+    },
+    {
+      "fromId": "spot-7cd00s",
+      "toId": "spot-1x27jox",
+      "fromName": "Playa El Palmar",
+      "toName": "El Palmar (Vejer de la Frontera)",
+      "reason": "Same El Palmar beach; retain curated shore point rather than offshore pin"
+    },
+    {
+      "fromId": "spot-18i9edn",
+      "toId": "spot-1fhonr5",
+      "fromName": "Lido Garda",
+      "toName": "Lido Garda (Anzio)",
+      "reason": "Same Lido Garda beach; retained Anzio point agrees with naval locality coordinates",
+      "maxDistanceMeters": 6000,
+      "evidence": "https://www.marina.difesa.it/noi-siamo-la-marina/pilastro-logistico/scientifici/idrografico/Documents/premessa_raccolta_2015/Raccolta_Semestrale_1_2015.pdf — Lido Garda vicinity 41°27.544 N, 012°36.597 E"
+    },
+    {
+      "fromId": "spot-7ej29x",
+      "toId": "spot-1rppczb",
+      "fromName": "Metigama Right",
+      "toName": "Lazy Left",
+      "reason": "Metigama Right is a misspelled distant duplicate of Midigama Right, already an alias of the nearby retained forecast group",
+      "maxDistanceMeters": 7500,
+      "evidence": "https://www.surf-forecast.com/breaks/Midigama-Right — describes Lazy Left as 1 km away; distant donor has no other aliases"
+    },
+    {
+      "fromId": "spot-14bl7jl",
+      "toId": "spot-l9s1p",
+      "fromName": "Essaouira",
+      "toName": "Essaouira",
+      "reason": "Same Essaouira destination; remove northern misplaced pin in favour of beach location",
+      "maxDistanceMeters": 8500,
+      "evidence": "https://mapcarta.com/W243397848 — Essaouira beach near 31.4992, -9.76758"
+    },
+    {
+      "fromId": "spot-xemepb",
+      "toId": "spot-25uclm",
+      "fromName": "Damp",
+      "toName": "Damp",
+      "reason": "Both Damp pins were misplaced; retain corrected DLRG beach location",
+      "maxDistanceMeters": 8500,
+      "evidence": "https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/AA_DLRG2019/Mitmachen/ZWRDK/Waterkant2021/epaper/Waterkant2021.pdf — Damp station 54.586445, 10.02496"
+    },
+    {
+      "fromId": "spot-c270z",
+      "toId": "spot-wfbbb6",
+      "fromName": "Camperduin",
+      "toName": "Camperduin",
+      "reason": "Same Camperduin destination; remove misplaced northern pin",
+      "maxDistanceMeters": 9500,
+      "evidence": "https://nl.uimaranta.com/noord-holland/schoorl/camperduin-noordzee-route-camperduin/ — bathing water near 52.72861, 4.63918"
+    },
+    {
+      "fromId": "spot-1gxzkpp",
+      "toId": "spot-1mfquwr",
+      "fromName": "Bolonia",
+      "toName": "Bolonia",
+      "reason": "Same Bolonia destination; remove inland/northwestern misplaced pin",
+      "maxDistanceMeters": 14000,
+      "evidence": "https://www.aemet.es/en/eltiempo/prediccion/playas?l=1103504 — beach 36.0852777778, -5.7669444444"
+    },
+    {
+      "fromId": "spot-zt779e",
+      "toId": "spot-1c0jzo3",
+      "fromName": "Pelzerhaken",
+      "toName": "Pelzerhaken",
+      "reason": "Same Pelzerhaken destination; remove distant offshore misplaced pin",
+      "maxDistanceMeters": 17000,
+      "evidence": "https://www.surfschule-pelzerhaken.de/informationen/anfahrt — nearby Rettin surf beach 54°05′32″ N, 10°53′14″ E; https://baken-net.de/pelzerhaken.htm — Pelzerhaken lighthouse 54°5.3′ N, 10°51.9′ E"
+    }
+  ],
+  "coordinateCorrections": [
+    {
+      "id": "spot-25uclm",
+      "latitude": 54.586445,
+      "longitude": 10.02496,
+      "reason": "Both imported Damp points were inland or near another village; use the beach lifeguard station.",
+      "evidence": "https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/AA_DLRG2019/Mitmachen/ZWRDK/Waterkant2021/epaper/Waterkant2021.pdf — Damp station 54.586445, 10.02496"
+    }
+  ]
+}

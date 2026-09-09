@@ -1,0 +1,3597 @@
+{
+  "version": 1,
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-09T13:04:41Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "query": "nwr[\"sport\"~\"(^|;)(surfing|kitesurfing|kiteboarding|kite_surfing|windsurfing|wingfoil|wingfoiling|wing_foil|wing_foiling)(;|$)\"](-56,-170,75,-30); out tags bb;",
+  "selection": "Named physical spots in the Americas; excludes existing source IDs, businesses, artificial/river waves, large geometries and explicit review exclusions. Way/relation centres derived from bounding boxes.",
+  "rawCount": 426,
+  "elements": [
+    {
+      "type": "node",
+      "id": 1128854959,
+      "lat": 36.9605191,
+      "lon": -122.0240332,
+      "tags": {
+        "access": "children",
+        "leisure": "playground",
+        "name": "Cowell's Beach Children's Surfing Area",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1599035227,
+      "lat": 36.9593054,
+      "lon": -121.9643858,
+      "tags": {
+        "leisure": "pitch",
+        "name": "The Hook",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1966226206,
+      "lat": 16.3363288,
+      "lon": -61.3621452,
+      "tags": {
+        "leisure": "sports_centre",
+        "name": "Spot de Damencourt",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850543,
+      "lat": 36.9713534,
+      "lon": -121.9439789,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Bombora",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850545,
+      "lat": 36.9545866,
+      "lon": -121.9709742,
+      "tags": {
+        "leisure": "pitch",
+        "name": "First Peak",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850546,
+      "lat": 36.9540996,
+      "lon": -121.9767453,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Little Wind-an-Sea",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850547,
+      "lat": 36.9755268,
+      "lon": -121.940728,
+      "tags": {
+        "leisure": "pitch",
+        "name": "New Brighton Reef",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850550,
+      "lat": 36.9555205,
+      "lon": -121.9702184,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Second Peak",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850551,
+      "lat": 36.9535308,
+      "lon": -121.9728983,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Sewer Peak",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850552,
+      "lat": 36.9609104,
+      "lon": -121.9624799,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Shark's Cove",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850553,
+      "lat": 36.9539085,
+      "lon": -121.9748546,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Suicide's",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850554,
+      "lat": 36.9710845,
+      "lon": -121.9486795,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Toes Over",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850555,
+      "lat": 36.9669527,
+      "lon": -121.956576,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Trees",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2330850564,
+      "lat": 36.9574939,
+      "lon": -121.9677716,
+      "tags": {
+        "leisure": "pitch",
+        "name": "38th",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2379212363,
+      "lat": 11.0425833,
+      "lon": -74.9192393,
+      "tags": {
+        "name": "Punta Roca",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2645054132,
+      "lat": -34.4244284,
+      "lon": -72.0437832,
+      "tags": {
+        "name": "Caleta Los Piures",
+        "natural": "bay",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3013041557,
+      "lat": -19.9328788,
+      "lon": -40.1156751,
+      "tags": {
+        "name": "Pico de Surf do Lodinho",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3013041558,
+      "lat": -19.9333024,
+      "lon": -40.1182608,
+      "tags": {
+        "name": "Pico de Surf do Urubu",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3373999536,
+      "lat": 38.4676825,
+      "lon": -75.0492749,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Lewes Street Surf Beach",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3659137147,
+      "lat": 19.7554894,
+      "lon": -155.0906552,
+      "tags": {
+        "name": "Honoli‘i",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4545892157,
+      "lat": 18.4692495,
+      "lon": -66.0897865,
+      "tags": {
+        "name": "Fiji",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4545892158,
+      "lat": 18.469275,
+      "lon": -66.0922058,
+      "tags": {
+        "name": "La Ocho",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4689366869,
+      "lat": 27.8623099,
+      "lon": -80.4465025,
+      "tags": {
+        "name": "North Jetty",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4802736378,
+      "lat": 15.6644065,
+      "lon": -96.5418646,
+      "tags": {
+        "name": "San Agustinillo",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5984125199,
+      "lat": 23.0289356,
+      "lon": -109.7137106,
+      "tags": {
+        "name": "Zippers",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5984125200,
+      "lat": 23.0251983,
+      "lon": -109.7147888,
+      "tags": {
+        "name": "The Rock",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6110263424,
+      "lat": 44.9585669,
+      "lon": -124.034433,
+      "tags": {
+        "name": "Nelscott Reef",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6205812097,
+      "lat": 12.4800259,
+      "lon": -81.7287225,
+      "tags": {
+        "name": "Punta Sur",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6205812098,
+      "lat": 12.4817813,
+      "lon": -81.7250984,
+      "tags": {
+        "name": "La Roca",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6294552157,
+      "lat": -12.3428185,
+      "lon": -76.8164192,
+      "tags": {
+        "name": "Playa Kon Tiki",
+        "natural": "beach",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9533884650,
+      "lat": 13.4938792,
+      "lon": -89.4386241,
+      "tags": {
+        "name": "El Zonte",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9831319123,
+      "lat": 16.4195349,
+      "lon": -61.5359401,
+      "tags": {
+        "name": "Spot du Souffleur",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10616900299,
+      "lat": -27.6977716,
+      "lon": -48.4898432,
+      "tags": {
+        "name": "Lomba do Sabão",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10905764515,
+      "lat": -28.752831,
+      "lon": -48.9859558,
+      "tags": {
+        "name": "Laje do Jagua",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13139806816,
+      "lat": 48.4193071,
+      "lon": -124.0566943,
+      "tags": {
+        "name": "Jordan River Point",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13139806817,
+      "lat": 48.4991043,
+      "lon": -124.3009349,
+      "tags": {
+        "name": "Chicken's",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13139806818,
+      "lat": 48.4998826,
+      "lon": -124.3037367,
+      "tags": {
+        "name": "Second's",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13139806819,
+      "lat": 48.4973631,
+      "lon": -124.3004103,
+      "tags": {
+        "name": "First's",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13139806820,
+      "lat": 48.4214658,
+      "lon": -124.0561536,
+      "tags": {
+        "name": "Sewers",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13900527108,
+      "lat": 36.9632137,
+      "lon": -121.960258,
+      "tags": {
+        "leisure": "pitch",
+        "name": "Private's",
+        "sport": "surfing"
+      }
+    },
+    {
+      "type": "way",
+      "id": 12541527,
+      "bounds": {
+        "minlat": 21.6381597,
+        "minlon": -158.065318,
+        "maxlat": 21.6423157,
+        "maxlon": -158.0622259
+      },
+      "tags": {
+        "name": "Waimea Bay",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.6402377,
+        "lon": -158.06377195
+      }
+    },
+    {
+      "type": "way",
+      "id": 12541972,
+      "bounds": {
+        "minlat": 21.6551363,
+        "minlon": -158.0616946,
+        "maxlat": 21.6866167,
+        "maxlon": -158.0304551
+      },
+      "tags": {
+        "name": "Sunset Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.6708765,
+        "lon": -158.04607485000002
+      }
+    },
+    {
+      "type": "way",
+      "id": 75803365,
+      "bounds": {
+        "minlat": -1.6654978,
+        "minlon": -80.8354417,
+        "maxlat": -1.6324638,
+        "maxlon": -80.8198315
+      },
+      "tags": {
+        "name": "Las Tunas",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -1.6489808,
+        "lon": -80.8276366
+      }
+    },
+    {
+      "type": "way",
+      "id": 154902421,
+      "bounds": {
+        "minlat": 10.9476851,
+        "minlon": -75.0364018,
+        "maxlat": 10.952784,
+        "maxlon": -75.0283831
+      },
+      "tags": {
+        "name": "Playa Puerto Velero",
+        "natural": "beach",
+        "sport": "kitesurfing"
+      },
+      "center": {
+        "lat": 10.95023455,
+        "lon": -75.03239245
+      }
+    },
+    {
+      "type": "way",
+      "id": 159308929,
+      "bounds": {
+        "minlat": -23.4791894,
+        "minlon": -45.0710608,
+        "maxlat": -23.4661361,
+        "maxlon": -45.0602331
+      },
+      "tags": {
+        "name": "Praia Grande",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.472662749999998,
+        "lon": -45.06564695
+      }
+    },
+    {
+      "type": "way",
+      "id": 159308936,
+      "bounds": {
+        "minlat": -23.421408,
+        "minlon": -45.0395776,
+        "maxlat": -23.4133647,
+        "maxlon": -45.0311823
+      },
+      "tags": {
+        "name": "Praia Vermelha do Norte",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.41738635,
+        "lon": -45.03537995
+      }
+    },
+    {
+      "type": "way",
+      "id": 159308937,
+      "bounds": {
+        "minlat": -23.4280074,
+        "minlon": -45.0649679,
+        "maxlat": -23.4163474,
+        "maxlon": -45.0533038
+      },
+      "tags": {
+        "name": "Praia do Perequê-Açu",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.4221774,
+        "lon": -45.059135850000004
+      }
+    },
+    {
+      "type": "way",
+      "id": 162009070,
+      "bounds": {
+        "minlat": -22.7828101,
+        "minlon": -41.9169094,
+        "maxlat": -22.7779771,
+        "maxlon": -41.9032133
+      },
+      "tags": {
+        "name": "Praia de Geribá",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -22.7803936,
+        "lon": -41.91006135
+      }
+    },
+    {
+      "type": "way",
+      "id": 162128345,
+      "bounds": {
+        "minlat": -22.7583068,
+        "minlon": -41.9514689,
+        "maxlat": -22.7448343,
+        "maxlon": -41.9424422
+      },
+      "tags": {
+        "name": "Praia Rasa",
+        "natural": "beach",
+        "sport": "kitesurfing;sailing"
+      },
+      "center": {
+        "lat": -22.75157055,
+        "lon": -41.94695555
+      }
+    },
+    {
+      "type": "way",
+      "id": 162866403,
+      "bounds": {
+        "minlat": -22.8063885,
+        "minlon": -41.9312694,
+        "maxlat": -22.7861273,
+        "maxlon": -41.9208492
+      },
+      "tags": {
+        "name": "Praia Tucuns",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -22.7962579,
+        "lon": -41.9260593
+      }
+    },
+    {
+      "type": "way",
+      "id": 162924323,
+      "bounds": {
+        "minlat": -22.7716965,
+        "minlon": -41.9425435,
+        "maxlat": -22.7579959,
+        "maxlon": -41.9079966
+      },
+      "tags": {
+        "name": "Praia de Manguinhos",
+        "natural": "beach",
+        "sport": "sailing;kitesurfing"
+      },
+      "center": {
+        "lat": -22.7648462,
+        "lon": -41.925270049999995
+      }
+    },
+    {
+      "type": "way",
+      "id": 165080724,
+      "bounds": {
+        "minlat": -12.1761804,
+        "minlon": -77.0342702,
+        "maxlat": -12.1730225,
+        "maxlon": -77.0333262
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Playa La Herradura",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.17460145,
+        "lon": -77.0337982
+      }
+    },
+    {
+      "type": "way",
+      "id": 168398222,
+      "bounds": {
+        "minlat": -38.2139042,
+        "minlon": -57.7004414,
+        "maxlat": -38.2096499,
+        "maxlon": -57.6966924
+      },
+      "tags": {
+        "name": "Playa Escondida",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -38.21177705,
+        "lon": -57.6985669
+      }
+    },
+    {
+      "type": "way",
+      "id": 176076686,
+      "bounds": {
+        "minlat": -23.8555912,
+        "minlon": -46.135026,
+        "maxlat": -23.8381313,
+        "maxlon": -46.1231342
+      },
+      "tags": {
+        "name": "Praia da Enseada de Bertioga",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.84686125,
+        "lon": -46.1290801
+      }
+    },
+    {
+      "type": "way",
+      "id": 189121608,
+      "bounds": {
+        "minlat": -8.5396847,
+        "minlon": -35.0073499,
+        "maxlat": -8.5118446,
+        "maxlon": -35.0030509
+      },
+      "tags": {
+        "name": "Praia de Maracaipe",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -8.52576465,
+        "lon": -35.0052004
+      }
+    },
+    {
+      "type": "way",
+      "id": 189121624,
+      "bounds": {
+        "minlat": -8.489299,
+        "minlon": -35.0016369,
+        "maxlat": -8.458906,
+        "maxlon": -34.9846721
+      },
+      "tags": {
+        "name": "Praia do Cupe",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -8.4741025,
+        "lon": -34.9931545
+      }
+    },
+    {
+      "type": "way",
+      "id": 189779407,
+      "bounds": {
+        "minlat": -6.3705871,
+        "minlon": -35.0085354,
+        "maxlat": -6.3659168,
+        "maxlon": -34.999597
+      },
+      "tags": {
+        "name": "Pontal de Baía Formosa",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -6.368251949999999,
+        "lon": -35.0040662
+      }
+    },
+    {
+      "type": "way",
+      "id": 192241413,
+      "bounds": {
+        "minlat": 21.5935614,
+        "minlon": -158.109434,
+        "maxlat": 21.5951276,
+        "maxlon": -158.1065111
+      },
+      "tags": {
+        "name": "Haleiwa Alii Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.5943445,
+        "lon": -158.10797255
+      }
+    },
+    {
+      "type": "way",
+      "id": 203014127,
+      "bounds": {
+        "minlat": 21.310193,
+        "minlon": -157.6609409,
+        "maxlat": 21.3122262,
+        "maxlon": -157.6588853
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Makapuu Beach Park",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 21.3112096,
+        "lon": -157.6599131
+      }
+    },
+    {
+      "type": "way",
+      "id": 204616555,
+      "bounds": {
+        "minlat": -38.2088507,
+        "minlon": -57.6936841,
+        "maxlat": -38.2065622,
+        "maxlon": -57.6900685
+      },
+      "tags": {
+        "name": "Playa de Chapadmalal",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -38.20770645,
+        "lon": -57.691876300000004
+      }
+    },
+    {
+      "type": "way",
+      "id": 218679862,
+      "bounds": {
+        "minlat": 21.2713293,
+        "minlon": -157.8297428,
+        "maxlat": 21.2767939,
+        "maxlon": -157.8228221
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Waikīkī Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.274061600000003,
+        "lon": -157.82628245
+      }
+    },
+    {
+      "type": "way",
+      "id": 243919362,
+      "bounds": {
+        "minlat": 12.0437013,
+        "minlon": -68.2669495,
+        "maxlat": 12.0447309,
+        "maxlon": -68.265888
+      },
+      "tags": {
+        "name": "Atlantis Beach",
+        "natural": "beach",
+        "sport": "kitesurfing"
+      },
+      "center": {
+        "lat": 12.0442161,
+        "lon": -68.26641875
+      }
+    },
+    {
+      "type": "way",
+      "id": 244597751,
+      "bounds": {
+        "minlat": 10.5061592,
+        "minlon": -67.6004482,
+        "maxlat": 10.5100622,
+        "maxlon": -67.5951675
+      },
+      "tags": {
+        "name": "Playa Grande",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.5081107,
+        "lon": -67.59780785000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 255820398,
+      "bounds": {
+        "minlat": -30.323596,
+        "minlon": -50.9126929,
+        "maxlat": -30.3209816,
+        "maxlon": -50.9064435
+      },
+      "tags": {
+        "name": "Praia da Varzinha",
+        "natural": "beach",
+        "sport": "kitesurfing"
+      },
+      "center": {
+        "lat": -30.3222888,
+        "lon": -50.9095682
+      }
+    },
+    {
+      "type": "way",
+      "id": 256490471,
+      "bounds": {
+        "minlat": 16.4706733,
+        "minlon": -61.5175514,
+        "maxlat": 16.4717658,
+        "maxlon": -61.5121625
+      },
+      "tags": {
+        "name": "Plage de la Chapelle",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 16.47121955,
+        "lon": -61.51485695
+      }
+    },
+    {
+      "type": "way",
+      "id": 256789749,
+      "bounds": {
+        "minlat": -22.8850912,
+        "minlon": -41.9992518,
+        "maxlat": -22.8840792,
+        "maxlon": -41.9977994
+      },
+      "tags": {
+        "name": "Praia Brava",
+        "natural": "beach",
+        "sport": "surfing;bodyboarding"
+      },
+      "center": {
+        "lat": -22.8845852,
+        "lon": -41.9985256
+      }
+    },
+    {
+      "type": "way",
+      "id": 281973587,
+      "bounds": {
+        "minlat": 48.9806993,
+        "minlon": -125.6587901,
+        "maxlat": 49.003966,
+        "maxlon": -125.6106396
+      },
+      "tags": {
+        "name": "Florencia Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 48.992332649999994,
+        "lon": -125.63471485
+      }
+    },
+    {
+      "type": "way",
+      "id": 292650235,
+      "bounds": {
+        "minlat": -8.0855376,
+        "minlon": -79.1236088,
+        "maxlat": -8.0787613,
+        "maxlon": -79.1210798
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Huancarute",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -8.08214945,
+        "lon": -79.12234430000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 321748028,
+      "bounds": {
+        "minlat": -23.0368106,
+        "minlon": -43.4957536,
+        "maxlat": -23.0360194,
+        "maxlon": -43.4941914
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Praia do Secreto",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.036414999999998,
+        "lon": -43.4949725
+      }
+    },
+    {
+      "type": "way",
+      "id": 382309593,
+      "bounds": {
+        "minlat": -9.7759878,
+        "minlon": -35.8444173,
+        "maxlat": -9.7722659,
+        "maxlon": -35.841188
+      },
+      "tags": {
+        "leisure": "surfing_spot_type",
+        "name": "Praia do Francês - Wavesurf Spot",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -9.77412685,
+        "lon": -35.84280265
+      }
+    },
+    {
+      "type": "way",
+      "id": 382323332,
+      "bounds": {
+        "minlat": -4.5236838,
+        "minlon": -37.7072074,
+        "maxlat": -4.5179356,
+        "maxlon": -37.6996296
+      },
+      "tags": {
+        "name": "Canoa Quebrada Kitesurf Spot",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -4.5208097,
+        "lon": -37.7034185
+      }
+    },
+    {
+      "type": "way",
+      "id": 389455902,
+      "bounds": {
+        "minlat": 33.4143569,
+        "minlon": -117.6188494,
+        "maxlat": 33.4177312,
+        "maxlon": -117.6156637
+      },
+      "tags": {
+        "name": "T Street Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 33.416044049999996,
+        "lon": -117.61725655000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 389455903,
+      "bounds": {
+        "minlat": 33.4174802,
+        "minlon": -117.6230345,
+        "maxlat": 33.4225418,
+        "maxlon": -117.6183902
+      },
+      "tags": {
+        "name": "The Pier Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 33.420011,
+        "lon": -117.62071234999999
+      }
+    },
+    {
+      "type": "way",
+      "id": 394441608,
+      "bounds": {
+        "minlat": -12.1454316,
+        "minlon": -77.0279787,
+        "maxlat": -12.1417589,
+        "maxlon": -77.0257285
+      },
+      "tags": {
+        "name": "Playa Barranquito",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.14359525,
+        "lon": -77.02685360000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 396258998,
+      "bounds": {
+        "minlat": -12.1299875,
+        "minlon": -77.0371999,
+        "maxlat": -12.1281703,
+        "maxlon": -77.0356921
+      },
+      "tags": {
+        "name": "Playa Makaha",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.1290789,
+        "lon": -77.03644600000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 396259001,
+      "bounds": {
+        "minlat": -12.1243262,
+        "minlon": -77.0418766,
+        "maxlat": -12.1236671,
+        "maxlon": -77.0407507
+      },
+      "tags": {
+        "name": "La Pampilla",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.12399665,
+        "lon": -77.04131365
+      }
+    },
+    {
+      "type": "way",
+      "id": 399820054,
+      "bounds": {
+        "minlat": -12.3308506,
+        "minlon": -76.8330177,
+        "maxlat": -12.3291151,
+        "maxlon": -76.8307755
+      },
+      "tags": {
+        "name": "Playa Caballeros",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.32998285,
+        "lon": -76.8318966
+      }
+    },
+    {
+      "type": "way",
+      "id": 399820057,
+      "bounds": {
+        "minlat": -12.3393734,
+        "minlon": -76.8234903,
+        "maxlat": -12.3380867,
+        "maxlon": -76.8198195
+      },
+      "tags": {
+        "name": "Playa Negra",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.338730049999999,
+        "lon": -76.8216549
+      }
+    },
+    {
+      "type": "way",
+      "id": 399820058,
+      "bounds": {
+        "minlat": -12.3424483,
+        "minlon": -76.8204443,
+        "maxlat": -12.3387476,
+        "maxlon": -76.8167826
+      },
+      "tags": {
+        "name": "Playa Blanca",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.34059795,
+        "lon": -76.81861345
+      }
+    },
+    {
+      "type": "way",
+      "id": 399820226,
+      "bounds": {
+        "minlat": -12.3210076,
+        "minlon": -76.8401603,
+        "maxlat": -12.3125846,
+        "maxlon": -76.835202
+      },
+      "tags": {
+        "name": "Playa El Silencio",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.3167961,
+        "lon": -76.83768115
+      }
+    },
+    {
+      "type": "way",
+      "id": 428024507,
+      "bounds": {
+        "minlat": -3.7089124,
+        "minlon": -38.4681332,
+        "maxlat": -3.7079416,
+        "maxlon": -38.46699
+      },
+      "tags": {
+        "name": "Praia do Titanzinho",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -3.708427,
+        "lon": -38.467561599999996
+      }
+    },
+    {
+      "type": "way",
+      "id": 431248348,
+      "bounds": {
+        "minlat": 18.4832368,
+        "minlon": -67.1667747,
+        "maxlat": 18.4840238,
+        "maxlon": -67.1664865
+      },
+      "tags": {
+        "name": "Wilderness",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 18.4836303,
+        "lon": -67.1666306
+      }
+    },
+    {
+      "type": "way",
+      "id": 450617292,
+      "bounds": {
+        "minlat": 16.24087,
+        "minlon": -61.3396284,
+        "maxlat": 16.2420153,
+        "maxlon": -61.3378329
+      },
+      "tags": {
+        "name": "Plage de Gros Sable",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 16.24144265,
+        "lon": -61.33873065
+      }
+    },
+    {
+      "type": "way",
+      "id": 519081277,
+      "bounds": {
+        "minlat": 10.4966049,
+        "minlon": -67.6957114,
+        "maxlat": 10.5009274,
+        "maxlon": -67.6842034
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Playa Cuyagua",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.49876615,
+        "lon": -67.6899574
+      }
+    },
+    {
+      "type": "way",
+      "id": 541599229,
+      "bounds": {
+        "minlat": 45.364479,
+        "minlon": -75.8062229,
+        "maxlat": 45.3656062,
+        "maxlon": -75.8051137
+      },
+      "tags": {
+        "name": "Britannia Watersport Beach",
+        "natural": "beach",
+        "sport": "kitesurfing;windsurfing"
+      },
+      "center": {
+        "lat": 45.3650426,
+        "lon": -75.80566830000001
+      }
+    },
+    {
+      "type": "way",
+      "id": 596267557,
+      "bounds": {
+        "minlat": 49.0107907,
+        "minlon": -125.6978452,
+        "maxlat": 49.0374755,
+        "maxlon": -125.67386
+      },
+      "tags": {
+        "name": "Wickaninnish Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 49.0241331,
+        "lon": -125.6858526
+      }
+    },
+    {
+      "type": "way",
+      "id": 672176654,
+      "bounds": {
+        "minlat": -12.3838956,
+        "minlon": -76.789293,
+        "maxlat": -12.3823732,
+        "maxlon": -76.7883805
+      },
+      "tags": {
+        "name": "El Huaico",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.3831344,
+        "lon": -76.78883675
+      }
+    },
+    {
+      "type": "way",
+      "id": 721412084,
+      "bounds": {
+        "minlat": -14.7446242,
+        "minlon": -39.063938,
+        "maxlat": -14.7437812,
+        "maxlon": -39.0627185
+      },
+      "tags": {
+        "name": "tirraras point",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -14.7442027,
+        "lon": -39.06332825
+      }
+    },
+    {
+      "type": "way",
+      "id": 729417201,
+      "bounds": {
+        "minlat": 10.628236,
+        "minlon": -66.574594,
+        "maxlat": 10.6287474,
+        "maxlon": -66.5733904
+      },
+      "tags": {
+        "access": "yes",
+        "addr:country": "VE",
+        "name": "Playa La Punta",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.6284917,
+        "lon": -66.57399219999999
+      }
+    },
+    {
+      "type": "way",
+      "id": 902370052,
+      "bounds": {
+        "minlat": 21.6611312,
+        "minlon": -157.9372268,
+        "maxlat": 21.6724934,
+        "maxlon": -157.9273903
+      },
+      "tags": {
+        "name": "Moku‘Auia Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.6668123,
+        "lon": -157.93230855000002
+      }
+    },
+    {
+      "type": "way",
+      "id": 904924436,
+      "bounds": {
+        "minlat": 21.4888623,
+        "minlon": -158.2304889,
+        "maxlat": 21.5001609,
+        "maxlon": -158.2292819
+      },
+      "tags": {
+        "name": "Keaau Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 21.494511600000003,
+        "lon": -158.2298854
+      }
+    },
+    {
+      "type": "way",
+      "id": 904924438,
+      "bounds": {
+        "minlat": 21.4754504,
+        "minlon": -158.2234235,
+        "maxlat": 21.4786443,
+        "maxlon": -158.219603
+      },
+      "tags": {
+        "name": "Mākaha Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.47704735,
+        "lon": -158.22151325
+      }
+    },
+    {
+      "type": "way",
+      "id": 904931359,
+      "bounds": {
+        "minlat": 21.5268321,
+        "minlon": -158.2311552,
+        "maxlat": 21.5364837,
+        "maxlon": -158.2288635
+      },
+      "tags": {
+        "name": "Mākua Beach",
+        "natural": "beach",
+        "sport": "swimming;surfing"
+      },
+      "center": {
+        "lat": 21.5316579,
+        "lon": -158.23000935
+      }
+    },
+    {
+      "type": "way",
+      "id": 991050234,
+      "bounds": {
+        "minlat": -38.2103793,
+        "minlon": -57.6984934,
+        "maxlat": -38.2087414,
+        "maxlon": -57.6934517
+      },
+      "tags": {
+        "name": "Playa de Chapadmalal",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -38.209560350000004,
+        "lon": -57.69597254999999
+      }
+    },
+    {
+      "type": "way",
+      "id": 1002825877,
+      "bounds": {
+        "minlat": -38.2074349,
+        "minlon": -57.6901194,
+        "maxlat": -38.2043728,
+        "maxlon": -57.6836768
+      },
+      "tags": {
+        "name": "Playa de Chapadmalal",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -38.20590385,
+        "lon": -57.6868981
+      }
+    },
+    {
+      "type": "way",
+      "id": 1002837252,
+      "bounds": {
+        "minlat": -38.21682,
+        "minlon": -57.7051615,
+        "maxlat": -38.2136852,
+        "maxlon": -57.6999241
+      },
+      "tags": {
+        "name": "Palangana",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -38.2152526,
+        "lon": -57.7025428
+      }
+    },
+    {
+      "type": "way",
+      "id": 1009395310,
+      "bounds": {
+        "minlat": 16.2405615,
+        "minlon": -61.3393879,
+        "maxlat": 16.2419728,
+        "maxlon": -61.3375707
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Spot du Helleux",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 16.24126715,
+        "lon": -61.3384793
+      }
+    },
+    {
+      "type": "way",
+      "id": 1029676139,
+      "bounds": {
+        "minlat": 43.4255478,
+        "minlon": -70.3774175,
+        "maxlat": 43.4357623,
+        "maxlon": -70.3677508
+      },
+      "tags": {
+        "name": "Fortunes Rocks Beach",
+        "natural": "beach",
+        "sport": "surfing;swimming"
+      },
+      "center": {
+        "lat": 43.43065505,
+        "lon": -70.37258415
+      }
+    },
+    {
+      "type": "way",
+      "id": 1061553499,
+      "bounds": {
+        "minlat": 18.2287465,
+        "minlon": -70.1906066,
+        "maxlat": 18.2308088,
+        "maxlon": -70.1855056
+      },
+      "tags": {
+        "name": "Playa Pato",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 18.22977765,
+        "lon": -70.1880561
+      }
+    },
+    {
+      "type": "way",
+      "id": 1089340805,
+      "bounds": {
+        "minlat": 32.3305722,
+        "minlon": -117.0717877,
+        "maxlat": 32.3651914,
+        "maxlon": -117.0543507
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Playa de Rosarito",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 32.347881799999996,
+        "lon": -117.0630692
+      }
+    },
+    {
+      "type": "way",
+      "id": 1107488622,
+      "bounds": {
+        "minlat": 43.0027111,
+        "minlon": -70.745135,
+        "maxlat": 43.011715,
+        "maxlon": -70.7387486
+      },
+      "tags": {
+        "name": "Foss Beach",
+        "natural": "beach",
+        "sport": "surfing;swimming"
+      },
+      "center": {
+        "lat": 43.007213050000004,
+        "lon": -70.7419418
+      }
+    },
+    {
+      "type": "way",
+      "id": 1183776625,
+      "bounds": {
+        "minlat": 10.6235688,
+        "minlon": -66.7134975,
+        "maxlat": 10.6248746,
+        "maxlon": -66.7119075
+      },
+      "tags": {
+        "access": "yes",
+        "addr:country": "VE",
+        "name": "Playa Pelúa",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.6242217,
+        "lon": -66.7127025
+      }
+    },
+    {
+      "type": "way",
+      "id": 1183776628,
+      "bounds": {
+        "minlat": 10.6221315,
+        "minlon": -66.7108551,
+        "maxlat": 10.6233375,
+        "maxlon": -66.708324
+      },
+      "tags": {
+        "access": "yes",
+        "addr:country": "VE",
+        "name": "Playa Pantaleta",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.6227345,
+        "lon": -66.70958955
+      }
+    },
+    {
+      "type": "way",
+      "id": 1206286178,
+      "bounds": {
+        "minlat": 10.6166957,
+        "minlon": -66.8392754,
+        "maxlat": 10.617885,
+        "maxlon": -66.837768
+      },
+      "tags": {
+        "access": "yes",
+        "addr:country": "VE",
+        "name": "Playa Los Cocos",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 10.61729035,
+        "lon": -66.8385217
+      }
+    },
+    {
+      "type": "way",
+      "id": 1247741871,
+      "bounds": {
+        "minlat": -23.4231209,
+        "minlon": -45.0637211,
+        "maxlat": -23.4229388,
+        "maxlon": -45.0635118
+      },
+      "tags": {
+        "name": "Praia do Perequê-Açu",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.42302985,
+        "lon": -45.06361645
+      }
+    },
+    {
+      "type": "way",
+      "id": 1458301379,
+      "bounds": {
+        "minlat": -12.1329585,
+        "minlon": -77.0353437,
+        "maxlat": -12.1307228,
+        "maxlon": -77.0320737
+      },
+      "tags": {
+        "name": "Playa Redondo",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.131840650000001,
+        "lon": -77.0337087
+      }
+    },
+    {
+      "type": "way",
+      "id": 1458301380,
+      "bounds": {
+        "minlat": -12.12325,
+        "minlon": -77.0459955,
+        "maxlat": -12.121457,
+        "maxlon": -77.0427968
+      },
+      "tags": {
+        "name": "Punta Roquitas",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -12.1223535,
+        "lon": -77.04439615000001
+      }
+    },
+    {
+      "type": "relation",
+      "id": 1365085,
+      "bounds": {
+        "minlat": -6.223458,
+        "minlon": -35.0784682,
+        "maxlat": -6.211418,
+        "maxlon": -35.0678318
+      },
+      "tags": {
+        "name": "Praia do Madeiro",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -6.217438,
+        "lon": -35.07315
+      }
+    },
+    {
+      "type": "relation",
+      "id": 4812919,
+      "bounds": {
+        "minlat": -23.7950429,
+        "minlon": -45.5882607,
+        "maxlat": -23.7911272,
+        "maxlon": -45.5536911
+      },
+      "tags": {
+        "name": "Praia de Maresias",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.79308505,
+        "lon": -45.5709759
+      }
+    },
+    {
+      "type": "relation",
+      "id": 5476220,
+      "bounds": {
+        "minlat": -3.8506996,
+        "minlon": -32.4410538,
+        "maxlat": -3.8488334,
+        "maxlon": -32.4367334
+      },
+      "tags": {
+        "access": "yes",
+        "name": "Praia do Cacimba do Padre",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -3.8497665000000003,
+        "lon": -32.4388936
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6435396,
+      "bounds": {
+        "minlat": -27.4441255,
+        "minlon": -48.4041043,
+        "maxlat": -27.4148381,
+        "maxlon": -48.3697249
+      },
+      "tags": {
+        "name": "Praia dos Ingleses",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.429481799999998,
+        "lon": -48.3869146
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6442370,
+      "bounds": {
+        "minlat": -27.7480679,
+        "minlon": -48.5080652,
+        "maxlat": -27.7239757,
+        "maxlon": -48.5052113
+      },
+      "tags": {
+        "name": "Praia da Armação",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.7360218,
+        "lon": -48.506638249999995
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6442371,
+      "bounds": {
+        "minlat": -27.7577996,
+        "minlon": -48.5004437,
+        "maxlat": -27.7510973,
+        "maxlon": -48.4957176
+      },
+      "tags": {
+        "name": "Praia do Matadeiro",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.754448449999998,
+        "lon": -48.49808065
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6445104,
+      "bounds": {
+        "minlat": -28.1370611,
+        "minlon": -48.6433052,
+        "maxlat": -28.1215512,
+        "maxlon": -48.6370758
+      },
+      "tags": {
+        "name": "Praia do Rosa",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -28.129306149999998,
+        "lon": -48.6401905
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6455059,
+      "bounds": {
+        "minlat": -27.6403105,
+        "minlon": -48.4594864,
+        "maxlat": -27.6286218,
+        "maxlon": -48.4469161
+      },
+      "tags": {
+        "name": "Praia da Joaquina",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.63446615,
+        "lon": -48.453201250000006
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6455060,
+      "bounds": {
+        "minlat": -27.7035774,
+        "minlon": -48.4954414,
+        "maxlat": -27.6683855,
+        "maxlon": -48.4761902
+      },
+      "tags": {
+        "name": "Praia do Campeche",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.68598145,
+        "lon": -48.4858158
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6480793,
+      "bounds": {
+        "minlat": -27.0228037,
+        "minlon": -48.5762678,
+        "maxlat": -27.0195722,
+        "maxlon": -48.5755759
+      },
+      "tags": {
+        "name": "Praia do Pinho",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.021187949999998,
+        "lon": -48.57592185
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6776925,
+      "bounds": {
+        "minlat": -23.7965618,
+        "minlon": -45.9939255,
+        "maxlat": -23.7818321,
+        "maxlon": -45.9722501
+      },
+      "tags": {
+        "name": "Praia de Itaguaré",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.789196949999997,
+        "lon": -45.9830878
+      }
+    },
+    {
+      "type": "relation",
+      "id": 7573250,
+      "bounds": {
+        "minlat": -23.4070216,
+        "minlon": -45.0102154,
+        "maxlat": -23.3959348,
+        "maxlon": -44.992845
+      },
+      "tags": {
+        "name": "Praia de Itamambuca",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -23.4014782,
+        "lon": -45.001530200000005
+      }
+    },
+    {
+      "type": "relation",
+      "id": 7600582,
+      "bounds": {
+        "minlat": -7.0560827,
+        "minlon": -34.8429894,
+        "maxlat": -7.0371409,
+        "maxlon": -34.8360998
+      },
+      "tags": {
+        "name": "Praia de Intermares",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -7.0466118,
+        "lon": -34.839544599999996
+      }
+    },
+    {
+      "type": "relation",
+      "id": 7611130,
+      "bounds": {
+        "minlat": -6.965028,
+        "minlon": -34.8431698,
+        "maxlat": -6.9610048,
+        "maxlon": -34.8362953
+      },
+      "tags": {
+        "name": "Praia do Dique",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -6.963016400000001,
+        "lon": -34.83973255
+      }
+    },
+    {
+      "type": "relation",
+      "id": 8337725,
+      "bounds": {
+        "minlat": 11.287376,
+        "minlon": -73.8900411,
+        "maxlat": 11.2953445,
+        "maxlon": -73.8802826
+      },
+      "tags": {
+        "access": "permissive",
+        "name": "Los Ángeles",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 11.29136025,
+        "lon": -73.88516185
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9248967,
+      "bounds": {
+        "minlat": -3.6336716,
+        "minlon": -38.7766971,
+        "maxlat": -3.5928157,
+        "maxlon": -38.71208
+      },
+      "tags": {
+        "name": "Praia do Cumbuco",
+        "natural": "beach",
+        "sport": "kitesurfing"
+      },
+      "center": {
+        "lat": -3.6132436500000003,
+        "lon": -38.74438855
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9841559,
+      "bounds": {
+        "minlat": -7.32856,
+        "minlon": -34.7983025,
+        "maxlat": -7.3215095,
+        "maxlon": -34.7953299
+      },
+      "tags": {
+        "name": "Praia Tabatinga",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -7.32503475,
+        "lon": -34.796816199999995
+      }
+    },
+    {
+      "type": "relation",
+      "id": 10301586,
+      "bounds": {
+        "minlat": -8.5777272,
+        "minlon": -35.0113383,
+        "maxlat": -8.5577397,
+        "maxlon": -35.0019613
+      },
+      "tags": {
+        "name": "Serrambi",
+        "natural": "reef",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -8.56773345,
+        "lon": -35.0066498
+      }
+    },
+    {
+      "type": "relation",
+      "id": 13108776,
+      "bounds": {
+        "minlat": -27.668521,
+        "minlon": -48.4764365,
+        "maxlat": -27.6402799,
+        "maxlon": -48.458972
+      },
+      "tags": {
+        "name": "Praia do Rio Tavares",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": -27.654400449999997,
+        "lon": -48.46770425
+      }
+    },
+    {
+      "type": "relation",
+      "id": 19056949,
+      "bounds": {
+        "minlat": 49.0962429,
+        "minlon": -125.8789111,
+        "maxlat": 49.1075212,
+        "maxlon": -125.8722201
+      },
+      "tags": {
+        "name": "Cox Bay Beach",
+        "natural": "beach",
+        "sport": "surfing"
+      },
+      "center": {
+        "lat": 49.10188205,
+        "lon": -125.8755656
+      }
+    }
+  ],
+  "exclusions": [
+    {
+      "sourceId": "node/255900622",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/340617390",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/665893503",
+      "name": "Scout Surf Wave",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/670699720",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/746952685",
+      "name": "WSV Jan Sofat",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/897913777",
+      "name": "Boise Whitewater Park",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/975731790",
+      "name": "Kiteline",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/988314317",
+      "name": "Blue Wind",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/1134911634",
+      "name": "Centro de Velerismo Teresita Lara",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/1422600097",
+      "name": "La digue Reef",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/1422606718",
+      "name": "Teahupoo Reef",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/1453290633",
+      "name": "Escola de Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/1554403326",
+      "name": "Escola de Surf Paz na Terra",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/1846283752",
+      "name": "Local",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/1849220876",
+      "name": "Hawaiian Island Surf and Sport",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/1923601679",
+      "name": "TSN",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/1946986663",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/2224245257",
+      "name": "Magnific Rock Hotel",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/2456076402",
+      "name": "Windsurfing Curaçao",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/2518181953",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/2535955975",
+      "name": "Los Cardones Surf Lodge",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/2559834996",
+      "name": "windsurf and kite spot",
+      "reason": "generic-name"
+    },
+    {
+      "sourceId": "node/2573653027",
+      "name": "Shark Waves Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/2615171825",
+      "name": "Kitesurf",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/2804972206",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/2945314409",
+      "name": "Stalls for Renting Surf Boards / Lessons",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/3033928155",
+      "name": "Westside Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/3137582803",
+      "name": "Sand & Sun Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/3659150483",
+      "name": "Elevators",
+      "reason": "kapoho-2018-lava-coast-change"
+    },
+    {
+      "sourceId": "node/3659150484",
+      "name": "First Bay",
+      "reason": "kapoho-2018-lava-coast-change"
+    },
+    {
+      "sourceId": "node/3659150485",
+      "name": "Second Bay",
+      "reason": "kapoho-2018-lava-coast-change"
+    },
+    {
+      "sourceId": "node/3713592379",
+      "name": "Kite Spot Kourou",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/3814226357",
+      "name": "BeeKite Brasil Kitesurf Center",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/3816898469",
+      "name": "Piry's Ding Repair",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/3885874057",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/3921516152",
+      "name": "Bend Whitewater Park",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4010486414",
+      "name": "Mollusk Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4069122389",
+      "name": "B!",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4103106460",
+      "name": "Kitesurf Center",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4170335072",
+      "name": "Kite surfing lessons",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/4214520323",
+      "name": "Aerosport",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4307631082",
+      "name": "Eoletto Kite & Windsurf, Lodging",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4370386790",
+      "name": "Best Kiteboarding",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4371550071",
+      "name": "Wyo Point",
+      "reason": "surf-school-and-rental"
+    },
+    {
+      "sourceId": "node/4373196289",
+      "name": "Pacific Surf Co.",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4373196290",
+      "name": "Wya Point Surf Shop Cafe",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4377800091",
+      "name": "Long Beach Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4377800092",
+      "name": "Long Beach Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4498542654",
+      "name": "Poyo Surf Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4549692986",
+      "name": "Papagayo Beach",
+      "reason": "dive-centre"
+    },
+    {
+      "sourceId": "node/4574878963",
+      "name": "Jamnesia",
+      "reason": "surf-camp"
+    },
+    {
+      "sourceId": "node/4611994456",
+      "name": "Galeria Viva",
+      "reason": "business"
+    },
+    {
+      "sourceId": "node/4690648430",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/4773868775",
+      "name": "Loa",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4784757521",
+      "name": "Escuela de Kiteboarding Caribbean Riders",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4795967265",
+      "name": "Hi-Tech Surf Sports",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4846420786",
+      "name": "Pro Wind",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/4985350215",
+      "name": "Nauru",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5013108125",
+      "name": "Maeva Surf",
+      "reason": "artificial-wave"
+    },
+    {
+      "sourceId": "node/5046352966",
+      "name": "Awa Salu kiteboarding, kitesurf school and rental",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5183023518",
+      "name": "Cove",
+      "reason": "unclear-spot"
+    },
+    {
+      "sourceId": "node/5257252795",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5260860438",
+      "name": "WindFun",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5346590227",
+      "name": "Surf Dojo",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5346590230",
+      "name": "Pucha Surf Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5376115062",
+      "name": "Mendihuaca Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5416687319",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5427866018",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949603",
+      "name": "Rotonda de Punta Lara Kite Spot",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5559949614",
+      "name": "ADENAM",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5559949832",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949845",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949846",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949847",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949872",
+      "name": "Punta Rasa kitesurf spot",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/5559949885",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5559949890",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5630623266",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5680606037",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5746612571",
+      "name": "Ocean Beach Surf & Skate",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5849509608",
+      "name": "Dominical Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/5910108881",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5984125201",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/5984125206",
+      "name": "Costa Azul Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6171416584",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/6175252420",
+      "name": "Real Watersports",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6188952186",
+      "name": "StaleFish Board Company",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6205703808",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/6414301756",
+      "name": "Atlantic Shoals Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6718716166",
+      "name": "Surf City Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6770979545",
+      "name": "Drill Surf Skate",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/6789174120",
+      "name": "Deportes de Viento",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/6845527564",
+      "name": "Escola Municipal de Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7057388395",
+      "name": "Moment Surf Company",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7058643435",
+      "name": "Escuela de Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7173168603",
+      "name": "Cabo Kite Center - Kitesurf & Yoga Center",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/7179627476",
+      "name": "South Coast Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7221019055",
+      "name": "Nix kitesurf school and rental",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/7241219176",
+      "name": "Spot kitesurf Anse du Belley",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/7450683237",
+      "name": "Xtrem Surf and skate",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7524642929",
+      "name": "Full Drop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7534715785",
+      "name": "West Coast Paddle Sports",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7576438148",
+      "name": "10th Street Wave",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/7610098441",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/7725580143",
+      "name": "Kokomo",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7727381499",
+      "name": "Sunset surf shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7752023204",
+      "name": "Kamea Meha",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7753918355",
+      "name": "The Room",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7805700090",
+      "name": "The Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/7805700091",
+      "name": "Steepwater Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/8019484088",
+      "name": "Vague Habitat '67",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/8552113690",
+      "name": "Escola Municipal de Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/8552113691",
+      "name": "Escola Municipal de Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/8627367247",
+      "name": "Bahama Boards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/8993368317",
+      "name": "Snoopy’s Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9109686117",
+      "name": "Spyder Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9277004319",
+      "name": "On The Beach Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9291781371",
+      "name": "15th St Surf and Supply",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9293380765",
+      "name": "Guarderia Beira Mar",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9307331130",
+      "name": "Chapatrapa Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9430959444",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/9443666820",
+      "name": "Quiet Storm Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9496951110",
+      "name": "JBay Kiteboarding Curacao",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9505121415",
+      "name": "Escuela de Surf Salty Sol",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9520603542",
+      "name": "Infinite Ride",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9695900998",
+      "name": "Pipe",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/9695999892",
+      "name": "Pointe",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/9696025676",
+      "name": "Maoti papara",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/9696025926",
+      "name": "Mitirapa",
+      "reason": "outside-americas"
+    },
+    {
+      "sourceId": "node/9753396272",
+      "name": "Hanalei Surf Co.",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9773757139",
+      "name": "Spyder",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9784488018",
+      "name": "Redondo Skate & Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9789426140",
+      "name": "Kitesurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9789428983",
+      "name": "Kitesurf / foil launch spot",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9789432464",
+      "name": "Kayak launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9791690025",
+      "name": "Kite launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9791690026",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9791690027",
+      "name": "Kite Launch 3rd Ave Upper",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9791690028",
+      "name": "Kite launch 3rd Ave Lower",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792875599",
+      "name": "Kitesurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792875600",
+      "name": "Kitesurf Launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792902644",
+      "name": "Kitesurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792902645",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792945823",
+      "name": "Kitesurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9792945824",
+      "name": "Foil Kite / Wing launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9812655823",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9812655827",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9812655831",
+      "name": "Windsurf launch",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/9829542019",
+      "name": "Seaside Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9906155922",
+      "name": "Boarder Line",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/9957260050",
+      "name": "Kitesurf corn Island",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/10110395563",
+      "name": "BRETADOR / Ropa y Accesorios Deportivos",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10184458936",
+      "name": "Kitesurf Corn Island",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/10285001461",
+      "name": "Jack’s Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10597746159",
+      "name": "Marco Polo Surf Escola",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10600130779",
+      "name": "Ventus Wave",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10614514184",
+      "name": "Floripa Kite Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10689289794",
+      "name": "Bay Street Boards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10869049890",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/10869049891",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/10869049892",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/10922897035",
+      "name": "Monomy Sail and Cycle",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/10938996371",
+      "name": "ZJ Boarding House",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/11026531203",
+      "name": "Kiteboarding Bonaire",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/11026531204",
+      "name": "Bonaire Kiteschool",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/11110176855",
+      "name": "Isolated",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/11292465329",
+      "name": "Vague à Guy",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/11315868201",
+      "name": "Jack's Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/11801133793",
+      "name": "Blue Soley",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/11891643706",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/12059589957",
+      "name": "Waco Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12125709014",
+      "name": "Mainland Skate & Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12134690479",
+      "name": "Rip Curl",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12146515001",
+      "name": "Dunkerbeck Pro Center",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/12247569852",
+      "name": "Quebra vento",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12247569860",
+      "name": "Surf & Co.",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12329421195",
+      "name": "Escuela de Surf Torre Fuerte",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12349687627",
+      "name": "Spyder",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12349687633",
+      "name": "Quiksilver",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12512224988",
+      "name": "Kitesurf",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/12553832828",
+      "name": "Macaé Surf Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/12613258243",
+      "name": "Atahallen école surf",
+      "reason": "surf-school"
+    },
+    {
+      "sourceId": "node/12810895419",
+      "name": "La Silver",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13108181572",
+      "name": "Hapa Board Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13208883982",
+      "name": "Vibe Surf School Pompano Beach",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13208941067",
+      "name": "Vibe Surf School Fort Lauderdale",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13208962568",
+      "name": "Vibe Surf School Sunny Isles Beach",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13233237042",
+      "name": "Abiquiu Wave",
+      "reason": "river-wave"
+    },
+    {
+      "sourceId": "node/13351608316",
+      "name": "Juicy Papaya - Surfboards and Apparel",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13469251577",
+      "name": "P.B. Boys Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13472552843",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "node/13480296203",
+      "name": "Sand Island Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13524797863",
+      "name": "El Elio Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13532929710",
+      "name": "Civil Skate & Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13623276701",
+      "name": "Wind School",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13623611001",
+      "name": "Escuela Kite Casa Paty",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13623618301",
+      "name": "Kite School 30 nudos",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13623618401",
+      "name": "Puchi Kite",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13623623801",
+      "name": "Alphakite",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13632901812",
+      "name": "Club de playa Hotel Paradise",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13641366352",
+      "name": "Escuela Ícaro",
+      "reason": "already-in-pinned-osm-source"
+    },
+    {
+      "sourceId": "node/13659663035",
+      "name": "BoardHouse Surf & Skate",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13665974038",
+      "name": "Evolve More Surf Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13782071504",
+      "name": "Tofino Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13788589142",
+      "name": "Rough Bar Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13816159598",
+      "name": "Eric Arakawa Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13816314376",
+      "name": "Kazuma Surfboards International",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/13988376094",
+      "name": "Sickday",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14001922362",
+      "name": "Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14001922364",
+      "name": "Sparrow Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14001922366",
+      "name": "Amaury Scognamillo Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14013780175",
+      "name": "Schaper Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14013780176",
+      "name": "Red Dirt Resin",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14121592220",
+      "name": "Hulakai Surf & Paddle",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14121662955",
+      "name": "Orchidland Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14124243630",
+      "name": "Pacific Vibrations",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "node/14164747407",
+      "name": "Ossies Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/34944350",
+      "name": "Haut Surfshop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/54528138",
+      "name": "SkyVenture",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/159389690",
+      "name": "Sports Junkies",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/194588082",
+      "name": "Boardsports",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/210920830",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/229074947",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/240859165",
+      "name": "Pousada Amarela",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/240859223",
+      "name": "Vila Marola",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/243812280",
+      "name": "Toronto Windsurfing Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/279038472",
+      "name": "ProKite Cabarete",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/295322242",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/305883152",
+      "name": "Live To Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/339130459",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/379477599",
+      "name": "Blue Trailz",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/379625835",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/380136995",
+      "name": "Blue Water",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/380850922",
+      "name": "Souvenir La Gran Esquina",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/389967644",
+      "name": "Nomad Supply Company",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/392124660",
+      "name": "Reparación de Tablas para Surfear Dr. Ding",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/393885099",
+      "name": "Roco Brava",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/395353379",
+      "name": "Indigo Store",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/416213712",
+      "name": "O'Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/440054380",
+      "name": "Catalyst Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/442332505",
+      "name": "Jack's Surfboards",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/458940395",
+      "name": "Lincoln City Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/483236209",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/510878561",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/543574658",
+      "name": "Kite & Surfcenter",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/580954566",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954570",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954572",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954573",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954574",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954575",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/580954578",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/586434926",
+      "name": "Nitinaht Lake Campground",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/641453771",
+      "name": "Fisherman's Hut",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/642325763",
+      "name": "Kitesurfing y windsurfing",
+      "reason": "generic-name"
+    },
+    {
+      "sourceId": "way/653479689",
+      "name": "Rip Curl",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/653479752",
+      "name": "Cristóbal Colón",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/672181022",
+      "name": "Club Yucaracu",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/674118253",
+      "name": "Ilha do Mel",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/676237542",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/683640703",
+      "name": "Brookfield Residential YMCA at Seton",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/708131365",
+      "name": "FlowHouse Thundering Surf",
+      "reason": "artificial-wave"
+    },
+    {
+      "sourceId": "way/731763927",
+      "name": "Badell Kite Club",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/731763936",
+      "name": "Gurkha",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/740572532",
+      "name": "Summertime Surf School",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/802071556",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/832627843",
+      "name": "Centro de Alto Rendimiento de Surf",
+      "reason": "training-centre"
+    },
+    {
+      "sourceId": "way/835107845",
+      "name": "Heritage Surf & Sport",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/891176234",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/902541778",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/902541779",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/904020348",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/904020352",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/904060742",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/904924441",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/904924443",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/906435057",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/968653410",
+      "name": "Bodega Bay Surf Shack",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/973557137",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/1005960945",
+      "name": "Kokoplaj",
+      "reason": "surf-school"
+    },
+    {
+      "sourceId": "way/1008731339",
+      "name": "Chapatrapa Surf",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1017781081",
+      "name": "ZuhG Life Surf Shop",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1033350924",
+      "name": "Infinite Ride",
+      "reason": "kite-school"
+    },
+    {
+      "sourceId": "way/1108090538",
+      "name": "Salida Whitewater Park",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1131292480",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/1213059846",
+      "name": "Nova Kite",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1215434113",
+      "name": "CNRBT",
+      "reason": "nautical-club"
+    },
+    {
+      "sourceId": "way/1226150143",
+      "name": "Piscina de ondas",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1266985608",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/1287822260",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/1313089996",
+      "name": "Tulsa Wave Park",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "way/1337308826",
+      "name": "FlowRider",
+      "reason": "artificial-wave"
+    },
+    {
+      "sourceId": "way/1365993872",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "way/1503157782",
+      "name": "Ama Fitness - CT para Atletas",
+      "reason": "business-facility-or-artificial-wave"
+    },
+    {
+      "sourceId": "relation/4278016",
+      "name": "Praia do Moçambique",
+      "reason": "large-geometry"
+    },
+    {
+      "sourceId": "relation/5362810",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "relation/10219491",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "relation/14180476",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "sourceId": "relation/14226156",
+      "name": "",
+      "reason": "unnamed"
+    }
+  ]
+}

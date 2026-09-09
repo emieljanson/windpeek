@@ -92,7 +92,7 @@ describe('findNearbyDefaultSpot', () => {
   it.each([
     ['Bali', -8.65, 115.22],
     ['Honolulu', 21.31, -157.86],
-  ])('still selects a recommended spot when %s has no local catalog coverage', (_, latitude, longitude) => {
+  ])('selects a recommended spot for %s', (_, latitude, longitude) => {
     expect(nearbyIndex.some(({ id }) => id === findNearbyDefaultSpot({ latitude, longitude })?.id)).toBe(true)
   })
 
@@ -105,6 +105,27 @@ describe('findNearbyDefaultSpot', () => {
     expect(findNearbyDefaultSpot({ latitude: 37.7749, longitude: -122.4194 })?.name)
       .toBe('Third Avenue')
     expect(nearbyIndex.some(({ id }) => id === 'spot-2h4kyt')).toBe(false)
+  })
+
+  it('offers a local curated surf spot in Honolulu and Pichilemu', () => {
+    expect(findNearbyDefaultSpot({ latitude: 21.31, longitude: -157.86 })?.name).toBe('Waikīkī Beach')
+    expect(findNearbyDefaultSpot({ latitude: -34.39, longitude: -72.0 })?.name).toBe('Punta de Lobos')
+  })
+
+  it.each([
+    ['Sydney', -33.8688, 151.2093, 'Bondi Beach'],
+    ['Perth', -31.9523, 115.8613, 'Cottesloe Beach'],
+    ['Melbourne', -37.8136, 144.9631, 'Torquay Front Beach'],
+    ['Auckland', -36.8485, 174.7633, 'Piha North'],
+    ['Wellington', -41.2866, 174.7756, 'Lyall Bay'],
+    ['Bali', -8.65, 115.22, 'Kuta Beach'],
+    ['Phuket', 7.88, 98.39, 'Kata Beach'],
+    ['Durban', -29.8587, 31.0218, 'Dairy Beach (New Pier)'],
+    ['Tokyo', 35.6762, 139.6503, 'Shonan'],
+    ['Miami', 25.7617, -80.1918, 'South Beach (Miami)'],
+    ['San Diego', 32.7157, -117.1611, 'La Jolla Shores'],
+  ])('offers %s a nearby geographic spot', (_, latitude, longitude, name) => {
+    expect(findNearbyDefaultSpot({ latitude, longitude })?.name).toBe(name)
   })
 
   it('includes the popular Dutch surf spots but excludes the nearby sailing club', () => {

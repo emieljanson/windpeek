@@ -50,6 +50,23 @@ async function locationGate(page) {
   return { requested, release: () => release?.() }
 }
 
+for (const location of [
+  { city: 'Sydney', latitude: -33.8688, longitude: 151.2093, id: 'spot-c8z415', spotLatitude: '-33.892300', timezone: 'Australia/Sydney' },
+  { city: 'Bali', latitude: -8.65, longitude: 115.22, id: 'spot-43o5jc', spotLatitude: '-8.716000', timezone: 'Asia/Makassar' },
+]) {
+  test(`IP location in ${location.city} loads a local curated forecast`, async ({ page }) => {
+    const requests = await mockWeather(page)
+    await page.route('**/__windpeek-location', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ latitude: location.latitude, longitude: location.longitude }),
+    }))
+    await page.goto('/?configure')
+    await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-spot', location.id, { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+    expect(requests.at(-1).searchParams.get('latitude')).toBe(location.spotLatitude)
+    expect(requests.at(-1).searchParams.get('timezone')).toBe(location.timezone)
+  })
+}
+
 test('homepage shows Brouwersdam immediately, then requests the nearest recommended surf spot', async ({ page }) => {
   const forecastRequests = await mockWeather(page)
   const location = await locationGate(page)

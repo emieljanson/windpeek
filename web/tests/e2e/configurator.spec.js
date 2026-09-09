@@ -13,7 +13,7 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
       return
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
-      forecastResponseForLatitude(Number(url.searchParams.get('latitude'))),
+      forecastResponseForLatitude(Number(url.searchParams.get('latitude')), url.searchParams.get('timezone')),
     ) })
   })
   await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
@@ -24,7 +24,7 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        timezone: 'Europe/Amsterdam',
+        timezone: new URL(route.request().url()).searchParams.get('timezone'),
         hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
         hourly: {
           time: times,
@@ -253,6 +253,26 @@ test('switches the live preview to another supported spot without a page reload'
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(2)
   expect(requests[1].searchParams.get('latitude')).toBe('52.512600')
+})
+
+test('selects worldwide spots and requests forecasts at their coordinates', async ({ page }) => {
+  const requests = await mockForecastApi(page)
+  await page.setViewportSize({ width: 1200, height: 900 })
+  await page.goto('/?configure')
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+
+  for (const location of [
+    { name: 'Huntington Beach', id: 'spot-qxgehf', latitude: '33.654800', longitude: '-118.003300' },
+    { name: 'Punta de Lobos', id: 'spot-yetoki', latitude: '-34.422400', longitude: '-72.053600' },
+    { name: 'Uluwatu', id: 'spot-yn5p7s', latitude: '-8.817500', longitude: '115.085500' },
+  ]) {
+    await page.getByRole('combobox', { name: 'Search spot' }).fill(location.name)
+    await page.keyboard.press('Enter')
+    await expect(forecastStatus(page)).toContainText(`Live Best Match forecast for ${location.name}`, { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+    await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-spot', location.id)
+    expect(requests.at(-1).searchParams.get('latitude')).toBe(location.latitude)
+    expect(requests.at(-1).searchParams.get('longitude')).toBe(location.longitude)
+  }
 })
 
 test('creates and remembers a personal spot only after the explicit map flow', async ({ page }) => {

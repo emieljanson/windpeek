@@ -5,6 +5,7 @@ import { buildNearbyIndex } from '../scripts/spots/lib/nearby-index.mjs'
 import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
 import { stableSpotId } from '../src/spots/spotIdentity'
+import worldwideCatalog from '../src/spots/catalog.generated.json'
 
 const existing = [
   { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
@@ -21,6 +22,14 @@ const accepted = {
 }
 
 describe('runtime spot catalog', () => {
+  it('uses current country codes and preserves Hong Kong and Macau regions', () => {
+    for (const [name, countryCode] of [
+      ["Aber Wrac'h Point", 'fr'], ['Aberaeron', 'gb'], ['Adler - Mzymta River', 'ru'],
+      ['Back Wash', 'bj'], ['Big Wave Bay', 'hk'], ['Macau Hacs Sa Beach', 'mo'],
+      ['Portrush-West Strand', 'gb'], ['Vama Veche', 'ro'], ['Gaza Harbourmouth', 'ps'],
+    ]) expect(worldwideCatalog.find((spot) => spot.name === name || spot.aliases?.includes(name))?.countryCode).toBe(countryCode)
+  })
+
   it('keeps existing ids and includes only accepted or currently approved records', () => {
     const reviewCandidate = { ...candidate, id: 'osm:node/100', name: 'Reviewed Spot' }
     const catalog = buildRuntimeCatalog({

@@ -1,0 +1,2102 @@
+{
+  "reviewedAt": "2026-09-09",
+  "method": "Exhaustive geometric centre-pair scan within each radius, followed by normalized/translated/reordered/fuzzy primary and alias name comparison and manual candidate assessment. Distance alone is not treated as identity outside the existing 1 km grouping.",
+  "scope": "Practical cleanup; 95% is the user acceptance target, not measured duplicate recall. Different-name duplicates can escape name screening. Uncertain same-name sectors remain separate.",
+  "beforeLocationCount": 8380,
+  "afterLocationCount": 8366,
+  "additionalMerges": 14,
+  "rings": [
+    {
+      "maxKm": 2,
+      "allPairs": 1732,
+      "nameCandidates": 18,
+      "minKm": 0,
+      "mergedPairs": 3,
+      "remainingCandidates": 15
+    },
+    {
+      "maxKm": 5,
+      "allPairs": 4493,
+      "nameCandidates": 20,
+      "minKm": 2,
+      "mergedPairs": 4,
+      "remainingCandidates": 16
+    },
+    {
+      "maxKm": 10,
+      "allPairs": 7004,
+      "nameCandidates": 15,
+      "minKm": 5,
+      "mergedPairs": 5,
+      "remainingCandidates": 10
+    },
+    {
+      "maxKm": 15,
+      "allPairs": 6999,
+      "nameCandidates": 13,
+      "minKm": 10,
+      "mergedPairs": 1,
+      "remainingCandidates": 12
+    },
+    {
+      "maxKm": 25,
+      "allPairs": 13286,
+      "nameCandidates": 7,
+      "minKm": 15,
+      "mergedPairs": 1,
+      "remainingCandidates": 6
+    }
+  ],
+  "stoppingReason": "Widened 2 → 5 → 10 → 15 → 25 km. Last confirmed duplicate is the misplaced Pelzerhaken point at 15.537 km; the remaining 16–25 km candidates are generic names or different coastal locations. No new name candidates appear after rebuilding. Further radius expansion is low yield for this cleanup.",
+  "decisions": [
+    {
+      "leftId": "spot-1111vqv",
+      "leftName": "Fiji",
+      "rightId": "spot-1wrkur",
+      "rightName": "La Ocho (Escambron Beach)",
+      "meters": 1057,
+      "countryCodes": [
+        "pr",
+        "pr"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "La Ocho",
+      "rightMatchedName": "La Ocho (Escambron Beach)",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Different primary breaks Fiji and La Ocho; the shared alias is insufficient to merge both forecast groups."
+    },
+    {
+      "leftId": "spot-1wmlpj7",
+      "leftName": "Ramsgate",
+      "rightId": "spot-1yd15c1",
+      "rightName": "Ramsgate (The Wall)",
+      "meters": 1073,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Ramsgate",
+      "rightMatchedName": "Ramsgate (The Wall)",
+      "decision": "merge",
+      "reviewReason": "Town/beach qualifier for the same Ramsgate forecast destination",
+      "retainedId": "spot-1yd15c1"
+    },
+    {
+      "leftId": "spot-1rifvrl",
+      "leftName": "Capbreton - La Pointe",
+      "rightId": "spot-17piw0a",
+      "rightName": "Mongrels",
+      "meters": 1098,
+      "countryCodes": [
+        "fr",
+        "fr"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Capbreton - La Pointe",
+      "rightMatchedName": "Capbreton - La Piste",
+      "decision": "retain-distinct",
+      "reviewReason": "La Pointe and La Piste are different named breaks; fuzzy spelling collision."
+    },
+    {
+      "leftId": "spot-1y9s7hj",
+      "leftName": "Gnejna Bay",
+      "rightId": "spot-1uac7nb",
+      "rightName": "Golden Bay",
+      "meters": 1115,
+      "countryCodes": [
+        "",
+        "mt"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Ghajn Tuffieha",
+      "rightMatchedName": "Għajn Tuffieħa",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Gnejna and Golden Bay are separate bays; shared Ghajn Tuffieha alias does not justify merging both groups."
+    },
+    {
+      "leftId": "spot-fe0uco",
+      "leftName": "East Wittering",
+      "rightId": "spot-pp4x29",
+      "rightName": "West Wittering",
+      "meters": 1194,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "East Wittering",
+      "rightMatchedName": "West Wittering",
+      "decision": "retain-distinct",
+      "reviewReason": "East and West Wittering remain different destinations."
+    },
+    {
+      "leftId": "spot-3gshrq",
+      "leftName": "Church",
+      "rightId": "spot-a66kq5",
+      "rightName": "Trestles (Uppers)",
+      "meters": 1358,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Trestles (Lowers)",
+      "rightMatchedName": "Trestles (Uppers)",
+      "decision": "retain-distinct",
+      "reviewReason": "Lowers and Uppers are separately named Trestles breaks."
+    },
+    {
+      "leftId": "spot-afmg81",
+      "leftName": "Boomerang Beach (North)",
+      "rightId": "spot-1bs1yt7",
+      "rightName": "Boomerang Beach (South)",
+      "meters": 1394,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Boomerang Beach (North)",
+      "rightMatchedName": "Boomerang Beach (South)",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite named ends of Boomerang Beach."
+    },
+    {
+      "leftId": "spot-nwef2v",
+      "leftName": "Scarborough North Bay",
+      "rightId": "spot-1wv5yhh",
+      "rightName": "Scarborough South Bay",
+      "meters": 1399,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Scarborough North Bay",
+      "rightMatchedName": "Scarborough South Bay",
+      "decision": "retain-distinct",
+      "reviewReason": "Separate Scarborough bays."
+    },
+    {
+      "leftId": "spot-ckwzl1",
+      "leftName": "Avalon 15th Street",
+      "rightId": "spot-rkk4pa",
+      "rightName": "Avalon 30th Street",
+      "meters": 1408,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Avalon 15th Street",
+      "rightMatchedName": "Avalon 30th Street",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered street access/break locations."
+    },
+    {
+      "leftId": "spot-3uwq5b",
+      "leftName": "Tenby (North Beach)",
+      "rightId": "spot-1fnl8ix",
+      "rightName": "Tenby (South Beach)",
+      "meters": 1582,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Tenby (North Beach)",
+      "rightMatchedName": "Tenby (South Beach)",
+      "decision": "retain-distinct",
+      "reviewReason": "Separate Tenby beaches."
+    },
+    {
+      "leftId": "spot-162d6be",
+      "leftName": "The Bluff-North Side",
+      "rightId": "spot-1toc7mc",
+      "rightName": "The Bluff-South Side",
+      "meters": 1612,
+      "countryCodes": [
+        "nz",
+        "nz"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "The Bluff-North Side",
+      "rightMatchedName": "The Bluff-South Side",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite named sides of the Bluff."
+    },
+    {
+      "leftId": "spot-g1l68s",
+      "leftName": "Poseidi",
+      "rightId": "spot-g7ub1f",
+      "rightName": "Possidi (Halkidiki)",
+      "meters": 1618,
+      "countryCodes": [
+        "gr",
+        "gr"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Poseidi",
+      "rightMatchedName": "Possidi (Halkidiki)",
+      "decision": "merge",
+      "reviewReason": "Poseidi/Possidi spelling variant of the same cape destination",
+      "retainedId": "spot-g7ub1f"
+    },
+    {
+      "leftId": "spot-1id5kbt",
+      "leftName": "St Andrews",
+      "rightId": "spot-c0v5wn",
+      "rightName": "St Andrews (West Sands)",
+      "meters": 1621,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "St Andrews",
+      "rightMatchedName": "St Andrews (West Sands)",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic St Andrews pin is near the town/east side; West Sands is a distinct beach. Do not collapse the headland on town-name similarity."
+    },
+    {
+      "leftId": "spot-1uwjdjm",
+      "leftName": "Mooring field #1",
+      "rightId": "spot-1w0kxth",
+      "rightName": "Mooring field #3",
+      "meters": 1684,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Mooring field #1",
+      "rightMatchedName": "Mooring field #3",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered mooring fields."
+    },
+    {
+      "leftId": "spot-2chhm0",
+      "leftName": "La Timba",
+      "rightId": "spot-n09u3v",
+      "rightName": "Playa El Silencio",
+      "meters": 1691,
+      "countryCodes": [
+        "pe",
+        "pe"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Silencios",
+      "rightMatchedName": "Playa El Silencio",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Different primary break names; Silencios alias alone is insufficient."
+    },
+    {
+      "leftId": "spot-1f6b89c",
+      "leftName": "Apelviken (Varberg)",
+      "rightId": "spot-122z26y",
+      "rightName": "Appelviken",
+      "meters": 1880,
+      "countryCodes": [
+        "se",
+        "se"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Apelviken (Varberg)",
+      "rightMatchedName": "Appelviken",
+      "decision": "merge",
+      "reviewReason": "Appelviken misspelling of Apelviken; retain curated beach point",
+      "retainedId": "spot-1f6b89c"
+    },
+    {
+      "leftId": "spot-qfmh2",
+      "leftName": "Makaha (Outside)",
+      "rightId": "spot-rsci3b",
+      "rightName": "Mākaha Beach",
+      "meters": 1901,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Makaha (Outside)",
+      "rightMatchedName": "Mākaha Beach",
+      "decision": "retain-distinct",
+      "reviewReason": "Outside reef and beach are separately named breaks."
+    },
+    {
+      "leftId": "spot-xo07cr",
+      "leftName": "North Broulee",
+      "rightId": "spot-152hfz9",
+      "rightName": "South Broulee",
+      "meters": 1985,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "North Broulee",
+      "rightMatchedName": "South Broulee",
+      "decision": "retain-distinct",
+      "reviewReason": "Separately named North/South Broulee beaches."
+    },
+    {
+      "leftId": "spot-1msnb8c",
+      "leftName": "Indian River (Northside)",
+      "rightId": "spot-n0maim",
+      "rightName": "Indian River (Southside)",
+      "meters": 2025,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Indian River (Northside)",
+      "rightMatchedName": "Indian River (Southside)",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite sides of Indian River inlet."
+    },
+    {
+      "leftId": "spot-6rgz9r",
+      "leftName": "Laida (Urdaibai)",
+      "rightId": "spot-1vtlmi0",
+      "rightName": "Mundaka",
+      "meters": 2136,
+      "countryCodes": [
+        "es",
+        "es"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Laida (Urdaibai)",
+      "rightMatchedName": "Playa de Laida",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Laida and Mundaka are different river-mouth locations; broad existing alias overlap is not enough."
+    },
+    {
+      "leftId": "spot-t52dak",
+      "leftName": "North Wall Mackay Harbour Beach",
+      "rightId": "spot-fam9qg",
+      "rightName": "South Wall Mackay Harbour",
+      "meters": 2175,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "North Wall Mackay Harbour Beach",
+      "rightMatchedName": "South Wall Mackay Harbour",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite harbour walls."
+    },
+    {
+      "leftId": "spot-k9kfci",
+      "leftName": "Antenot",
+      "rightId": "spot-m5ktmy",
+      "rightName": "Danger",
+      "meters": 2180,
+      "countryCodes": [
+        "il",
+        "il"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Tel Baruch North Beach",
+      "rightMatchedName": "Tel Baruch South Beach",
+      "decision": "retain-distinct",
+      "reviewReason": "Distinct north/south beach groups."
+    },
+    {
+      "leftId": "spot-1nkzro1",
+      "leftName": "Petten",
+      "rightId": "spot-w5bpm7",
+      "rightName": "Petten (Pettemer Zeewering)",
+      "meters": 2314,
+      "countryCodes": [
+        "nl",
+        "nl"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Petten",
+      "rightMatchedName": "Petten (Pettemer Zeewering)",
+      "decision": "merge",
+      "reviewReason": "Same Petten destination with sea-wall qualifier",
+      "retainedId": "spot-w5bpm7"
+    },
+    {
+      "leftId": "spot-gztclp",
+      "leftName": "Acids",
+      "rightId": "spot-u6kgry",
+      "rightName": "Woonona",
+      "meters": 2347,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Wollongong North Beach",
+      "rightMatchedName": "Wollongong South Beach",
+      "decision": "retain-distinct",
+      "reviewReason": "Different primary breaks and north/south aliases."
+    },
+    {
+      "leftId": "spot-wts8yq",
+      "leftName": "Chałupy 3",
+      "rightId": "spot-1i1iy7l",
+      "rightName": "Chałupy 6",
+      "meters": 2461,
+      "countryCodes": [
+        "pl",
+        "pl"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Chałupy 3",
+      "rightMatchedName": "Chałupy 6",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered Chalupy locations."
+    },
+    {
+      "leftId": "spot-cxg8sr",
+      "leftName": "Aisling's Beach",
+      "rightId": "spot-x7fc9n",
+      "rightName": "Asling's Beach",
+      "meters": 2584,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Aisling's Beach",
+      "rightMatchedName": "Asling's Beach",
+      "decision": "merge",
+      "reviewReason": "Misspelled Aslings Beach with offshore pin; retain Eden beach point",
+      "retainedId": "spot-x7fc9n",
+      "evidence": "https://beachsafe.org.au/beach/nsw/bega-valley/eden/aslings"
+    },
+    {
+      "leftId": "spot-11zvg82",
+      "leftName": "12th Street Jetty",
+      "rightId": "spot-12a00l1",
+      "rightName": "8th Street Jetty",
+      "meters": 2702,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "12th Street Jetty",
+      "rightMatchedName": "8th Street Jetty",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered street jetties."
+    },
+    {
+      "leftId": "spot-9r8v33",
+      "leftName": "Narrabeen-South",
+      "rightId": "spot-1oddspi",
+      "rightName": "Turimetta Beach",
+      "meters": 2805,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Narrabeen-South",
+      "rightMatchedName": "Narrabeen-North",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite Narrabeen beach sectors; Turimetta is a separate primary beach."
+    },
+    {
+      "leftId": "spot-f6ci14",
+      "leftName": "Prasonisi",
+      "rightId": "spot-dkooyb",
+      "rightName": "Prasonisi East Beach",
+      "meters": 2919,
+      "countryCodes": [
+        "gr",
+        "gr"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Prasonisi West Beach",
+      "rightMatchedName": "Prasonisi East Beach",
+      "decision": "retain-distinct",
+      "reviewReason": "Opposite sides of Prasonisi with different exposure."
+    },
+    {
+      "leftId": "spot-3c0lmh",
+      "leftName": "Dump Beach",
+      "rightId": "spot-1l7dgr5",
+      "rightName": "The Dump",
+      "meters": 3096,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Dump Beach",
+      "rightMatchedName": "The Dump",
+      "decision": "retain-distinct",
+      "reviewReason": "Different breaks per Surf-Forecast Dump-Beach and The-Dump_1 guides."
+    },
+    {
+      "leftId": "spot-iofvy9",
+      "leftName": "San Pedro North Reef Pass",
+      "rightId": "spot-1ykbvtj",
+      "rightName": "San Pedro South Reef Pass",
+      "meters": 3367,
+      "countryCodes": [
+        "bz",
+        "bz"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "San Pedro North Reef Pass",
+      "rightMatchedName": "San Pedro South Reef Pass",
+      "decision": "retain-distinct",
+      "reviewReason": "Distinct north/south reef passes."
+    },
+    {
+      "leftId": "spot-yqz49l",
+      "leftName": "Tofta",
+      "rightId": "spot-1nkwulk",
+      "rightName": "Tofta (Gotland)",
+      "meters": 3428,
+      "countryCodes": [
+        "se",
+        "se"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Tofta",
+      "rightMatchedName": "Tofta (Gotland)",
+      "decision": "merge",
+      "reviewReason": "Same Tofta destination; retain curated beach rather than offshore pin",
+      "retainedId": "spot-1nkwulk"
+    },
+    {
+      "leftId": "spot-1e3s0ik",
+      "leftName": "Caravelle",
+      "rightId": "spot-8o8py0",
+      "rightName": "La Caravelle",
+      "meters": 3462,
+      "countryCodes": [
+        "gp",
+        "gp"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Caravelle",
+      "rightMatchedName": "La Caravelle",
+      "decision": "retain-distinct",
+      "reviewReason": "Surf-Forecast describes Caravelle and La-Caravelle as separate beach/point and reef breaks."
+    },
+    {
+      "leftId": "spot-1x27jox",
+      "leftName": "El Palmar (Vejer de la Frontera)",
+      "rightId": "spot-7cd00s",
+      "rightName": "Playa El Palmar",
+      "meters": 3670,
+      "countryCodes": [
+        "es",
+        "es"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "El Palmar (Vejer de la Frontera)",
+      "rightMatchedName": "Playa El Palmar",
+      "decision": "merge",
+      "reviewReason": "Same El Palmar beach; retain curated shore point rather than offshore pin",
+      "retainedId": "spot-1x27jox"
+    },
+    {
+      "leftId": "spot-1c24rkr",
+      "leftName": "La Cote Sauvage - Le 27",
+      "rightId": "spot-7tywli",
+      "rightName": "La Cote Sauvage - Le 46",
+      "meters": 3750,
+      "countryCodes": [
+        "fr",
+        "fr"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "La Cote Sauvage - Le 27",
+      "rightMatchedName": "La Cote Sauvage - Le 46",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered Cote Sauvage sections."
+    },
+    {
+      "leftId": "spot-14gwn7",
+      "leftName": "Unnamed5",
+      "rightId": "spot-1egic6",
+      "rightName": "Unnamed6",
+      "meters": 3828,
+      "countryCodes": [
+        "ly",
+        "ly"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Unnamed5",
+      "rightMatchedName": "Unnamed6",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic unnamed labels, not identity evidence."
+    },
+    {
+      "leftId": "spot-1jcqe7q",
+      "leftName": "Bloubergstrand (Big Bay)",
+      "rightId": "spot-1695p02",
+      "rightName": "Kite Beach (Table View)",
+      "meters": 4161,
+      "countryCodes": [
+        "za",
+        "za"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Bloubergstrand (Big Bay)",
+      "rightMatchedName": "Bloubergstrand",
+      "decision": "retain-distinct",
+      "reviewReason": "Big Bay and Table View are separate beaches."
+    },
+    {
+      "leftId": "spot-1rg0t7z",
+      "leftName": "Bude",
+      "rightId": "spot-96kixc",
+      "rightName": "Widemouth Bay",
+      "meters": 4353,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Bude",
+      "rightMatchedName": "Bude (Widemouth Bay)",
+      "decision": "retain-distinct",
+      "reviewReason": "Bude and Widemouth Bay are separate coastal destinations."
+    },
+    {
+      "leftId": "spot-17cjt69",
+      "leftName": "Saint-Jean-de-Monts",
+      "rightId": "spot-1b4ixnv",
+      "rightName": "St Jean de Monts",
+      "meters": 5240,
+      "countryCodes": [
+        "fr",
+        "fr"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Saint-Jean-de-Monts",
+      "rightMatchedName": "St Jean de Monts",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Same town name along a long beach; no sufficient evidence that these sectors should share a single point."
+    },
+    {
+      "leftId": "spot-18i9edn",
+      "leftName": "Lido Garda",
+      "rightId": "spot-1fhonr5",
+      "rightName": "Lido Garda (Anzio)",
+      "meters": 5355,
+      "countryCodes": [
+        "it",
+        "it"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Lido Garda",
+      "rightMatchedName": "Lido Garda (Anzio)",
+      "decision": "merge",
+      "reviewReason": "Same Lido Garda beach; retained Anzio point agrees with naval locality coordinates",
+      "retainedId": "spot-1fhonr5",
+      "evidence": "https://www.marina.difesa.it/noi-siamo-la-marina/pilastro-logistico/scientifici/idrografico/Documents/premessa_raccolta_2015/Raccolta_Semestrale_1_2015.pdf — Lido Garda vicinity 41°27.544 N, 012°36.597 E"
+    },
+    {
+      "leftId": "spot-1jnpwv3",
+      "leftName": "Reef",
+      "rightId": "spot-1v5lith",
+      "rightName": "The Reef",
+      "meters": 5595,
+      "countryCodes": [
+        "pt",
+        "pt"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Reef",
+      "rightMatchedName": "The Reef",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic reef names."
+    },
+    {
+      "leftId": "spot-1d5lpm7",
+      "leftName": "کلوپ آسمان قشم",
+      "rightId": "spot-1d5n3oo",
+      "rightName": "کلوپ آسمان قشم",
+      "meters": 5796,
+      "countryCodes": [
+        "ir",
+        "ir"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "کلوپ آسمان قشم",
+      "rightMatchedName": "کلوپ آسمان قشم",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Same club name at distant sites; branch/relocation status unresolved. Retain rather than assume."
+    },
+    {
+      "leftId": "spot-1rppczb",
+      "leftName": "Lazy Left",
+      "rightId": "spot-7ej29x",
+      "rightName": "Metigama Right",
+      "meters": 6814,
+      "countryCodes": [
+        "lk",
+        "lk"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Midigama Right",
+      "rightMatchedName": "Metigama Right",
+      "decision": "merge",
+      "reviewReason": "Metigama Right is a misspelled distant duplicate of Midigama Right, already an alias of the nearby retained forecast group",
+      "retainedId": "spot-1rppczb",
+      "evidence": "https://www.surf-forecast.com/breaks/Midigama-Right — describes Lazy Left as 1 km away; distant donor has no other aliases"
+    },
+    {
+      "leftId": "spot-130dgyq",
+      "leftName": "Praia Brava",
+      "rightId": "spot-itootr",
+      "rightName": "Praia Brava",
+      "meters": 7063,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Praia Brava",
+      "rightMatchedName": "Praia Brava",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Common Praia Brava name at different coastal positions; no evidence of identical beach."
+    },
+    {
+      "leftId": "spot-1yovoc1",
+      "leftName": "Texel (Paal 17.6-18.99, 28.2-32)",
+      "rightId": "spot-eyopdn",
+      "rightName": "Texel (Waddeneilanden)",
+      "meters": 7327,
+      "countryCodes": [
+        "nl",
+        "nl"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Texel (Paal 17.6-18.99, 28.2-32)",
+      "rightMatchedName": "Texel (Waddeneilanden)",
+      "decision": "retain-distinct",
+      "reviewReason": "Different sectors of the long Texel coast, including named pole ranges."
+    },
+    {
+      "leftId": "spot-14bl7jl",
+      "leftName": "Essaouira",
+      "rightId": "spot-l9s1p",
+      "rightName": "Essaouira",
+      "meters": 7666,
+      "countryCodes": [
+        "ma",
+        "ma"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Essaouira",
+      "rightMatchedName": "Essaouira",
+      "decision": "merge",
+      "reviewReason": "Same Essaouira destination; remove northern misplaced pin in favour of beach location",
+      "retainedId": "spot-l9s1p",
+      "evidence": "https://mapcarta.com/W243397848 — Essaouira beach near 31.4992, -9.76758"
+    },
+    {
+      "leftId": "spot-2seit1",
+      "leftName": "Unnamed",
+      "rightId": "spot-14gwn7",
+      "rightName": "Unnamed5",
+      "meters": 7815,
+      "countryCodes": [
+        "ly",
+        "ly"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Unnamed",
+      "rightMatchedName": "Unnamed5",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic unnamed labels."
+    },
+    {
+      "leftId": "spot-25uclm",
+      "leftName": "Damp",
+      "rightId": "spot-xemepb",
+      "rightName": "Damp",
+      "meters": 7948,
+      "countryCodes": [
+        "de",
+        "de"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Damp",
+      "rightMatchedName": "Damp",
+      "decision": "merge",
+      "reviewReason": "Both Damp pins were misplaced; retain corrected DLRG beach location",
+      "retainedId": "spot-25uclm",
+      "evidence": "https://www.dlrg.de/fileadmin/user_upload/DLRG.de/Fuer-Mitglieder/AA_DLRG2019/Mitmachen/ZWRDK/Waterkant2021/epaper/Waterkant2021.pdf — Damp station 54.586445, 10.02496"
+    },
+    {
+      "leftId": "spot-1cmp0vn",
+      "leftName": "57th Street",
+      "rightId": "spot-14vrr5q",
+      "rightName": "5th Street",
+      "meters": 8018,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "57th Street",
+      "rightMatchedName": "5th Street",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered streets."
+    },
+    {
+      "leftId": "spot-c270z",
+      "leftName": "Camperduin",
+      "rightId": "spot-wfbbb6",
+      "rightName": "Camperduin",
+      "meters": 8729,
+      "countryCodes": [
+        "nl",
+        "nl"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Camperduin",
+      "rightMatchedName": "Camperduin",
+      "decision": "merge",
+      "reviewReason": "Same Camperduin destination; remove misplaced northern pin",
+      "retainedId": "spot-wfbbb6",
+      "evidence": "https://nl.uimaranta.com/noord-holland/schoorl/camperduin-noordzee-route-camperduin/ — bathing water near 52.72861, 4.63918"
+    },
+    {
+      "leftId": "spot-tjaias",
+      "leftName": "Sotavento",
+      "rightId": "spot-8zhfcu",
+      "rightName": "Sotavento (Fuerteventura, Canary Islands)",
+      "meters": 8795,
+      "countryCodes": [
+        "es",
+        "es"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Sotavento",
+      "rightMatchedName": "Sotavento (Fuerteventura, Canary Islands)",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Broad Sotavento name across a long coast; retain separate sectors absent stronger identity evidence."
+    },
+    {
+      "leftId": "spot-dacl7y",
+      "leftName": "Ilha de Faro",
+      "rightId": "spot-dtmmmk",
+      "rightName": "Ilha do Farol",
+      "meters": 9243,
+      "countryCodes": [
+        "pt",
+        "pt"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Ilha de Faro",
+      "rightMatchedName": "Ilha do Farol",
+      "decision": "retain-distinct",
+      "reviewReason": "Faro and Farol are different islands."
+    },
+    {
+      "leftId": "spot-19cy28p",
+      "leftName": "47th Street",
+      "rightId": "spot-1cmp0vn",
+      "rightName": "57th Street",
+      "meters": 9930,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "47th Street",
+      "rightMatchedName": "57th Street",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered streets."
+    },
+    {
+      "leftId": "spot-11zvg82",
+      "leftName": "12th Street Jetty",
+      "rightId": "spot-11z3d43",
+      "rightName": "37th Street Jetty",
+      "meters": 10087,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "12th Street Jetty",
+      "rightMatchedName": "37th Street Jetty",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered street jetties."
+    },
+    {
+      "leftId": "spot-lv6k2g",
+      "leftName": "Tiree (Balevullin)",
+      "rightId": "spot-l17qzj",
+      "rightName": "Tiree (Gott Bay)",
+      "meters": 10121,
+      "countryCodes": [
+        "gb",
+        ""
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Tiree (Balevullin)",
+      "rightMatchedName": "Tiree (Gott Bay)",
+      "decision": "retain-distinct",
+      "reviewReason": "Balevullin and Gott Bay are different Tiree bays."
+    },
+    {
+      "leftId": "spot-cif5f1",
+      "leftName": "Praia Brava",
+      "rightId": "spot-itootr",
+      "rightName": "Praia Brava",
+      "meters": 10571,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Praia Brava",
+      "rightMatchedName": "Praia Brava",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Common Praia Brava name at different coastal positions."
+    },
+    {
+      "leftId": "spot-2seit1",
+      "leftName": "Unnamed",
+      "rightId": "spot-1egic6",
+      "rightName": "Unnamed6",
+      "meters": 11047,
+      "countryCodes": [
+        "ly",
+        "ly"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Unnamed",
+      "rightMatchedName": "Unnamed6",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic unnamed labels."
+    },
+    {
+      "leftId": "spot-1il95ft",
+      "leftName": "Centre Crack",
+      "rightId": "spot-1ll3wab",
+      "rightName": "Surf Beach",
+      "meters": 11100,
+      "countryCodes": [
+        "au",
+        "au"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Summerland Bay",
+      "rightMatchedName": "Sunderland Bay",
+      "decision": "retain-distinct",
+      "reviewReason": "Summerland and Sunderland are different bays despite similar spelling."
+    },
+    {
+      "leftId": "spot-8kesnf",
+      "leftName": "Praia Brava",
+      "rightId": "spot-cif5f1",
+      "rightName": "Praia Brava",
+      "meters": 11611,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Praia Brava",
+      "rightMatchedName": "Praia Brava",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Common Praia Brava name at different coastal positions."
+    },
+    {
+      "leftId": "spot-1e676ds",
+      "leftName": "Mui Ne",
+      "rightId": "spot-hfgj3c",
+      "rightName": "Mui Ne",
+      "meters": 12432,
+      "countryCodes": [
+        "vn",
+        "vn"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Mui Ne",
+      "rightMatchedName": "Mui Ne",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Mui Ne town and Ham Tien coastal area are separate positions under a broad destination name."
+    },
+    {
+      "leftId": "spot-1gxzkpp",
+      "leftName": "Bolonia",
+      "rightId": "spot-1mfquwr",
+      "rightName": "Bolonia",
+      "meters": 12633,
+      "countryCodes": [
+        "es",
+        "es"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Bolonia",
+      "rightMatchedName": "Bolonia",
+      "decision": "merge",
+      "reviewReason": "Same Bolonia destination; remove inland/northwestern misplaced pin",
+      "retainedId": "spot-1mfquwr",
+      "evidence": "https://www.aemet.es/en/eltiempo/prediccion/playas?l=1103504 — beach 36.0852777778, -5.7669444444"
+    },
+    {
+      "leftId": "spot-11z3d43",
+      "leftName": "37th Street Jetty",
+      "rightId": "spot-12a00l1",
+      "rightName": "8th Street Jetty",
+      "meters": 12770,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "37th Street Jetty",
+      "rightMatchedName": "8th Street Jetty",
+      "decision": "retain-distinct",
+      "reviewReason": "Different numbered street jetties."
+    },
+    {
+      "leftId": "spot-1o1jjxs",
+      "leftName": "Barra do Sai",
+      "rightId": "spot-jxx18s",
+      "rightName": "Barre do Sai",
+      "meters": 13222,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Barra do Sai",
+      "rightMatchedName": "Barre do Sai",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Sai/Sai river and beach area has multiple named coastal sectors; identity not established."
+    },
+    {
+      "leftId": "spot-hrq85n",
+      "leftName": "Dunes Hotel (Miami)",
+      "rightId": "spot-63ee8o",
+      "rightName": "Dunes Motel",
+      "meters": 13302,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Dunes Hotel (Miami)",
+      "rightMatchedName": "Dunes Motel",
+      "decision": "retain-distinct",
+      "reviewReason": "Different hotel/motel break names, not a demonstrated common location."
+    },
+    {
+      "leftId": "spot-2j6jc4",
+      "leftName": "Freshwater east",
+      "rightId": "spot-1cjl12e",
+      "rightName": "Freshwater West",
+      "meters": 13870,
+      "countryCodes": [
+        "gb",
+        "gb"
+      ],
+      "reason": "spelling-variant",
+      "leftMatchedName": "Freshwater east",
+      "rightMatchedName": "Freshwater West",
+      "decision": "retain-distinct",
+      "reviewReason": "Freshwater East and West are different beaches."
+    },
+    {
+      "leftId": "spot-13oa4bm",
+      "leftName": "Kitesurf corn Island",
+      "rightId": "spot-gw7l02",
+      "rightName": "Kitesurf Corn Island",
+      "meters": 14138,
+      "countryCodes": [
+        "ni",
+        "ni"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Kitesurf corn Island",
+      "rightMatchedName": "Kitesurf Corn Island",
+      "decision": "retain-distinct",
+      "reviewReason": "Big and Little Corn Island locations; same broad label does not imply same island."
+    },
+    {
+      "leftId": "spot-1z13irm",
+      "leftName": "Ile de Noirmoutier",
+      "rightId": "spot-xzkcjp",
+      "rightName": "Île de Noirmoutier",
+      "meters": 15483,
+      "countryCodes": [
+        "fr",
+        "fr"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Ile de Noirmoutier",
+      "rightMatchedName": "Île de Noirmoutier",
+      "decision": "retain-distinct",
+      "reviewReason": "Different parts of the large Noirmoutier island."
+    },
+    {
+      "leftId": "spot-1c0jzo3",
+      "leftName": "Pelzerhaken",
+      "rightId": "spot-zt779e",
+      "rightName": "Pelzerhaken",
+      "meters": 15537,
+      "countryCodes": [
+        "de",
+        "de"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Pelzerhaken",
+      "rightMatchedName": "Pelzerhaken",
+      "decision": "merge",
+      "reviewReason": "Same Pelzerhaken destination; remove distant offshore misplaced pin",
+      "retainedId": "spot-1c0jzo3",
+      "evidence": "https://www.surfschule-pelzerhaken.de/informationen/anfahrt — nearby Rettin surf beach 54°05′32″ N, 10°53′14″ E; https://baken-net.de/pelzerhaken.htm — Pelzerhaken lighthouse 54°5.3′ N, 10°51.9′ E"
+    },
+    {
+      "leftId": "spot-1hqytmz",
+      "leftName": "Kitesurf launch",
+      "rightId": "spot-vkli28",
+      "rightName": "Kitesurf Launch",
+      "meters": 16428,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Kitesurf launch",
+      "rightMatchedName": "Kitesurf Launch",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic activity label at different launch sites."
+    },
+    {
+      "leftId": "spot-11snc9o",
+      "leftName": "Suicides",
+      "rightId": "spot-1o2fa6w",
+      "rightName": "Suicides",
+      "meters": 17270,
+      "countryCodes": [
+        "us",
+        "us"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Suicides",
+      "rightMatchedName": "Suicides",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Reused local break nickname; no evidence these distant points identify one break."
+    },
+    {
+      "leftId": "spot-130dgyq",
+      "leftName": "Praia Brava",
+      "rightId": "spot-cif5f1",
+      "rightName": "Praia Brava",
+      "meters": 17604,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Praia Brava",
+      "rightMatchedName": "Praia Brava",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Common Praia Brava name at different coastal positions."
+    },
+    {
+      "leftId": "spot-8kesnf",
+      "leftName": "Praia Brava",
+      "rightId": "spot-itootr",
+      "rightName": "Praia Brava",
+      "meters": 21450,
+      "countryCodes": [
+        "br",
+        "br"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "Praia Brava",
+      "rightMatchedName": "Praia Brava",
+      "decision": "retain-unconfirmed",
+      "reviewReason": "Common Praia Brava name at different coastal positions."
+    },
+    {
+      "leftId": "spot-17emnbs",
+      "leftName": "École de voile",
+      "rightId": "spot-y86c5h",
+      "rightName": "École de voile",
+      "meters": 23481,
+      "countryCodes": [
+        "fr",
+        "fr"
+      ],
+      "reason": "normalized-name",
+      "leftMatchedName": "École de voile",
+      "rightMatchedName": "École de voile",
+      "decision": "retain-distinct",
+      "reviewReason": "Generic sailing-school label at different facilities."
+    }
+  ],
+  "after": {
+    "radiusKm": 25,
+    "locationCount": 8366,
+    "rings": [
+      {
+        "maxKm": 2,
+        "allPairs": 1727,
+        "nameCandidates": 15
+      },
+      {
+        "maxKm": 5,
+        "allPairs": 4476,
+        "nameCandidates": 16
+      },
+      {
+        "maxKm": 10,
+        "allPairs": 6981,
+        "nameCandidates": 10
+      },
+      {
+        "maxKm": 15,
+        "allPairs": 6983,
+        "nameCandidates": 12
+      },
+      {
+        "maxKm": 25,
+        "allPairs": 13248,
+        "nameCandidates": 6
+      }
+    ],
+    "pairs": [
+      {
+        "leftId": "spot-1111vqv",
+        "leftName": "Fiji",
+        "rightId": "spot-1wrkur",
+        "rightName": "La Ocho (Escambron Beach)",
+        "meters": 1057,
+        "countryCodes": [
+          "pr",
+          "pr"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "La Ocho",
+        "rightMatchedName": "La Ocho (Escambron Beach)"
+      },
+      {
+        "leftId": "spot-1rifvrl",
+        "leftName": "Capbreton - La Pointe",
+        "rightId": "spot-17piw0a",
+        "rightName": "Mongrels",
+        "meters": 1098,
+        "countryCodes": [
+          "fr",
+          "fr"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Capbreton - La Pointe",
+        "rightMatchedName": "Capbreton - La Piste"
+      },
+      {
+        "leftId": "spot-1y9s7hj",
+        "leftName": "Gnejna Bay",
+        "rightId": "spot-1uac7nb",
+        "rightName": "Golden Bay",
+        "meters": 1115,
+        "countryCodes": [
+          "",
+          "mt"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Ghajn Tuffieha",
+        "rightMatchedName": "Għajn Tuffieħa"
+      },
+      {
+        "leftId": "spot-fe0uco",
+        "leftName": "East Wittering",
+        "rightId": "spot-pp4x29",
+        "rightName": "West Wittering",
+        "meters": 1194,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "East Wittering",
+        "rightMatchedName": "West Wittering"
+      },
+      {
+        "leftId": "spot-3gshrq",
+        "leftName": "Church",
+        "rightId": "spot-a66kq5",
+        "rightName": "Trestles (Uppers)",
+        "meters": 1358,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Trestles (Lowers)",
+        "rightMatchedName": "Trestles (Uppers)"
+      },
+      {
+        "leftId": "spot-afmg81",
+        "leftName": "Boomerang Beach (North)",
+        "rightId": "spot-1bs1yt7",
+        "rightName": "Boomerang Beach (South)",
+        "meters": 1394,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Boomerang Beach (North)",
+        "rightMatchedName": "Boomerang Beach (South)"
+      },
+      {
+        "leftId": "spot-nwef2v",
+        "leftName": "Scarborough North Bay",
+        "rightId": "spot-1wv5yhh",
+        "rightName": "Scarborough South Bay",
+        "meters": 1399,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Scarborough North Bay",
+        "rightMatchedName": "Scarborough South Bay"
+      },
+      {
+        "leftId": "spot-ckwzl1",
+        "leftName": "Avalon 15th Street",
+        "rightId": "spot-rkk4pa",
+        "rightName": "Avalon 30th Street",
+        "meters": 1408,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Avalon 15th Street",
+        "rightMatchedName": "Avalon 30th Street"
+      },
+      {
+        "leftId": "spot-3uwq5b",
+        "leftName": "Tenby (North Beach)",
+        "rightId": "spot-1fnl8ix",
+        "rightName": "Tenby (South Beach)",
+        "meters": 1582,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Tenby (North Beach)",
+        "rightMatchedName": "Tenby (South Beach)"
+      },
+      {
+        "leftId": "spot-162d6be",
+        "leftName": "The Bluff-North Side",
+        "rightId": "spot-1toc7mc",
+        "rightName": "The Bluff-South Side",
+        "meters": 1612,
+        "countryCodes": [
+          "nz",
+          "nz"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "The Bluff-North Side",
+        "rightMatchedName": "The Bluff-South Side"
+      },
+      {
+        "leftId": "spot-1id5kbt",
+        "leftName": "St Andrews",
+        "rightId": "spot-c0v5wn",
+        "rightName": "St Andrews (West Sands)",
+        "meters": 1621,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "St Andrews",
+        "rightMatchedName": "St Andrews (West Sands)"
+      },
+      {
+        "leftId": "spot-1uwjdjm",
+        "leftName": "Mooring field #1",
+        "rightId": "spot-1w0kxth",
+        "rightName": "Mooring field #3",
+        "meters": 1684,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Mooring field #1",
+        "rightMatchedName": "Mooring field #3"
+      },
+      {
+        "leftId": "spot-2chhm0",
+        "leftName": "La Timba",
+        "rightId": "spot-n09u3v",
+        "rightName": "Playa El Silencio",
+        "meters": 1691,
+        "countryCodes": [
+          "pe",
+          "pe"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Silencios",
+        "rightMatchedName": "Playa El Silencio"
+      },
+      {
+        "leftId": "spot-qfmh2",
+        "leftName": "Makaha (Outside)",
+        "rightId": "spot-rsci3b",
+        "rightName": "Mākaha Beach",
+        "meters": 1901,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Makaha (Outside)",
+        "rightMatchedName": "Mākaha Beach"
+      },
+      {
+        "leftId": "spot-xo07cr",
+        "leftName": "North Broulee",
+        "rightId": "spot-152hfz9",
+        "rightName": "South Broulee",
+        "meters": 1985,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "North Broulee",
+        "rightMatchedName": "South Broulee"
+      },
+      {
+        "leftId": "spot-1msnb8c",
+        "leftName": "Indian River (Northside)",
+        "rightId": "spot-n0maim",
+        "rightName": "Indian River (Southside)",
+        "meters": 2025,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Indian River (Northside)",
+        "rightMatchedName": "Indian River (Southside)"
+      },
+      {
+        "leftId": "spot-6rgz9r",
+        "leftName": "Laida (Urdaibai)",
+        "rightId": "spot-1vtlmi0",
+        "rightName": "Mundaka",
+        "meters": 2136,
+        "countryCodes": [
+          "es",
+          "es"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Laida (Urdaibai)",
+        "rightMatchedName": "Playa de Laida"
+      },
+      {
+        "leftId": "spot-t52dak",
+        "leftName": "North Wall Mackay Harbour Beach",
+        "rightId": "spot-fam9qg",
+        "rightName": "South Wall Mackay Harbour",
+        "meters": 2175,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "North Wall Mackay Harbour Beach",
+        "rightMatchedName": "South Wall Mackay Harbour"
+      },
+      {
+        "leftId": "spot-k9kfci",
+        "leftName": "Antenot",
+        "rightId": "spot-m5ktmy",
+        "rightName": "Danger",
+        "meters": 2180,
+        "countryCodes": [
+          "il",
+          "il"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Tel Baruch North Beach",
+        "rightMatchedName": "Tel Baruch South Beach"
+      },
+      {
+        "leftId": "spot-gztclp",
+        "leftName": "Acids",
+        "rightId": "spot-u6kgry",
+        "rightName": "Woonona",
+        "meters": 2347,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Wollongong North Beach",
+        "rightMatchedName": "Wollongong South Beach"
+      },
+      {
+        "leftId": "spot-wts8yq",
+        "leftName": "Chałupy 3",
+        "rightId": "spot-1i1iy7l",
+        "rightName": "Chałupy 6",
+        "meters": 2461,
+        "countryCodes": [
+          "pl",
+          "pl"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Chałupy 3",
+        "rightMatchedName": "Chałupy 6"
+      },
+      {
+        "leftId": "spot-11zvg82",
+        "leftName": "12th Street Jetty",
+        "rightId": "spot-12a00l1",
+        "rightName": "8th Street Jetty",
+        "meters": 2702,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "12th Street Jetty",
+        "rightMatchedName": "8th Street Jetty"
+      },
+      {
+        "leftId": "spot-9r8v33",
+        "leftName": "Narrabeen-South",
+        "rightId": "spot-1oddspi",
+        "rightName": "Turimetta Beach",
+        "meters": 2805,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Narrabeen-South",
+        "rightMatchedName": "Narrabeen-North"
+      },
+      {
+        "leftId": "spot-f6ci14",
+        "leftName": "Prasonisi",
+        "rightId": "spot-dkooyb",
+        "rightName": "Prasonisi East Beach",
+        "meters": 2919,
+        "countryCodes": [
+          "gr",
+          "gr"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Prasonisi West Beach",
+        "rightMatchedName": "Prasonisi East Beach"
+      },
+      {
+        "leftId": "spot-3c0lmh",
+        "leftName": "Dump Beach",
+        "rightId": "spot-1l7dgr5",
+        "rightName": "The Dump",
+        "meters": 3096,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Dump Beach",
+        "rightMatchedName": "The Dump"
+      },
+      {
+        "leftId": "spot-iofvy9",
+        "leftName": "San Pedro North Reef Pass",
+        "rightId": "spot-1ykbvtj",
+        "rightName": "San Pedro South Reef Pass",
+        "meters": 3367,
+        "countryCodes": [
+          "bz",
+          "bz"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "San Pedro North Reef Pass",
+        "rightMatchedName": "San Pedro South Reef Pass"
+      },
+      {
+        "leftId": "spot-1e3s0ik",
+        "leftName": "Caravelle",
+        "rightId": "spot-8o8py0",
+        "rightName": "La Caravelle",
+        "meters": 3462,
+        "countryCodes": [
+          "gp",
+          "gp"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Caravelle",
+        "rightMatchedName": "La Caravelle"
+      },
+      {
+        "leftId": "spot-1c24rkr",
+        "leftName": "La Cote Sauvage - Le 27",
+        "rightId": "spot-7tywli",
+        "rightName": "La Cote Sauvage - Le 46",
+        "meters": 3750,
+        "countryCodes": [
+          "fr",
+          "fr"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "La Cote Sauvage - Le 27",
+        "rightMatchedName": "La Cote Sauvage - Le 46"
+      },
+      {
+        "leftId": "spot-14gwn7",
+        "leftName": "Unnamed5",
+        "rightId": "spot-1egic6",
+        "rightName": "Unnamed6",
+        "meters": 3828,
+        "countryCodes": [
+          "ly",
+          "ly"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Unnamed5",
+        "rightMatchedName": "Unnamed6"
+      },
+      {
+        "leftId": "spot-1jcqe7q",
+        "leftName": "Bloubergstrand (Big Bay)",
+        "rightId": "spot-1695p02",
+        "rightName": "Kite Beach (Table View)",
+        "meters": 4161,
+        "countryCodes": [
+          "za",
+          "za"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Bloubergstrand (Big Bay)",
+        "rightMatchedName": "Bloubergstrand"
+      },
+      {
+        "leftId": "spot-1rg0t7z",
+        "leftName": "Bude",
+        "rightId": "spot-96kixc",
+        "rightName": "Widemouth Bay",
+        "meters": 4353,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Bude",
+        "rightMatchedName": "Bude (Widemouth Bay)"
+      },
+      {
+        "leftId": "spot-17cjt69",
+        "leftName": "Saint-Jean-de-Monts",
+        "rightId": "spot-1b4ixnv",
+        "rightName": "St Jean de Monts",
+        "meters": 5240,
+        "countryCodes": [
+          "fr",
+          "fr"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Saint-Jean-de-Monts",
+        "rightMatchedName": "St Jean de Monts"
+      },
+      {
+        "leftId": "spot-1jnpwv3",
+        "leftName": "Reef",
+        "rightId": "spot-1v5lith",
+        "rightName": "The Reef",
+        "meters": 5595,
+        "countryCodes": [
+          "pt",
+          "pt"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Reef",
+        "rightMatchedName": "The Reef"
+      },
+      {
+        "leftId": "spot-1d5lpm7",
+        "leftName": "کلوپ آسمان قشم",
+        "rightId": "spot-1d5n3oo",
+        "rightName": "کلوپ آسمان قشم",
+        "meters": 5796,
+        "countryCodes": [
+          "ir",
+          "ir"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "کلوپ آسمان قشم",
+        "rightMatchedName": "کلوپ آسمان قشم"
+      },
+      {
+        "leftId": "spot-130dgyq",
+        "leftName": "Praia Brava",
+        "rightId": "spot-itootr",
+        "rightName": "Praia Brava",
+        "meters": 7063,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Praia Brava",
+        "rightMatchedName": "Praia Brava"
+      },
+      {
+        "leftId": "spot-1yovoc1",
+        "leftName": "Texel (Paal 17.6-18.99, 28.2-32)",
+        "rightId": "spot-eyopdn",
+        "rightName": "Texel (Waddeneilanden)",
+        "meters": 7327,
+        "countryCodes": [
+          "nl",
+          "nl"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Texel (Paal 17.6-18.99, 28.2-32)",
+        "rightMatchedName": "Texel (Waddeneilanden)"
+      },
+      {
+        "leftId": "spot-2seit1",
+        "leftName": "Unnamed",
+        "rightId": "spot-14gwn7",
+        "rightName": "Unnamed5",
+        "meters": 7815,
+        "countryCodes": [
+          "ly",
+          "ly"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Unnamed",
+        "rightMatchedName": "Unnamed5"
+      },
+      {
+        "leftId": "spot-1cmp0vn",
+        "leftName": "57th Street",
+        "rightId": "spot-14vrr5q",
+        "rightName": "5th Street",
+        "meters": 8018,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "57th Street",
+        "rightMatchedName": "5th Street"
+      },
+      {
+        "leftId": "spot-tjaias",
+        "leftName": "Sotavento",
+        "rightId": "spot-8zhfcu",
+        "rightName": "Sotavento (Fuerteventura, Canary Islands)",
+        "meters": 8795,
+        "countryCodes": [
+          "es",
+          "es"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Sotavento",
+        "rightMatchedName": "Sotavento (Fuerteventura, Canary Islands)"
+      },
+      {
+        "leftId": "spot-dacl7y",
+        "leftName": "Ilha de Faro",
+        "rightId": "spot-dtmmmk",
+        "rightName": "Ilha do Farol",
+        "meters": 9243,
+        "countryCodes": [
+          "pt",
+          "pt"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Ilha de Faro",
+        "rightMatchedName": "Ilha do Farol"
+      },
+      {
+        "leftId": "spot-19cy28p",
+        "leftName": "47th Street",
+        "rightId": "spot-1cmp0vn",
+        "rightName": "57th Street",
+        "meters": 9930,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "47th Street",
+        "rightMatchedName": "57th Street"
+      },
+      {
+        "leftId": "spot-11zvg82",
+        "leftName": "12th Street Jetty",
+        "rightId": "spot-11z3d43",
+        "rightName": "37th Street Jetty",
+        "meters": 10087,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "12th Street Jetty",
+        "rightMatchedName": "37th Street Jetty"
+      },
+      {
+        "leftId": "spot-lv6k2g",
+        "leftName": "Tiree (Balevullin)",
+        "rightId": "spot-l17qzj",
+        "rightName": "Tiree (Gott Bay)",
+        "meters": 10121,
+        "countryCodes": [
+          "gb",
+          ""
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Tiree (Balevullin)",
+        "rightMatchedName": "Tiree (Gott Bay)"
+      },
+      {
+        "leftId": "spot-cif5f1",
+        "leftName": "Praia Brava",
+        "rightId": "spot-itootr",
+        "rightName": "Praia Brava",
+        "meters": 10571,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Praia Brava",
+        "rightMatchedName": "Praia Brava"
+      },
+      {
+        "leftId": "spot-2seit1",
+        "leftName": "Unnamed",
+        "rightId": "spot-1egic6",
+        "rightName": "Unnamed6",
+        "meters": 11047,
+        "countryCodes": [
+          "ly",
+          "ly"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Unnamed",
+        "rightMatchedName": "Unnamed6"
+      },
+      {
+        "leftId": "spot-1il95ft",
+        "leftName": "Centre Crack",
+        "rightId": "spot-1ll3wab",
+        "rightName": "Surf Beach",
+        "meters": 11100,
+        "countryCodes": [
+          "au",
+          "au"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Summerland Bay",
+        "rightMatchedName": "Sunderland Bay"
+      },
+      {
+        "leftId": "spot-8kesnf",
+        "leftName": "Praia Brava",
+        "rightId": "spot-cif5f1",
+        "rightName": "Praia Brava",
+        "meters": 11611,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Praia Brava",
+        "rightMatchedName": "Praia Brava"
+      },
+      {
+        "leftId": "spot-1e676ds",
+        "leftName": "Mui Ne",
+        "rightId": "spot-hfgj3c",
+        "rightName": "Mui Ne",
+        "meters": 12432,
+        "countryCodes": [
+          "vn",
+          "vn"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Mui Ne",
+        "rightMatchedName": "Mui Ne"
+      },
+      {
+        "leftId": "spot-11z3d43",
+        "leftName": "37th Street Jetty",
+        "rightId": "spot-12a00l1",
+        "rightName": "8th Street Jetty",
+        "meters": 12770,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "37th Street Jetty",
+        "rightMatchedName": "8th Street Jetty"
+      },
+      {
+        "leftId": "spot-1o1jjxs",
+        "leftName": "Barra do Sai",
+        "rightId": "spot-jxx18s",
+        "rightName": "Barre do Sai",
+        "meters": 13222,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Barra do Sai",
+        "rightMatchedName": "Barre do Sai"
+      },
+      {
+        "leftId": "spot-hrq85n",
+        "leftName": "Dunes Hotel (Miami)",
+        "rightId": "spot-63ee8o",
+        "rightName": "Dunes Motel",
+        "meters": 13302,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Dunes Hotel (Miami)",
+        "rightMatchedName": "Dunes Motel"
+      },
+      {
+        "leftId": "spot-2j6jc4",
+        "leftName": "Freshwater east",
+        "rightId": "spot-1cjl12e",
+        "rightName": "Freshwater West",
+        "meters": 13870,
+        "countryCodes": [
+          "gb",
+          "gb"
+        ],
+        "reason": "spelling-variant",
+        "leftMatchedName": "Freshwater east",
+        "rightMatchedName": "Freshwater West"
+      },
+      {
+        "leftId": "spot-13oa4bm",
+        "leftName": "Kitesurf corn Island",
+        "rightId": "spot-gw7l02",
+        "rightName": "Kitesurf Corn Island",
+        "meters": 14138,
+        "countryCodes": [
+          "ni",
+          "ni"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Kitesurf corn Island",
+        "rightMatchedName": "Kitesurf Corn Island"
+      },
+      {
+        "leftId": "spot-1z13irm",
+        "leftName": "Ile de Noirmoutier",
+        "rightId": "spot-xzkcjp",
+        "rightName": "Île de Noirmoutier",
+        "meters": 15483,
+        "countryCodes": [
+          "fr",
+          "fr"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Ile de Noirmoutier",
+        "rightMatchedName": "Île de Noirmoutier"
+      },
+      {
+        "leftId": "spot-1hqytmz",
+        "leftName": "Kitesurf launch",
+        "rightId": "spot-vkli28",
+        "rightName": "Kitesurf Launch",
+        "meters": 16428,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Kitesurf launch",
+        "rightMatchedName": "Kitesurf Launch"
+      },
+      {
+        "leftId": "spot-11snc9o",
+        "leftName": "Suicides",
+        "rightId": "spot-1o2fa6w",
+        "rightName": "Suicides",
+        "meters": 17270,
+        "countryCodes": [
+          "us",
+          "us"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Suicides",
+        "rightMatchedName": "Suicides"
+      },
+      {
+        "leftId": "spot-130dgyq",
+        "leftName": "Praia Brava",
+        "rightId": "spot-cif5f1",
+        "rightName": "Praia Brava",
+        "meters": 17604,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Praia Brava",
+        "rightMatchedName": "Praia Brava"
+      },
+      {
+        "leftId": "spot-8kesnf",
+        "leftName": "Praia Brava",
+        "rightId": "spot-itootr",
+        "rightName": "Praia Brava",
+        "meters": 21450,
+        "countryCodes": [
+          "br",
+          "br"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "Praia Brava",
+        "rightMatchedName": "Praia Brava"
+      },
+      {
+        "leftId": "spot-17emnbs",
+        "leftName": "École de voile",
+        "rightId": "spot-y86c5h",
+        "rightName": "École de voile",
+        "meters": 23481,
+        "countryCodes": [
+          "fr",
+          "fr"
+        ],
+        "reason": "normalized-name",
+        "leftMatchedName": "École de voile",
+        "rightMatchedName": "École de voile"
+      }
+    ]
+  }
+}

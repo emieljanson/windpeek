@@ -1,0 +1,5354 @@
+{
+  "stats": {
+    "requests": 280,
+    "cacheHits": 94
+  },
+  "samples": [
+    {
+      "id": "surf-forecast:A-Bay",
+      "name": "A-Bay (Willyama Bay)",
+      "latitude": -35.245,
+      "longitude": 136.9822,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Adelaide",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Adelaide"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Adelaide",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bribie-Island",
+      "name": "Bribie Island",
+      "latitude": -27.058,
+      "longitude": 153.2,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Brisbane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1647,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Brisbane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cozies-and-Geeries",
+      "name": "Cozies and Geeries",
+      "latitude": -32.5689,
+      "longitude": 115.6516,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Perth",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Perth"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Perth",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Gas-Bay",
+      "name": "Gas Bay",
+      "latitude": -34.0283,
+      "longitude": 114.9851,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Perth",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Australia/Perth"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Perth",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Long-Beach_3",
+      "name": "Long Beach",
+      "latitude": -37.1474,
+      "longitude": 139.7951,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Adelaide",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Adelaide"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Adelaide",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:North-Haven",
+      "name": "North Haven",
+      "latitude": -31.6349,
+      "longitude": 152.8357,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Sydney",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Sydney"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1433,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Sydney",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Sandon-Point",
+      "name": "Sandon Point",
+      "latitude": -34.3691,
+      "longitude": 150.93,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Sydney",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Sydney"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 118,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Sydney",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:The-groyne_1",
+      "name": "The groyne",
+      "latitude": -26.7988,
+      "longitude": 153.1609,
+      "sourceCountry": "Australia",
+      "expected": {
+        "countryCode": "au",
+        "timezone": "Australia/Brisbane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "au",
+        "timezone": "Australia/Brisbane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:A-Ds-Doubles",
+      "name": "ADs/Doubles",
+      "latitude": 21.2987,
+      "longitude": -157.656,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "Pacific/Honolulu"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 169,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Boiler-Bay",
+      "name": "Boiler Bay",
+      "latitude": 44.8488,
+      "longitude": -124.0561,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Crescent",
+      "name": "Crescent",
+      "latitude": 48.1637,
+      "longitude": -123.712,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 505,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:fifteenthth-St",
+      "name": "15th Street",
+      "latitude": 32.9976,
+      "longitude": -117.2795,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Halfpoint-Fullpoint",
+      "name": "Halfpoint/Fullpoint",
+      "latitude": 21.2884,
+      "longitude": -157.6646,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "Pacific/Honolulu"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 579,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:K-O-A",
+      "name": "K.O.A",
+      "latitude": 35.5429,
+      "longitude": -75.4661,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Long-Beach_5",
+      "name": "Long Beach",
+      "latitude": 33.904,
+      "longitude": -78.0852,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Natural-Bridges-State-Beach",
+      "name": "Natural Bridges State Beach",
+      "latitude": 36.9498,
+      "longitude": -122.0578,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 690,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Papaikou-Mill",
+      "name": "Papaikou Mill",
+      "latitude": 19.7745,
+      "longitude": -155.0802,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "Pacific/Honolulu"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 742,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "Pacific/Honolulu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Redwood-Creek",
+      "name": "Redwood Creek",
+      "latitude": 41.291,
+      "longitude": -124.093,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Seaside-Park",
+      "name": "Seaside Park",
+      "latitude": 39.913,
+      "longitude": -74.076,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Stuart-Public-Beach",
+      "name": "Stuart Public Beach",
+      "latitude": 27.2051,
+      "longitude": -80.169,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/New_York",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Torrey-Pines-State-Beach",
+      "name": "Torrey Pines State Beach",
+      "latitude": 32.9604,
+      "longitude": -117.2711,
+      "sourceCountry": "United States",
+      "expected": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "us",
+        "timezone": "America/Los_Angeles",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:A-Ver-o-Mar",
+      "name": "A Ver o Mar",
+      "latitude": 41.3909,
+      "longitude": -8.787,
+      "sourceCountry": "Portugal",
+      "expected": {
+        "countryCode": "pt",
+        "timezone": "Europe/Lisbon",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pt",
+          "timezone": "Europe/Lisbon"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1567,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "pt",
+        "timezone": "Europe/Lisbon",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Monte-Clerigo",
+      "name": "Monte Clerigo",
+      "latitude": 37.3281,
+      "longitude": -8.8785,
+      "sourceCountry": "Portugal",
+      "expected": {
+        "countryCode": "pt",
+        "timezone": "Europe/Lisbon",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pt",
+          "timezone": "Europe/Lisbon"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 799,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "pt",
+        "timezone": "Europe/Lisbon",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aan",
+      "name": "Aan",
+      "latitude": -8.9225,
+      "longitude": 116.3089,
+      "sourceCountry": "Indonesia",
+      "expected": {
+        "countryCode": "id",
+        "timezone": "Asia/Makassar",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "id",
+        "timezone": "Asia/Makassar",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Mama-Losmen-Left",
+      "name": "Mama Losmen Left",
+      "latitude": -7.3429,
+      "longitude": 106.3861,
+      "sourceCountry": "Indonesia",
+      "expected": {
+        "countryCode": "id",
+        "timezone": "Asia/Jakarta",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Jakarta"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "id",
+        "timezone": "Asia/Jakarta",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Abacateiro",
+      "name": "Abacateiro",
+      "latitude": -6.2552,
+      "longitude": -35.0328,
+      "sourceCountry": "Brazil",
+      "expected": {
+        "countryCode": "br",
+        "timezone": "America/Fortaleza",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/Fortaleza"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "br",
+        "timezone": "America/Fortaleza",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Gaibu",
+      "name": "Gaibu",
+      "latitude": -8.3403,
+      "longitude": -34.9475,
+      "sourceCountry": "Brazil",
+      "expected": {
+        "countryCode": "br",
+        "timezone": "America/Recife",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "br",
+          "timezone": "America/Recife"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1373,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "br",
+        "timezone": "America/Recife",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Outside",
+      "name": "Outside",
+      "latitude": -3.3898,
+      "longitude": -38.9916,
+      "sourceCountry": "Brazil",
+      "expected": {
+        "countryCode": "br",
+        "timezone": "America/Fortaleza",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "br",
+          "timezone": "America/Fortaleza"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "br",
+        "timezone": "America/Fortaleza",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Praiada-Fazenda",
+      "name": "Praia da Fazenda",
+      "latitude": -23.3613,
+      "longitude": -44.8492,
+      "sourceCountry": "Brazil",
+      "expected": {
+        "countryCode": "br",
+        "timezone": "America/Sao_Paulo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "br",
+          "timezone": "America/Sao_Paulo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "br",
+        "timezone": "America/Sao_Paulo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aber-Wrac-h-Point",
+      "name": "Aber Wrac'h Point",
+      "latitude": 48.5879,
+      "longitude": -4.633,
+      "sourceCountry": "France",
+      "expected": {
+        "countryCode": "fx",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1808,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "fr",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Fecamp",
+      "name": "Fecamp",
+      "latitude": 49.7678,
+      "longitude": 0.3686,
+      "sourceCountry": "France",
+      "expected": {
+        "countryCode": "fx",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 122,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "fr",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Le-Goudoul",
+      "name": "Le Goudoul",
+      "latitude": 47.7856,
+      "longitude": -4.2249,
+      "sourceCountry": "France",
+      "expected": {
+        "countryCode": "fx",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 776,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "fr",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Plage-Des-Granges",
+      "name": "Plage Des Granges",
+      "latitude": 46.585,
+      "longitude": -1.852,
+      "sourceCountry": "France",
+      "expected": {
+        "countryCode": "fx",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "fr",
+        "timezone": "Europe/Paris",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aberaeron",
+      "name": "Aberaeron",
+      "latitude": 52.2488,
+      "longitude": -4.2579,
+      "sourceCountry": "United Kingdom",
+      "expected": {
+        "countryCode": "uk",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gb",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Coombesgate-Beach",
+      "name": "Coombesgate Beach",
+      "latitude": 51.178,
+      "longitude": -4.217,
+      "sourceCountry": "United Kingdom",
+      "expected": {
+        "countryCode": "uk",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gb",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Huntcliff",
+      "name": "Huntcliff",
+      "latitude": 54.5869,
+      "longitude": -0.9489,
+      "sourceCountry": "United Kingdom",
+      "expected": {
+        "countryCode": "uk",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gb",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Petes-Reef",
+      "name": "Petes Reef",
+      "latitude": 51.5401,
+      "longitude": -4.2376,
+      "sourceCountry": "United Kingdom",
+      "expected": {
+        "countryCode": "uk",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gb",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Southend-Reef",
+      "name": "Southend Reef",
+      "latitude": 55.2952,
+      "longitude": -5.6245,
+      "sourceCountry": "United Kingdom",
+      "expected": {
+        "countryCode": "uk",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gb",
+        "timezone": "Europe/London",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aberdeen-Area-Beach",
+      "name": "Aberdeen Area Beach",
+      "latitude": 8.4973,
+      "longitude": -13.2975,
+      "sourceCountry": "Sierra Leone",
+      "expected": {
+        "countryCode": "sl",
+        "timezone": "Africa/Freetown",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "sl",
+          "timezone": "Africa/Freetown"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "sl",
+        "timezone": "Africa/Freetown",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Abrami-Beach",
+      "name": "Abrami Beach (Naxos)",
+      "latitude": 37.1733,
+      "longitude": 25.4801,
+      "sourceCountry": "Greece",
+      "expected": {
+        "countryCode": "gr",
+        "timezone": "Europe/Athens",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gr",
+          "timezone": "Europe/Athens"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gr",
+        "timezone": "Europe/Athens",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Acajutla",
+      "name": "Acajutla",
+      "latitude": 13.6044,
+      "longitude": -89.8747,
+      "sourceCountry": "El Salvador",
+      "expected": {
+        "countryCode": "sv",
+        "timezone": "America/El_Salvador",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "sv",
+          "timezone": "America/El_Salvador"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "sv",
+        "timezone": "America/El_Salvador",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Acapulquito_Costa-Azul",
+      "name": "Acapulquito-Costa Azul",
+      "latitude": 22.9553,
+      "longitude": -109.803,
+      "sourceCountry": "Mexico",
+      "expected": {
+        "countryCode": "mx",
+        "timezone": "America/Mazatlan",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mx",
+          "timezone": "America/Mazatlan"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mx",
+        "timezone": "America/Mazatlan",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Paraiso-Escondido",
+      "name": "Paraiso Escondido",
+      "latitude": 17.0563,
+      "longitude": -100.4252,
+      "sourceCountry": "Mexico",
+      "expected": {
+        "countryCode": "mx",
+        "timezone": "America/Mexico_City",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mx",
+          "timezone": "America/Mexico_City"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mx",
+        "timezone": "America/Mexico_City",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Accra-Beach-Rockley-Beach",
+      "name": "Accra Beach - Rockley Beach",
+      "latitude": 13.073,
+      "longitude": -59.5884,
+      "sourceCountry": "Barbados",
+      "expected": {
+        "countryCode": "bb",
+        "timezone": "America/Barbados",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bb",
+          "timezone": "America/Barbados"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1153,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "bb",
+        "timezone": "America/Barbados",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Acque-Calde-Savona",
+      "name": "Acque-Calde (Savona)",
+      "latitude": 44.2793,
+      "longitude": 8.4447,
+      "sourceCountry": "Italy",
+      "expected": {
+        "countryCode": "it",
+        "timezone": "Europe/Rome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "it",
+          "timezone": "Europe/Rome"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "it",
+        "timezone": "Europe/Rome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Lillatro",
+      "name": "Lillatro",
+      "latitude": 43.2686,
+      "longitude": 10.5213,
+      "sourceCountry": "Italy",
+      "expected": {
+        "countryCode": "it",
+        "timezone": "Europe/Rome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "it",
+          "timezone": "Europe/Rome"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1761,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "it",
+        "timezone": "Europe/Rome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Acre-Mifalim",
+      "name": "Acre (Mifalim) or Ako",
+      "latitude": 32.908,
+      "longitude": 35.081,
+      "sourceCountry": "Israel",
+      "expected": {
+        "countryCode": "il",
+        "timezone": "Asia/Jerusalem",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "il",
+          "timezone": "Asia/Jerusalem"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "il",
+        "timezone": "Asia/Jerusalem",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ada",
+      "name": "Ada",
+      "latitude": 26.7253,
+      "longitude": 128.3336,
+      "sourceCountry": "Japan",
+      "expected": {
+        "countryCode": "jp",
+        "timezone": "Asia/Tokyo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "jp",
+          "timezone": "Asia/Tokyo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1853,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "jp",
+        "timezone": "Asia/Tokyo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Addington",
+      "name": "Addington (South Beach)",
+      "latitude": -29.8555,
+      "longitude": 31.0405,
+      "sourceCountry": "South Africa",
+      "expected": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Hawston",
+      "name": "Hawston",
+      "latitude": -34.3985,
+      "longitude": 19.111,
+      "sourceCountry": "South Africa",
+      "expected": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Pulpit",
+      "name": "Pulpit",
+      "latitude": -30.0805,
+      "longitude": 30.8754,
+      "sourceCountry": "South Africa",
+      "expected": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "za",
+        "timezone": "Africa/Johannesburg",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Adler-Mzymta-River",
+      "name": "Adler - Mzymta River",
+      "latitude": 43.4094,
+      "longitude": 39.9137,
+      "sourceCountry": "Russia",
+      "expected": {
+        "countryCode": "su",
+        "timezone": "Europe/Moscow",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ru",
+          "timezone": "Europe/Moscow"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ru",
+        "timezone": "Europe/Moscow",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Agadir",
+      "name": "Agadir",
+      "latitude": 30.4212,
+      "longitude": -9.6096,
+      "sourceCountry": "Morocco",
+      "expected": {
+        "countryCode": "ma",
+        "timezone": "Africa/Casablanca",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ma",
+          "timezone": "Africa/Casablanca"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ma",
+        "timezone": "Africa/Casablanca",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Agami",
+      "name": "Agami",
+      "latitude": 31.1343,
+      "longitude": 29.7797,
+      "sourceCountry": "Egypt",
+      "expected": {
+        "countryCode": "eg",
+        "timezone": "Africa/Cairo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "eg",
+          "timezone": "Africa/Cairo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "eg",
+        "timezone": "Africa/Cairo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aganoa-Beach",
+      "name": "Aganoa Beach",
+      "latitude": -13.7764,
+      "longitude": -172.3091,
+      "sourceCountry": "Samoa",
+      "expected": {
+        "countryCode": "ws",
+        "timezone": "Pacific/Apia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Pacific/Apia"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ws",
+        "timezone": "Pacific/Apia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aglayankaya",
+      "name": "Ağlayankaya Plajı (Aglayankaya)",
+      "latitude": 41.177,
+      "longitude": 29.6459,
+      "sourceCountry": "Turkey",
+      "expected": {
+        "countryCode": "tr",
+        "timezone": "Europe/Istanbul"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tr",
+          "timezone": "Europe/Istanbul"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1868,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "tr",
+        "timezone": "Europe/Istanbul"
+      }
+    },
+    {
+      "id": "surf-forecast:Agonda",
+      "name": "Agonda",
+      "latitude": 15.0442,
+      "longitude": 73.985,
+      "sourceCountry": "India",
+      "expected": {
+        "countryCode": "in",
+        "timezone": "Asia/Kolkata",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "in",
+          "timezone": "Asia/Kolkata"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1976,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "in",
+        "timezone": "Asia/Kolkata",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Agujas",
+      "name": "Agujas",
+      "latitude": 9.7195,
+      "longitude": -84.6625,
+      "sourceCountry": "Costa Rica",
+      "expected": {
+        "countryCode": "cr",
+        "timezone": "America/Costa_Rica",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cr",
+          "timezone": "America/Costa_Rica"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "cr",
+        "timezone": "America/Costa_Rica",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ahogados",
+      "name": "Playa de los Ahogados",
+      "latitude": -33.3986,
+      "longitude": -71.711,
+      "sourceCountry": "Chile",
+      "expected": {
+        "countryCode": "cl",
+        "timezone": "America/Santiago",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cl",
+          "timezone": "America/Santiago"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1138,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "cl",
+        "timezone": "America/Santiago",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ahtopol",
+      "name": "Ahtopol",
+      "latitude": 42.1001,
+      "longitude": 27.949,
+      "sourceCountry": "Bulgaria",
+      "expected": {
+        "countryCode": "bg",
+        "timezone": "Europe/Sofia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bg",
+          "timezone": "Europe/Sofia"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bg",
+        "timezone": "Europe/Sofia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ahu-Ahu-Road",
+      "name": "Ahu Ahu Road",
+      "latitude": -39.1296,
+      "longitude": 173.9028,
+      "sourceCountry": "New Zealand",
+      "expected": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Great-Exhibition-Bay",
+      "name": "Great Exhibition Bay",
+      "latitude": -34.6597,
+      "longitude": 173.0285,
+      "sourceCountry": "New Zealand",
+      "expected": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Mitchells",
+      "name": "Mitchell's Bay",
+      "latitude": -46.3794,
+      "longitude": 168.0343,
+      "sourceCountry": "New Zealand",
+      "expected": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 368,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Punakaiki",
+      "name": "Punakaiki",
+      "latitude": -42.1141,
+      "longitude": 171.3293,
+      "sourceCountry": "New Zealand",
+      "expected": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 276,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:The-Bluff-South-Side",
+      "name": "The Bluff-South Side",
+      "latitude": -34.6887,
+      "longitude": 172.8968,
+      "sourceCountry": "New Zealand",
+      "expected": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "nz",
+        "timezone": "Pacific/Auckland",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aiguadolc",
+      "name": "Aiguadolc",
+      "latitude": 41.2343,
+      "longitude": 1.8286,
+      "sourceCountry": "Spain (Europe)",
+      "expected": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 415,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Mundaka",
+      "name": "Mundaka",
+      "latitude": 43.415,
+      "longitude": -2.7015,
+      "sourceCountry": "Spain (Europe)",
+      "expected": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Playade-Ogeia",
+      "name": "Playa de Ogeia",
+      "latitude": 43.3747,
+      "longitude": -2.5494,
+      "sourceCountry": "Spain (Europe)",
+      "expected": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1286,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "es",
+        "timezone": "Europe/Madrid",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aileens",
+      "name": "Aileen's",
+      "latitude": 52.9836,
+      "longitude": -9.4367,
+      "sourceCountry": "Ireland",
+      "expected": {
+        "countryCode": "ie",
+        "timezone": "Europe/Dublin",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ie",
+          "timezone": "Europe/Dublin"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ie",
+        "timezone": "Europe/Dublin",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Airports",
+      "name": "Airports",
+      "latitude": 0.4593,
+      "longitude": 72.9369,
+      "sourceCountry": "Maldives",
+      "expected": {
+        "countryCode": "mv",
+        "timezone": "Indian/Maldives",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mv",
+          "timezone": "Indian/Maldives"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mv",
+        "timezone": "Indian/Maldives",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Airports_1",
+      "name": "Airports",
+      "latitude": 11.138,
+      "longitude": -60.8504,
+      "sourceCountry": "Trinidad and Tobago",
+      "expected": {
+        "countryCode": "tt",
+        "timezone": "America/Port_of_Spain",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tt",
+          "timezone": "America/Port_of_Spain"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tt",
+        "timezone": "America/Port_of_Spain",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Airpot-Left",
+      "name": "Airpot Left",
+      "latitude": 17.9133,
+      "longitude": -62.8334,
+      "sourceCountry": "Saint Barthélemy",
+      "expected": {
+        "countryCode": "bl",
+        "timezone": "America/St_Barthelemy",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "America/St_Barthelemy"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1277,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "bl",
+        "timezone": "America/St_Barthelemy",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aitape",
+      "name": "Aitape",
+      "latitude": -3.1154,
+      "longitude": 142.3423,
+      "sourceCountry": "Papua New Guinea",
+      "expected": {
+        "countryCode": "pg",
+        "timezone": "Pacific/Port_Moresby",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pg",
+          "timezone": "Pacific/Port_Moresby"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 955,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "pg",
+        "timezone": "Pacific/Port_Moresby",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aktau-Aqtau",
+      "name": "Aktau or Aqtau",
+      "latitude": 43.6315,
+      "longitude": 51.1445,
+      "sourceCountry": "Kazakhstan",
+      "expected": {
+        "countryCode": "kz",
+        "timezone": "Asia/Aqtau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "kz",
+          "timezone": "Asia/Aqtau"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1854,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "kz",
+        "timezone": "Asia/Aqtau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Akwaadi",
+      "name": "Akwaadi",
+      "latitude": 4.7502,
+      "longitude": -2.0093,
+      "sourceCountry": "Ghana",
+      "expected": {
+        "countryCode": "gh",
+        "timezone": "Africa/Accra",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gh",
+          "timezone": "Africa/Accra"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gh",
+        "timezone": "Africa/Accra",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Al-Ashkharah",
+      "name": "Al Ashkharah (Shipwreck Beach)",
+      "latitude": 21.8352,
+      "longitude": 59.5729,
+      "sourceCountry": "Oman",
+      "expected": {
+        "countryCode": "om",
+        "timezone": "Asia/Muscat",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "om",
+          "timezone": "Asia/Muscat"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "om",
+        "timezone": "Asia/Muscat",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ala-Moana",
+      "name": "Ala Moana",
+      "latitude": -12.1488,
+      "longitude": -77.0264,
+      "sourceCountry": "Peru",
+      "expected": {
+        "countryCode": "pe",
+        "timezone": "America/Lima",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pe",
+          "timezone": "America/Lima"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "pe",
+        "timezone": "America/Lima",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alao",
+      "name": "Alao",
+      "latitude": -14.268,
+      "longitude": -170.5882,
+      "sourceCountry": "American Samoa",
+      "expected": {
+        "countryCode": "as",
+        "timezone": "Pacific/Pago_Pago",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "as",
+          "timezone": "Pacific/Pago_Pago"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 957,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "as",
+        "timezone": "Pacific/Pago_Pago",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alfar",
+      "name": "Alfar",
+      "latitude": -38.1039,
+      "longitude": -57.5552,
+      "sourceCountry": "Argentina",
+      "expected": {
+        "countryCode": "ar",
+        "timezone": "America/Argentina/Buenos_Aires",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ar",
+          "timezone": "America/Argentina/Buenos_Aires"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1027,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "ar",
+        "timezone": "America/Argentina/Buenos_Aires",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alibaba",
+      "name": "Alibaba",
+      "latitude": 16.7258,
+      "longitude": -22.9967,
+      "sourceCountry": "Cape Verde",
+      "expected": {
+        "countryCode": "cv",
+        "timezone": "Atlantic/Cape_Verde",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cv",
+          "timezone": "Atlantic/Cape_Verde"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "cv",
+        "timezone": "Atlantic/Cape_Verde",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alize",
+      "name": "Alize",
+      "latitude": 16.3209,
+      "longitude": -61.2737,
+      "sourceCountry": "Guadeloupe",
+      "expected": {
+        "countryCode": "gp",
+        "timezone": "America/Guadeloupe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "America/Guadeloupe"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gp",
+        "timezone": "America/Guadeloupe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alnes-Lighthouse",
+      "name": "Alnes Lighthouse",
+      "latitude": 62.4833,
+      "longitude": 5.9667,
+      "sourceCountry": "Norway",
+      "expected": {
+        "countryCode": "no",
+        "timezone": "Europe/Oslo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "no",
+          "timezone": "Europe/Oslo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1025,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "no",
+        "timezone": "Europe/Oslo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alogarde",
+      "name": "Alogarde",
+      "latitude": 56.0923,
+      "longitude": 12.4905,
+      "sourceCountry": "Denmark",
+      "expected": {
+        "countryCode": "dk",
+        "timezone": "Europe/Copenhagen",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "dk",
+          "timezone": "Europe/Copenhagen"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 496,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "dk",
+        "timezone": "Europe/Copenhagen",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Alona-Bay",
+      "name": "Alona Bay",
+      "latitude": 47.1611,
+      "longitude": -84.7105,
+      "sourceCountry": "Canada",
+      "expected": {
+        "countryCode": "ca",
+        "timezone": "America/Toronto",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ca",
+          "timezone": "America/Toronto"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ca",
+        "timezone": "America/Toronto",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ambinanibe",
+      "name": "Ambinanibe",
+      "latitude": -25.0697,
+      "longitude": 46.9197,
+      "sourceCountry": "Madagascar",
+      "expected": {
+        "countryCode": "mg",
+        "timezone": "Indian/Antananarivo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mg",
+          "timezone": "Indian/Antananarivo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1381,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "mg",
+        "timezone": "Indian/Antananarivo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ambriz-Point",
+      "name": "Ambriz Point",
+      "latitude": -7.8444,
+      "longitude": 13.087,
+      "sourceCountry": "Angola",
+      "expected": {
+        "countryCode": "ao",
+        "timezone": "Africa/Luanda",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ao",
+          "timezone": "Africa/Luanda"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ao",
+        "timezone": "Africa/Luanda",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Anare",
+      "name": "Anare",
+      "latitude": 10.6326,
+      "longitude": -66.6459,
+      "sourceCountry": "Venezuela",
+      "expected": {
+        "countryCode": "ve",
+        "timezone": "America/Caracas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/Caracas"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 912,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "ve",
+        "timezone": "America/Caracas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Anconcito",
+      "name": "Anconcito",
+      "latitude": -2.3277,
+      "longitude": -80.8995,
+      "sourceCountry": "Ecuador",
+      "expected": {
+        "countryCode": "ec",
+        "timezone": "America/Guayaquil",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ec",
+          "timezone": "America/Guayaquil"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ec",
+        "timezone": "America/Guayaquil",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Andicuri",
+      "name": "Andicuri",
+      "latitude": 12.5381,
+      "longitude": -69.9561,
+      "sourceCountry": "Aruba",
+      "expected": {
+        "countryCode": "aw",
+        "timezone": "America/Aruba",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nl",
+          "timezone": "America/Aruba"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "aw",
+        "timezone": "America/Aruba",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aneho-Beach",
+      "name": "Anecho Beach",
+      "latitude": 6.2136,
+      "longitude": 1.5968,
+      "sourceCountry": "Togo",
+      "expected": {
+        "countryCode": "tg",
+        "timezone": "Africa/Lome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tg",
+          "timezone": "Africa/Lome"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tg",
+        "timezone": "Africa/Lome",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Angjarnsudden",
+      "name": "Angjarnsudden",
+      "latitude": 57.2851,
+      "longitude": 17.0709,
+      "sourceCountry": "Sweden",
+      "expected": {
+        "countryCode": "se",
+        "timezone": "Europe/Stockholm",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "se",
+          "timezone": "Europe/Stockholm"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "se",
+        "timezone": "Europe/Stockholm",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Animals",
+      "name": "Animals",
+      "latitude": 5.9637,
+      "longitude": 80.358,
+      "sourceCountry": "Sri Lanka",
+      "expected": {
+        "countryCode": "lk",
+        "timezone": "Asia/Colombo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Asia/Colombo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "lk",
+        "timezone": "Asia/Colombo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Annaba",
+      "name": "Annaba - Seraidi beach",
+      "latitude": 36.9583,
+      "longitude": 7.7083,
+      "sourceCountry": "Algeria",
+      "expected": {
+        "countryCode": "dz",
+        "timezone": "Africa/Algiers",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "dz",
+          "timezone": "Africa/Algiers"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "dz",
+        "timezone": "Africa/Algiers",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Anse-Banane",
+      "name": "Anse Banane",
+      "latitude": -4.3449,
+      "longitude": 55.8544,
+      "sourceCountry": "Seychelles",
+      "expected": {
+        "countryCode": "sc",
+        "timezone": "Indian/Mahe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "sc",
+          "timezone": "Indian/Mahe"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "sc",
+        "timezone": "Indian/Mahe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Anse-Cafard",
+      "name": "Anse Cafard",
+      "latitude": 14.4577,
+      "longitude": -61.0522,
+      "sourceCountry": "Martinique",
+      "expected": {
+        "countryCode": "mq",
+        "timezone": "America/Martinique",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/Martinique"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 593,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "mq",
+        "timezone": "America/Martinique",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Anse-de-Remire",
+      "name": "Anse de Rémire (L'apcat)",
+      "latitude": 4.8952,
+      "longitude": -52.2582,
+      "sourceCountry": "French Guiana",
+      "expected": {
+        "countryCode": "gf",
+        "timezone": "America/Cayenne",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "America/Cayenne"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gf",
+        "timezone": "America/Cayenne",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ao-Kahi",
+      "name": "Aho Kahi Harbor Entrance",
+      "latitude": 12.6341,
+      "longitude": 101.653,
+      "sourceCountry": "Thailand",
+      "expected": {
+        "countryCode": "th",
+        "timezone": "Asia/Bangkok",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Asia/Bangkok"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1844,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "th",
+        "timezone": "Asia/Bangkok",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Arcadia",
+      "name": "Arcadia",
+      "latitude": 46.428,
+      "longitude": 30.768,
+      "sourceCountry": "Ukraine",
+      "expected": {
+        "countryCode": "ua",
+        "timezone": "Europe/Kyiv",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ua",
+          "timezone": "Europe/Kyiv"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ua",
+        "timezone": "Europe/Kyiv",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Arguineguin",
+      "name": "Arguineguin",
+      "latitude": 27.7471,
+      "longitude": -15.6829,
+      "sourceCountry": "Spain (Africa)",
+      "expected": {
+        "countryCode": "es",
+        "timezone": "Atlantic/Canary",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Atlantic/Canary"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 845,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "es",
+        "timezone": "Atlantic/Canary",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Arrecifes",
+      "name": "Arrecifes",
+      "latitude": 11.3178,
+      "longitude": -73.9515,
+      "sourceCountry": "Colombia",
+      "expected": {
+        "countryCode": "co",
+        "timezone": "America/Bogota",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "co",
+          "timezone": "America/Bogota"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 632,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "co",
+        "timezone": "America/Bogota",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Arue-Beach",
+      "name": "Arue Beach",
+      "latitude": -17.5234,
+      "longitude": -149.5008,
+      "sourceCountry": "French Polynesia",
+      "expected": {
+        "countryCode": "pf",
+        "timezone": "Pacific/Tahiti",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Pacific/Tahiti"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1383,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "pf",
+        "timezone": "Pacific/Tahiti",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Assinie_1",
+      "name": "Assinie",
+      "latitude": 5.0482,
+      "longitude": -2.9098,
+      "sourceCountry": "Côte d'Ivoire",
+      "expected": {
+        "countryCode": "ci",
+        "timezone": "Africa/Accra",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gh",
+          "timezone": "Africa/Accra"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ci",
+        "timezone": "Africa/Accra",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Asuchillo-Beach",
+      "name": "Asuchillo Beach Break",
+      "latitude": 11.934,
+      "longitude": -86.621,
+      "sourceCountry": "Nicaragua",
+      "expected": {
+        "countryCode": "ni",
+        "timezone": "America/Managua",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ni",
+          "timezone": "America/Managua"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ni",
+        "timezone": "America/Managua",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Avaavaroa-Passage",
+      "name": "Avaavaroa Passage",
+      "latitude": -21.2674,
+      "longitude": -159.7832,
+      "sourceCountry": "Cook Islands",
+      "expected": {
+        "countryCode": "ck",
+        "timezone": "Pacific/Rarotonga",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ck",
+          "timezone": "Pacific/Rarotonga"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ck",
+        "timezone": "Pacific/Rarotonga",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Aviones",
+      "name": "Aviones",
+      "latitude": 18.453,
+      "longitude": -65.957,
+      "sourceCountry": "Puerto Rico",
+      "expected": {
+        "countryCode": "pr",
+        "timezone": "America/Puerto_Rico",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Puerto_Rico"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1716,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "pr",
+        "timezone": "America/Puerto_Rico",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Awuali-Rivermouth",
+      "name": "Awuali Rivermouth",
+      "latitude": 33.5845,
+      "longitude": 35.375,
+      "sourceCountry": "Lebanon",
+      "expected": {
+        "countryCode": "lb",
+        "timezone": "Asia/Beirut",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "lb",
+          "timezone": "Asia/Beirut"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "lb",
+        "timezone": "Asia/Beirut",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ayoke",
+      "name": "Ayoke - Tinago",
+      "latitude": 9.4224,
+      "longitude": 126.0364,
+      "sourceCountry": "Philippines",
+      "expected": {
+        "countryCode": "ph",
+        "timezone": "Asia/Manila",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ph",
+          "timezone": "Asia/Manila"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ph",
+        "timezone": "Asia/Manila",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Back-Beach_3",
+      "name": "Back Beach",
+      "latitude": -23.8747,
+      "longitude": 35.5508,
+      "sourceCountry": "Mozambique",
+      "expected": {
+        "countryCode": "mz",
+        "timezone": "Africa/Maputo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mz",
+          "timezone": "Africa/Maputo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mz",
+        "timezone": "Africa/Maputo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Back-Wash",
+      "name": "Back Wash",
+      "latitude": 6.3342,
+      "longitude": 2.2443,
+      "sourceCountry": "Benin",
+      "expected": {
+        "countryCode": "dy",
+        "timezone": "Africa/Porto-Novo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bj",
+          "timezone": "Africa/Porto-Novo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bj",
+        "timezone": "Africa/Porto-Novo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bahar-ic-Caghaq",
+      "name": "Baħar Iċ-Ċagħaq",
+      "latitude": 35.9444,
+      "longitude": 14.4381,
+      "sourceCountry": "Malta",
+      "expected": {
+        "countryCode": "mt",
+        "timezone": "Europe/Malta",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mt",
+          "timezone": "Europe/Malta"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mt",
+        "timezone": "Europe/Malta",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bahiadelas-Aguilas",
+      "name": "Bahia de las Aguilas",
+      "latitude": 17.8627,
+      "longitude": -71.6475,
+      "sourceCountry": "Dominican Republic",
+      "expected": {
+        "countryCode": "do",
+        "timezone": "America/Santo_Domingo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "do",
+          "timezone": "America/Santo_Domingo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "do",
+        "timezone": "America/Santo_Domingo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bai-Dai-Nha-Trang",
+      "name": "Bai Dai Nha Trang",
+      "latitude": 12.1194,
+      "longitude": 109.2044,
+      "sourceCountry": "Vietnam",
+      "expected": {
+        "countryCode": "vn",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "vn",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "vn",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Baiedes-Carpes",
+      "name": "Baie des Carpes",
+      "latitude": 14.7541,
+      "longitude": -17.5481,
+      "sourceCountry": "Senegal",
+      "expected": {
+        "countryCode": "sn",
+        "timezone": "Africa/Dakar",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "sn",
+          "timezone": "Africa/Dakar"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "sn",
+        "timezone": "Africa/Dakar",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bamboo-Island",
+      "name": "Bamboo Island",
+      "latitude": 10.4886,
+      "longitude": 103.5535,
+      "sourceCountry": "Cambodia",
+      "expected": {
+        "countryCode": "kh",
+        "timezone": "Asia/Phnom_Penh",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "kh",
+          "timezone": "Asia/Phnom_Penh"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "kh",
+        "timezone": "Asia/Phnom_Penh",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Banzart",
+      "name": "Banzart",
+      "latitude": 37.3171,
+      "longitude": 9.8835,
+      "sourceCountry": "Tunisia",
+      "expected": {
+        "countryCode": "tn",
+        "timezone": "Africa/Tunis",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tn",
+          "timezone": "Africa/Tunis"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tn",
+        "timezone": "Africa/Tunis",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Barachois",
+      "name": "Barachois",
+      "latitude": -20.8519,
+      "longitude": 55.4544,
+      "sourceCountry": "Reunion",
+      "expected": {
+        "countryCode": "re",
+        "timezone": "Indian/Reunion",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Indian/Reunion"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "re",
+        "timezone": "Indian/Reunion",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Barn-s-Beach",
+      "name": "Kendeja Resort",
+      "latitude": 6.2307,
+      "longitude": -10.6833,
+      "sourceCountry": "Liberia",
+      "expected": {
+        "countryCode": "lr",
+        "timezone": "Africa/Monrovia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "lr",
+          "timezone": "Africa/Monrovia"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "lr",
+        "timezone": "Africa/Monrovia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Barrede-Balizas",
+      "name": "Barre de Balizas",
+      "latitude": -34.3147,
+      "longitude": -53.7791,
+      "sourceCountry": "Uruguay",
+      "expected": {
+        "countryCode": "uy",
+        "timezone": "America/Montevideo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "uy",
+          "timezone": "America/Montevideo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "uy",
+        "timezone": "America/Montevideo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Barredela-Gabina",
+      "name": "Barre de la Gabina",
+      "latitude": 13.7657,
+      "longitude": -90.1959,
+      "sourceCountry": "Guatemala",
+      "expected": {
+        "countryCode": "gt",
+        "timezone": "America/Guatemala",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/Guatemala"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gt",
+        "timezone": "America/Guatemala",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Barrels",
+      "name": "Barrels",
+      "latitude": 24.811,
+      "longitude": 121.8153,
+      "sourceCountry": "Taiwan",
+      "expected": {
+        "countryCode": "tw",
+        "timezone": "Asia/Taipei",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tw",
+          "timezone": "Asia/Taipei"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1875,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "tw",
+        "timezone": "Asia/Taipei",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Batu-Buruk",
+      "name": "Batu Buruk",
+      "latitude": 5.329,
+      "longitude": 103.1539,
+      "sourceCountry": "Malaysia",
+      "expected": {
+        "countryCode": "my",
+        "timezone": "Asia/Kuala_Lumpur",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "my",
+          "timezone": "Asia/Kuala_Lumpur"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "my",
+        "timezone": "Asia/Kuala_Lumpur",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Beachouse",
+      "name": "Beachouse",
+      "latitude": -18.2381,
+      "longitude": 177.7614,
+      "sourceCountry": "Fiji",
+      "expected": {
+        "countryCode": "fj",
+        "timezone": "Pacific/Fiji",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fj",
+          "timezone": "Pacific/Fiji"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "fj",
+        "timezone": "Pacific/Fiji",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Belham-Valley-Rivermouth",
+      "name": "Belham Valley Rivermouth",
+      "latitude": 16.7339,
+      "longitude": -62.2449,
+      "sourceCountry": "Montserrat",
+      "expected": {
+        "countryCode": "ms",
+        "timezone": "America/Montserrat",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/Montserrat"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ms",
+        "timezone": "America/Montserrat",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Berakas-Beach",
+      "name": "Berakas Beach",
+      "latitude": 4.994,
+      "longitude": 114.92,
+      "sourceCountry": "Brunei Darussalam",
+      "expected": {
+        "countryCode": "bn",
+        "timezone": "Asia/Brunei",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bn",
+          "timezone": "Asia/Brunei"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bn",
+        "timezone": "Asia/Brunei",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bergenaan-Zee",
+      "name": "Bergen aan Zee",
+      "latitude": 52.6506,
+      "longitude": 4.6232,
+      "sourceCountry": "Netherlands",
+      "expected": {
+        "countryCode": "nl",
+        "timezone": "Europe/Amsterdam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "nl",
+          "timezone": "Europe/Amsterdam"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "nl",
+        "timezone": "Europe/Amsterdam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bernache",
+      "name": "Bernache",
+      "latitude": -19.9939,
+      "longitude": 57.6946,
+      "sourceCountry": "Mauritius",
+      "expected": {
+        "countryCode": "mu",
+        "timezone": "Indian/Mauritius",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "mu",
+          "timezone": "Indian/Mauritius"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mu",
+        "timezone": "Indian/Mauritius",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Berthas-Beach",
+      "name": "Bertha's Beach",
+      "latitude": -51.907,
+      "longitude": -58.379,
+      "sourceCountry": "Falkland Islands",
+      "expected": {
+        "countryCode": "fk",
+        "timezone": "Atlantic/Stanley",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fk",
+          "timezone": "Atlantic/Stanley"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "fk",
+        "timezone": "Atlantic/Stanley",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Big-Wave-Bay",
+      "name": "Big Wave Bay",
+      "latitude": 22.2477,
+      "longitude": 114.2499,
+      "sourceCountry": "China",
+      "expected": {
+        "countryCode": "cn",
+        "timezone": "Asia/Hong_Kong",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "hk",
+          "timezone": "Asia/Hong_Kong"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1702,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "hk",
+        "timezone": "Asia/Hong_Kong",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bings-Point",
+      "name": "Bing's Point",
+      "latitude": 23.2303,
+      "longitude": -16.126,
+      "sourceCountry": "Western Sahara",
+      "expected": {
+        "countryCode": "eh",
+        "timezone": "Africa/El_Aaiun",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ma",
+          "timezone": "Africa/El_Aaiun"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "eh",
+        "timezone": "Africa/El_Aaiun",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bird-Island-Saipan",
+      "name": "Bird Island",
+      "latitude": 15.2853,
+      "longitude": 145.8344,
+      "sourceCountry": "Northern Mariana Islands",
+      "expected": {
+        "countryCode": "mp",
+        "timezone": "Pacific/Saipan",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "Pacific/Saipan"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mp",
+        "timezone": "Pacific/Saipan",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bishtpala-Outer-Reef",
+      "name": "Bishtpala Outer Reef",
+      "latitude": 41.3834,
+      "longitude": 19.4086,
+      "sourceCountry": "Albania",
+      "expected": {
+        "countryCode": "al",
+        "timezone": "Europe/Tirane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "al",
+          "timezone": "Europe/Tirane"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "al",
+        "timezone": "Europe/Tirane",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Black-Sands-Beach",
+      "name": "Black Sands Beach",
+      "latitude": -17.7137,
+      "longitude": 168.2156,
+      "sourceCountry": "Vanuatu",
+      "expected": {
+        "countryCode": "vu",
+        "timezone": "Pacific/Efate",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "vu",
+          "timezone": "Pacific/Efate"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "vu",
+        "timezone": "Pacific/Efate",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Blankenberge",
+      "name": "Blankenberge",
+      "latitude": 51.3188,
+      "longitude": 3.1305,
+      "sourceCountry": "Belgium",
+      "expected": {
+        "countryCode": "be",
+        "timezone": "Europe/Brussels",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "be",
+          "timezone": "Europe/Brussels"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "be",
+        "timezone": "Europe/Brussels",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bluff",
+      "name": "Bluff",
+      "latitude": 9.4105,
+      "longitude": -82.2485,
+      "sourceCountry": "Panama",
+      "expected": {
+        "countryCode": "pa",
+        "timezone": "America/Panama",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pa",
+          "timezone": "America/Panama"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "pa",
+        "timezone": "America/Panama",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Boat-Basin-Lefts",
+      "name": "Boat Basin Lefts",
+      "latitude": 13.4893,
+      "longitude": 144.7454,
+      "sourceCountry": "Guam",
+      "expected": {
+        "countryCode": "gu",
+        "timezone": "Pacific/Guam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gu",
+          "timezone": "Pacific/Guam"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gu",
+        "timezone": "Pacific/Guam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bococks-Bay",
+      "name": "Bocock's Bay",
+      "latitude": -21.5086,
+      "longitude": 13.8463,
+      "sourceCountry": "Namibia",
+      "expected": {
+        "countryCode": "na",
+        "timezone": "Africa/Windhoek",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "na",
+          "timezone": "Africa/Windhoek"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "na",
+        "timezone": "Africa/Windhoek",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Borkum-Nordstrand",
+      "name": "Borkum Nordstrand",
+      "latitude": 53.6092,
+      "longitude": 6.6397,
+      "sourceCountry": "Germany",
+      "expected": {
+        "countryCode": "de",
+        "timezone": "Europe/Berlin",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "de",
+          "timezone": "Europe/Berlin"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "de",
+        "timezone": "Europe/Berlin",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Boston-Bay",
+      "name": "Boston Bay",
+      "latitude": 18.1361,
+      "longitude": -76.3247,
+      "sourceCountry": "Jamaica",
+      "expected": {
+        "countryCode": "jm",
+        "timezone": "America/Jamaica",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "jm",
+          "timezone": "America/Jamaica"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1353,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "jm",
+        "timezone": "America/Jamaica",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Botany-Bay",
+      "name": "Botany Bay",
+      "latitude": 18.357,
+      "longitude": -65.032,
+      "sourceCountry": "US Virgin Islands",
+      "expected": {
+        "countryCode": "vi",
+        "timezone": "America/St_Thomas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/St_Thomas"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "vi",
+        "timezone": "America/St_Thomas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bouncer-Beach",
+      "name": "Bouncer Beach",
+      "latitude": 32.259,
+      "longitude": -64.8052,
+      "sourceCountry": "Bermuda",
+      "expected": {
+        "countryCode": "bm",
+        "timezone": "Atlantic/Bermuda",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bm",
+          "timezone": "Atlantic/Bermuda"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1022,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "bm",
+        "timezone": "Atlantic/Bermuda",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Bowling-left",
+      "name": "Bowling left",
+      "latitude": -18.8327,
+      "longitude": -174.0202,
+      "sourceCountry": "Tonga",
+      "expected": {
+        "countryCode": "to",
+        "timezone": "Pacific/Tongatapu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "to",
+          "timezone": "Pacific/Tongatapu"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "to",
+        "timezone": "Pacific/Tongatapu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Brewers-Bay",
+      "name": "Brewers Bay",
+      "latitude": 18.4444,
+      "longitude": -64.6496,
+      "sourceCountry": "British Virgin Islands",
+      "expected": {
+        "countryCode": "vg",
+        "timezone": "America/Tortola",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "vg",
+          "timezone": "America/Tortola"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "vg",
+        "timezone": "America/Tortola",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Busan-Haeundae",
+      "name": "Busan (Haeundae Beach)",
+      "latitude": 35.1587,
+      "longitude": 129.1619,
+      "sourceCountry": "South Korea",
+      "expected": {
+        "countryCode": "kr",
+        "timezone": "Asia/Seoul",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "kr",
+          "timezone": "Asia/Seoul"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "kr",
+        "timezone": "Asia/Seoul",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Camp-Kazela-Medulin",
+      "name": "Camp Kazela Medulin",
+      "latitude": 44.803,
+      "longitude": 13.967,
+      "sourceCountry": "Croatia",
+      "expected": {
+        "countryCode": "hr",
+        "timezone": "Europe/Zagreb",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "hr",
+          "timezone": "Europe/Zagreb"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1522,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "hr",
+        "timezone": "Europe/Zagreb",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cap-Lopez",
+      "name": "Cap Lopez",
+      "latitude": -0.6322,
+      "longitude": 8.6988,
+      "sourceCountry": "Gabon",
+      "expected": {
+        "countryCode": "ga",
+        "timezone": "Africa/Libreville",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ga",
+          "timezone": "Africa/Libreville"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1942,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "ga",
+        "timezone": "Africa/Libreville",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Chalupy",
+      "name": "Chalupy",
+      "latitude": 54.769,
+      "longitude": 18.485,
+      "sourceCountry": "Poland",
+      "expected": {
+        "countryCode": "pl",
+        "timezone": "Europe/Warsaw",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pl",
+          "timezone": "Europe/Warsaw"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "pl",
+        "timezone": "Europe/Warsaw",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cherry-Hill-1",
+      "name": "Cherry Hill",
+      "latitude": 12.062,
+      "longitude": -61.757,
+      "sourceCountry": "Grenada",
+      "expected": {
+        "countryCode": "gd",
+        "timezone": "America/Grenada",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gd",
+          "timezone": "America/Grenada"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1596,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "gd",
+        "timezone": "America/Grenada",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Commaret-Point",
+      "name": "Commaret Point",
+      "latitude": 14.0843,
+      "longitude": -60.9065,
+      "sourceCountry": "Saint Lucia",
+      "expected": {
+        "countryCode": "lc",
+        "timezone": "America/St_Lucia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "America/St_Lucia"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 781,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "lc",
+        "timezone": "America/St_Lucia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Corvette",
+      "name": "Corvette",
+      "latitude": -22.4808,
+      "longitude": 166.4532,
+      "sourceCountry": "New Caledonia",
+      "expected": {
+        "countryCode": "nc",
+        "timezone": "Pacific/Noumea",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Pacific/Noumea"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "nc",
+        "timezone": "Pacific/Noumea",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cote-Sauvage",
+      "name": "Cote Sauvage",
+      "latitude": -4.813,
+      "longitude": 11.843,
+      "sourceCountry": "Republic of the Congo",
+      "expected": {
+        "countryCode": "cg",
+        "timezone": "Africa/Brazzaville",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cg",
+          "timezone": "Africa/Brazzaville"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "cg",
+        "timezone": "Africa/Brazzaville",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Coves",
+      "name": "Coves",
+      "latitude": -8.6258,
+      "longitude": 157.2357,
+      "sourceCountry": "Solomon Islands",
+      "expected": {
+        "countryCode": "sb",
+        "timezone": "Pacific/Guadalcanal",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "sb",
+          "timezone": "Pacific/Guadalcanal"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1356,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "sb",
+        "timezone": "Pacific/Guadalcanal",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cox-s-Bazar",
+      "name": "Cox's Bazar",
+      "latitude": 21.4156,
+      "longitude": 91.9901,
+      "sourceCountry": "Bangladesh",
+      "expected": {
+        "countryCode": "bd",
+        "timezone": "Asia/Dhaka",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bd",
+          "timezone": "Asia/Dhaka"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bd",
+        "timezone": "Asia/Dhaka",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cripplers",
+      "name": "Cripplers",
+      "latitude": 34.9388,
+      "longitude": 32.3027,
+      "sourceCountry": "Cyprus",
+      "expected": {
+        "countryCode": "cy",
+        "timezone": "Asia/Nicosia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cy",
+          "timezone": "Asia/Nicosia"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1051,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "cy",
+        "timezone": "Asia/Nicosia",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Cupecoy",
+      "name": "Cupecoy",
+      "latitude": 18.0461,
+      "longitude": -63.1468,
+      "sourceCountry": "Netherlands Antilles",
+      "expected": {
+        "countryCode": "sx",
+        "timezone": "America/Lower_Princes",
+        "countryProvider": "Reviewed Saint Martin territory mapping (2026-09-09)",
+        "timezoneProvider": "Reviewed Saint Martin territory mapping (2026-09-09)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "America/Marigot"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1686,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "sx",
+        "timezone": "America/Lower_Princes",
+        "countryProvider": "Reviewed Saint Martin territory mapping (2026-09-09)",
+        "timezoneProvider": "Reviewed Saint Martin territory mapping (2026-09-09)"
+      }
+    },
+    {
+      "id": "surf-forecast:Digger",
+      "name": "Digger",
+      "latitude": -9.3623,
+      "longitude": 125.2814,
+      "sourceCountry": "East Timor",
+      "expected": {
+        "countryCode": "tl",
+        "timezone": "Asia/Dili",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tl",
+          "timezone": "Asia/Dili"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tl",
+        "timezone": "Asia/Dili",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Dolphins",
+      "name": "Dolphins",
+      "latitude": 18.1939,
+      "longitude": -63.1513,
+      "sourceCountry": "Anguilla",
+      "expected": {
+        "countryCode": "ai",
+        "timezone": "America/Anguilla",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ai",
+          "timezone": "America/Anguilla"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ai",
+        "timezone": "America/Anguilla",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:East-End",
+      "name": "East End",
+      "latitude": 19.284,
+      "longitude": -81.11,
+      "sourceCountry": "Cayman Islands",
+      "expected": {
+        "countryCode": "ky",
+        "timezone": "America/Cayman",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ky",
+          "timezone": "America/Cayman"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ky",
+        "timezone": "America/Cayman",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:East-Point",
+      "name": "East Point Long Cay",
+      "latitude": 17.61,
+      "longitude": -88.0306,
+      "sourceCountry": "Belize",
+      "expected": {
+        "countryCode": "bz",
+        "timezone": "America/Belize",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bz",
+          "timezone": "America/Belize"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bz",
+        "timezone": "America/Belize",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Egg-Island",
+      "name": "Egg Island",
+      "latitude": 25.4998,
+      "longitude": -76.7804,
+      "sourceCountry": "Bahamas",
+      "expected": {
+        "countryCode": "bs",
+        "timezone": "America/Nassau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "bs",
+          "timezone": "America/Nassau"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "bs",
+        "timezone": "America/Nassau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Eyvik",
+      "name": "Eyvik",
+      "latitude": 66.1025,
+      "longitude": -17.325,
+      "sourceCountry": "Iceland",
+      "expected": {
+        "countryCode": "is",
+        "timezone": "Atlantic/Reykjavik",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "is",
+          "timezone": "Atlantic/Reykjavik"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1470,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "is",
+        "timezone": "Atlantic/Reykjavik",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Famjin-Left",
+      "name": "Fámjin Left",
+      "latitude": 61.5264,
+      "longitude": -6.9105,
+      "sourceCountry": "Faroe Islands",
+      "expected": {
+        "countryCode": "fo",
+        "timezone": "Atlantic/Faroe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Atlantic/Faroe"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 769,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "fo",
+        "timezone": "Atlantic/Faroe",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Fanning-Island",
+      "name": "English Channel Left (Fanning Island)",
+      "latitude": 3.8545,
+      "longitude": -159.3811,
+      "sourceCountry": "Kiribati",
+      "expected": {
+        "countryCode": "ki",
+        "timezone": "Pacific/Kiritimati",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ki",
+          "timezone": "Pacific/Kiritimati"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ki",
+        "timezone": "Pacific/Kiritimati",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Fort-George-Cut",
+      "name": "Fort George Cut (Pine Cay)",
+      "latitude": 21.87,
+      "longitude": -72.1414,
+      "sourceCountry": "Turks and Caicos Islands",
+      "expected": {
+        "countryCode": "tc",
+        "timezone": "America/Grand_Turk",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tc",
+          "timezone": "America/Grand_Turk"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tc",
+        "timezone": "America/Grand_Turk",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ganz",
+      "name": "Ganz",
+      "latitude": 25.1031,
+      "longitude": 61.9336,
+      "sourceCountry": "Pakistan",
+      "expected": {
+        "countryCode": "pk",
+        "timezone": "Asia/Karachi",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pk",
+          "timezone": "Asia/Karachi"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "pk",
+        "timezone": "Asia/Karachi",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Jacmel",
+      "name": "Jacmel",
+      "latitude": 18.211,
+      "longitude": -72.541,
+      "sourceCountry": "Haiti",
+      "expected": {
+        "countryCode": "ht",
+        "timezone": "America/Port-au-Prince",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ht",
+          "timezone": "America/Port-au-Prince"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ht",
+        "timezone": "America/Port-au-Prince",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Jam-s-Right",
+      "name": "Jam's Right",
+      "latitude": -6.7065,
+      "longitude": 39.2883,
+      "sourceCountry": "Tanzania",
+      "expected": {
+        "countryCode": "tz",
+        "timezone": "Africa/Dar_es_Salaam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tz",
+          "timezone": "Africa/Dar_es_Salaam"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tz",
+        "timezone": "Africa/Dar_es_Salaam",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Janzour",
+      "name": "Janzour",
+      "latitude": 32.8486,
+      "longitude": 13.0095,
+      "sourceCountry": "Libya",
+      "expected": {
+        "countryCode": "ly",
+        "timezone": "Africa/Tripoli",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ly",
+          "timezone": "Africa/Tripoli"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ly",
+        "timezone": "Africa/Tripoli",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Jebal-Ali-Lefts",
+      "name": "Jebal Ali Lefts",
+      "latitude": 24.9723,
+      "longitude": 54.9599,
+      "sourceCountry": "United Arab Emirates",
+      "expected": {
+        "countryCode": "ae",
+        "timezone": "Asia/Dubai",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ae",
+          "timezone": "Asia/Dubai"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ae",
+        "timezone": "Asia/Dubai",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Jetty-s",
+      "name": "Jetty's",
+      "latitude": -10.4226,
+      "longitude": 105.6625,
+      "sourceCountry": "Christmas Island",
+      "expected": {
+        "countryCode": "cx",
+        "timezone": "Indian/Christmas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Indian/Christmas"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 644,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "cx",
+        "timezone": "Indian/Christmas",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Juodkrante",
+      "name": "Juodkrante",
+      "latitude": 55.532,
+      "longitude": 21.096,
+      "sourceCountry": "Lithuania",
+      "expected": {
+        "countryCode": "lt",
+        "timezone": "Europe/Vilnius",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "lt",
+          "timezone": "Europe/Vilnius"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "lt",
+        "timezone": "Europe/Vilnius",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Kololi-Kotu-Kombo",
+      "name": "Kololi Kotu Kombo",
+      "latitude": 13.416,
+      "longitude": -16.747,
+      "sourceCountry": "Gambia",
+      "expected": {
+        "countryCode": "gm",
+        "timezone": "Africa/Banjul",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "gm",
+          "timezone": "Africa/Banjul"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "gm",
+        "timezone": "Africa/Banjul",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Kribi",
+      "name": "Kribi",
+      "latitude": 2.9374,
+      "longitude": 9.8966,
+      "sourceCountry": "Cameroon",
+      "expected": {
+        "countryCode": "cm",
+        "timezone": "Africa/Douala",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "cm",
+          "timezone": "Africa/Douala"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "cm",
+        "timezone": "Africa/Douala",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Le-Wharf-Ancien-Port",
+      "name": "Le Wharf",
+      "latitude": 18.036,
+      "longitude": -16.0352,
+      "sourceCountry": "Mauritania",
+      "expected": {
+        "countryCode": "mr",
+        "timezone": "Africa/Nouakchott",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Africa/Nouakchott"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "mr",
+        "timezone": "Africa/Nouakchott",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Lighthouse-Beach-2",
+      "name": "Lighthouse Beach",
+      "latitude": 6.385,
+      "longitude": 3.395,
+      "sourceCountry": "Nigeria",
+      "expected": {
+        "countryCode": "ng",
+        "timezone": "Africa/Lagos",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ng",
+          "timezone": "Africa/Lagos"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ng",
+        "timezone": "Africa/Lagos",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Malindi-Bay",
+      "name": "Malindi Bay",
+      "latitude": -3.198,
+      "longitude": 40.126,
+      "sourceCountry": "Kenya",
+      "expected": {
+        "countryCode": "ke",
+        "timezone": "Africa/Nairobi",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ke",
+        "timezone": "Africa/Nairobi",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Mangaf",
+      "name": "Mangaf",
+      "latitude": 29.1054,
+      "longitude": 48.1485,
+      "sourceCountry": "Kuwait",
+      "expected": {
+        "countryCode": "kw",
+        "timezone": "Asia/Kuwait",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "kw",
+          "timezone": "Asia/Kuwait"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "kw",
+        "timezone": "Asia/Kuwait",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Mangalia",
+      "name": "Mangalia",
+      "latitude": 43.8364,
+      "longitude": 28.591,
+      "sourceCountry": "Romania",
+      "expected": {
+        "countryCode": "ro",
+        "timezone": "Europe/Bucharest",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Europe/Bucharest"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1956,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "ro",
+        "timezone": "Europe/Bucharest",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Melekeok",
+      "name": "Melekeok (Babelthuap)",
+      "latitude": 7.491,
+      "longitude": 134.651,
+      "sourceCountry": "Palau",
+      "expected": {
+        "countryCode": "pw",
+        "timezone": "Pacific/Palau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "pw",
+          "timezone": "Pacific/Palau"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "pw",
+        "timezone": "Pacific/Palau",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:North-Friars-Bay",
+      "name": "North Friars Bay",
+      "latitude": 17.2851,
+      "longitude": -62.667,
+      "sourceCountry": "Saint Kitts and Nevis",
+      "expected": {
+        "countryCode": "kn",
+        "timezone": "America/St_Kitts",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "kn",
+          "timezone": "America/St_Kitts"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "kn",
+        "timezone": "America/St_Kitts",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Palma-Real",
+      "name": "Palma Real",
+      "latitude": 15.8239,
+      "longitude": -86.51,
+      "sourceCountry": "Honduras",
+      "expected": {
+        "countryCode": "hn",
+        "timezone": "America/Tegucigalpa",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "hn",
+          "timezone": "America/Tegucigalpa"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1547,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "hn",
+        "timezone": "America/Tegucigalpa",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Palmu-Licis",
+      "name": "Palmu Licis",
+      "latitude": 56.56,
+      "longitude": 21,
+      "sourceCountry": "Latvia",
+      "expected": {
+        "countryCode": "lv",
+        "timezone": "Europe/Riga",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "lv",
+          "timezone": "Europe/Riga"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "lv",
+        "timezone": "Europe/Riga",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Pirights",
+      "name": "Pirights",
+      "latitude": 10.527,
+      "longitude": 51.2251,
+      "sourceCountry": "Somalia",
+      "expected": {
+        "countryCode": "so",
+        "timezone": "Africa/Mogadishu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "so",
+          "timezone": "Africa/Mogadishu"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "so",
+        "timezone": "Africa/Mogadishu",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Poliisinlahti",
+      "name": "Poliisinlahti",
+      "latitude": 61.5779,
+      "longitude": 21.4898,
+      "sourceCountry": "Finland",
+      "expected": {
+        "countryCode": "fi",
+        "timezone": "Europe/Helsinki",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fi",
+          "timezone": "Europe/Helsinki"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 896,
+          "category": "natural.water"
+        }
+      },
+      "final": {
+        "countryCode": "fi",
+        "timezone": "Europe/Helsinki",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Qulansiyah",
+      "name": "Qulansiyah",
+      "latitude": 12.7209,
+      "longitude": 53.505,
+      "sourceCountry": "Yemen",
+      "expected": {
+        "countryCode": "ye",
+        "timezone": "Asia/Aden",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ye",
+          "timezone": "Asia/Aden"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "ye",
+        "timezone": "Asia/Aden",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Ristna-Hiiumaa-Island",
+      "name": "Ristna Hiiumaa Island",
+      "latitude": 58.931,
+      "longitude": 22.051,
+      "sourceCountry": "Estonia",
+      "expected": {
+        "countryCode": "ee",
+        "timezone": "Europe/Tallinn",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "ee",
+          "timezone": "Europe/Tallinn"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 827,
+          "category": "natural.coastal"
+        }
+      },
+      "final": {
+        "countryCode": "ee",
+        "timezone": "Europe/Tallinn",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Sidedish",
+      "name": "Sidedish",
+      "latitude": 5.3363,
+      "longitude": 162.9326,
+      "sourceCountry": "Micronesia",
+      "expected": {
+        "countryCode": "fm",
+        "timezone": "Pacific/Kosrae",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "fm",
+          "timezone": "Pacific/Kosrae"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "fm",
+        "timezone": "Pacific/Kosrae",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    },
+    {
+      "id": "surf-forecast:Utua-Mamao",
+      "name": "Utua Mamao (Atafu)",
+      "latitude": -8.558,
+      "longitude": -172.453,
+      "sourceCountry": "Tokelau",
+      "expected": {
+        "countryCode": "tk",
+        "timezone": "Pacific/Fakaofo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      },
+      "observed": {
+        "reverse": {
+          "countryCode": "tk",
+          "timezone": "Pacific/Fakaofo"
+        },
+        "water": {
+          "nearby": false
+        }
+      },
+      "final": {
+        "countryCode": "tk",
+        "timezone": "Pacific/Fakaofo",
+        "countryProvider": "Surf-Forecast country directory",
+        "timezoneProvider": "geo-tz@8.1.8/all (timezone-boundary-builder, ODbL-1.0)"
+      }
+    }
+  ]
+}
