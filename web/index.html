@@ -10,8 +10,9 @@
         || routeParams.has('devicePreview')
         || routeParams.has('installerDemo')
       const colorScheme = matchMedia('(prefers-color-scheme: dark)')
+      const isDeviceCapture = ['seeedstudio_reterminal_e1001', 'seeedstudio_reterminal_e1002', 'seeedstudio_reterminal_e1003'].includes(routeParams.get('devicePreview'))
       const applyPageSurface = ({ matches: dark }) => {
-        const studioBackground = dark && !routeParams.has('devicePreview') ? '#101012' : '#f3f5f7'
+        const studioBackground = dark && !isDeviceCapture ? '#101012' : '#f3f5f7'
         const landingBackground = dark ? '#111113' : '#ffffff'
         const pageBackground = isConfigurator ? studioBackground : landingBackground
         document.documentElement.style.setProperty('--studio-background', studioBackground)

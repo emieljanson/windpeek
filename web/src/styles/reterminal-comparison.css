@@ -1,6 +1,7 @@
 .reterminal-comparison { min-width: 0; }
 .reterminal-comparison p { margin: 0; }
 
+.landing-page .button,
 .reterminal-comparison .hardware-model__buy {
   display: inline-flex;
   min-height: 38px;
@@ -16,8 +17,11 @@
   transition: background-color 120ms ease-out, scale 120ms ease-out;
 }
 
+.landing-page .button:hover,
 .reterminal-comparison .hardware-model__buy:hover { background: var(--landing-button-hover); }
+.landing-page .button:active,
 .reterminal-comparison .hardware-model__buy:active { scale: 0.96; }
+.landing-page .button:focus-visible,
 .reterminal-comparison .hardware-model__buy:focus-visible {
   outline: 0;
   box-shadow: inset 0 0 0 1px var(--landing-text), 0 0 0 2px var(--landing-background), 0 0 0 4px var(--landing-text);
