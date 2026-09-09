@@ -838,8 +838,8 @@ async function initialize() {
     })
     if (cableLabEnabled) applyCableLabSettings()
     scene.add(
-      createPhysicalShadowLayer(deviceStage, props.captureMode ? 0.14 : 0.28),
-      createContactOcclusion(deviceStage, props.captureMode ? 0.5 : 1),
+      createPhysicalShadowLayer(deviceStage, props.captureMode ? 0.07 : 0.28),
+      createContactOcclusion(deviceStage, props.captureMode ? 0.25 : 1),
       model,
       usbCable.object,
     )
