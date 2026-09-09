@@ -42,6 +42,12 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_set_day_field',
   'wind_wasm_set_sample_label',
   'wind_wasm_set_sample_values',
+  'wind_wasm_set_swell_sample',
+  'wind_wasm_set_modules',
+  'wind_wasm_set_module_order',
+  'wind_wasm_set_swell_hour',
+  'wind_wasm_set_secondary_swell_hour',
+  'wind_wasm_set_secondary_swell_sample',
   'wind_wasm_set_tide_sample',
   'wind_wasm_set_tide_extremum',
   'wind_wasm_render',
@@ -212,12 +218,37 @@ class SharedRenderer {
       input.showDedicatedFooter ? 1 : 0,
     )
 
+    const windSize = input.windSize ?? (input.swellFocus ? 1 : 2)
+    const swellSize = input.swellSize ?? (input.swellFocus ? 2 : 0)
+    if (input.windSize !== undefined || input.swellSize !== undefined || windSize !== 2 || swellSize !== 0) {
+      this.#call('wind_wasm_set_modules', requireInteger(windSize, 'windSize'), requireInteger(swellSize, 'swellSize'))
+    }
+    if (input.moduleOrder) {
+      if (!Array.isArray(input.moduleOrder) || input.moduleOrder.length !== 5 || new Set(input.moduleOrder).size !== 5) fail('INVALID_INPUT', 'Invalid module order')
+      this.#call('wind_wasm_set_module_order', ...input.moduleOrder.map(id => requireInteger(id, 'moduleOrder')))
+    }
+    if (input.swellHourly != null && !Array.isArray(input.swellHourly)) fail('INVALID_INPUT', 'swellHourly must be an array')
+    for (const sample of input.swellHourly ?? []) {
+      if (!sample || typeof sample !== 'object') fail('INVALID_INPUT', 'Invalid swell hourly sample')
+      this.#call('wind_wasm_set_swell_hour', requireInteger(sample.dayIndex, 'dayIndex'),
+        requireInteger(sample.hour, 'hour'), requireInteger(sample.heightCm, 'heightCm'))
+      this.#call('wind_wasm_set_secondary_swell_hour', requireInteger(sample.dayIndex, 'dayIndex'),
+        requireInteger(sample.hour, 'hour'), requireInteger(sample.secondaryHeightCm ?? -1, 'secondaryHeightCm'))
+    }
     input.days.forEach((day, dayIndex) => {
       for (const [field, name] of ['day', 'date'].entries()) {
         this.#writeString(day[name], `days[${dayIndex}].${name}`)
         this.#call('wind_wasm_set_day_field', dayIndex, field)
       }
       day.samples.forEach((sample, sampleIndex) => {
+        if (swellSize > 0) this.#call('wind_wasm_set_swell_sample', dayIndex, sampleIndex,
+          requireInteger(sample.swellHeightCm, 'swellHeightCm'),
+          requireInteger(sample.swellPeriodTenths, 'swellPeriodTenths'),
+          requireInteger(sample.swellDestinationDegrees, 'swellDestinationDegrees'))
+        if (swellSize > 0) this.#call('wind_wasm_set_secondary_swell_sample', dayIndex, sampleIndex,
+          requireInteger(sample.secondarySwellHeightCm ?? -1, 'secondarySwellHeightCm'),
+          requireInteger(sample.secondarySwellPeriodTenths ?? -1, 'secondarySwellPeriodTenths'),
+          requireInteger(sample.secondarySwellDestinationDegrees ?? -1, 'secondarySwellDestinationDegrees'))
         this.#writeString(sample.time, `days[${dayIndex}].samples[${sampleIndex}].time`)
         this.#call('wind_wasm_set_sample_label', dayIndex, sampleIndex)
         this.#call(

@@ -55,7 +55,9 @@ export default {
       return emptyResponse(204)
     }
 
-    return Response.json(coordinates, {
+    const countryCode = String(request.cf?.country ?? '').toUpperCase()
+    const location = /^[A-Z]{2}$/.test(countryCode) ? { ...coordinates, countryCode } : coordinates
+    return Response.json(location, {
       headers: BASE_HEADERS,
     })
   },

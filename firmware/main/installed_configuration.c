@@ -40,12 +40,23 @@ typedef struct {
 } installed_configuration_v2_t;
 
 typedef struct {
+    bool show_threshold;
+    uint8_t threshold_kt;
+    bool show_weather;
+    bool show_temperature;
+    bool show_tide;
+    bool show_dedicated_footer;
+    bool use_24_hour;
+    bool temperature_fahrenheit;
+} installed_display_configuration_v4_t;
+
+typedef struct {
     uint32_t version;
     uint32_t generation;
     char board_id[40];
     installed_spot_t spot;
     char forecast_model[32];
-    installed_display_configuration_t display;
+    installed_display_configuration_v4_t display;
 } installed_configuration_v3_t;
 
 typedef struct {
@@ -70,8 +81,30 @@ typedef struct {
     char password[65];
 } configuration_record_v3_t;
 
+typedef struct {
+    uint32_t version;
+    uint32_t generation;
+    char board_id[40];
+    char device_timezone[64];
+    installed_spot_t spot;
+    char forecast_model[32];
+    installed_display_configuration_v4_t display;
+} installed_configuration_v4_t;
+
+typedef struct {
+    uint32_t magic;
+    uint8_t committed;
+    uint8_t reserved[3];
+    uint64_t digest;
+    installed_configuration_v4_t config;
+    uint8_t has_credentials;
+    char ssid[33];
+    char password[65];
+} configuration_record_v4_t;
+
 typedef union {
     configuration_record_t current;
+    configuration_record_v4_t v4;
     configuration_record_v3_t v3;
     configuration_record_v2_t v2;
 } configuration_record_storage_t;
@@ -188,6 +221,9 @@ void installed_configuration_default(installed_configuration_t *config)
     config->display.show_dedicated_footer = false;
     config->display.use_24_hour = true;
     config->display.temperature_fahrenheit = false;
+    config->display.wind_size = 2;
+    strcpy(config->display.swell_model, "best_match");
+    for (int i = 0; i < 5; ++i) config->display.module_order[i] = i;
 }
 
 bool installed_configuration_validate(const installed_configuration_t *config)
@@ -208,6 +244,15 @@ bool installed_configuration_validate(const installed_configuration_t *config)
         config->forecast_model[0] == '\0' || config->display.threshold_kt > 99) {
         return false;
     }
+    if (!terminated(config->display.swell_model, sizeof(config->display.swell_model)) ||
+        (strcmp(config->display.swell_model, "best_match") && strcmp(config->display.swell_model, "meteofrance_wave") && strcmp(config->display.swell_model, "ncep_gfswave025") && strcmp(config->display.swell_model, "dwd_ewam"))) return false;
+    if (config->display.wind_size > 2 || config->display.swell_size > 2) return false;
+    unsigned seen = 0;
+    for (int i = 0; i < 5; ++i) {
+        unsigned id = config->display.module_order[i];
+        if (id >= 5 || (seen & (1u << id))) return false;
+        seen |= 1u << id;
+    }
     return true;
 }
 
@@ -225,6 +270,15 @@ static uint64_t configuration_digest_unchecked(const installed_configuration_t *
         config->display.show_dedicated_footer ? 1u : 0u,
         config->display.use_24_hour ? "24-hour" : "12-hour",
         config->display.temperature_fahrenheit ? "fahrenheit" : "celsius");
+    if (config->version >= 5 && length > 0 && (size_t)length < sizeof(canonical)) {
+        const char *sizes[] = { "off", "small", "large" };
+        const char *modules[] = { "wind", "swell", "weather", "temperature", "tide" };
+        const uint8_t *order = config->display.module_order;
+        int appended = snprintf(canonical + length, sizeof(canonical) - length,
+            "|%s|%s|%s,%s,%s,%s,%s|%s", sizes[config->display.wind_size], sizes[config->display.swell_size],
+            modules[order[0]], modules[order[1]], modules[order[2]], modules[order[3]], modules[order[4]], config->display.swell_model);
+        if (appended < 0 || (size_t)appended >= sizeof(canonical) - length) return 0;
+    }
     return length > 0 && (size_t) length < sizeof(canonical) ? fnv1a(canonical) : 0;
 }
 
@@ -299,7 +353,25 @@ static bool migrate_v3_record(const configuration_record_v3_t *legacy,
     initialize_migrated_record(migrated, legacy->config.generation, legacy->config.board_id,
                                &legacy->config.spot, legacy->config.forecast_model,
                                legacy->has_credentials, legacy->ssid, legacy->password);
-    migrated->config.display = legacy->config.display;
+    memcpy(&migrated->config.display, &legacy->config.display, sizeof(legacy->config.display));
+    migrated->digest = configuration_digest_unchecked(&migrated->config);
+    return record_valid(migrated);
+}
+
+static bool migrate_v4_record(const configuration_record_v4_t *legacy, configuration_record_t *migrated)
+{
+    if (!legacy || legacy->magic != CONFIG_RECORD_MAGIC || legacy->committed != 1 ||
+        !credentials_valid(legacy->has_credentials, legacy->ssid, sizeof(legacy->ssid), legacy->password, sizeof(legacy->password)) ||
+        !legacy_configuration_core_valid(legacy->config.version, 4u, legacy->config.generation,
+            legacy->config.board_id, &legacy->config.spot, legacy->config.forecast_model, legacy->config.display.threshold_kt) ||
+        !terminated(legacy->config.device_timezone, sizeof(legacy->config.device_timezone))) return false;
+    initialize_migrated_record(migrated, legacy->config.generation, legacy->config.board_id,
+        &legacy->config.spot, legacy->config.forecast_model, legacy->has_credentials, legacy->ssid, legacy->password);
+    memcpy(migrated->config.device_timezone, legacy->config.device_timezone, sizeof(migrated->config.device_timezone));
+    memcpy(&migrated->config.display, &legacy->config.display, sizeof(legacy->config.display));
+    migrated->config.version = 4u;
+    if (configuration_digest_unchecked(&migrated->config) != legacy->digest) return false;
+    migrated->config.version = INSTALLED_CONFIGURATION_VERSION;
     migrated->digest = configuration_digest_unchecked(&migrated->config);
     return record_valid(migrated);
 }
@@ -311,6 +383,10 @@ static bool decode_record(const configuration_record_storage_t *stored, size_t s
     if (stored_size == sizeof(stored->current) && record_valid(&stored->current)) {
         *decoded = stored->current;
         if (was_migrated) *was_migrated = false;
+        return true;
+    }
+    if (stored_size == sizeof(stored->v4) && migrate_v4_record(&stored->v4, decoded)) {
+        if (was_migrated) *was_migrated = true;
         return true;
     }
     if (stored_size != sizeof(stored->v3) ||
@@ -560,6 +636,27 @@ void installed_configuration_seed_v2_host_storage(const installed_configuration_
     record->digest = configuration_v2_digest(&record->config);
 }
 
+void installed_configuration_seed_v4_host_storage(const installed_configuration_t *config,
+    const char *ssid, const char *password)
+{
+    if (!config) return;
+    memset(&s_active, 0, sizeof(s_active));
+    s_active_size = sizeof(s_active.v4);
+    configuration_record_v4_t *record = &s_active.v4;
+    record->magic = CONFIG_RECORD_MAGIC;
+    record->committed = 1;
+    memcpy(&record->config, config, sizeof(record->config));
+    record->config.version = 4;
+    if (ssid) {
+        record->has_credentials = 1;
+        snprintf(record->ssid, sizeof(record->ssid), "%s", ssid);
+        snprintf(record->password, sizeof(record->password), "%s", password ? password : "");
+    }
+    installed_configuration_t copy = *config;
+    copy.version = 4;
+    record->digest = configuration_digest_unchecked(&copy);
+}
+
 void installed_configuration_seed_v3_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password)
 {
@@ -575,7 +672,7 @@ void installed_configuration_seed_v3_host_storage(const installed_configuration_
     record->config.spot = config->spot;
     memcpy(record->config.forecast_model, config->forecast_model,
            sizeof(record->config.forecast_model));
-    record->config.display = config->display;
+    memcpy(&record->config.display, &config->display, sizeof(record->config.display));
     if (ssid) {
         record->has_credentials = 1;
         snprintf(record->ssid, sizeof(record->ssid), "%s", ssid);

@@ -17,6 +17,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const row = inject('windpeek-setting-row', null)
 const pointerFocus = ref(false)
+const hasInteracted = ref(false)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const tooltipId = `setting-switch-tooltip-${useId()}`
 const hasDisabledReason = computed(() => isDisabled.value && Boolean(props.disabledReason))
@@ -28,11 +29,13 @@ const describedBy = computed(() => [
 
 function selectValue(value) {
   if (isDisabled.value || props.modelValue === value) return
+  hasInteracted.value = true
   emit('update:modelValue', value)
 }
 
 function updateValue(value) {
   if (isDisabled.value) return
+  hasInteracted.value = true
   emit('update:modelValue', value)
 }
 </script>
@@ -42,7 +45,7 @@ function updateValue(value) {
     <SwitchRoot
       :id="row?.controlId"
       class="setting-switch"
-      :class="{ 'is-pointer-focus': pointerFocus }"
+      :class="{ 'is-pointer-focus': pointerFocus, 'has-interacted': hasInteracted }"
       :model-value="props.modelValue"
       :disabled="nativeDisabled"
       :name="props.name"
@@ -55,8 +58,8 @@ function updateValue(value) {
       @blur="pointerFocus = false"
       @update:model-value="updateValue"
     >
-      <span class="setting-switch__segment setting-switch__segment--on" @click.stop="selectValue(true)">{{ props.onLabel }}</span>
       <span class="setting-switch__segment setting-switch__segment--off" @click.stop="selectValue(false)">{{ props.offLabel }}</span>
+      <span class="setting-switch__segment setting-switch__segment--on" @click.stop="selectValue(true)">{{ props.onLabel }}</span>
       <span class="setting-switch__thumb" aria-hidden="true" />
     </SwitchRoot>
     <span v-if="hasDisabledReason" :id="tooltipId" class="setting-switch-tooltip" role="tooltip">

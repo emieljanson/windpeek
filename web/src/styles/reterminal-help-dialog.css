@@ -56,13 +56,16 @@
   top: 50%;
   left: 50%;
   display: grid;
-  inline-size: min(48rem, calc(100% - 2rem));
+  inline-size: min(40rem, calc(100% - 2rem));
   max-block-size: calc(100dvh - 2rem);
   gap: 1.25rem;
   padding: 1.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   color: var(--settings-control-ink);
+  font-size: var(--settings-label-size);
+  font-weight: 400;
+  line-height: 1.5;
   background: var(--panel-background);
   border: 0;
   border-radius: 1rem;
@@ -76,13 +79,12 @@
 .reterminal-help:focus-visible { outline: none; }
 .reterminal-help__title,
 .reterminal-help__description { margin: 0; }
-.reterminal-help__title { padding-inline-end: 2rem; font-size: 1.25rem; font-weight: 650; line-height: 1.2; }
+.reterminal-help__title { padding-inline-end: 2rem; font-size: 1.25rem; font-weight: 600; line-height: 1.2; }
 .reterminal-help__description {
   max-inline-size: 34rem;
   margin-block-start: 0.375rem;
-  color: var(--settings-control-muted);
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  color: inherit;
+  font: inherit;
 }
 
 .reterminal-help .reterminal-comparison {
@@ -93,6 +95,24 @@
   --landing-button-background: var(--panel-primary-background);
   --landing-button-text: var(--panel-primary-ink);
   --landing-button-hover: var(--panel-primary-hover);
+}
+
+/* The comparison also lives on the landing page; keep this scale local to dialogs. */
+.reterminal-help .reterminal-comparison .hardware-model__name,
+.reterminal-help .reterminal-comparison .hardware-spec dd,
+.reterminal-help .reterminal-comparison .hardware-model__buy {
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 400;
+}
+.reterminal-help .reterminal-comparison .hardware-model__name,
+.reterminal-help .reterminal-comparison .hardware-model__buy { font-weight: 500; }
+.reterminal-help .reterminal-comparison .hardware-models { margin-block-start: 0; }
+.reterminal-help .reterminal-comparison .hardware-model { grid-template-rows: 88px auto; }
+.reterminal-help .reterminal-comparison .hardware-model__visual img { height: 84px; }
+@media (max-width: 640px) {
+  .reterminal-help .reterminal-comparison .hardware-model { grid-template-rows: 68px auto; }
+  .reterminal-help .reterminal-comparison .hardware-model__visual img { height: 64px; }
 }
 
 .reterminal-help__close {
@@ -120,7 +140,7 @@
 .reterminal-help__close svg { inline-size: 1rem; block-size: 1rem; }
 
 @media (max-width: 46rem) {
-  .reterminal-help { inline-size: calc(100% - 1rem); padding: 1.25rem; }
+  .reterminal-help { inline-size: min(40rem, calc(100% - 1rem)); padding: 1.25rem; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

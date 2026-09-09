@@ -389,3 +389,7 @@ target_compile_definitions(
   WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
 )
 target_link_libraries(render_wind_fixture m)
+
+add_wind_test(wind_swell_test test_wind_swell.cpp ../main/wind_swell.c ../main/wind_swell_cache.c ../main/open_meteo_marine_provider.c ../main/wind_tide.c)
+target_link_libraries(wind_swell_test cjson)
+target_include_directories(wind_swell_test BEFORE PRIVATE ${cjson_SOURCE_DIR})

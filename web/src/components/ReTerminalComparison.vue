@@ -1,6 +1,8 @@
 <script setup>
+import { siteVariant } from '../marketing/siteVariant'
 import { publicAssetUrl } from '../assets/publicAssetUrl'
 
+const variant = siteVariant()
 const hardwareModels = [
   {
     model: 'E1001',
@@ -10,7 +12,7 @@ const hardwareModels = [
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
     price: '~$74',
-    image: publicAssetUrl('devices/previews/e1001.png'),
+    image: publicAssetUrl(`devices/previews/e1001-${variant.id}.png`),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
   {
@@ -21,7 +23,7 @@ const hardwareModels = [
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
     price: '~$107',
-    image: publicAssetUrl('devices/previews/e1002.png'),
+    image: publicAssetUrl(`devices/previews/e1002-${variant.id}.png`),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
   {
@@ -32,7 +34,7 @@ const hardwareModels = [
     battery: '6 month battery',
     batteryCompact: '6 mo battery',
     price: '~$160',
-    image: publicAssetUrl('devices/previews/e1003.png'),
+    image: publicAssetUrl(`devices/previews/e1003-${variant.id}.png`),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
 ]

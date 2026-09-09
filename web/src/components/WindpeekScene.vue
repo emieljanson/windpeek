@@ -117,6 +117,12 @@ const {
   temperatureUnit,
   timeFormat,
   tide,
+  swell,
+  swellFocus,
+  windSize,
+  swellSize,
+  swellStatus,
+  moduleOrder,
 } = storeToRefs(store)
 
 let renderer
@@ -135,6 +141,13 @@ let viewportResizeFrame
 let cancelLoadingStatus = () => {}
 let compositionMode
 let screenSource
+
+defineExpose({
+  exportScreen() {
+    if (!screenSource) return null
+    return screenSource.exportPng()
+  },
+})
 let keyLight
 let softbox
 let accent
@@ -235,6 +248,12 @@ function currentDisplayConfig() {
     timeFormat: timeFormat.value,
     temperatureUnit: temperatureUnit.value,
     tide: tide.value,
+    swell: swell.value,
+    swellFocus: swellFocus.value,
+    windSize: windSize.value,
+    swellSize: swellSize.value,
+    swellStatus: swellStatus.value,
+    moduleOrder: [...moduleOrder.value],
   }
 }
 let model
@@ -786,6 +805,9 @@ async function initialize() {
         timeFormat.value !== initialConfig.timeFormat ||
         temperatureUnit.value !== initialConfig.temperatureUnit ||
         effectiveShowTide.value !== initialConfig.showTide || tide.value !== initialConfig.tide ||
+        swell.value !== initialConfig.swell || swellStatus.value !== initialConfig.swellStatus || swellFocus.value !== initialConfig.swellFocus ||
+        moduleOrder.value.join() !== initialConfig.moduleOrder.join() ||
+        windSize.value !== initialConfig.windSize || swellSize.value !== initialConfig.swellSize ||
         forecastRevision.value !== initialForecastRevision) {
       screenSource.update({
         forecast: forecast.value,
@@ -854,6 +876,12 @@ watch([
   effectiveShowTide,
   showDedicatedFooter,
   tide,
+  swell,
+  swellFocus,
+  windSize,
+  swellSize,
+  swellStatus,
+  moduleOrder,
   timeFormat,
   temperatureUnit,
 ], () => {

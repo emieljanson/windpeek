@@ -1,8 +1,8 @@
 # Windpeek nearby-location Worker
 
 This small Cloudflare Worker turns Cloudflare's approximate request location
-into the latitude and longitude Windpeek uses to choose its nearest bundled
-spot. It does not use browser GPS, store coordinates, or log location data.
+into latitude, longitude, and country code. Windpeek uses these to choose its
+nearest bundled spot and an initial temperature unit. It does not use browser GPS, store coordinates, or log location data.
 
 ## Deploy
 

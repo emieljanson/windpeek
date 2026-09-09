@@ -37,6 +37,19 @@ enum {
     TEMPERATURE_ROW_HEIGHT = 35,
     COMBINED_CONDITIONS_ROW_HEIGHT = 54,
     TIDE_ROW_HEIGHT = 60,
+    MODULE_PADDING = 8,
+    MODULE_CELL = 20,
+    MODULE_TEXT_CELL = 16,
+    MODULE_GAP = 8,
+    MODULE_GRAPH_INSET = MODULE_PADDING * 2 + MODULE_CELL,
+    MODULE_PERIOD_INSET = MODULE_PADDING * 2 + MODULE_TEXT_CELL,
+    MODULE_LABEL_HEIGHT = 12,
+    MODULE_COMPACT_HEIGHT = MODULE_PADDING * 2 + MODULE_CELL + MODULE_TEXT_CELL * 2 + MODULE_GAP * 2,
+    MODULE_TIDE_LABEL_GAP = 2,
+    MODULE_TIDE_CURVE_HEIGHT = 16,
+    MODULE_TIDE_HEIGHT = MODULE_PADDING * 2 + MODULE_TEXT_CELL * 2 + MODULE_TIDE_LABEL_GAP * 2 + MODULE_TIDE_CURVE_HEIGHT,
+    SWELL_SCALE_CM = 1000,
+    SWELL_LINE_WIDTH = 1,
     FORECAST_FIRST_HOUR = 8,
     FORECAST_LAST_HOUR = 20,
     TIDE_DATA_FIRST_HOUR = 5,
@@ -45,7 +58,10 @@ enum {
 
 typedef struct {
     int wind_baseline;
+    int modules_bottom;
+    int direction_center;
     int chart_scale_height;
+    bool inset_labels;
     int weather_top;
     int weather_bottom;
     int weather_center;
@@ -62,6 +78,7 @@ typedef struct {
     size_t size;
     int clipped;
     bool antialias_text;
+    bool smooth_curves;
 } canvas_t;
 
 typedef enum {
@@ -143,14 +160,31 @@ static int canvas_footer_top(const canvas_t *canvas) {
     return FOOTER_TOP + canvas->height - WIND_RENDERER_HEIGHT;
 }
 
+/* Shared fixed-height slots for icons and numeric text. Text uses the
+ * digit cap height rather than a font's descender space for optical centering. */
+static int module_text_center(int top, int row, bool after_icon) {
+    return top + MODULE_PADDING + (after_icon ? MODULE_CELL + MODULE_GAP : 0) +
+        MODULE_TEXT_CELL / 2 + row * (MODULE_TEXT_CELL + MODULE_GAP);
+}
+
+static int module_cell_center(int top, int row) {
+    return row == 0 ? top + MODULE_PADDING + MODULE_CELL / 2 :
+        module_text_center(top, row - 1, true);
+}
+
+static int module_text_baseline(int center) {
+    return center + 6;
+}
+
 static dashboard_layout_t dashboard_layout(const wind_renderer_dashboard_t *dashboard,
                                            const canvas_t *canvas) {
     dashboard_layout_t layout = {0};
     int cursor = dashboard->show_dedicated_footer ? canvas_footer_top(canvas)
                                                   : canvas_outer_bottom(canvas);
+    const int tide_height = dashboard->custom_modules ? MODULE_TIDE_HEIGHT : TIDE_ROW_HEIGHT;
     if (dashboard->show_tide) {
         layout.tide_bottom = cursor - 1;
-        cursor -= TIDE_ROW_HEIGHT;
+        cursor -= tide_height;
         layout.tide_top = cursor;
     }
     if (dashboard->show_weather && dashboard->show_temperature) {
@@ -171,6 +205,26 @@ static dashboard_layout_t dashboard_layout(const wind_renderer_dashboard_t *dash
         layout.weather_top = cursor;
         layout.weather_center = cursor + 18;
     }
+    if (dashboard->custom_modules) {
+        cursor = dashboard->show_dedicated_footer ? canvas_footer_top(canvas) : canvas_outer_bottom(canvas);
+        if (dashboard->show_tide) cursor -= tide_height;
+        const int rows = dashboard->show_weather + dashboard->show_temperature;
+        if (rows) {
+            const int conditions_height = MODULE_PADDING * 2 + MODULE_CELL * dashboard->show_weather +
+                MODULE_TEXT_CELL * dashboard->show_temperature + MODULE_GAP * (rows - 1);
+            cursor -= conditions_height;
+            if (dashboard->show_weather) {
+                layout.weather_top = cursor;
+                layout.weather_center = module_cell_center(cursor, 0);
+            }
+            if (dashboard->show_temperature) {
+                layout.temperature_top = cursor;
+                layout.temperature_bottom = cursor + conditions_height - 1;
+            }
+        }
+    }
+    layout.modules_bottom = cursor;
+    layout.direction_center = DIRECTION_CENTER_Y;
     layout.wind_baseline = cursor - 8;
     layout.chart_scale_height = layout.wind_baseline - BAR_GRAPH_TOP;
     return layout;
@@ -223,6 +277,9 @@ static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
     if (!dashboard || dashboard->state < WIND_RENDERER_FRESH ||
         dashboard->state > WIND_RENDERER_UNAVAILABLE ||
         (dashboard->refresh_failed != 0 && dashboard->refresh_failed != 1) ||
+        (dashboard->custom_modules != 0 && dashboard->custom_modules != 1) ||
+        (dashboard->custom_modules && (dashboard->wind_size < 0 || dashboard->wind_size > 2 ||
+         dashboard->swell_size < 0 || dashboard->swell_size > 2)) ||
         dashboard->age_hours < 0 || dashboard->battery_percent < -1 ||
         dashboard->battery_percent > 100 ||
         (dashboard->display_mode != WIND_RENDERER_MODE_THRESHOLD &&
@@ -254,6 +311,10 @@ static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
         }
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
             const wind_renderer_sample_t *slot = &dashboard->days[day].samples[sample];
+            const wind_renderer_swell_sample_t *swell = &dashboard->swell[day][sample];
+            if (dashboard->custom_modules && (swell->height_cm < -1 || swell->height_cm > 10000 ||
+                swell->period_tenths < -1 || swell->period_tenths > 1000 ||
+                swell->destination_degrees < -1 || swell->destination_degrees >= 360)) return 0;
             if ((slot->available != 0 && slot->available != 1) ||
                 slot->weather < WIND_RENDERER_WEATHER_UNAVAILABLE ||
                 slot->weather > WIND_RENDERER_WEATHER_HEAVY_RAIN ||
@@ -528,6 +589,19 @@ static void draw_weather(canvas_t *canvas, int center_x, int center_y,
     }
 }
 
+static int graph_label_baseline(int y, int plot_top, int plot_bottom) {
+    /* Keep peak labels inside the plot, clear of the direction row. */
+    return y - 7 - MODULE_LABEL_HEIGHT < plot_top
+        ? clamp_int(y + MODULE_LABEL_HEIGHT + 5, plot_top + MODULE_LABEL_HEIGHT, plot_bottom - 5)
+        : y - 7;
+}
+
+static int wind_label_baseline(int y, const dashboard_layout_t *layout) {
+    const int plot_top = layout->wind_baseline - layout->chart_scale_height;
+    return layout->inset_labels ? graph_label_baseline(y, plot_top, layout->wind_baseline) :
+        clamp_int(y - 5, plot_top - 4, layout->wind_baseline - 5);
+}
+
 static void draw_sample(canvas_t *canvas, int center_x,
                         const wind_renderer_sample_t *sample,
                         const dashboard_layout_t *layout) {
@@ -540,7 +614,7 @@ static void draw_sample(canvas_t *canvas, int center_x,
         return;
     }
 
-    draw_arrow(canvas, center_x, DIRECTION_CENTER_Y, sample->destination_degrees);
+    draw_arrow(canvas, center_x, layout->direction_center, sample->destination_degrees);
 
     const int sustained = clamp_int(sample->sustained_kt, 0, 40);
     const int gust = clamp_int(sample->gust_kt, 0, 40);
@@ -554,9 +628,7 @@ static void draw_sample(canvas_t *canvas, int center_x,
         horizontal_line(canvas, center_x - 8, center_x + 7, gust_y, CANVAS_BLACK);
 
     snprintf(value, sizeof(value), "%d", clamp_int(sample->sustained_kt, 0, 999));
-    const int label_baseline = clamp_int(
-        sustained_y - 5, layout->wind_baseline - layout->chart_scale_height - 4,
-        layout->wind_baseline - 5);
+    const int label_baseline = wind_label_baseline(sustained_y, layout);
     draw_outlined_text_center(canvas, center_x, label_baseline,
                               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                               WIND_FONT_SIZE_STATUS, value);
@@ -564,7 +636,7 @@ static void draw_sample(canvas_t *canvas, int center_x,
 
 static void draw_temperature(canvas_t *canvas, int center_x, int row_top,
                              int row_bottom, const wind_renderer_sample_t *sample,
-                             int temperature_fahrenheit) {
+                             int temperature_fahrenheit, int text_center) {
     if (!sample->temperature_available) return;
     char value[12];
     const int whole_degrees =
@@ -576,6 +648,7 @@ static void draw_temperature(canvas_t *canvas, int center_x, int row_top,
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, value);
     const int row_height = row_bottom - row_top + 1;
     const int baseline =
+        text_center > 0 ? module_text_baseline(text_center) :
         row_top + (row_height + value_metrics.ascent - value_metrics.descent) / 2;
     draw_text(canvas, center_x - value_metrics.width / 2, baseline,
               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, value);
@@ -598,6 +671,35 @@ static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
             y0 += sy;
         }
     }
+}
+
+/* Subpixel coverage keeps curved strokes smooth at the native display size.
+ * Both marine graphs use the same stroke rasterizer and round joins. */
+static void draw_curve_segment_color(canvas_t *canvas, double x0, double y0,
+                                      double x1, double y1, int width, uint8_t color, int clip_left, int clip_right) {
+    const double dx = x1 - x0, dy = y1 - y0;
+    const double length_squared = dx * dx + dy * dy;
+    const double radius = width / 2.0;
+    for (int y = (int)floor(fmin(y0, y1) - radius); y <= (int)ceil(fmax(y0, y1) + radius); ++y) {
+        for (int x = (int)floor(fmin(x0, x1) - radius); x <= (int)ceil(fmax(x0, x1) + radius); ++x) {
+            if (x <= OUTER_X || x >= OUTER_RIGHT || x < clip_left || x > clip_right || y < 0 || y >= canvas->height) continue;
+            double t = length_squared > 0 ? ((x-x0)*dx + (y-y0)*dy) / length_squared : 0;
+            t = fmin(1.0, fmax(0.0, t));
+            const double distance = hypot(x - x0 - t*dx, y - y0 - t*dy);
+            double coverage = fmin(1.0, fmax(0.0, radius + 0.5 - distance));
+            if (!canvas->antialias_text) coverage = coverage >= 0.5 ? 1.0 : 0.0;
+            const uint8_t previous = canvas->pixels[y * WIND_RENDERER_WIDTH + x];
+            const uint8_t gray = color == CANVAS_WHITE
+                ? (uint8_t)lround(previous + (255 - previous) * coverage)
+                : (uint8_t)lround(255 * (1.0 - coverage));
+            if (color == CANVAS_WHITE || gray < previous) set_pixel(canvas, x, y, gray);
+        }
+    }
+}
+
+static void draw_curve_segment(canvas_t *canvas, double x0, double y0,
+                                double x1, double y1, int width) {
+    draw_curve_segment_color(canvas, x0, y0, x1, y1, width, CANVAS_BLACK, OUTER_X + 1, OUTER_RIGHT - 1);
 }
 
 static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *point_y,
@@ -623,7 +725,7 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *poi
                       (float)(point_x[segment + 2] - point_x[segment]);
 
         int previous_x = first_x;
-        int previous_y = point_y[segment];
+        double previous_y = point_y[segment];
         for (int x = first_x; x <= last_x; ++x) {
             const float t = (float)(x - x0) / segment_width;
             const float t2 = t * t;
@@ -632,15 +734,17 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *poi
             const float h10 = t3 - 2.0f * t2 + t;
             const float h01 = -2.0f * t3 + 3.0f * t2;
             const float h11 = t3 - t2;
-            const int y = clamp_int((int)lroundf(h00 * point_y[segment] +
+            const float curve_y = h00 * point_y[segment] +
                                                  h10 * segment_width * start_slope +
                                                  h01 * point_y[segment + 1] +
-                                                 h11 * segment_width * end_slope),
-                                    curve_top, curve_bottom);
+                                                 h11 * segment_width * end_slope;
+            const double y = canvas->smooth_curves ? fmin(curve_bottom, fmax(curve_top, curve_y)) :
+                clamp_int((int)lroundf(curve_y), curve_top, curve_bottom);
             if (x == first_x) {
                 previous_y = y;
             } else {
-                draw_line(canvas, previous_x, previous_y, x, y);
+                if (canvas->smooth_curves) draw_curve_segment(canvas, previous_x, previous_y, x, y, 1);
+                else draw_line(canvas, previous_x, previous_y, x, y);
             }
             previous_x = x;
             previous_y = y;
@@ -672,8 +776,11 @@ static void draw_tide_time_label(canvas_t *canvas,
     const int label_margin = metrics.width / 2 + 10;
     const int label_center = clamp_int(center_x, day_column_x(day) + label_margin,
                                        day_column_x(day + 1) - label_margin);
-    const int baseline = clamp_int(is_high ? extremum_y - 3 : extremum_y + 16,
-                                   layout->tide_top + 14, layout->tide_bottom - 5);
+    const int baseline = dashboard->custom_modules
+        ? module_text_baseline(is_high ? module_text_center(layout->tide_top, 0, false) :
+            layout->tide_bottom + 1 - MODULE_PADDING - MODULE_TEXT_CELL / 2)
+        : clamp_int(is_high ? extremum_y - 3 : extremum_y + 16,
+                    layout->tide_top + 14, layout->tide_bottom - 5);
     draw_outlined_text_center(canvas, label_center, baseline,
                               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                               WIND_FONT_SIZE_STATUS, time);
@@ -683,8 +790,10 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
                       const dashboard_layout_t *layout) {
     if (!dashboard->tide_available || dashboard->tide_sample_count < 2) return;
 
-    const int curve_top = layout->tide_top + 25;
-    const int curve_bottom = layout->tide_bottom - 25;
+    const int curve_inset = MODULE_PADDING + MODULE_TEXT_CELL + MODULE_TIDE_LABEL_GAP;
+    const int curve_top = layout->tide_top + (dashboard->custom_modules ? curve_inset : 25);
+    const int curve_bottom = dashboard->custom_modules
+        ? layout->tide_bottom + 1 - curve_inset : layout->tide_bottom - 25;
     const int curve_middle = (curve_top + curve_bottom) / 2;
 
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
@@ -956,6 +1065,280 @@ static void draw_header_status(canvas_t *canvas,
                     update);
 }
 
+/* Compact decimal spacing is local to wave heights; other mono text stays unchanged. */
+static void draw_swell_height(canvas_t *canvas, int center, int baseline, int height_cm) {
+    char value[16];
+    if (height_cm < 0) snprintf(value, sizeof(value), "-");
+    else {
+        const int tenths = (height_cm + 5) / 10;
+        if (tenths >= 100 && tenths % 10 == 0) snprintf(value, sizeof(value), "%d", tenths / 10);
+        else snprintf(value, sizeof(value), "%d.%d", tenths / 10, tenths % 10);
+    }
+    const wind_font_family_t font = WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED;
+    const int size = WIND_FONT_SIZE_STATUS;
+    int width = 0;
+    for (const char *p = value; *p; ++p) {
+        char glyph[2] = {*p, 0};
+        width += *p == '.' ? 3 : wind_font_measure(font, size, glyph).width;
+    }
+    for (int pass = 0; pass < 2; ++pass) {
+        int x = center - width / 2;
+        for (const char *p = value; *p; ++p) {
+            char glyph[2] = {*p, 0};
+            const int advance = wind_font_measure(font, size, glyph).width;
+            const int glyph_x = *p == '.' ? x - (advance - 3) / 2 : x;
+            if (pass == 0) {
+                for (int dy = -2; dy <= 2; ++dy)
+                    for (int dx = -2; dx <= 2; ++dx)
+                        if (dx * dx + dy * dy <= 4)
+                            draw_text_color(canvas, glyph_x + dx, baseline + dy, font, size, CANVAS_WHITE, glyph);
+            } else draw_text(canvas, glyph_x, baseline, font, size, glyph);
+            x += *p == '.' ? 3 : advance;
+        }
+    }
+}
+
+static void draw_heavy_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
+    draw_line(canvas, x0, y0, x1, y1);
+    draw_line(canvas, x0, y0 + 1, x1, y1 + 1);
+}
+
+static void draw_swell_arrow_scaled(canvas_t *canvas, int x, int y, int degrees, double scale) {
+    /* Filled head and shaft match the optical weight of the wind arrow,
+     * inside the same 20px icon slot. */
+    const double angle = degrees * 3.14159265358979323846 / 180.0;
+    const double sine = sin(angle), cosine = cos(angle);
+    static const double source[7][2] = {
+        {-1.5, 7}, {1.5, 7}, {-1.5, -1}, {1.5, -1},
+        {-5, -1}, {0, -8}, {5, -1},
+    };
+    int points[7][2];
+    for (int i = 0; i < 7; ++i) {
+        points[i][0] = x + (int)lround(scale * (source[i][0] * cosine - source[i][1] * sine));
+        points[i][1] = y + (int)lround(scale * (source[i][0] * sine + source[i][1] * cosine));
+    }
+    fill_triangle(canvas, points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
+    fill_triangle(canvas, points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
+    fill_triangle(canvas, points[4][0], points[4][1], points[5][0], points[5][1], points[6][0], points[6][1]);
+}
+
+static void draw_centered_value(canvas_t *canvas, int x, int baseline, int size,
+                                const char *value, uint8_t gray) {
+    const wind_text_metrics_t metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, size, value);
+    draw_text_color(canvas, x - metrics.width / 2, baseline,
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, size, gray, value);
+}
+
+/* A fixed soft-log scale includes calm water without log(0), and never
+ * rescales when switching spots or forecasts. Values above 10m get overflow marks. */
+static double swell_y(double height_cm, int top, int bottom) {
+    const double height = fmin(fmax(height_cm, 0.0), SWELL_SCALE_CM);
+    return bottom - log1p(height / 50.0) / log1p(SWELL_SCALE_CM / 50.0) * (bottom - top);
+}
+
+static double swell_tangent(int before, int current, int after) {
+    const double a = current - before, b = after - current;
+    if (a * b <= 0) return 0;
+    return 2 * a * b / (a + b);
+}
+
+static double swell_interpolate(const int *hours, int hour, double t) {
+    const double start = hours[hour], end = hours[hour + 1];
+    const double m0 = hour > 0 && hours[hour - 1] >= 0
+        ? swell_tangent(hours[hour - 1], start, end) : end - start;
+    const double m1 = hour < 22 && hours[hour + 2] >= 0
+        ? swell_tangent(start, end, hours[hour + 2]) : end - start;
+    const double t2 = t * t, t3 = t2 * t;
+    return (2*t3 - 3*t2 + 1)*start + (t3 - 2*t2 + t)*m0 +
+           (-2*t3 + 3*t2)*end + (t3 - t2)*m1;
+}
+
+static void draw_swell_trace(canvas_t *canvas, const int *hours, int day,
+                              int plot_top, int plot_bottom, int width, uint8_t color, bool dashed) {
+    for (int hour = TIDE_DATA_FIRST_HOUR; hour < TIDE_DATA_LAST_HOUR; ++hour) {
+        if (hours[hour] < 0 || hours[hour + 1] < 0) continue;
+        const int x0 = tide_time_x(day, hour, 0), x1 = tide_time_x(day, hour + 1, 0);
+        const int left = clamp_int(x0, day_column_x(day) + 1, day_column_x(day + 1) - 1);
+        const int right = clamp_int(x1, day_column_x(day) + 1, day_column_x(day + 1) - 1);
+        double previous_y = 0;
+        for (int x = left; x <= right; ++x) {
+            const double height = swell_interpolate(hours, hour, (double)(x - x0) / (x1 - x0));
+            const double y = swell_y(height, plot_top, plot_bottom);
+            if (x > left && (!dashed || (x - day_column_x(day)) % 7 < 3))
+                draw_curve_segment_color(canvas, x - 1, previous_y, x, y, width, color, day_column_x(day) + 1, day_column_x(day + 1) - 1);
+            previous_y = y;
+        }
+    }
+}
+
+static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
+                              int top, int bottom, int size) {
+    const bool large = size == 2;
+    bool secondary = false;
+    if (large) {
+        for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
+            for (int hour = TIDE_DATA_FIRST_HOUR; hour <= TIDE_DATA_LAST_HOUR; ++hour)
+                if (dashboard->secondary_swell_hourly[day][hour] > 0) secondary = true;
+    }
+    const int plot_top = top + MODULE_GRAPH_INSET;
+    const int plot_bottom = bottom - MODULE_PERIOD_INSET;
+    const int direction_y = module_cell_center(top, 0);
+    const int period_baseline = module_text_baseline(bottom - MODULE_PADDING - MODULE_TEXT_CELL / 2);
+    if (large) {
+        const int ticks[] = {0, 250, 500, 750, SWELL_SCALE_CM};
+        for (size_t tick = 0; tick < sizeof(ticks) / sizeof(ticks[0]); ++tick) {
+            const int y = (int)lround(swell_y(ticks[tick], plot_top, plot_bottom));
+            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) set_pixel(canvas, x, y, CANVAS_BLACK);
+        }
+    }
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        if (large) {
+            if (secondary) draw_swell_trace(canvas, dashboard->secondary_swell_hourly[day], day,
+                plot_top, plot_bottom, SWELL_LINE_WIDTH, CANVAS_BLACK, true);
+            /* Paint the complete halo before the foreground stroke so segment joins stay intact. */
+            if (secondary) draw_swell_trace(canvas, dashboard->swell_hourly[day], day,
+                plot_top, plot_bottom, SWELL_LINE_WIDTH + 2, CANVAS_WHITE, false);
+            draw_swell_trace(canvas, dashboard->swell_hourly[day], day,
+                plot_top, plot_bottom, SWELL_LINE_WIDTH, CANVAS_BLACK, false);
+        }
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+            const wind_renderer_swell_sample_t *swell = &dashboard->swell[day][sample];
+            const int x = forecast_sample_center_x(day, sample);
+            char period[12];
+            if (large) {
+                const int y = swell->height_cm < 0 ? plot_bottom :
+                    (int)lround(swell_y(swell->height_cm, plot_top, plot_bottom));
+                draw_swell_height(canvas, x, graph_label_baseline(y, plot_top, plot_bottom), swell->height_cm);
+                if (swell->height_cm >= 0) {
+                    fill_rect(canvas, x - 4, y - 4, 9, 9, CANVAS_WHITE);
+                    fill_rect(canvas, x - 2, y - 2, 5, 5, CANVAS_BLACK);
+                }
+                if (swell->height_cm > SWELL_SCALE_CM) {
+                    draw_heavy_line(canvas, x - 3, y + 5, x, y + 2);
+                    draw_heavy_line(canvas, x, y + 2, x + 3, y + 5);
+                }
+            } else draw_swell_height(canvas, x, module_text_baseline(module_cell_center(top, 1)), swell->height_cm);
+            if (swell->destination_degrees >= 0) draw_swell_arrow_scaled(canvas, x, direction_y, swell->destination_degrees, 1.0);
+            if (swell->period_tenths >= 0) snprintf(period, sizeof(period), "%dS", (int)((swell->period_tenths + 5) / 10));
+            else snprintf(period, sizeof(period), "-");
+            draw_centered_value(canvas, x, period_baseline, WIND_FONT_SIZE_STATUS, period, CANVAS_BLACK);
+
+        }
+    }
+}
+
+static dashboard_layout_t draw_wind_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
+                             int top, int bottom, int size) {
+    dashboard_layout_t layout = {0};
+    layout.wind_baseline = bottom - MODULE_PADDING;
+    layout.chart_scale_height = layout.wind_baseline - (top + MODULE_GRAPH_INSET);
+    layout.direction_center = module_cell_center(top, 0);
+    layout.inset_labels = true;
+    if (size == 2) {
+        for (int knots = 5; knots <= 40; knots += 5) {
+            const int y = layout.wind_baseline - knots * layout.chart_scale_height / 40;
+            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) set_pixel(canvas, x, y, CANVAS_BLACK);
+        }
+    }
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+            const wind_renderer_sample_t *wind = &dashboard->days[day].samples[sample];
+            const int x = forecast_sample_center_x(day, sample);
+            if (size == 2) { draw_sample(canvas, x, wind, &layout); continue; }
+            char value[12];
+            if (wind->available) {
+                draw_arrow(canvas, x, module_cell_center(top, 0), wind->destination_degrees);
+                snprintf(value, sizeof(value), "%d", wind->sustained_kt);
+            } else snprintf(value, sizeof(value), "-");
+            draw_centered_value(canvas, x, module_text_baseline(module_cell_center(top, 1)), WIND_FONT_SIZE_STATUS, value, CANVAS_BLACK);
+            if (wind->available) snprintf(value, sizeof(value), "%d", wind->gust_kt);
+            draw_centered_value(canvas, x, module_text_baseline(module_cell_center(top, 2)), WIND_FONT_SIZE_STATUS, value, CANVAS_BLACK);
+        }
+    return layout;
+}
+
+static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
+                                  const dashboard_layout_t *layout, dashboard_layout_t *wind_layout) {
+    const int sizes[2] = { dashboard->wind_size, dashboard->swell_size };
+    const int large_count = (sizes[0] == 2) + (sizes[1] == 2);
+    const int small_count = (sizes[0] == 1) + (sizes[1] == 1);
+    const int available = layout->modules_bottom - DAY_HEADER_BOTTOM - small_count * MODULE_COMPACT_HEIGHT;
+    int top = DAY_HEADER_BOTTOM;
+    /* Large modules lead; equal-size modules retain Wind, Swell order. */
+    for (int size = 2; size >= 1; --size) {
+        for (int module = 0; module < 2; ++module) {
+            if (sizes[module] != size) continue;
+            const int height = size == 1 ? MODULE_COMPACT_HEIGHT :
+                available / large_count + (large_count == 2 && module == 1 ? available % 2 : 0);
+            if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+            if (module == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, size);
+            else draw_swell_module(canvas, dashboard, top, top + height, size);
+            top += height;
+        }
+    }
+    if (top > DAY_HEADER_BOTTOM && top < layout->modules_bottom)
+        horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+}
+
+/* Explicit order is independent of module size. Small rows retain their height. */
+static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard, dashboard_layout_t *wind_layout) {
+    int sizes[] = { dashboard->wind_size, dashboard->swell_size,
+        dashboard->show_weather, dashboard->show_temperature, dashboard->show_tide };
+    int fixed[] = { MODULE_COMPACT_HEIGHT, MODULE_COMPACT_HEIGHT,
+        MODULE_PADDING * 2 + MODULE_CELL, MODULE_PADDING * 2 + MODULE_TEXT_CELL, MODULE_TIDE_HEIGHT };
+    /* Preserve the shared weather/temperature card when these rows are adjacent. */
+    bool combined = false;
+    for (int i = 0; i < 4; ++i) {
+        if (dashboard->module_order[i] != 2 || !sizes[2] || !sizes[3]) continue;
+        int next = i + 1;
+        while (next < 5 && !sizes[dashboard->module_order[next]]) ++next;
+        combined = next < 5 && dashboard->module_order[next] == 3;
+    }
+    if (combined) {
+        fixed[2] = MODULE_PADDING * 2 + MODULE_CELL + MODULE_TEXT_CELL + MODULE_GAP;
+        sizes[3] = 0;
+    }
+    const int bottom = dashboard->show_dedicated_footer ? canvas_footer_top(canvas) : canvas_outer_bottom(canvas);
+    int available = bottom - DAY_HEADER_BOTTOM, large = 0;
+    for (int id = 0; id < 5; ++id) {
+        if (id < 2 && sizes[id] == 2) ++large;
+        else if (sizes[id]) available -= fixed[id];
+    }
+    int top = DAY_HEADER_BOTTOM, remaining = large;
+    for (int index = 0; index < 5; ++index) {
+        const int id = dashboard->module_order[index];
+        if (!sizes[id]) continue;
+        int height = fixed[id];
+        if (id < 2 && sizes[id] == 2) {
+            height = available / large + (--remaining == 0 ? available % large : 0);
+        }
+        if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+        if (id == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, sizes[id]);
+        else if (id == 1) draw_swell_module(canvas, dashboard, top, top + height, sizes[id]);
+        else if (id == 4) {
+            const dashboard_layout_t row = { .tide_top = top, .tide_bottom = top + height - 1 };
+            draw_tide(canvas, dashboard, &row);
+        } else {
+            for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+                for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+                    const int x = forecast_sample_center_x(day, sample);
+                    const wind_renderer_sample_t *slot = &dashboard->days[day].samples[sample];
+                    if (id == 2) {
+                        draw_weather(canvas, x, module_cell_center(top, 0), slot->weather);
+                        if (combined) draw_temperature(canvas, x, top, top + height - 1, slot,
+                            dashboard->temperature_fahrenheit, module_text_center(top, 0, true));
+                    }
+                    else draw_temperature(canvas, x, top, top + height - 1, slot,
+                        dashboard->temperature_fahrenheit, module_text_center(top, 0, false));
+                }
+            }
+        }
+        top += height;
+    }
+    if (top > DAY_HEADER_BOTTOM && top < bottom) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+}
+
 static void draw_wind_reference_lines(canvas_t *canvas,
                                       const dashboard_layout_t *layout) {
     const int graph_height = layout->wind_baseline - GRAPH_TOP;
@@ -1119,9 +1502,7 @@ static void draw_threshold_overlay(canvas_t *scratch, output_surface_t *output,
             const int sustained = clamp_int(source->sustained_kt, 0, 40);
             const int sustained_y =
                 layout->wind_baseline - sustained * layout->chart_scale_height / 40;
-            const int baseline = clamp_int(
-                sustained_y - 5, layout->wind_baseline - layout->chart_scale_height - 4,
-                layout->wind_baseline - 5);
+            const int baseline = wind_label_baseline(sustained_y, layout);
             if (baseline - 14 > y || baseline + 3 < y) continue;
 
             char value[12];
@@ -1173,6 +1554,16 @@ void wind_renderer_input_v2_init(wind_renderer_input_v2_t *input) {
     input->version = WIND_RENDERER_CONTRACT_VERSION;
     input->battery_percent = -1;
     input->threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        for (int hour = 0; hour < 24; ++hour) {
+            input->swell_hourly[day][hour] = -1;
+            input->secondary_swell_hourly[day][hour] = -1;
+        }
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample)
+            input->secondary_swell[day][sample] = (wind_renderer_swell_sample_t){-1, -1, -1};
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample)
+            input->swell[day][sample] = (wind_renderer_swell_sample_t){-1, -1, -1};
+    }
     input->show_weather = 1;
     input->show_dedicated_footer = 1;
 }
@@ -1229,6 +1620,20 @@ int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
     input->show_temperature = show_temperature;
     input->show_tide = show_tide;
     input->tide_available = tide_available;
+    return 0;
+}
+
+int wind_renderer_input_v2_set_swell(wind_renderer_input_v2_t *input,
+    int day_index, int sample_index, int height_cm, int period_tenths, int destination_degrees) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        day_index < 0 || day_index >= WIND_RENDERER_DAY_COUNT ||
+        sample_index < 0 || sample_index >= WIND_RENDERER_SAMPLES_PER_DAY ||
+        height_cm < -1 || height_cm > 10000 || period_tenths < -1 || period_tenths > 1000 ||
+        destination_degrees < -1 || destination_degrees >= 360) return -1;
+    if (!input->custom_modules) { input->wind_size = 1; input->swell_size = 2; }
+    input->custom_modules = 1;
+    input->swell[day_index][sample_index] = (wind_renderer_swell_sample_t){
+        height_cm, period_tenths, destination_degrees};
     return 0;
 }
 
@@ -1354,6 +1759,13 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
     result.battery_percent = input->battery_percent;
     result.display_mode = (wind_renderer_display_mode_t)input->display_mode;
     result.threshold_kt = input->threshold_kt;
+    result.custom_modules = input->custom_modules;
+    result.wind_size = input->wind_size;
+    result.swell_size = input->swell_size;
+    memcpy(result.swell_hourly, input->swell_hourly, sizeof(result.swell_hourly));
+    memcpy(result.secondary_swell_hourly, input->secondary_swell_hourly, sizeof(result.secondary_swell_hourly));
+    memcpy(result.secondary_swell, input->secondary_swell, sizeof(result.secondary_swell));
+    memcpy(result.swell, input->swell, sizeof(result.swell));
     result.show_weather = input->show_weather;
     result.show_temperature = input->show_temperature;
     result.show_tide = input->show_tide;
@@ -1399,6 +1811,8 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
             };
         }
     }
+    result.ordered_modules = input->ordered_modules;
+    memcpy(result.module_order, input->module_order, sizeof(result.module_order));
     if (!dashboard_valid(&result)) return -2;
     *dashboard = result;
     return 0;
@@ -1461,11 +1875,20 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
             : canvas_size;
     if (!dashboard || !output_pixels || output_size < required_size) return -1;
     if (!dashboard_valid(dashboard)) return -3;
+    if (dashboard->ordered_modules) {
+        unsigned seen = 0;
+        for (int i = 0; i < 5; ++i) {
+            int id = dashboard->module_order[i];
+            if (id < 0 || id >= 5 || (seen & (1u << id))) return -3;
+            seen |= 1u << id;
+        }
+    }
 
     canvas_t canvas = {0};
     canvas.pixels = (uint8_t *)malloc(canvas_size);
     if (!canvas.pixels) return -2;
     canvas.height = canvas_height;
+    canvas.smooth_curves = dashboard->custom_modules;
     canvas.size = canvas_size;
     canvas.antialias_text = output_format == OUTPUT_RGBA ||
                             output_format == OUTPUT_RGBA_GC16 ||
@@ -1481,7 +1904,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                  frame_bottom - OUTER_TOP + 1);
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, HEADER_BOTTOM, CANVAS_BLACK);
 
-    draw_wind_reference_lines(&canvas, &layout);
+    if (!dashboard->custom_modules) draw_wind_reference_lines(&canvas, &layout);
 
     const int header_text_right =
         dashboard->show_dedicated_footer ? CONTENT_RIGHT : 630;
@@ -1510,12 +1933,12 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     }
     if (!dashboard->show_dedicated_footer) draw_header_status(&canvas, dashboard);
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM, CANVAS_BLACK);
-    if (dashboard->show_weather || dashboard->show_temperature) {
+    if (!dashboard->ordered_modules && (dashboard->show_weather || dashboard->show_temperature)) {
         const int conditions_top =
             dashboard->show_weather ? layout.weather_top : layout.temperature_top;
         horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, conditions_top, CANVAS_BLACK);
     }
-    if (dashboard->show_tide)
+    if (!dashboard->ordered_modules && dashboard->show_tide)
         horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.tide_top, CANVAS_BLACK);
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         const int column_x = day_column_x(day);
@@ -1529,23 +1952,28 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                   WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY,
                   safe_text(dashboard->days[day].day));
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
-            if (dashboard->state != WIND_RENDERER_UNAVAILABLE)
+            if (!dashboard->custom_modules && dashboard->state != WIND_RENDERER_UNAVAILABLE)
                 draw_sample(&canvas, forecast_sample_center_x(day, sample),
                             &dashboard->days[day].samples[sample], &layout);
             const int center_x = forecast_sample_center_x(day, sample);
             const wind_renderer_sample_t *slot = &dashboard->days[day].samples[sample];
-            if (dashboard->state != WIND_RENDERER_UNAVAILABLE &&
+            if (!dashboard->ordered_modules && dashboard->state != WIND_RENDERER_UNAVAILABLE &&
                 dashboard->show_weather)
                 draw_weather(&canvas, center_x, layout.weather_center, slot->weather);
-            if (dashboard->state != WIND_RENDERER_UNAVAILABLE &&
+            if (!dashboard->ordered_modules && dashboard->state != WIND_RENDERER_UNAVAILABLE &&
                 dashboard->show_temperature)
                 draw_temperature(&canvas, center_x, layout.temperature_top,
                                  layout.temperature_bottom, slot,
-                                 dashboard->temperature_fahrenheit);
+                                 dashboard->temperature_fahrenheit,
+                                 dashboard->custom_modules ? module_text_center(layout.temperature_top, 0, dashboard->show_weather != 0) : 0);
         }
     }
 
-    if (dashboard->state != WIND_RENDERER_UNAVAILABLE && dashboard->show_tide)
+    dashboard_layout_t wind_overlay_layout = layout;
+    if (dashboard->ordered_modules) draw_ordered_modules(&canvas, dashboard, &wind_overlay_layout);
+    else if (dashboard->custom_modules) draw_modules(&canvas, dashboard, &layout, &wind_overlay_layout);
+
+    if (!dashboard->ordered_modules && dashboard->state != WIND_RENDERER_UNAVAILABLE && dashboard->show_tide)
         draw_tide(&canvas, dashboard, &layout);
 
     if (dashboard->state == WIND_RENDERER_UNAVAILABLE) {
@@ -1587,8 +2015,12 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         .format = output_format,
     };
     if (output_result == 0 && dashboard->display_mode == WIND_RENDERER_MODE_THRESHOLD &&
-        dashboard->state != WIND_RENDERER_UNAVAILABLE)
-        draw_threshold_overlay(&canvas, &output, dashboard, &layout);
+        dashboard->state != WIND_RENDERER_UNAVAILABLE) {
+        if (!dashboard->custom_modules) draw_threshold_overlay(&canvas, &output, dashboard, &layout);
+        else if (dashboard->wind_size == 2) {
+            draw_threshold_overlay(&canvas, &output, dashboard, &wind_overlay_layout);
+        }
+    }
     if (output_result == 0)
         draw_low_battery_overlay(&canvas, &output, dashboard->battery_percent,
                                  dashboard->show_dedicated_footer != 0);

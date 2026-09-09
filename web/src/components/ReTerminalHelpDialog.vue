@@ -22,7 +22,7 @@ const emit = defineEmits(['update:open'])
   <DialogRoot :open="open" @update:open="emit('update:open', $event)">
     <DialogPortal>
       <DialogOverlay class="reterminal-help__overlay" />
-      <DialogContent class="reterminal-help">
+      <DialogContent class="reterminal-help reterminal-device-help">
         <header>
           <DialogTitle class="reterminal-help__title">Windpeek for reTerminal</DialogTitle>
           <DialogDescription class="reterminal-help__description">
@@ -43,3 +43,7 @@ const emit = defineEmits(['update:open'])
     </DialogPortal>
   </DialogRoot>
 </template>
+
+<style scoped>
+.reterminal-device-help { inline-size: min(31rem, calc(100% - 2rem)); }
+</style>

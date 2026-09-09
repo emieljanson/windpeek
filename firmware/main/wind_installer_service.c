@@ -140,7 +140,7 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
     };
     static const char *const display_keys[] = {
         "showThreshold", "threshold", "showWeather", "showTemperature", "showTide",
-        "showDedicatedFooter", "timeFormat", "temperatureUnit",
+        "showDedicatedFooter", "timeFormat", "temperatureUnit", "windSize", "swellSize", "moduleOrder", "swellModel",
     };
     memset(configuration, 0, sizeof(*configuration));
     const cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
@@ -148,7 +148,7 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
     const cJSON *display = cJSON_GetObjectItemCaseSensitive(json, "display");
     if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 7) ||
         !object_has_only_keys(spot, spot_keys, 5) ||
-        !object_has_only_keys(display, display_keys, 8) ||
+        !object_has_only_keys(display, display_keys, 12) ||
         !copy_json_string(json, "boardId", configuration->board_id,
                           sizeof(configuration->board_id)) ||
         !copy_json_string(json, "deviceTimezone", configuration->device_timezone,
@@ -191,6 +191,25 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
     configuration->display.threshold_kt = (uint8_t) threshold->valuedouble;
     configuration->display.use_24_hour = strcmp(time_format, "24-hour") == 0;
     configuration->display.temperature_fahrenheit = strcmp(temperature_unit, "fahrenheit") == 0;
+    if (!copy_json_string(display, "swellModel", configuration->display.swell_model, sizeof(configuration->display.swell_model))) return false;
+    const char *sizes[] = { "off", "small", "large" };
+    const char *modules[] = { "wind", "swell", "weather", "temperature", "tide" };
+    char wind_size[8], swell_size[8];
+    if (!copy_json_string(display, "windSize", wind_size, sizeof(wind_size)) ||
+        !copy_json_string(display, "swellSize", swell_size, sizeof(swell_size))) return false;
+    configuration->display.wind_size = configuration->display.swell_size = 255;
+    for (int i = 0; i < 3; ++i) {
+        if (!strcmp(wind_size, sizes[i])) configuration->display.wind_size = i;
+        if (!strcmp(swell_size, sizes[i])) configuration->display.swell_size = i;
+    }
+    const cJSON *order = cJSON_GetObjectItemCaseSensitive(display, "moduleOrder");
+    if (!cJSON_IsArray(order) || cJSON_GetArraySize(order) != 5) return false;
+    for (int i = 0; i < 5; ++i) {
+        const cJSON *item = cJSON_GetArrayItem(order, i);
+        if (!cJSON_IsString(item)) return false;
+        configuration->display.module_order[i] = 255;
+        for (int j = 0; j < 5; ++j) if (!strcmp(item->valuestring, modules[j])) configuration->display.module_order[i] = j;
+    }
     return installed_configuration_validate(configuration);
 }
 

@@ -24,6 +24,11 @@ describe('fetchIpLocation', () => {
     }))
   })
 
+  it('preserves a valid country code for the initial temperature unit', async () => {
+    const fetcher = async () => new Response(JSON.stringify({ latitude: 40, longitude: -74, countryCode: 'us', city: 'ignored' }))
+    await expect(fetchIpLocation({ endpoint: '/location', fetcher })).resolves.toEqual({ latitude: 40, longitude: -74, countryCode: 'US' })
+  })
+
   it('does not make a request when the endpoint is missing', async () => {
     const fetcher = vi.fn()
 

@@ -28,9 +28,34 @@ import LandingHero from '../src/components/LandingHero.vue'
 
 describe('landing hero nearby default', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/')
     projectiveScreen.setFrame.mockClear()
     projectiveScreen.draw.mockClear()
     projectiveScreen.dispose.mockClear()
+  })
+
+  it('renders the swell landing with swell first, compact wind and its own data request', async () => {
+    window.history.replaceState({}, '', '/?site=swell')
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+    const swellRequest = vi.spyOn(store, 'refreshSwell').mockResolvedValue(false)
+    const wrapper = mount(LandingHero, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(swellRequest).toHaveBeenCalledOnce())
+    const renderer = await loadSharedRenderer()
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenCalledWith(
+      expect.objectContaining({ windSize: 1, swellSize: 2, moduleOrder: [1, 0, 2, 3, 4], showTemperature: false }),
+      expect.anything(),
+    ))
+    expect(wrapper.get('.hero-link').attributes('href')).toContain('site=swell')
+    store.swellStatus = 'failed'
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ refreshFailed: true }), expect.anything(),
+    ))
+    wrapper.unmount()
+    window.history.replaceState({}, '', '/')
   })
 
   it('starts forecast and tide before the fire-and-forget nearby lookup', async () => {
@@ -53,11 +78,9 @@ describe('landing hero nearby default', () => {
     )
     await vi.waitFor(() => expect(projectiveScreen.setFrame).toHaveBeenCalledWith(frame))
     const photo = wrapper.get('picture source')
-    expect(wrapper.get('picture img').attributes('src')).toContain('windpeek-hero-yellow-v17-1672w.jpg')
-    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-960w.webp 960w')
-    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-1672w.webp 1672w')
-    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-2508w.webp 2508w')
-    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v17-2x.webp 3344w')
+    expect(wrapper.get('picture img').attributes('src')).toContain('windpeek-hero-yellow-v21-1672w.jpg')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v21-960w.webp 960w')
+    expect(photo.attributes('srcset')).toContain('windpeek-hero-yellow-v21-1672w.webp 1672w')
     // Account for the calibrated 1.2x photo zoom, not just the visible crop.
     expect(photo.attributes('sizes')).toBe('(max-width: 666px) calc(120vw - 28.8px), 770.4px')
     expect(projectiveScreen.draw).toHaveBeenCalledWith(

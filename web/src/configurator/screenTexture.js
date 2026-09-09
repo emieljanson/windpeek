@@ -86,6 +86,15 @@ export async function createScreenTexture({
       currentForecast = nextForecast
       currentConfig = nextConfig
     },
+    exportPng() {
+      if (disposed) throw new Error('The screen texture has been disposed')
+      const { data, width, height } = texture.image
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0)
+      return canvas.toDataURL('image/png')
+    },
     dispose() {
       if (disposed) return
       disposed = true

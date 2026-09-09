@@ -498,7 +498,7 @@ describe('configurator store', () => {
     expect(store.forecast).toMatchObject({ modelId: 'ncep_gfs_seamless', model: 'NOAA GFS' })
     expect(store.forecastStatus).toBe('rendering')
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
-    expect(store.forecastMessage).toBe('Live NOAA GFS forecast for Brouwersdam.')
+    expect(store.forecastMessage).toBe('Live GFS forecast for Brouwersdam.')
   })
 
   it('changes the requested model during initial loading without duplicating the API call', async () => {
@@ -579,7 +579,7 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('ncep_gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not load NOAA GFS. Still showing BEST MATCH.')
+    expect(store.forecastMessage).toBe('Could not load GFS. Still showing BEST MATCH.')
   })
 
   it('does not publish an old pending forecast under a newly selected spot', async () => {
@@ -656,6 +656,6 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('ncep_gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not show NOAA GFS. Still showing BEST MATCH.')
+    expect(store.forecastMessage).toBe('Could not show GFS. Still showing BEST MATCH.')
   })
 })

@@ -13,6 +13,8 @@ void wind_display_config_default(wind_display_config_t *config)
         .show_dedicated_footer = false,
         .use_24_hour = true,
         .temperature_fahrenheit = false,
+        .wind_size = 2,
+        .module_order = {0,1,2,3,4},
     };
 }
 
@@ -23,7 +25,14 @@ bool wind_display_config_stored_version_supported(uint32_t stored_version)
 
 bool wind_display_config_validate(const wind_display_config_t *config)
 {
-    return config && config->version == WIND_DISPLAY_CONFIG_VERSION &&
+    if (!config || config->wind_size > 2 || config->swell_size > 2) return false;
+    unsigned seen = 0;
+    for (int i = 0; i < 5; ++i) {
+        unsigned id = config->module_order[i];
+        if (id >= 5 || (seen & (1u << id))) return false;
+        seen |= 1u << id;
+    }
+    return config->version == WIND_DISPLAY_CONFIG_VERSION &&
            (config->display_mode == WIND_RENDERER_MODE_THRESHOLD ||
             config->display_mode == WIND_RENDERER_MODE_SOLID) &&
            config->threshold_kt >= WIND_RENDERER_MIN_THRESHOLD_KT &&
@@ -42,5 +51,8 @@ uint64_t wind_display_config_signature(const wind_display_config_t *config)
     value = value * 131u + (config->show_dedicated_footer ? 1u : 0u);
     value = value * 131u + (config->use_24_hour ? 1u : 0u);
     value = value * 131u + (config->temperature_fahrenheit ? 1u : 0u);
+    value = value * 131u + config->wind_size;
+    value = value * 131u + config->swell_size;
+    for (int i = 0; i < 5; ++i) value = value * 131u + config->module_order[i];
     return value;
 }

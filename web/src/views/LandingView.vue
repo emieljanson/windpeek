@@ -1,27 +1,31 @@
 <script setup>
+import { siteVariant, configuratorLink } from '../marketing/siteVariant'
 import LandingHero from '../components/LandingHero.vue'
 import ReTerminalComparison from '../components/ReTerminalComparison.vue'
+const variant = siteVariant()
+const configureHref = configuratorLink()
 </script>
 
 <template>
   <div class="landing-page">
     <main id="main-content">
       <header>
-        <h1>The always-on wind forecast for your favorite spot</h1>
-        <p class="intro">Windpeek turns a reTerminal into a quiet e-ink display that keeps the next five days visible at home.</p>
+        <h1>{{ variant.title }}</h1>
+        <p class="intro">{{ variant.intro }}</p>
       </header>
 
       <LandingHero />
 
       <section class="story" aria-label="About Windpeek">
-        <p>Wind forecasts change. You check once, it looks like nothing, and later discover it turned into a great session. Windpeek keeps the whole forecast in sight, so you catch the change instead of hearing about it afterwards.</p>
+        <p>{{ variant.story }}</p>
       </section>
 
       <section class="landing-section personalize" id="build">
         <ul class="facts">
-          <li><strong>The whole picture</strong> — wind, gusts, direction, weather, temperature and tide</li>
+          <li><strong>The whole picture</strong> — {{ variant.id === 'swell' ? 'swell, wind, weather, temperature and tide' : 'wind, waves, weather, temperature and tide' }}</li>
+          <li><strong>Your screen, your choice</strong> — choose what to show and how it looks</li>
           <li><strong>Always in sight</strong> — five days that update without opening an app</li>
-          <li><strong>16 forecast models</strong> — worldwide ECMWF, ICON and GFS + 13 local models</li>
+          <li><strong>Global &amp; regional models</strong> — choose your wind and wave forecasts</li>
           <li><strong>Any spot, worldwide</strong> — search the catalog or add a location on the map</li>
           <li><strong>Months between charges</strong> — built around low-power e-ink hardware</li>
         </ul>
@@ -35,8 +39,8 @@ import ReTerminalComparison from '../components/ReTerminalComparison.vue'
 
         <div class="configure-step">
           <h2>Configure &amp; install</h2>
-          <p>Installing Windpeek is simple: choose your spot, connect your reTerminal with USB and press Install.</p>
-          <a class="button configure-action configure-action--desktop" href="?configure">Configure &amp; install</a>
+          <p>Choose your spot, customize your forecast screen, connect your reTerminal with USB and press Install.</p>
+          <a class="button configure-action configure-action--desktop" :href="configureHref">Configure &amp; install</a>
           <button class="button configure-action configure-action--mobile" type="button" disabled>Configure &amp; install on desktop</button>
         </div>
       </section>
@@ -46,19 +50,15 @@ import ReTerminalComparison from '../components/ReTerminalComparison.vue'
         <div class="faq-list">
           <details>
             <summary>Will my spot be available?</summary>
-            <p>You can search the spot catalog or add any location on the map. Global forecast models cover spots worldwide; regional models and tide depend on location.</p>
+            <p>You can search the spot catalog or add any location on the map. Wind forecasts are available worldwide. Regional models, wave data and tide availability depend on your spot.</p>
           </details>
           <details>
             <summary>Which forecast models can I use?</summary>
-            <p>Forecasts come from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Choose worldwide models ECMWF, DWD ICON and NOAA GFS, or one of 13 high-resolution local models, including KNMI HARMONIE, DMI HARMONIE, AROME, UKV and HRRR, depending on your spot.</p>
+            <p>Start with Best Match for automatic selection, or choose wind and wave models separately in Advanced. Wind options include ECMWF, ICON, GFS and regional models for your spot. Wave options include MFWAM, GFS Wave and EWAM. Forecast data comes from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.</p>
           </details>
           <details>
             <summary>What can I show on the screen?</summary>
-            <p>Wind, gusts and direction are always included. You can also show weather, temperature, tide and a wind threshold, and choose your units.</p>
-          </details>
-          <details>
-            <summary>Will Windpeek show swell?</summary>
-            <p>Not yet. Swell support is planned, so Windpeek can eventually show more of the conditions that determine whether a session is worth it.</p>
+            <p>Show wind and waves as graphs or compact numbers, or hide either one. Wind includes gusts and direction; waves include swell height, direction and period. You can also show or hide weather, temperature and tide, and add a minimum wind threshold to the wind graph.</p>
           </details>
           <details>
             <summary>What do I need to install Windpeek?</summary>
