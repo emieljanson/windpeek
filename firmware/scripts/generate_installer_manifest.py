@@ -210,7 +210,7 @@ def generate_installer_bundle(
         "firmwareLayoutVersion": FIRMWARE_LAYOUT_VERSION,
         "flashSize": flash_size,
         "protocol": {"minimum": 1, "maximum": 1},
-        "configuration": {"minimum": 4, "maximum": 4},
+        "configuration": {"minimum": 5, "maximum": 5},
         "parts": parts,
         "cleanInstall": {"eraseFlash": True, "parts": [dict(part) for part in parts]},
         "preservingUpdate": {

@@ -1,5 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { siteVariant, configuratorLink } from '../marketing/siteVariant'
 import { publicAssetUrl } from '../assets/publicAssetUrl'
 import { createRendererInput } from '../renderer/rendererInput'
 import { landingDisplayConfiguration } from '../marketing/landingDisplay'
@@ -20,7 +21,7 @@ const heroImage = publicAssetUrl(LANDING_HERO_PRESENTATION.imageFallback)
 const heroImageWebp = publicAssetUrl(LANDING_HERO_PRESENTATION.imageWebp)
 const heroImageSrcset = [
   ...LANDING_HERO_PRESENTATION.responsiveWebp.map(({ image, width }) => `${publicAssetUrl(image)} ${width}w`),
-  `${heroImageWebp} ${WIDTH * 2}w`,
+  `${heroImageWebp} ${WIDTH}w`,
 ].join(', ')
 // Match the 642px scene / 24px viewport gutter, including the calibrated zoom.
 const zoomedSize = size => Math.round(size * HERO_FRAMING.zoom * 100) / 100
@@ -31,6 +32,8 @@ const heroMediaStyle = Object.freeze({
   '--hero-focus-y': `${-HERO_FRAMING.focusY}%`,
 })
 
+const variant = siteVariant()
+const configureHref = configuratorLink()
 const store = useConfiguratorStore()
 const canvas = ref(null)
 const screenReady = ref(false)
@@ -40,7 +43,7 @@ let unmounted = false
 
 function drawForecast(forecast) {
   if (!renderer || !projectiveScreen || !forecast) return
-  const input = createRendererInput(forecast, landingDisplayConfiguration(store.tide))
+  const input = createRendererInput(forecast, landingDisplayConfiguration(store.tide, variant, store.swell))
   const frame = renderer.renderPreviewForDisplay(input, RENDERER_DISPLAYS.E1002_SPECTRA6)
   projectiveScreen.setFrame(frame)
   projectiveScreen.draw(SCREEN_CORNERS, SCREEN_FINISH)
@@ -48,13 +51,17 @@ function drawForecast(forecast) {
 }
 
 watch(
-  [() => store.forecastRevision, () => store.tide],
+  [() => store.forecastRevision, () => store.tide, () => store.swell],
   () => drawForecast(store.forecast),
 )
 
 onMounted(async () => {
   void store.initializeForecast()
   void store.initializeTide()
+  if (variant.id === 'swell') {
+    store.swellFocus = true
+    void store.refreshSwell()
+  }
   void store.initializeNearbyDefault()
 
   try {
@@ -89,7 +96,7 @@ onBeforeUnmount(() => {
     :data-forecast-spot="store.forecast?.spotId"
     :data-forecast-revision="store.forecastRevision"
   >
-    <a class="hero-link" href="?configure" aria-label="Open the Windpeek configurator">
+    <a class="hero-link" :href="configureHref" aria-label="Open the forecast configurator">
       <div class="hero-scene">
         <div class="hero-media" :style="heroMediaStyle">
           <picture>
@@ -98,7 +105,7 @@ onBeforeUnmount(() => {
               :src="heroImage"
               width="1672"
               height="941"
-              alt="Windpeek on a yellow designer sideboard showing a five-day e-ink forecast"
+              :alt="`${variant.name} on a yellow sideboard showing a five-day ${variant.id === 'swell' ? 'swell' : 'wind'} forecast`"
               fetchpriority="high"
             >
           </picture>

@@ -7,6 +7,7 @@ import WindpeekSettings from '../src/components/WindpeekSettings.vue'
 import ReTerminalHelpDialog from '../src/components/ReTerminalHelpDialog.vue'
 import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
 import SettingCombobox from '../src/components/settings/SettingCombobox.vue'
+import SettingSegments from '../src/components/settings/SettingSegments.vue'
 import SettingSelect from '../src/components/settings/SettingSelect.vue'
 import { useConfiguratorStore } from '../src/stores/configurator'
 
@@ -40,6 +41,73 @@ describe('Windpeek settings panel', () => {
     document.body.innerHTML = ''
   })
 
+  it('opens model explanations from labels without changing the selection', async () => {
+    const store = useConfiguratorStore()
+    mountSettings()
+    const windModel = store.selectedModelId
+    const waveModel = store.selectedSwellModelId
+    for (const kind of ['wind', 'wave']) {
+      const trigger = wrapper.get(`button[aria-label="About ${kind} models"]`)
+      await trigger.trigger('click')
+      await nextTick()
+      const dialog = document.body.querySelector('[role="dialog"]')
+      expect(dialog).not.toBeNull()
+      expect(dialog.textContent).toContain(kind === 'wind' ? 'Wind models' : 'Wave models')
+      expect(dialog.textContent).toContain(kind === 'wind' ? 'HARM-NL' : 'GWAM')
+      const rows = [...dialog.querySelectorAll('table:first-of-type tbody tr')]
+      expect(rows.length).toBeGreaterThan(0)
+      for (const row of rows) {
+        expect(row.querySelectorAll('td')).toHaveLength(2)
+        expect(row.querySelectorAll('td')[0].textContent).toMatch(/km|Varies/)
+        expect(row.querySelectorAll('td')[1].textContent.length).toBeGreaterThan(0)
+      }
+      if (kind === 'wind') {
+        const offeredNames = [...dialog.querySelector('table').querySelectorAll('tbody th')].map(cell => cell.textContent)
+        expect(offeredNames).toEqual(store.availableForecastModels.map(model => model.label))
+        const otherRegions = dialog.querySelector('details')
+        expect(otherRegions.open).toBe(false)
+        expect(otherRegions.textContent).toContain('HRRR')
+      }
+      document.body.querySelector(`button[aria-label="Close ${kind} model help"]`).click()
+      await nextTick()
+      await nextTick()
+      expect(trigger.attributes('aria-expanded')).toBe('false')
+    }
+    expect(store.selectedModelId).toBe(windModel)
+    expect(store.selectedSwellModelId).toBe(waveModel)
+  })
+
+  it('collapses Advanced on entering Install and keeps it closed on return', async () => {
+    mountSettings()
+    const details = wrapper.get('.forecast-advanced')
+    details.element.open = true
+    await details.trigger('toggle')
+    expect(details.element.open).toBe(true)
+    await wrapper.setProps({ installerOpen: true })
+    expect(details.element.open).toBe(false)
+    await wrapper.setProps({ installerOpen: false })
+    expect(details.element.open).toBe(false)
+  })
+
+  it('changes Wind and Swell independently and hides controls for compact wind', async () => {
+    const store = useConfiguratorStore()
+    store.swellStatus = 'ready'
+    mountSettings()
+    rowControl('Wind').findComponent(SettingSelect).vm.$emit('update:modelValue', 'small')
+    rowControl('Waves').findComponent(SettingSelect).vm.$emit('update:modelValue', 'large')
+    await nextTick()
+    expect(store.windSize).toBe('small')
+    expect(store.swellSize).toBe('large')
+    expect(wrapper.text()).not.toContain('Wind threshold')
+    expect(wrapper.text()).not.toContain('Export PNG')
+    expect(wrapper.text()).not.toContain('Open-Meteo Marine')
+    rowControl('Wind').findComponent(SettingSelect).vm.$emit('update:modelValue', 'off')
+    rowControl('Waves').findComponent(SettingSelect).vm.$emit('update:modelValue', 'off')
+    await nextTick()
+    expect(store.windSize).toBe('off')
+    expect(store.swellSize).toBe('off')
+  })
+
   it('uses the compact inspector hierarchy with the active spot ready to replace', async () => {
     mountSettings()
 
@@ -48,12 +116,16 @@ describe('Windpeek settings panel', () => {
     expect(wrapper.findAll('.setting-section__title')).toHaveLength(0)
     expect(wrapper.findAll('.setting-row__label').map((label) => label.text())).toEqual([
       'reTerminal',
-      'Wind model',
-      'Wind threshold',
+      'Wind',
+      'Waves',
       'Weather',
       'Temperature',
       'Tide',
-      'Legend',
+      'Wind model',
+      'Wave model',
+      'Wind threshold',
+      'Temperature',
+      'Footer',
     ])
     expect(wrapper.text()).not.toContain('Treatment')
     expect(wrapper.text()).not.toContain('Time format')
@@ -123,22 +195,14 @@ describe('Windpeek settings panel', () => {
     expect(wrapper.get('.settings-shell').classes()).toContain('settings-shell--compact')
     expect(wrapper.find('.inspector-search').exists()).toBe(false)
     expect(wrapper.find('.inspector-divider').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Wind model')
-    expect(wrapper.findAll('select.setting-select__native')).toHaveLength(0)
-    expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(0)
+    expect(wrapper.findComponent(SettingSegments).exists()).toBe(true)
+    expect(wrapper.get('details').attributes('open')).toBeUndefined()
     expect(wrapper.find('[name="device"]').exists()).toBe(false)
-    expect(wrapper.find('button[aria-label="About reTerminal devices"]').exists()).toBe(false)
-    const pills = wrapper.findAll('.mobile-display-pill')
-    expect(pills.map((pill) => pill.text())).toEqual(['Threshold', 'Weather', 'Temp', 'Tide'])
-    expect(pills.map((pill) => pill.attributes('aria-pressed'))).toEqual(['false', 'true', 'false', 'false'])
+    rowControl('Wind').findComponent(SettingSelect).vm.$emit('update:modelValue', 'off')
+    await nextTick()
+    expect(store.windSize).toBe('off')
+    expect(rowControl('Wind model').exists()).toBe(true)
 
-    await pills[0].trigger('click')
-    await pills[2].trigger('click')
-    expect(store.selectedBoardId).toBe('seeedstudio_reterminal_e1002')
-    expect(store.showThreshold).toBe(true)
-    expect(store.temperatureChoice).toBe('celsius')
-    expect(pills[0].attributes('aria-pressed')).toBe('true')
-    expect(pills[2].attributes('aria-pressed')).toBe('true')
   })
 
   it('explains the reTerminal choices from the settings label', async () => {
@@ -159,25 +223,25 @@ describe('Windpeek settings panel', () => {
     expect(dialog?.textContent).toContain('Windpeek only uses colour for the threshold line')
     expect(dialog?.textContent).toContain('Direct installation supports E1001, E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
-    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
-    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+    expect(dialog?.textContent).toContain('7.3″, 6 colours')
+    expect(dialog?.textContent).toContain('10.3″, 16 greys')
     expect(dialog?.textContent).not.toContain('touch')
     expect(dialog?.textContent).not.toContain('affiliate')
     const buyLinks = [...dialog.querySelectorAll('a')]
     const deviceImages = [...dialog.querySelectorAll('img')]
     expect(deviceImages.map((image) => image.getAttribute('src'))).toEqual([
-      '/devices/previews/e1001.png',
-      '/devices/previews/e1002.png',
-      '/devices/previews/e1003.png',
+      '/devices/previews/e1001-wind.png',
+      '/devices/previews/e1002-wind.png',
+      '/devices/previews/e1003-wind.png',
     ])
     expect(deviceImages.every((image) => image.getAttribute('alt') === '')).toBe(true)
     expect(buyLinks.map((link) => link.textContent.trim().replace(/\s+/g, ' '))).toEqual([
-      'Buy ~$70',
-      'Buy ~$107',
-      'Buy ~$160',
+      'Buy for ~$74',
+      'Buy for ~$107',
+      'Buy for ~$160',
     ])
     expect(buyLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
-      'Buy reTerminal E1001, approximately $70',
+      'Buy reTerminal E1001, approximately $74',
       'Buy reTerminal E1002, approximately $107',
       'Buy reTerminal E1003, approximately $160',
     ])
@@ -234,10 +298,10 @@ describe('Windpeek settings panel', () => {
 
     expect(wrapper.get('.settings-shell').classes()).not.toContain('settings-shell--compact')
     expect(wrapper.findAll('select.setting-select__native')).toHaveLength(0)
-    expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(3)
+    expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(5)
 
     expect(modelSelect.props('options').map((option) => option.label)).toEqual([
-      'Best Match', 'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
+      'Best Match', 'ECMWF', 'ICON', 'GFS',
     ])
     expect(modelSelect.props('options').map((option) => Boolean(option.separatorBefore))).toEqual([
       false, true, false, false,
@@ -257,8 +321,8 @@ describe('Windpeek settings panel', () => {
     const modelOptions = rowControl('Wind model').findComponent(SettingSelect).props('options')
     expect(modelOptions.map((option) => option.label)).toEqual([
       'Best Match',
-      'KNMI HARMONIE', 'DMI HARMONIE',
-      'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
+      'HARM-NL', 'HARM-DK',
+      'ECMWF', 'ICON', 'GFS',
     ])
     expect(modelOptions.map((option) => Boolean(option.separatorBefore))).toEqual([
       false, true, false, true, false, false,
@@ -285,22 +349,18 @@ describe('Windpeek settings panel', () => {
     expect(rowControl('Minimum wind').get('input').element.value).toBe('24')
   })
 
-  it('maps Temperature to Hide, Celsius, or Fahrenheit as one setting', async () => {
+  it('toggles weather and temperature independently while keeping units in Advanced', async () => {
     const store = useConfiguratorStore()
     mountSettings()
-    const temperatureSelect = rowControl('Temperature').findComponent(SettingSelect)
-
-    expect(store.temperatureChoice).toBe('hide')
-    expect(temperatureSelect.props('options').map((option) => option.label)).toEqual([
-      'Hide', 'Celsius', 'Fahrenheit',
-    ])
-    temperatureSelect.vm.$emit('update:modelValue', 'fahrenheit')
-    await nextTick()
-    expect(store.temperatureChoice).toBe('fahrenheit')
-
-    temperatureSelect.vm.$emit('update:modelValue', 'hide')
-    await nextTick()
-    expect(store.temperatureChoice).toBe('hide')
+    const unit = wrapper.find('.forecast-advanced').findComponent(SettingSegments)
+    unit.vm.$emit('update:modelValue', 'fahrenheit')
+    await rowControl('Temperature').get('[role="switch"]').trigger('click')
+    expect([store.showWeather, store.showTemperature]).toEqual([true, true])
+    await rowControl('Weather').get('[role="switch"]').trigger('click')
+    expect([store.showWeather, store.showTemperature]).toEqual([false, true])
+    await rowControl('Temperature').get('[role="switch"]').trigger('click')
+    expect([store.showWeather, store.showTemperature]).toEqual([false, false])
+    expect(store.temperatureUnit).toBe('fahrenheit')
   })
 
   it('shows Tide effectively off while unavailable without losing its preference', async () => {

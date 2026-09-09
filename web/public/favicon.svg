@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="7" fill="#171717"/>
-  <path fill="#f2f2ec" d="M8.5 5.5h12v3h-9v18h-3v-21Zm9 3h6v3h-6v-3Zm6 3h3v9h-3v-9Zm-12 6h9v3h-9v-3Zm6 3h6v3h-6v-3Z"/>
+  <!-- Whole pixels at 16px; snap the mark at fractional display scales too. -->
+  <path fill="#f2f2ec" shape-rendering="crispEdges" d="M8 6h12v4h-8v16H8V6Zm10 4h6v4h-6v-4Zm6 4h4v6h-4v-6Zm-12 2h8v4h-8v-4Zm6 4h6v4h-6v-4Z"/>
 </svg>

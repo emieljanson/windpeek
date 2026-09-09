@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest'
 import LandingView from '../src/views/LandingView.vue'
 
 describe('Windpeek landing page', () => {
+  it('uses swell renders for all three devices on the swell landing', () => {
+    window.history.replaceState({}, '', '/?site=swell')
+    const wrapper = mount(LandingView, { global: { stubs: { LandingHero: true } } })
+    expect(wrapper.findAll('.hardware-model img').map(image => image.attributes('src'))).toEqual([
+      '/devices/previews/e1001-swell.png', '/devices/previews/e1002-swell.png', '/devices/previews/e1003-swell.png',
+    ])
+    wrapper.unmount()
+    window.history.replaceState({}, '', '/')
+  })
+
   it('presents every compatible device equally before the configuration step', () => {
     const wrapper = mount(LandingView, {
       global: {
@@ -15,10 +25,10 @@ describe('Windpeek landing page', () => {
     expect(wrapper.get('h1').text()).toBe('The always-on wind forecast for your favorite spot')
     expect(wrapper.get('.intro').text()).toContain('e-ink display')
     expect(wrapper.get('.story').text()).toContain('later discover it turned into a great session')
-    expect(wrapper.findAll('.facts li')).toHaveLength(5)
-    expect(wrapper.get('.facts').text()).toContain('16 forecast models')
-    expect(wrapper.get('.facts').text()).toContain('worldwide ECMWF, ICON and GFS')
-    expect(wrapper.get('.facts').text()).toContain('13 local models')
+    expect(wrapper.findAll('.facts li')).toHaveLength(6)
+    expect(wrapper.get('.facts').text()).toContain('Global & regional models')
+    expect(wrapper.get('.facts').text()).toContain('wind and wave forecasts')
+    expect(wrapper.get('.facts').text()).toContain('Your screen, your choice')
     expect(wrapper.get('.facts').text()).not.toContain('choose units')
     expect(wrapper.get('.faq').text()).not.toContain('Best fit')
     expect(wrapper.findAll('h2').map(heading => heading.text())).toEqual([
@@ -29,7 +39,7 @@ describe('Windpeek landing page', () => {
     expect(wrapper.get('.purchase').text()).toContain('free software')
     expect(wrapper.get('.purchase').text()).toContain('~$74')
     expect(wrapper.get('.personalize').text()).toContain('Months between charges')
-    expect(wrapper.findAll('.faq details')).toHaveLength(7)
+    expect(wrapper.findAll('.faq details')).toHaveLength(6)
     const devices = wrapper.findAll('.hardware-model')
     expect(devices).toHaveLength(3)
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1001', 'E1002', 'E1003'])
@@ -47,7 +57,7 @@ describe('Windpeek landing page', () => {
       const model = `E100${index + 1}`
       const image = device.get('img')
 
-      expect(image.attributes('src')).toContain(`devices/previews/e100${index + 1}.png`)
+      expect(image.attributes('src')).toContain(`devices/previews/e100${index + 1}-wind.png`)
       expect(image.attributes('loading')).toBe('lazy')
       expect(image.attributes('decoding')).toBe('async')
       expect(device.find('.hardware-model__buy').exists()).toBe(false)
@@ -64,14 +74,14 @@ describe('Windpeek landing page', () => {
       expect(buyLink.text()).toBe(`Buy for ${['~$74', '~$107', '~$160'][index]}`)
     })
     expect(wrapper.find('.hardware-compare').exists()).toBe(false)
-    expect(wrapper.get('.configure-action--desktop').attributes('href')).toBe('?configure')
+    expect(wrapper.get('.configure-action--desktop').attributes('href')).toContain('?configure=')
     expect(wrapper.get('.configure-action--desktop').text()).toBe('Configure & install')
     expect(wrapper.get('.configure-action--mobile').attributes('disabled')).toBeDefined()
     expect(wrapper.get('.configure-action--mobile').text()).toBe('Configure & install on desktop')
     expect(wrapper.find('.configure-desktop-note').exists()).toBe(false)
     expect(wrapper.find('.quiet-note').exists()).toBe(false)
     const forecastQuestion = wrapper.findAll('.faq details').find(item => item.get('summary').text() === 'Which forecast models can I use?')
-    expect(forecastQuestion.text()).toContain('Forecasts come from Open-Meteo')
+    expect(forecastQuestion.text()).toContain('Forecast data comes from Open-Meteo')
     expect(forecastQuestion.get('a').attributes('href')).toBe('https://open-meteo.com/')
     const donationLink = wrapper.get('.faq a[href^="https://donate.stripe.com/"]')
     expect(donationLink.attributes('href')).toBe('https://donate.stripe.com/6oU14o3Hy1Xg5C02291wY00')

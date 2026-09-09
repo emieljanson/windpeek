@@ -21,7 +21,7 @@ enum {
         WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
     WIND_RENDERER_E1003_RGBA_BYTES = WIND_RENDERER_E1003_COMPOSITION_BYTES * 4,
-    WIND_RENDERER_CONTRACT_VERSION = 6,
+    WIND_RENDERER_CONTRACT_VERSION = 10,
     WIND_RENDERER_MAX_TIDE_SAMPLES = 121,
     WIND_RENDERER_MAX_TIDE_EXTREMA = 32,
     WIND_RENDERER_MIN_THRESHOLD_KT = 5,
@@ -67,6 +67,12 @@ typedef enum {
 } wind_renderer_weather_t;
 
 typedef struct {
+    int32_t height_cm;
+    int32_t period_tenths;
+    int32_t destination_degrees;
+} wind_renderer_swell_sample_t;
+
+typedef struct {
     const char *time;
     int sustained_kt;
     int gust_kt;
@@ -110,6 +116,15 @@ typedef struct {
     int battery_percent;
     wind_renderer_display_mode_t display_mode;
     int threshold_kt;
+    int custom_modules;
+    int wind_size;
+    int swell_size;
+    int ordered_modules;
+    int module_order[5];
+    int swell_hourly[WIND_RENDERER_DAY_COUNT][24];
+    int secondary_swell_hourly[WIND_RENDERER_DAY_COUNT][24];
+    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
     int show_weather;
     int show_temperature;
     int show_tide;
@@ -173,6 +188,15 @@ typedef struct {
     int32_t battery_percent;
     int32_t display_mode;
     int32_t threshold_kt;
+    int32_t custom_modules;
+    int32_t wind_size;
+    int32_t swell_size;
+    int ordered_modules;
+    int module_order[5];
+    int swell_hourly[WIND_RENDERER_DAY_COUNT][24];
+    int secondary_swell_hourly[WIND_RENDERER_DAY_COUNT][24];
+    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
     int32_t show_weather;
     int32_t show_temperature;
     int32_t show_tide;
@@ -264,6 +288,9 @@ int wind_renderer_input_v2_set_status(wind_renderer_input_v2_t *input,
 int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
                                             int show_weather, int show_temperature,
                                             int show_tide, int tide_available);
+
+int wind_renderer_input_v2_set_swell(wind_renderer_input_v2_t *input,
+    int day_index, int sample_index, int height_cm, int period_tenths, int destination_degrees);
 
 int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
                                            int use_24_hour, int temperature_fahrenheit,

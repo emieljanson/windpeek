@@ -88,6 +88,7 @@ onMounted(() => {
   if (!captureMode) {
     void store.initializeForecast()
     void store.initializeTide()
+    if (store.swellSize !== 'off') void store.refreshSwell()
     if (!installerDemoMode) void store.initializeNearbyDefault()
   }
 })
@@ -136,7 +137,7 @@ onBeforeUnmount(() => {
         :class="{ 'settings-panel--compact': isCompact }"
         aria-label="Windpeek settings"
       >
-        <WindpeekSettings :compact="isCompact" />
+        <WindpeekSettings :compact="isCompact" :installer-open="installerOpen" />
         <InstallContinuation
           v-if="showInstaller"
           :configuration="installationConfiguration"

@@ -69,11 +69,11 @@ describe('Open-Meteo forecast client', () => {
   it('uses stable internal IDs and the exact selector labels', () => {
     expect(getForecastModel('knmi_harmonie')).toMatchObject({
       apiId: 'knmi_harmonie_arome_netherlands',
-      label: 'KNMI HARMONIE',
+      label: 'HARM-NL',
       screenLabel: 'KNMI HARMONIE',
     })
     expect(getForecastModel('ecmwf_ifs')).toMatchObject({
-      label: 'ECMWF IFS', screenLabel: 'ECMWF IFS',
+      label: 'ECMWF', screenLabel: 'ECMWF IFS',
     })
   })
 

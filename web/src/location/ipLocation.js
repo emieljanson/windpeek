@@ -22,7 +22,11 @@ export async function fetchIpLocation({
     })
     if (!response.ok) return null
 
-    return normalizeCoordinates(await response.json())
+    const data = await response.json()
+    const coordinates = normalizeCoordinates(data)
+    if (!coordinates) return null
+    const countryCode = String(data.countryCode ?? '').toUpperCase()
+    return /^[A-Z]{2}$/.test(countryCode) ? { ...coordinates, countryCode } : coordinates
   } catch {
     return null
   } finally {

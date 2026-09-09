@@ -153,12 +153,12 @@ test('uses model typeahead and restores focus when its popup is dismissed', asyn
 
   const model = await selectWithKeyboard(page, 'Wind model', 'noaa')
   await expect(model).toContainText('GFS')
-  await expect(forecastStatus(page)).toContainText('Live NOAA GFS forecast for Brouwersdam')
+  await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
   await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'ncep_gfs_seamless')
   expect(requests).toHaveLength(1)
 
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('option', { name: 'NOAA GFS' })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'GFS' })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(model).toBeFocused()
 })

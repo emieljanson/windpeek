@@ -201,6 +201,48 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_values(int day_index, int sample_i
         temperature_tenths_c, temperature_available));
 }
 
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_swell_sample(int day, int sample,
+    int height_cm, int period_tenths, int destination_degrees) {
+    if (!input_ready || input_error) return -1;
+    return accept_result(wind_renderer_input_v2_set_swell(&renderer_input,
+        day, sample, height_cm, period_tenths, destination_degrees));
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_modules(int wind_size, int swell_size) {
+    if (!input_ready || input_error) return -1;
+    if (wind_size < 0 || wind_size > 2 || swell_size < 0 || swell_size > 2) return accept_result(-1);
+    renderer_input.custom_modules = 1;
+    renderer_input.wind_size = wind_size;
+    renderer_input.swell_size = swell_size;
+    return accept_result(0);
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_swell_hour(int day, int hour, int height_cm) {
+    if (!input_ready || input_error) return -1;
+    if (day < 0 || day >= WIND_RENDERER_DAY_COUNT || hour < 0 || hour > 23 ||
+        height_cm < -1 || height_cm > 10000) return accept_result(-1);
+    renderer_input.swell_hourly[day][hour] = height_cm;
+    return accept_result(0);
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_secondary_swell_hour(int day, int hour, int height_cm) {
+    if (!input_ready || input_error) return -1;
+    if (day < 0 || day >= WIND_RENDERER_DAY_COUNT || hour < 0 || hour > 23 ||
+        height_cm < -1 || height_cm > 10000) return accept_result(-1);
+    renderer_input.secondary_swell_hourly[day][hour] = height_cm;
+    return accept_result(0);
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_secondary_swell_sample(int day, int sample,
+    int height_cm, int period_tenths, int destination_degrees) {
+    if (!input_ready || input_error) return -1;
+    if (day < 0 || day >= WIND_RENDERER_DAY_COUNT || sample < 0 || sample >= WIND_RENDERER_SAMPLES_PER_DAY ||
+        height_cm < -1 || height_cm > 10000 || period_tenths < -1 || period_tenths > 1000 ||
+        destination_degrees < -1 || destination_degrees >= 360) return accept_result(-1);
+    renderer_input.secondary_swell[day][sample] = (wind_renderer_swell_sample_t){height_cm, period_tenths, destination_degrees};
+    return accept_result(0);
+}
+
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_sample(int tide_index, int day_index,
                                                    int local_hour, int sea_level_mm,
                                                    int available) {
@@ -255,5 +297,17 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(int display) {
         return result != 0 ? result : -2;
     }
     preview_output_valid = 1;
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_module_order(int a, int b, int c, int d, int e) {
+    const int order[] = {a,b,c,d,e};
+    unsigned seen = 0;
+    for (int i = 0; i < 5; ++i) {
+        if (order[i] < 0 || order[i] >= 5 || (seen & (1u << order[i]))) return -1;
+        seen |= 1u << order[i];
+    }
+    renderer_input.ordered_modules = 1;
+    memcpy(renderer_input.module_order, order, sizeof(order));
     return 0;
 }

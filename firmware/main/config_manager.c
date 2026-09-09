@@ -296,6 +296,12 @@ esp_err_t config_manager_init(void)
                 if (nvs_get_u8(nvs_handle, NVS_WIND_FOOTER_KEY, &flag) == ESP_OK)
                     stored.show_dedicated_footer = flag != 0;
             }
+            if (stored_wind_version >= 4u) {
+                nvs_get_u8(nvs_handle, "wind_size", &stored.wind_size);
+                nvs_get_u8(nvs_handle, "swell_size", &stored.swell_size);
+                size_t order_size = sizeof(stored.module_order);
+                nvs_get_blob(nvs_handle, "module_order", stored.module_order, &order_size);
+            }
             if (wind_display_config_validate(&stored)) {
                 wind_display_config = stored;
                 ESP_LOGI(TAG, "Loaded Windpeek display configuration");
@@ -745,6 +751,9 @@ bool config_manager_set_wind_display_config(const wind_display_config_t *config)
     if (result == ESP_OK)
         result = nvs_set_u8(nvs_handle, NVS_WIND_TEMP_F_KEY,
                             config->temperature_fahrenheit ? 1 : 0);
+    if (result == ESP_OK) result = nvs_set_u8(nvs_handle, "wind_size", config->wind_size);
+    if (result == ESP_OK) result = nvs_set_u8(nvs_handle, "swell_size", config->swell_size);
+    if (result == ESP_OK) result = nvs_set_blob(nvs_handle, "module_order", config->module_order, sizeof(config->module_order));
     if (result == ESP_OK)
         result = nvs_set_u32(nvs_handle, NVS_WIND_CONFIG_VERSION_KEY,
                              WIND_DISPLAY_CONFIG_VERSION);

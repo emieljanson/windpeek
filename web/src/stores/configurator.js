@@ -1,3 +1,4 @@
+import { MODULE_IDS, validModuleOrder } from '../config/modules'
 import { defineStore } from 'pinia'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import { readCachedForecast, writeCachedForecasts } from '../forecast/forecastCache'
@@ -8,6 +9,7 @@ import {
   getForecastModel,
 } from '../forecast/models'
 import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
+import { fetchOpenMeteoSwell, SWELL_MODELS } from '../forecast/openMeteoSwell'
 import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
 import { fetchIpLocation } from '../location/ipLocation'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
@@ -45,6 +47,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       showDedicatedFooter: displayConfiguration.showDedicatedFooter,
       timeFormat: displayConfiguration.timeFormat,
       temperatureUnit: displayConfiguration.temperatureUnit,
+      temperatureUnitInitialized: false,
       selectedBoardId: BOARD_ID,
       selectedSpotId: DEFAULT_SPOT_ID,
       hasUserSpotIntent: false,
@@ -66,6 +69,14 @@ export const useConfiguratorStore = defineStore('configurator', {
       forecastInitialized: false,
       forecastRequestId: 0,
       forecastRequestInFlight: false,
+      swellFocus: false,
+      windSize: 'large',
+      swellSize: 'off',
+      selectedSwellModelId: 'best_match',
+      moduleOrder: [...MODULE_IDS],
+      swell: null,
+      swellStatus: 'idle',
+      swellRequestId: 0,
       tide: null,
       tideStatus: 'idle',
       tideMessage: 'Tide availability has not been checked yet.',
@@ -78,6 +89,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     spotById() {
       return (spotId) => this.spots.find((spot) => spot.id === spotId) ?? null
     },
+    weatherSize: (state) => state.showTemperature ? 'large' : state.showWeather ? 'small' : 'off',
     temperatureChoice: (state) => state.showTemperature ? state.temperatureUnit : 'hide',
     tideAvailable: (state) =>
       ['available', 'cached'].includes(state.tideStatus) &&
@@ -110,7 +122,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       if (this.nearbyDefaultStatus !== 'idle') return false
       this.nearbyDefaultStatus = 'resolving'
 
-      if (this.hasUserSpotIntent || this.selectedSpotId !== DEFAULT_SPOT_ID) {
+      if ((this.hasUserSpotIntent || this.selectedSpotId !== DEFAULT_SPOT_ID) && this.temperatureUnitInitialized) {
         this.nearbyDefaultStatus = 'ignored'
         return false
       }
@@ -121,6 +133,13 @@ export const useConfiguratorStore = defineStore('configurator', {
       } catch {
         this.nearbyDefaultStatus = 'ignored'
         return false
+      }
+
+      if (!this.temperatureUnitInitialized && /^[a-z]{2}$/i.test(coordinates?.countryCode ?? '')) {
+        this.$patch({
+          temperatureUnit: ['US', 'BS', 'BZ', 'KY', 'PW', 'FM', 'MH', 'LR'].includes(coordinates.countryCode.toUpperCase()) ? 'fahrenheit' : 'celsius',
+          temperatureUnitInitialized: true,
+        })
       }
 
       if (this.hasUserSpotIntent || this.selectedSpotId !== DEFAULT_SPOT_ID) {
@@ -167,6 +186,13 @@ export const useConfiguratorStore = defineStore('configurator', {
       this.threshold = Math.round(threshold)
       return true
     },
+    setWeatherSize(value) {
+      if (!['off', 'small', 'large'].includes(value)) return false
+      const order = this.moduleOrder.filter(id => id !== 'temperature')
+      order.splice(order.indexOf('weather') + 1, 0, 'temperature')
+      this.$patch({ showWeather: value !== 'off', showTemperature: value === 'large', moduleOrder: order })
+      return true
+    },
     setShowWeather(value) {
       if (typeof value !== 'boolean') return false
       this.showWeather = value
@@ -194,7 +220,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
     setTemperatureUnit(value) {
       if (!TEMPERATURE_UNITS.includes(value)) return false
-      this.temperatureUnit = value
+      this.$patch({ temperatureUnit: value, temperatureUnitInitialized: true })
       return true
     },
     setTemperatureChoice(value) {
@@ -202,7 +228,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       if (value === 'hide') {
         this.showTemperature = false
       } else {
-        this.temperatureUnit = value
+        this.setTemperatureUnit(value)
         this.showTemperature = true
       }
       return true
@@ -211,6 +237,58 @@ export const useConfiguratorStore = defineStore('configurator', {
       this.forecastStatus = 'warning'
       this.forecastLabel = 'Preview unchanged'
       this.forecastMessage = 'Could not apply that display change. Showing the last valid preview.'
+    },
+    setSwellFocus(value) {
+      this.swellFocus = Boolean(value)
+      this.windSize = value ? 'small' : 'large'
+      this.swellSize = value ? 'large' : 'off'
+      if (value && this.swellStatus === 'idle') void this.refreshSwell()
+    },
+    moveModule(id, targetIndex) {
+      if (!this.moduleOrder.includes(id) || !Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= MODULE_IDS.length) return false
+      const order = this.moduleOrder.filter(module => module !== id)
+      order.splice(targetIndex, 0, id)
+      this.moduleOrder = order
+      return true
+    },
+    setModuleOrder(order) {
+      if (!validModuleOrder(order)) return false
+      this.moduleOrder = [...order]
+      return true
+    },
+    setModuleSize(module, size) {
+      if (!['wind', 'swell'].includes(module) || !['off', 'small', 'large'].includes(size)) return false
+      this[`${module}Size`] = size
+      this.swellFocus = this.swellSize !== 'off'
+      if (this.swellFocus && ['idle', 'failed'].includes(this.swellStatus)) void this.refreshSwell()
+      return true
+    },
+    setSwellModel(value) {
+      if (!SWELL_MODELS.some(model => model.value === value)) return false
+      if (this.selectedSwellModelId === value) return true
+      this.selectedSwellModelId = value
+      this.swellRequestId += 1
+      this.swell = null
+      this.swellStatus = 'idle'
+      if (this.swellSize !== 'off') void this.refreshSwell()
+      return true
+    },
+    async refreshSwell({ fetcher = fetchOpenMeteoSwell, ...options } = {}) {
+      const spot = this.spotById(this.selectedSpotId)
+      if (!spot) return false
+      const requestId = ++this.swellRequestId
+      this.swellStatus = 'loading'
+      try {
+        const swell = await fetcher(spot, { ...options, model: this.selectedSwellModelId })
+        if (requestId !== this.swellRequestId || spot.id !== this.selectedSpotId) return false
+        this.swell = swell
+        this.swellStatus = swell.available ? 'ready' : 'unavailable'
+        return true
+      } catch {
+        if (requestId !== this.swellRequestId || spot.id !== this.selectedSpotId) return false
+        this.swellStatus = 'failed'
+        return false
+      }
     },
     async initializeTide(options = {}) {
       if (this.tideInitialized) return false
@@ -350,11 +428,15 @@ export const useConfiguratorStore = defineStore('configurator', {
         if (requestId === this.forecastRequestId) this.forecastRequestInFlight = false
       }
     },
-    async selectSpot(spotId, { tideFetcher, ...options } = {}) {
+    async selectSpot(spotId, { tideFetcher, swellFetcher, ...options } = {}) {
       const spot = this.spotById(spotId)
       if (!spot) return false
       if (spotId === this.selectedSpotId) return true
       this.selectedSpotId = spotId
+      this.swellRequestId += 1
+      this.swell = null
+      this.swellStatus = 'idle'
+      if (this.swellFocus) void this.refreshSwell({ fetcher: swellFetcher ?? fetchOpenMeteoSwell })
       if (!forecastModelsForSpot(spot).some((model) => model.id === this.selectedModelId)) {
         this.selectedModelId = DEFAULT_FORECAST_MODEL_ID
       }

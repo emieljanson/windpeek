@@ -48,9 +48,15 @@ describe('installer inspector panel', () => {
 
     expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
     const dialog = document.body.querySelector('[role="dialog"]')
-    expect(dialog?.textContent).toContain('7.5″ monochrome — E1001')
-    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
-    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+    expect([...dialog.querySelectorAll('.hardware-model__name')].map(node => node.textContent))
+      .toEqual(['E1001', 'E1002', 'E1003'])
+    const screens = [...dialog.querySelectorAll('.hardware-spec--screen dd')]
+    expect(screens.map(node => [...node.querySelectorAll('.hardware-spec__line')].map(line => line.textContent.trim())))
+      .toEqual([
+        ['7.5″, 4 greys', '800 × 480'],
+        ['7.3″, 6 colours', '800 × 480'],
+        ['10.3″, 16 greys', '1872 × 1404'],
+      ])
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await wrapper.vm.$nextTick()

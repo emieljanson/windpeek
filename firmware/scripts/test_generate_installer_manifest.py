@@ -62,7 +62,7 @@ class InstallerManifestTest(unittest.TestCase):
         manifest = json.loads(first)
         self.assertEqual(manifest["firmwareLayoutVersion"], 1)
         self.assertEqual(manifest["flashSize"], 32 * 1024 * 1024)
-        self.assertEqual(manifest["configuration"], {"minimum": 4, "maximum": 4})
+        self.assertEqual(manifest["configuration"], {"minimum": 5, "maximum": 5})
         self.assertTrue(manifest["cleanInstall"]["eraseFlash"])
         self.assertEqual(
             [part["kind"] for part in manifest["cleanInstall"]["parts"]],

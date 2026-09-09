@@ -13,7 +13,7 @@ import { resolveTimeFormat } from '../src/config/localeTimeFormat'
 describe('display configuration', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('keeps version 3 output while deriving its treatment from threshold visibility', () => {
+  it('includes module configuration while deriving its treatment from threshold visibility', () => {
     const settings = {
       showThreshold: false,
       threshold: 23,
@@ -27,6 +27,8 @@ describe('display configuration', () => {
 
     expect(displayConfigurationFromStore(settings)).toEqual({
       version: CONFIGURATION_VERSION,
+      windSize: 'large', swellSize: 'off', swellModel: 'best_match',
+      moduleOrder: ['wind', 'swell', 'weather', 'temperature', 'tide'],
       showThreshold: false,
       treatment: 'solid',
       threshold: 23,
@@ -163,7 +165,7 @@ describe('display configuration', () => {
         temperatureUnit: 'celsius',
       },
     })
-    expect(configuration.digest).toBe('1cb353796dfceaac')
+    expect(configuration.digest).toBe('f0d2b5b76c69406e')
   })
 
   it('changes the digest for a spot change but not for object key order', () => {

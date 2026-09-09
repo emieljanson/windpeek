@@ -1,3 +1,5 @@
+import { MODULE_IDS } from '../config/modules'
+import { swellDashboardForecast } from '../forecast/openMeteoSwell'
 import { DISPLAY_MODES, RENDERER_CONTRACT_VERSION } from './contract'
 
 function formatSampleTime(time, timeFormat) {
@@ -73,7 +75,13 @@ function formatUpdatedTime(forecast, timeFormat) {
 }
 
 export function createRendererInput(forecast, config) {
-  const displayMode = config.showThreshold
+  const sizes = { off: 0, small: 1, large: 2 }
+  const windSize = sizes[config.windSize] ?? (config.swellFocus ? 1 : 2)
+  const swellSize = sizes[config.swellSize] ?? (config.swellFocus ? 2 : 0)
+  if (swellSize) forecast = swellDashboardForecast(forecast, config.swell, windSize > 0 || config.showWeather || config.showTemperature)
+  const swell = config.swell?.spotId === forecast.spotId ? config.swell : null
+  const swellSamples = new Map((swell?.samples ?? []).map((sample) => [`${sample.localDate}T${sample.time}`, sample]))
+  const displayMode = config.showThreshold && windSize === 2
     ? DISPLAY_MODES['threshold-line']
     : DISPLAY_MODES.solid
 
@@ -82,11 +90,19 @@ export function createRendererInput(forecast, config) {
   const tideExtrema = rendererTideExtrema(tide, forecast.days)
   return {
     version: RENDERER_CONTRACT_VERSION,
+    swellFocus: swellSize > 0,
+    windSize,
+    swellSize,
+    moduleOrder: config.moduleOrder?.map(id => MODULE_IDS.indexOf(id)),
+    swellHourly: (swell?.hourly ?? []).flatMap((sample) => {
+      const dayIndex = forecast.days.findIndex((day) => day.localDate === sample.localDate)
+      return dayIndex < 0 ? [] : [{ dayIndex, hour: Number(sample.time), heightCm: sample.heightCm, secondaryHeightCm: sample.secondaryHeightCm ?? -1 }]
+    }),
     spotName: forecast.spotName,
     provider: forecast.model ?? forecast.provider ?? 'OPEN-METEO',
     updatedTime: formatUpdatedTime(forecast, config.timeFormat),
     state: forecast.state ?? 0,
-    refreshFailed: forecast.refreshFailed ?? false,
+    refreshFailed: Boolean(forecast.refreshFailed || (swellSize && config.swellStatus === 'failed')),
     ageHours: forecast.ageHours ?? 0,
     batteryPercent: forecast.batteryPercent ?? 70,
     displayMode,
@@ -103,8 +119,15 @@ export function createRendererInput(forecast, config) {
     days: forecast.days.map((day) => ({
       day: day.day,
       date: day.date,
-      samples: day.samples.map((sample) => rendererSample(sample, config.timeFormat)),
+      samples: day.samples.map((sample) => ({
+        ...rendererSample(sample, config.timeFormat),
+        secondarySwellHeightCm: swellSamples.get(`${day.localDate}T${sample.time}`)?.secondaryHeightCm ?? -1,
+        secondarySwellPeriodTenths: swellSamples.get(`${day.localDate}T${sample.time}`)?.secondaryPeriodTenths ?? -1,
+        secondarySwellDestinationDegrees: swellSamples.get(`${day.localDate}T${sample.time}`)?.secondaryDestinationDegrees ?? -1,
+        swellHeightCm: swellSamples.get(`${day.localDate}T${sample.time}`)?.heightCm ?? -1,
+        swellPeriodTenths: swellSamples.get(`${day.localDate}T${sample.time}`)?.periodTenths ?? -1,
+        swellDestinationDegrees: swellSamples.get(`${day.localDate}T${sample.time}`)?.destinationDegrees ?? -1,
+      })),
     })),
   }
 }
-

@@ -240,6 +240,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
 #include "wind_renderer.h"
 #include "wind_spots.h"
 #include "wind_tide_cache.h"
+#include "wind_swell_cache.h"
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics
 // change.
@@ -253,6 +254,9 @@ typedef struct {
     wind_tide_provider_t tide_provider;
     wind_tide_t tide;
     bool have_tide;
+    wind_swell_t swell;
+    bool have_swell;
+    bool swell_failed;
     const wind_spot_t *spot;
     const char *device_timezone;
     char forecast_path[96];
@@ -262,6 +266,7 @@ typedef struct {
 
 static wind_spot_runtime_t s_spots[1];
 static installed_configuration_t s_installed_configuration;
+static const installed_configuration_t *s_preview_configuration;
 static size_t s_selected_index;
 static SemaphoreHandle_t s_app_lock;
 // Serializes runtime reconfiguration with scheduled refreshes and button
@@ -300,7 +305,9 @@ static uint64_t current_render_signature(void) {
 static void refresh_render_signatures(void) {
     const uint64_t signature = current_render_signature();
     for (size_t index = 0; index < wind_spots_count(); ++index) {
-        s_spots[index].app.config.render_signature = signature;
+        s_spots[index].app.config.render_signature = signature ^
+            (s_spots[index].have_swell ? (uint64_t)s_spots[index].swell.retrieved_at : 0) ^
+            ((uint64_t)s_spots[index].swell_failed << 63);
     }
 }
 
@@ -443,6 +450,27 @@ static esp_err_t write_dashboard_preview(const uint8_t *bitmap, size_t bitmap_si
     return result;
 }
 
+static void load_or_refresh_swell(wind_spot_runtime_t *runtime, bool force, int64_t now) {
+    const wind_display_config_t display = config_manager_get_wind_display_config();
+    runtime->have_swell = false;
+    runtime->swell_failed = false;
+    if (!display.swell_size) return;
+    char path[128];
+    snprintf(path, sizeof(path), "%s.swell", runtime->forecast_path);
+    const wind_swell_cache_identity_t identity = { runtime->spot->id, runtime->spot->timezone, runtime->marine_config.swell_model };
+    runtime->have_swell = wind_swell_cache_load(path, &identity, &runtime->swell) == ESP_OK;
+    if (runtime->have_swell && runtime->swell.retrieved_at <= now &&
+        now - runtime->swell.retrieved_at < 6 * 3600 && !force) return;
+    wind_swell_t *fresh = malloc(sizeof(*fresh));
+    if (!fresh) { runtime->swell_failed = true; return; }
+    if (wind_swell_fetch(&runtime->marine_config, now, fresh) == ESP_OK && wind_swell_validate(fresh)) {
+        runtime->swell = *fresh;
+        runtime->have_swell = true;
+        if (wind_swell_cache_store(path, fresh) != ESP_OK) ESP_LOGW(TAG, "Could not cache swell");
+    } else runtime->swell_failed = true;
+    free(fresh);
+}
+
 static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast,
                                   wind_freshness_t freshness, bool refresh_failed,
                                   int64_t now, uint8_t *bitmap, size_t bitmap_size) {
@@ -455,17 +483,60 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][8] = {{{0}}};
     wind_local_datetime_t local = {0};
 
+    wind_forecast_t calendar = {0};
+    const bool weather_required = display.wind_size || display.show_weather || display.show_temperature;
+    const bool weather_missing = !forecast;
+    bool calendar_used = false;
+    bool calendar_weather[5][5] = {{false}};
+    if (display.swell_size && runtime->have_swell) {
+        calendar_used = true;
+        if (forecast) calendar = *forecast;
+        snprintf(calendar.spot_name, sizeof(calendar.spot_name), "%s", spot->display_name);
+        calendar.retrieved_at = weather_required && forecast && forecast->retrieved_at < runtime->swell.retrieved_at
+            ? forecast->retrieved_at : runtime->swell.retrieved_at;
+        wind_local_datetime_t date;
+        if (wind_timezone_from_unix(spot->timezone, now, &date) != ESP_OK) return ESP_ERR_INVALID_STATE;
+        const int hours[] = {8,11,14,17,20};
+        for (int day = 0; day < 5; ++day) {
+            wind_timezone_format_date(&date, calendar.days[day].local_date, sizeof(calendar.days[day].local_date));
+            for (int i = 0; i < 5; ++i) {
+                date.hour = hours[i]; date.minute = date.second = 0;
+                int64_t timestamp;
+                if (wind_timezone_to_unix(spot->timezone, &date, &timestamp) != ESP_OK) return ESP_ERR_INVALID_STATE;
+                wind_forecast_sample_t sample = { .timestamp = timestamp, .local_hour = hours[i] };
+                if (forecast) for (int d = 0; d < 5; ++d) for (int j = 0; j < 5; ++j)
+                    if (forecast->days[d].samples[j].timestamp == timestamp) { sample = forecast->days[d].samples[j]; calendar_weather[day][i] = true; }
+                calendar.days[day].samples[i] = sample;
+            }
+            wind_timezone_shift_date(&date, 1);
+        }
+        forecast = &calendar;
+    }
     dashboard.spot_name = forecast ? forecast->spot_name : spot->display_name;
     dashboard.provider =
         wind_forecast_model_screen_name(forecast ? forecast->model : WIND_MODEL);
     dashboard.updated_time = updated;
-    dashboard.state = renderer_state(freshness);
-    dashboard.refresh_failed = refresh_failed ? 1 : 0;
+    dashboard.state = display.swell_size && runtime->have_swell ? renderer_state(freshness_for(forecast, now)) : renderer_state(freshness);
+    dashboard.refresh_failed = (weather_required && refresh_failed) || (display.swell_size && runtime->swell_failed);
+    if (display.swell_size) dashboard.provider = "OPEN-METEO";
     dashboard.age_hours = forecast && now > forecast->retrieved_at
                               ? (int)((now - forecast->retrieved_at) / 3600)
                               : 0;
     dashboard.battery_percent = board_hal_get_battery_percent();
     dashboard.display_mode = (wind_renderer_display_mode_t)display.display_mode;
+    dashboard.custom_modules = 1;
+    dashboard.ordered_modules = 1;
+    dashboard.wind_size = display.wind_size;
+    dashboard.swell_size = display.swell_size;
+    for (int i = 0; i < 5; ++i) dashboard.module_order[i] = display.module_order[i];
+    for (int day = 0; day < 5; ++day) {
+        for (int hour = 0; hour < 24; ++hour) {
+            dashboard.swell_hourly[day][hour] = -1;
+            dashboard.secondary_swell_hourly[day][hour] = -1;
+        }
+        for (int i = 0; i < 5; ++i) dashboard.swell[day][i] = (wind_renderer_swell_sample_t){-1,-1,-1};
+    }
+    if (display.wind_size != 2) dashboard.display_mode = WIND_RENDERER_MODE_SOLID;
     dashboard.threshold_kt = display.threshold_kt;
     dashboard.show_weather = display.show_weather;
     dashboard.show_temperature = display.show_temperature;
@@ -520,7 +591,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                     .sustained_kt = source->wind_knots,
                     .gust_kt = source->gust_knots,
                     .destination_degrees = source->destination_degrees,
-                    .available = source->timestamp > 0,
+                    .available = !weather_missing && source->timestamp > 0 && (!calendar_used || calendar_weather[day][sample]),
                     .weather =
                         (wind_renderer_weather_t)wind_forecast_weather_state(source),
                     .temperature_tenths_c = source->temperature_tenths_c,
@@ -576,6 +647,26 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
         }
     }
 
+    if (display.swell_size && runtime->have_swell) {
+        for (size_t i = 0; i < runtime->swell.sample_count; ++i) {
+            const wind_swell_sample_t *source = &runtime->swell.samples[i];
+            wind_local_datetime_t date;
+            char local_date[11];
+            if (wind_timezone_from_unix(spot->timezone, source->timestamp, &date) != ESP_OK) continue;
+            wind_timezone_format_date(&date, local_date, sizeof(local_date));
+            for (int day = 0; day < 5; ++day) {
+                if (!forecast || strcmp(local_date, forecast->days[day].local_date)) continue;
+                dashboard.swell_hourly[day][date.hour] = source->height_cm;
+                dashboard.secondary_swell_hourly[day][date.hour] = source->secondary_height_cm;
+                for (int slot = 0; slot < 5; ++slot) {
+                    if (forecast->days[day].samples[slot].local_hour == date.hour) {
+                        dashboard.swell[day][slot] = (wind_renderer_swell_sample_t){ source->height_cm, source->period_tenths, source->destination_degrees };
+                        dashboard.secondary_swell[day][slot] = (wind_renderer_swell_sample_t){ source->secondary_height_cm, source->secondary_period_tenths, source->secondary_destination_degrees };
+                    }
+                }
+            }
+        }
+    }
     wind_renderer_stats_t stats;
     int render_result = wind_renderer_render_for_display(
         &dashboard, active_renderer_display(), bitmap, bitmap_size, &stats);
@@ -634,7 +725,8 @@ static esp_err_t ensure_ready(void) {
             return ESP_ERR_NO_MEM;
         }
     }
-    if (installed_configuration_load(&s_installed_configuration) != ESP_OK) {
+    if (s_preview_configuration) s_installed_configuration = *s_preview_configuration;
+    else if (installed_configuration_load(&s_installed_configuration) != ESP_OK) {
         return ESP_ERR_INVALID_STATE;
     }
     if (wind_spots_load_selected(&s_selected_index) != ESP_OK ||
@@ -687,6 +779,7 @@ static esp_err_t ensure_ready(void) {
             .longitude = runtime->spot->longitude,
             .timezone = runtime->spot->timezone,
         };
+        runtime->marine_config.swell_model = s_installed_configuration.display.swell_model;
         if (!open_meteo_marine_config_valid(&runtime->marine_config)) {
             // Tide is an optional row. A missing licensed marine endpoint must
             // not take the core wind forecast offline; the renderer will show
@@ -750,6 +843,9 @@ display_from_installed(const installed_configuration_t *installed) {
     display.display_mode = installed->display.show_threshold
                                ? WIND_RENDERER_MODE_THRESHOLD
                                : WIND_RENDERER_MODE_SOLID;
+    display.wind_size = installed->display.wind_size;
+    display.swell_size = installed->display.swell_size;
+    memcpy(display.module_order, installed->display.module_order, sizeof(display.module_order));
     display.threshold_kt = installed->display.threshold_kt;
     display.show_weather = installed->display.show_weather;
     display.show_temperature = installed->display.show_temperature;
@@ -776,8 +872,10 @@ esp_err_t wind_app_preview_configuration(const installed_configuration_t *candid
     if (config_manager_set_wind_display_config_transient(&preview_display) &&
         config_manager_set_timezone_transient(candidate->spot.timezone) &&
         wind_spots_use_configuration(candidate) == ESP_OK) {
+        s_preview_configuration = candidate;
         s_ready = false;
         result = wind_app_refresh_unlocked(true, NULL);
+        s_preview_configuration = NULL;
     }
     (void)wind_spots_use_configuration(&active);
     (void)config_manager_set_timezone_transient(active.spot.timezone);
@@ -819,6 +917,7 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_f
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
     time_t now;
     time(&now);
+    load_or_refresh_swell(&s_spots[s_selected_index], force_refresh, now);
     refresh_render_signatures();
     load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, now);
     bool any_forecast_published = false;
@@ -885,6 +984,7 @@ static esp_err_t navigate(int direction) {
                         &cached) == ESP_OK;
     time_t now;
     time(&now);
+    load_or_refresh_swell(runtime, false, now);
     refresh_render_signatures();
     load_or_refresh_tide(runtime, false, now);
     wind_app_outcome_t outcome;

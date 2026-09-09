@@ -19,7 +19,7 @@ const expectPrivateCorsResponse = (response) => {
 }
 
 describe('nearby location Worker', () => {
-  it('returns only numeric coordinates from valid Cloudflare metadata', async () => {
+  it('returns coordinates and country code without extra location metadata', async () => {
     const response = await worker.fetch(request('GET', {
       latitude: '51.9225',
       longitude: 4.47917,
@@ -31,6 +31,7 @@ describe('nearby location Worker', () => {
     await expect(response.json()).resolves.toEqual({
       latitude: 51.9225,
       longitude: 4.47917,
+      countryCode: 'NL',
     })
     expectPrivateCorsResponse(response)
   })

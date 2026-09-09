@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define INSTALLED_CONFIGURATION_VERSION 4u
+#define INSTALLED_CONFIGURATION_VERSION 5u
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
 #define WINDPEEK_BOARD_ID "seeedstudio_reterminal_e1003"
 #else
@@ -35,6 +35,10 @@ typedef struct {
     bool show_dedicated_footer;
     bool use_24_hour;
     bool temperature_fahrenheit;
+    uint8_t wind_size;
+    uint8_t swell_size;
+    uint8_t module_order[5];
+    char swell_model[32];
 } installed_display_configuration_t;
 
 typedef struct {
@@ -61,6 +65,8 @@ esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
 void installed_configuration_reset_host_storage(void);
 void installed_configuration_set_host_failure_boundary(int boundary);
 void installed_configuration_seed_v2_host_storage(const installed_configuration_t *config,
+                                                   const char *ssid, const char *password);
+void installed_configuration_seed_v4_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password);
 void installed_configuration_seed_v3_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password);

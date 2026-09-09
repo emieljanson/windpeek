@@ -19,6 +19,7 @@ typedef struct {
     double latitude;
     double longitude;
     const char *timezone;
+    const char *swell_model;
 } open_meteo_marine_config_t;
 
 bool open_meteo_marine_config_valid(const open_meteo_marine_config_t *config);

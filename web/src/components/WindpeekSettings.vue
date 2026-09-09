@@ -3,39 +3,29 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConfiguratorStore } from '../stores/configurator'
 import { FLOATING_INSPECTOR_VIEWPORT_QUERY } from '../composables/useCompactViewport'
-import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 import { DEVICE_OPTIONS } from '../config/configuration'
 import { normalizeSpotQuery, searchSpots } from '../spots/searchSpots'
 import ReTerminalHelpDialog from './ReTerminalHelpDialog.vue'
 import SpotCreationDialog from './SpotCreationDialog.vue'
 import SettingCombobox from './settings/SettingCombobox.vue'
-import SettingNumberInput from './settings/SettingNumberInput.vue'
 import SettingRow from './settings/SettingRow.vue'
 import SettingSelect from './settings/SettingSelect.vue'
-import SettingSwitch from './settings/SettingSwitch.vue'
+import ForecastModules from './settings/ForecastModules.vue'
+import ForecastAdvanced from './settings/ForecastAdvanced.vue'
 
 const props = defineProps({
   compact: { type: Boolean, default: false },
+  installerOpen: { type: Boolean, default: false },
 })
 
 const store = useConfiguratorStore()
 const {
-  effectiveShowTide,
-  availableForecastModels,
   forecastLabel,
   forecastMessage,
   forecastStatus,
-  selectedModelId,
   selectedBoardId,
   selectedSpotId,
-  showDedicatedFooter,
   spots,
-  showThreshold,
-  showWeather,
-  temperatureChoice,
-  threshold,
-  tideAvailable,
-  tideMessage,
 } = storeToRefs(store)
 
 const spotSearchTerm = ref('')
@@ -57,33 +47,6 @@ const createSpotActionLabel = computed(() => {
     normalizeSpotQuery(spot.name) === normalizeSpotQuery(query))
   return exactMatch ? '' : `Add ${query}`
 })
-
-const modelOptions = computed(() => {
-  const bestMatchModels = availableForecastModels.value.filter((model) => model.id === 'best_match')
-  const localModels = availableForecastModels.value.filter((model) => model.availability === 'regional')
-  const globalModels = availableForecastModels.value.filter((model) => (
-    model.availability === 'always' && model.id !== 'best_match'
-  ))
-
-  return [
-    ...bestMatchModels.map((model) => ({ value: model.id, label: model.label })),
-    ...localModels.map((model, index) => ({
-      value: model.id,
-      label: model.label,
-      separatorBefore: index === 0 && bestMatchModels.length > 0,
-    })),
-    ...globalModels.map((model, index) => ({
-      value: model.id,
-      label: model.label,
-      separatorBefore: index === 0 && (bestMatchModels.length > 0 || localModels.length > 0),
-    })),
-  ]
-})
-const temperatureOptions = [
-  { value: 'hide', label: 'Hide' },
-  { value: 'celsius', label: 'Celsius' },
-  { value: 'fahrenheit', label: 'Fahrenheit' },
-]
 
 watch(selectedSpotId, (spotId) => {
   if (spotHasUserSelection.value) {
@@ -135,21 +98,8 @@ function saveSpot(input) {
   return spot
 }
 
-function selectModel(modelId) {
-  if (modelId !== selectedModelId.value) void store.selectModel(modelId)
-}
 
-function toggleTemperature() {
-  store.setTemperatureChoice(temperatureChoice.value === 'hide' ? 'celsius' : 'hide')
-}
 
-function markPillPointerFocus(event) {
-  event.currentTarget.classList.add('is-pointer-focus')
-}
-
-function clearPillPointerFocus(event) {
-  event.currentTarget.classList.remove('is-pointer-focus')
-}
 </script>
 
 <template>
@@ -171,55 +121,8 @@ function clearPillPointerFocus(event) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
-    <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windpeek">
-      <button
-        class="mobile-display-pill"
-        type="button"
-        :aria-pressed="showThreshold"
-        @pointerdown="markPillPointerFocus"
-        @keydown="clearPillPointerFocus"
-        @blur="clearPillPointerFocus"
-        @click="store.setShowThreshold(!showThreshold)"
-      >
-        Threshold
-      </button>
-      <button
-        class="mobile-display-pill"
-        type="button"
-        :aria-pressed="showWeather"
-        @pointerdown="markPillPointerFocus"
-        @keydown="clearPillPointerFocus"
-        @blur="clearPillPointerFocus"
-        @click="store.setShowWeather(!showWeather)"
-      >
-        Weather
-      </button>
-      <button
-        class="mobile-display-pill"
-        type="button"
-        :aria-pressed="temperatureChoice !== 'hide'"
-        @pointerdown="markPillPointerFocus"
-        @keydown="clearPillPointerFocus"
-        @blur="clearPillPointerFocus"
-        @click="toggleTemperature"
-      >
-        Temp
-      </button>
-      <button
-        class="mobile-display-pill"
-        type="button"
-        :aria-pressed="effectiveShowTide"
-        :disabled="!tideAvailable"
-        :title="tideAvailable ? undefined : tideMessage"
-        @pointerdown="markPillPointerFocus"
-        @keydown="clearPillPointerFocus"
-        @blur="clearPillPointerFocus"
-        @click="store.setShowTide(!effectiveShowTide)"
-      >
-        Tide
-      </button>
-    </div>
-
+    <ForecastModules v-if="compact" />
+    <ForecastAdvanced v-if="compact" :installer-open="props.installerOpen" />
     <div v-if="!compact" class="inspector-search">
       <SettingCombobox
         ref="spotSearch"
@@ -279,72 +182,9 @@ function clearPillPointerFocus(event) {
           />
         </SettingRow>
 
-        <SettingRow v-if="!compact" label="Wind model">
-          <SettingSelect
-            :model-value="selectedModelId"
-            :options="modelOptions"
-            :native="compact"
-            name="model"
-            @update:model-value="selectModel"
-          />
-        </SettingRow>
+        <ForecastModules />
 
-        <SettingRow label="Wind threshold">
-          <SettingSwitch
-            :model-value="showThreshold"
-            name="show-threshold"
-            @update:model-value="store.setShowThreshold"
-          />
-        </SettingRow>
-
-        <SettingRow v-if="showThreshold" class="setting-row--compact-control" label="Minimum wind">
-          <SettingNumberInput
-            :model-value="threshold"
-            :min="MIN_THRESHOLD"
-            :max="MAX_THRESHOLD"
-            :step="1"
-            unit="kt"
-            name="threshold"
-            @update:model-value="store.setThreshold"
-          />
-        </SettingRow>
-
-        <SettingRow label="Weather">
-          <SettingSwitch
-            :model-value="showWeather"
-            name="show-weather"
-            @update:model-value="store.setShowWeather"
-          />
-        </SettingRow>
-
-        <SettingRow label="Temperature">
-          <SettingSelect
-            :model-value="temperatureChoice"
-            :options="temperatureOptions"
-            :native="compact"
-            :muted="temperatureChoice === 'hide'"
-            name="temperature"
-            @update:model-value="store.setTemperatureChoice"
-          />
-        </SettingRow>
-
-        <SettingRow label="Tide">
-          <SettingSwitch
-            :model-value="effectiveShowTide"
-            :disabled="!tideAvailable"
-            :disabled-reason="tideAvailable ? '' : tideMessage"
-            name="show-tide"
-            @update:model-value="store.setShowTide"
-          />
-        </SettingRow>
-
-        <SettingRow label="Legend">
-          <SettingSwitch
-            :model-value="showDedicatedFooter"
-            name="show-dedicated-footer"
-            @update:model-value="store.setShowDedicatedFooter"
-          />
-        </SettingRow>
+        <ForecastAdvanced :installer-open="props.installerOpen" />
       </div>
     </div>
 

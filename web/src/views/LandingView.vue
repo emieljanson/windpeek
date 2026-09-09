@@ -1,69 +1,31 @@
 <script setup>
+import { siteVariant, configuratorLink } from '../marketing/siteVariant'
 import LandingHero from '../components/LandingHero.vue'
-import { publicAssetUrl } from '../assets/publicAssetUrl'
-
-const hardwareModels = [
-  {
-    model: 'E1001',
-    screen: '7.5″, 4 greys',
-    resolution: '800 × 480',
-    threshold: 'Black threshold',
-    battery: '3 month battery',
-    batteryCompact: '3 mo battery',
-    price: '~$74',
-    image: publicAssetUrl('devices/previews/e1001.png'),
-    buyUrl: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  },
-  {
-    model: 'E1002',
-    screen: '7.3″, 6 colours',
-    resolution: '800 × 480',
-    threshold: 'Red threshold',
-    battery: '3 month battery',
-    batteryCompact: '3 mo battery',
-    price: '~$107',
-    image: publicAssetUrl('devices/previews/e1002.png'),
-    buyUrl: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  },
-  {
-    model: 'E1003',
-    screen: '10.3″, 16 greys',
-    resolution: '1872 × 1404',
-    threshold: 'Black threshold',
-    battery: '6 month battery',
-    batteryCompact: '6 mo battery',
-    price: '~$160',
-    image: publicAssetUrl('devices/previews/e1003.png'),
-    buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  },
-]
-
-const hardwareSpecs = [
-  { id: 'screen', label: 'Screen', keys: ['screen', 'resolution'] },
-  { id: 'threshold', label: 'Threshold line', keys: ['threshold'] },
-  { id: 'battery', label: 'Battery', keys: ['battery'] },
-]
+import ReTerminalComparison from '../components/ReTerminalComparison.vue'
+const variant = siteVariant()
+const configureHref = configuratorLink()
 </script>
 
 <template>
   <div class="landing-page">
     <main id="main-content">
       <header>
-        <h1>The always-on wind forecast for your favorite spot</h1>
-        <p class="intro">Windpeek turns a reTerminal into a quiet e-ink display that keeps the next five days visible at home.</p>
+        <h1>{{ variant.title }}</h1>
+        <p class="intro">{{ variant.intro }}</p>
       </header>
 
       <LandingHero />
 
       <section class="story" aria-label="About Windpeek">
-        <p>Wind forecasts change. You check once, it looks like nothing, and later discover it turned into a great session. Windpeek keeps the whole forecast in sight, so you catch the change instead of hearing about it afterwards.</p>
+        <p>{{ variant.story }}</p>
       </section>
 
       <section class="landing-section personalize" id="build">
         <ul class="facts">
-          <li><strong>The whole picture</strong> — wind, gusts, direction, weather, temperature and tide</li>
+          <li><strong>The whole picture</strong> — {{ variant.id === 'swell' ? 'swell, wind, weather, temperature and tide' : 'wind, waves, weather, temperature and tide' }}</li>
+          <li><strong>Your screen, your choice</strong> — choose what to show and how it looks</li>
           <li><strong>Always in sight</strong> — five days that update without opening an app</li>
-          <li><strong>16 forecast models</strong> — worldwide ECMWF, ICON and GFS + 13 local models</li>
+          <li><strong>Global &amp; regional models</strong> — choose your wind and wave forecasts</li>
           <li><strong>Any spot, worldwide</strong> — search the catalog or add a location on the map</li>
           <li><strong>Months between charges</strong> — built around low-power e-ink hardware</li>
         </ul>
@@ -73,46 +35,12 @@ const hardwareSpecs = [
         <h2>Choose your reTerminal</h2>
         <p>Windpeek is free software for all three models. Choose the screen size and display type that suits you.</p>
 
-        <ul class="hardware-models">
-          <li v-for="device in hardwareModels" :key="device.model" class="hardware-model">
-            <div class="hardware-model__visual">
-              <img :src="device.image" alt="" loading="lazy" decoding="async">
-            </div>
-            <p class="hardware-model__name">{{ device.model }}</p>
-          </li>
-        </ul>
-
-        <dl class="hardware-specs" aria-label="reTerminal comparison">
-          <div v-for="spec in hardwareSpecs" :key="spec.id" :class="['hardware-spec', `hardware-spec--${spec.id}`]">
-            <dt>{{ spec.label }}</dt>
-            <dd v-for="device in hardwareModels" :key="device.model">
-              <span
-                v-for="key in spec.keys"
-                :key="key"
-                class="hardware-spec__line"
-              >
-                <span :class="{ 'hardware-spec__copy--desktop': key === 'battery' }">{{ device[key] }}</span>
-                <span v-if="key === 'battery'" class="hardware-spec__copy--mobile">{{ device.batteryCompact }}</span>
-              </span>
-            </dd>
-          </div>
-        </dl>
-
-        <ul class="hardware-buys" aria-label="Buy a reTerminal">
-          <li v-for="device in hardwareModels" :key="device.model">
-            <a
-              class="button hardware-model__buy"
-              :href="device.buyUrl"
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-            >Buy for {{ device.price }}</a>
-          </li>
-        </ul>
+        <ReTerminalComparison />
 
         <div class="configure-step">
           <h2>Configure &amp; install</h2>
-          <p>Installing Windpeek is simple: choose your spot, connect your reTerminal with USB and press Install.</p>
-          <a class="button configure-action configure-action--desktop" href="?configure">Configure &amp; install</a>
+          <p>Choose your spot, customize your forecast screen, connect your reTerminal with USB and press Install.</p>
+          <a class="button configure-action configure-action--desktop" :href="configureHref">Configure &amp; install</a>
           <button class="button configure-action configure-action--mobile" type="button" disabled>Configure &amp; install on desktop</button>
         </div>
       </section>
@@ -122,19 +50,15 @@ const hardwareSpecs = [
         <div class="faq-list">
           <details>
             <summary>Will my spot be available?</summary>
-            <p>You can search the spot catalog or add any location on the map. Global forecast models cover spots worldwide; regional models and tide depend on location.</p>
+            <p>You can search the spot catalog or add any location on the map. Wind forecasts are available worldwide. Regional models, wave data and tide availability depend on your spot.</p>
           </details>
           <details>
             <summary>Which forecast models can I use?</summary>
-            <p>Forecasts come from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Choose worldwide models ECMWF, DWD ICON and NOAA GFS, or one of 13 high-resolution local models, including KNMI HARMONIE, DMI HARMONIE, AROME, UKV and HRRR, depending on your spot.</p>
+            <p>Start with Best Match for automatic selection, or choose wind and wave models separately in Advanced. Wind options include ECMWF, ICON, GFS and regional models for your spot. Wave options include MFWAM, GFS Wave and EWAM. Forecast data comes from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.</p>
           </details>
           <details>
             <summary>What can I show on the screen?</summary>
-            <p>Wind, gusts and direction are always included. You can also show weather, temperature, tide and a wind threshold, and choose your units.</p>
-          </details>
-          <details>
-            <summary>Will Windpeek show swell?</summary>
-            <p>Not yet. Swell support is planned, so Windpeek can eventually show more of the conditions that determine whether a session is worth it.</p>
+            <p>Show wind and waves as graphs or compact numbers, or hide either one. Wind includes gusts and direction; waves include swell height, direction and period. You can also show or hide weather, temperature and tide, and add a minimum wind threshold to the wind graph.</p>
           </details>
           <details>
             <summary>What do I need to install Windpeek?</summary>

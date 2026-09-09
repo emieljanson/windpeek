@@ -1,8 +1,10 @@
+import { SWELL_MODELS } from '../forecast/openMeteoSwell'
+import { MODULE_IDS, MODULE_SIZES, validModuleOrder } from './modules'
 import { resolveTimeFormat } from './localeTimeFormat'
 import { DEFAULT_THRESHOLD } from '../renderer/contract'
 import { validTimezone } from '../timezone'
 
-export const CONFIGURATION_VERSION = 4
+export const CONFIGURATION_VERSION = 5
 export const BOARD_ID = 'seeedstudio_reterminal_e1002'
 export const BOARD_IDS = Object.freeze({
   E1001: 'seeedstudio_reterminal_e1001',
@@ -25,6 +27,10 @@ export const TEMPERATURE_UNITS = Object.freeze(['celsius', 'fahrenheit'])
 export const TEMPERATURE_CHOICES = Object.freeze(['hide', ...TEMPERATURE_UNITS])
 
 export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
+  windSize: 'large',
+  swellSize: 'off',
+  swellModel: 'best_match',
+  moduleOrder: MODULE_IDS,
   showThreshold: false,
   threshold: DEFAULT_THRESHOLD,
   showWeather: true,
@@ -45,6 +51,10 @@ export function createDefaultDisplayConfiguration(locale) {
 export function displayConfigurationFromStore(store) {
   return {
     version: CONFIGURATION_VERSION,
+    windSize: store.windSize ?? 'large',
+    swellSize: store.swellSize ?? 'off',
+    swellModel: store.selectedSwellModelId ?? 'best_match',
+    moduleOrder: [...(store.moduleOrder ?? MODULE_IDS)],
     showThreshold: store.showThreshold,
     treatment: store.showThreshold ? 'threshold-line' : 'solid',
     threshold: store.threshold,
@@ -77,6 +87,10 @@ function canonicalInstalledConfiguration(configuration) {
     display.showDedicatedFooter ? 1 : 0,
     display.timeFormat,
     display.temperatureUnit,
+    display.windSize,
+    display.swellSize,
+    display.moduleOrder.join(','),
+    display.swellModel,
   ].join('|')
 }
 
@@ -102,7 +116,8 @@ export function validateInstalledConfiguration(configuration) {
       !TIMEZONE_PATTERN.test(spot.timezone)) return false
   if (typeof configuration.forecastModel !== 'string' ||
       configuration.forecastModel.length < 1 || configuration.forecastModel.length > 31) return false
-  if (!display || typeof display.showThreshold !== 'boolean' ||
+  if (!display || !MODULE_SIZES.includes(display.windSize) || !MODULE_SIZES.includes(display.swellSize) ||
+      !validModuleOrder(display.moduleOrder) || !SWELL_MODELS.some(model => model.value === display.swellModel) || typeof display.showThreshold !== 'boolean' ||
       !Number.isInteger(display.threshold) || display.threshold < 0 || display.threshold > 99 ||
       typeof display.showWeather !== 'boolean' ||
       typeof display.showTemperature !== 'boolean' || typeof display.showTide !== 'boolean' ||
@@ -129,6 +144,10 @@ export function createInstalledConfiguration({
     },
     forecastModel: String(modelId ?? ''),
     display: {
+      windSize: display?.windSize ?? 'large',
+      swellSize: display?.swellSize ?? 'off',
+      swellModel: display?.swellModel ?? 'best_match',
+      moduleOrder: [...(display?.moduleOrder ?? MODULE_IDS)],
       showThreshold: Boolean(display?.showThreshold),
       threshold: Number(display?.threshold),
       showWeather: Boolean(display?.showWeather),
