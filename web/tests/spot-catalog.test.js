@@ -120,7 +120,7 @@ describe('nearby default index', () => {
   }
   const surfSpot = { id: stableSpotId(surfCandidate.id), name: 'Popular Beach' }
 
-  it('includes named places but excludes clubs, schools and generic activity labels', () => {
+  it('includes only explicitly curated places, not automatically imported candidates', () => {
     const dolphinBeach = {
       ...surfCandidate,
       id: 'varun:dolphin-beach',
@@ -152,17 +152,16 @@ describe('nearby default index', () => {
       ],
       popularSpots: [{ ...surfSpot, priority: 3 }],
     })).toEqual([
-      { id: dolphinBeachSpot.id, priority: 1 },
       { id: surfSpot.id, priority: 3 },
     ].sort((left, right) => left.id.localeCompare(right.id)))
   })
 
-  it.each(['beach', 'spot-collection', 'watersport-location'])('includes a named %s without a curated override', (featureType) => {
+  it.each(['beach', 'spot-collection', 'watersport-location'])('does not recommend a named %s without an explicit selection', (featureType) => {
     expect(buildNearbyIndex({
       candidates: [{ ...surfCandidate, featureType }],
       catalog: [surfSpot],
       popularSpots: [],
-    })).toEqual([{ id: surfSpot.id, priority: 1 }])
+    })).toEqual([])
   })
 
   it('includes explicitly bundled places at baseline priority', () => {

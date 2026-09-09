@@ -126,10 +126,10 @@ describe('configurator store', () => {
       storage: memoryStorage(),
     })).resolves.toBe(true)
 
-    expect(store.selectedSpotId).toBe('spot-1ljalze')
+    expect(store.selectedSpotId).toBe('edam')
     expect(store.nearbyDefaultStatus).toBe('applied')
-    expect(forecastFetcher).toHaveBeenCalledWith(expect.objectContaining({ id: 'spot-1ljalze' }), {})
-    expect(tideFetcher).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'spot-1ljalze' }), {})
+    expect(forecastFetcher).toHaveBeenCalledWith(expect.objectContaining({ id: 'edam' }), {})
+    expect(tideFetcher).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'edam' }), {})
   })
 
   it('ignores the initial Brouwersdam tide after the nearby spot loads', async () => {
@@ -137,19 +137,19 @@ describe('configurator store', () => {
     const initialTide = deferred()
     const tideFetcher = vi.fn()
       .mockImplementationOnce(() => initialTide.promise)
-      .mockResolvedValueOnce(tideFor('spot-1ljalze'))
+      .mockResolvedValueOnce(tideFor('edam'))
     const initialTideRequest = store.initializeTide({ fetcher: tideFetcher })
 
     await store.initializeNearbyDefault({
       locationFetcher: vi.fn().mockResolvedValue({ latitude: 52.5126, longitude: 5.0486 }),
-      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('spot-1ljalze'))),
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('edam'))),
       tideFetcher,
     })
-    await vi.waitFor(() => expect(store.tide?.spotId).toBe('spot-1ljalze'))
+    await vi.waitFor(() => expect(store.tide?.spotId).toBe('edam'))
 
     initialTide.resolve(tideFor('brouwersdam'))
     await expect(initialTideRequest).resolves.toBe(false)
-    expect(store.tide.spotId).toBe('spot-1ljalze')
+    expect(store.tide.spotId).toBe('edam')
   })
 
   it('performs only one nearby lookup when initializers overlap', async () => {
@@ -159,7 +159,7 @@ describe('configurator store', () => {
 
     const first = store.initializeNearbyDefault({
       locationFetcher,
-      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('spot-1ljalze'))),
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast('edam'))),
     })
     const second = store.initializeNearbyDefault({ locationFetcher })
 

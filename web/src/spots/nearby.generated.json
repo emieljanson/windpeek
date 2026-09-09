@@ -12,616 +12,84 @@
     "priority": 1
   },
   {
-    "id": "spot-100yph0",
-    "priority": 1
-  },
-  {
-    "id": "spot-104ddkc",
-    "priority": 1
-  },
-  {
-    "id": "spot-106sn35",
-    "priority": 1
-  },
-  {
-    "id": "spot-10fvurm",
-    "priority": 1
-  },
-  {
-    "id": "spot-10h8b7s",
-    "priority": 1
-  },
-  {
-    "id": "spot-10hkjzy",
-    "priority": 1
-  },
-  {
-    "id": "spot-10ockya",
-    "priority": 1
-  },
-  {
-    "id": "spot-10oivy8",
-    "priority": 1
-  },
-  {
-    "id": "spot-10prqtu",
-    "priority": 1
-  },
-  {
-    "id": "spot-10yc6n9",
-    "priority": 1
-  },
-  {
     "id": "spot-111tcys",
-    "priority": 1
-  },
-  {
-    "id": "spot-116ibul",
-    "priority": 1
-  },
-  {
-    "id": "spot-118bsc8",
-    "priority": 1
-  },
-  {
-    "id": "spot-11anyx",
-    "priority": 1
-  },
-  {
-    "id": "spot-11bsynr",
-    "priority": 1
-  },
-  {
-    "id": "spot-11c3uyy",
-    "priority": 1
-  },
-  {
-    "id": "spot-11ihp15",
-    "priority": 1
-  },
-  {
-    "id": "spot-11jckt3",
-    "priority": 1
-  },
-  {
-    "id": "spot-11s64tj",
-    "priority": 1
-  },
-  {
-    "id": "spot-11sz9tr",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-11wxail",
-    "priority": 1
-  },
-  {
-    "id": "spot-122gwf3",
-    "priority": 1
-  },
-  {
-    "id": "spot-125y4to",
-    "priority": 1
-  },
-  {
-    "id": "spot-126rqo0",
-    "priority": 1
-  },
-  {
-    "id": "spot-12fua4o",
-    "priority": 1
-  },
-  {
-    "id": "spot-12gnskw",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-12mlplt",
-    "priority": 1
-  },
-  {
-    "id": "spot-12q5hsw",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-12vyqh5",
-    "priority": 1
-  },
-  {
-    "id": "spot-12waii0",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-12z16q2",
-    "priority": 1
-  },
-  {
-    "id": "spot-131q1uj",
-    "priority": 1
-  },
-  {
-    "id": "spot-139wzdp",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-13a4xvv",
-    "priority": 1
-  },
-  {
-    "id": "spot-13b7bm9",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-13gm7yo",
-    "priority": 1
-  },
-  {
-    "id": "spot-13k4jku",
-    "priority": 1
-  },
-  {
-    "id": "spot-13kr2kl",
-    "priority": 1
-  },
-  {
-    "id": "spot-13ktluk",
-    "priority": 1
-  },
-  {
-    "id": "spot-13qwhok",
-    "priority": 1
-  },
-  {
-    "id": "spot-13t9btx",
-    "priority": 1
-  },
-  {
-    "id": "spot-142uisa",
-    "priority": 1
-  },
-  {
-    "id": "spot-143eu71",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-144z48g",
-    "priority": 1
-  },
-  {
-    "id": "spot-145o7m0",
-    "priority": 1
-  },
-  {
-    "id": "spot-147neg4",
-    "priority": 1
-  },
-  {
-    "id": "spot-1484hsv",
-    "priority": 1
-  },
-  {
-    "id": "spot-149xfu0",
-    "priority": 1
-  },
-  {
-    "id": "spot-14bw1ga",
-    "priority": 1
-  },
-  {
-    "id": "spot-14exw14",
-    "priority": 1
-  },
-  {
-    "id": "spot-14fknt0",
-    "priority": 1
-  },
-  {
-    "id": "spot-14fnofx",
-    "priority": 1
-  },
-  {
-    "id": "spot-14jzi4y",
-    "priority": 1
-  },
-  {
-    "id": "spot-14k84nu",
-    "priority": 1
-  },
-  {
-    "id": "spot-14nu7xt",
-    "priority": 1
-  },
-  {
-    "id": "spot-14o2tsc",
-    "priority": 1
-  },
-  {
-    "id": "spot-14os0mg",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-14osiar",
-    "priority": 1
-  },
-  {
-    "id": "spot-14ucxct",
-    "priority": 1
-  },
-  {
-    "id": "spot-14z04le",
-    "priority": 1
-  },
-  {
-    "id": "spot-14ze3x7",
-    "priority": 1
-  },
-  {
-    "id": "spot-158rpop",
-    "priority": 1
-  },
-  {
-    "id": "spot-159jgvx",
-    "priority": 1
-  },
-  {
-    "id": "spot-15d2zr5",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-15ey2jy",
-    "priority": 1
-  },
-  {
-    "id": "spot-15ge1qg",
-    "priority": 1
-  },
-  {
-    "id": "spot-15i9ca1",
-    "priority": 1
-  },
-  {
-    "id": "spot-15ichs0",
-    "priority": 1
-  },
-  {
-    "id": "spot-15irbdo",
-    "priority": 1
-  },
-  {
-    "id": "spot-15iugvn",
-    "priority": 1
-  },
-  {
-    "id": "spot-15ln5a0",
-    "priority": 1
-  },
-  {
-    "id": "spot-15mm6k0",
-    "priority": 1
-  },
-  {
-    "id": "spot-15s8xz0",
-    "priority": 1
-  },
-  {
-    "id": "spot-15su2km",
-    "priority": 1
-  },
-  {
-    "id": "spot-15swna4",
-    "priority": 1
-  },
-  {
-    "id": "spot-15tltru",
-    "priority": 1
-  },
-  {
-    "id": "spot-15xzx6d",
-    "priority": 1
-  },
-  {
-    "id": "spot-1628jnz",
-    "priority": 1
-  },
-  {
-    "id": "spot-162t6la",
-    "priority": 1
-  },
-  {
-    "id": "spot-162to9l",
-    "priority": 1
-  },
-  {
-    "id": "spot-162wtrk",
-    "priority": 1
-  },
-  {
-    "id": "spot-164tsbh",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1695p02",
-    "priority": 1
-  },
-  {
-    "id": "spot-16c85cy",
-    "priority": 1
-  },
-  {
-    "id": "spot-16cbaux",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-16ct9yk",
-    "priority": 1
-  },
-  {
-    "id": "spot-16cwfgj",
-    "priority": 1
-  },
-  {
-    "id": "spot-16f8d4n",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-16i3813",
-    "priority": 1
-  },
-  {
-    "id": "spot-16m7r1x",
-    "priority": 1
-  },
-  {
-    "id": "spot-16mw15i",
-    "priority": 1
-  },
-  {
-    "id": "spot-16opkcw",
-    "priority": 1
-  },
-  {
-    "id": "spot-16ppkcq",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-16rjfvk",
     "priority": 3
   },
   {
-    "id": "spot-16shgac",
-    "priority": 1
-  },
-  {
-    "id": "spot-16sklsb",
-    "priority": 1
-  },
-  {
-    "id": "spot-16vnx5g",
-    "priority": 1
-  },
-  {
-    "id": "spot-16wai8v",
-    "priority": 1
-  },
-  {
-    "id": "spot-16wvmuh",
-    "priority": 1
-  },
-  {
-    "id": "spot-16wxgru",
-    "priority": 1
-  },
-  {
-    "id": "spot-16xwxi3",
-    "priority": 1
-  },
-  {
-    "id": "spot-16z3gt6",
-    "priority": 1
-  },
-  {
     "id": "spot-172h1zb",
-    "priority": 1
-  },
-  {
-    "id": "spot-172x2u",
-    "priority": 1
-  },
-  {
-    "id": "spot-1767y8f",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-176a3xu",
-    "priority": 1
-  },
-  {
-    "id": "spot-17b2rqe",
-    "priority": 1
-  },
-  {
-    "id": "spot-17cbnru",
-    "priority": 1
-  },
-  {
-    "id": "spot-17cgnoa",
-    "priority": 1
-  },
-  {
-    "id": "spot-17cjt69",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-17e7avd",
     "priority": 3
   },
   {
-    "id": "spot-17en9so",
-    "priority": 1
-  },
-  {
-    "id": "spot-17hxlz",
-    "priority": 1
-  },
-  {
-    "id": "spot-17jklmb",
-    "priority": 1
-  },
-  {
-    "id": "spot-17m1frl",
-    "priority": 1
-  },
-  {
-    "id": "spot-17m759l",
-    "priority": 1
-  },
-  {
-    "id": "spot-17mg9d9",
-    "priority": 1
-  },
-  {
-    "id": "spot-17qxlfd",
-    "priority": 1
-  },
-  {
-    "id": "spot-180tjy2",
-    "priority": 1
-  },
-  {
     "id": "spot-187q11l",
     "priority": 2
   },
   {
-    "id": "spot-18cuflw",
-    "priority": 1
-  },
-  {
-    "id": "spot-18ghqu9",
-    "priority": 1
-  },
-  {
-    "id": "spot-18gi7y5",
-    "priority": 1
-  },
-  {
-    "id": "spot-18k7vfw",
-    "priority": 1
-  },
-  {
-    "id": "spot-18ot79c",
-    "priority": 1
-  },
-  {
-    "id": "spot-18sf13w",
-    "priority": 1
-  },
-  {
-    "id": "spot-18teyqz",
-    "priority": 1
-  },
-  {
-    "id": "spot-1947bsn",
-    "priority": 1
-  },
-  {
-    "id": "spot-19495vd",
-    "priority": 1
-  },
-  {
-    "id": "spot-194vlw8",
-    "priority": 1
-  },
-  {
-    "id": "spot-194xfdn",
-    "priority": 1
-  },
-  {
-    "id": "spot-196akba",
-    "priority": 1
-  },
-  {
-    "id": "spot-19e0dkn",
-    "priority": 1
-  },
-  {
-    "id": "spot-19efhde",
-    "priority": 1
-  },
-  {
-    "id": "spot-19g1klj",
-    "priority": 1
-  },
-  {
-    "id": "spot-19kwdsc",
-    "priority": 1
-  },
-  {
-    "id": "spot-19v9egk",
-    "priority": 1
-  },
-  {
-    "id": "spot-19x5wji",
-    "priority": 1
-  },
-  {
-    "id": "spot-19y0mg5",
-    "priority": 1
-  },
-  {
-    "id": "spot-19yr9h6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1a2ii98",
-    "priority": 1
-  },
-  {
-    "id": "spot-1a5905j",
-    "priority": 1
-  },
-  {
-    "id": "spot-1a8qv65",
-    "priority": 1
-  },
-  {
     "id": "spot-1aato66",
-    "priority": 1
-  },
-  {
-    "id": "spot-1adnui1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1akt9v5",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ao1hon",
-    "priority": 1
-  },
-  {
-    "id": "spot-1aooutb",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ast822",
-    "priority": 1
-  },
-  {
-    "id": "spot-1at4py",
-    "priority": 1
-  },
-  {
-    "id": "spot-1au35d3",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1b4vmr2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1b687j0",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1b6wz8k",
@@ -629,651 +97,75 @@
   },
   {
     "id": "spot-1b91veg",
-    "priority": 1
-  },
-  {
-    "id": "spot-1b9w4du",
-    "priority": 1
-  },
-  {
-    "id": "spot-1babmdt",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1bcta27",
-    "priority": 1
-  },
-  {
-    "id": "spot-1bdhomy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1bf2735",
-    "priority": 1
-  },
-  {
-    "id": "spot-1bim9vw",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1bjdbmc",
-    "priority": 1
-  },
-  {
-    "id": "spot-1br2d2r",
-    "priority": 1
-  },
-  {
-    "id": "spot-1c0jzo3",
-    "priority": 1
-  },
-  {
-    "id": "spot-1c163wd",
-    "priority": 1
-  },
-  {
-    "id": "spot-1c2etyn",
-    "priority": 1
-  },
-  {
-    "id": "spot-1c3kmls",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cayeyq",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cdfdia",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cgcg1e",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cjl12e",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1cl165o",
-    "priority": 1
-  },
-  {
-    "id": "spot-1coli62",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cq211v",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cqwdgk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1crbrb6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1csuy9n",
-    "priority": 1
-  },
-  {
-    "id": "spot-1cv0run",
-    "priority": 1
-  },
-  {
-    "id": "spot-1d2fzoj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1d2zy1b",
-    "priority": 1
-  },
-  {
-    "id": "spot-1d3dz7h",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dd1sbp",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dhwpq9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dlsycn",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dpfejr",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ds54ja",
-    "priority": 1
-  },
-  {
-    "id": "spot-1duxz3b",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dxzrx6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1dyhdsa",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1dzssg",
-    "priority": 1
-  },
-  {
-    "id": "spot-1e2hhom",
-    "priority": 1
-  },
-  {
-    "id": "spot-1e88xbi",
-    "priority": 1
-  },
-  {
-    "id": "spot-1e953bg",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ebo52u",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ej4p0f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ek0tiy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1eld5tn",
-    "priority": 1
-  },
-  {
-    "id": "spot-1eolnsk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1f0d7jc",
-    "priority": 1
-  },
-  {
-    "id": "spot-1f0gd1b",
-    "priority": 1
-  },
-  {
-    "id": "spot-1f30qwe",
-    "priority": 1
-  },
-  {
-    "id": "spot-1f4uhev",
-    "priority": 1
-  },
-  {
-    "id": "spot-1f5dk4n",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1f6b89c",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fd0cld",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fdbyns",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fdio7p",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ff80aj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ffd5tm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ffhljj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fja5y7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fmjrcx",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1fn33sb",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fppb1o",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fq4zoh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1fwl3bh",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1g00h7w",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g2jhvd",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g3lqcs",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g4a5f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g5m5r",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g6z5oa",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g72b69",
-    "priority": 1
-  },
-  {
-    "id": "spot-1g75k8v",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ga9n18",
-    "priority": 1
-  },
-  {
-    "id": "spot-1geb807",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1geedi6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1getjr9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ggyrd9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gj6f2f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gjr9mk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gkmc46",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gnlguw",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gr0wvm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gtqvbj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1gyny32",
-    "priority": 1
-  },
-  {
-    "id": "spot-1h11496",
-    "priority": 1
-  },
-  {
-    "id": "spot-1h77i3x",
-    "priority": 1
-  },
-  {
-    "id": "spot-1haf0dz",
-    "priority": 1
-  },
-  {
-    "id": "spot-1hb0py5",
-    "priority": 1
-  },
-  {
-    "id": "spot-1he2wbd",
-    "priority": 1
-  },
-  {
-    "id": "spot-1hhy4nk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1hji70i",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ho79zh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1hyh732",
-    "priority": 1
-  },
-  {
-    "id": "spot-1i05y2d",
-    "priority": 1
-  },
-  {
-    "id": "spot-1i1iy7l",
-    "priority": 1
-  },
-  {
-    "id": "spot-1i7h7g9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1icequy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1iigeh0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1io04v9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1isj5ny",
-    "priority": 1
-  },
-  {
-    "id": "spot-1isr395",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1it14rl",
     "priority": 3
   },
   {
-    "id": "spot-1iv1q83",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ivjr6x",
-    "priority": 1
-  },
-  {
-    "id": "spot-1iwssuy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ixzini",
-    "priority": 1
-  },
-  {
-    "id": "spot-1iy04nw",
-    "priority": 1
-  },
-  {
-    "id": "spot-1j0c22n",
-    "priority": 1
-  },
-  {
-    "id": "spot-1j2fluy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1j3czo",
-    "priority": 1
-  },
-  {
-    "id": "spot-1j6zp5n",
-    "priority": 1
-  },
-  {
-    "id": "spot-1j9nzm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jcid1w",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jclijv",
-    "priority": 1
-  },
-  {
     "id": "spot-1jcqe7q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jecjw2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jkyt2m",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jml48u",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jvjtfa",
-    "priority": 1
-  },
-  {
-    "id": "spot-1jwzjjh",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1jxa2i7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1k5chdk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1k9f8lj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1kfkehr",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1kgjxbr",
     "priority": 2
   },
   {
-    "id": "spot-1kkqhre",
-    "priority": 1
-  },
-  {
-    "id": "spot-1kmnl07",
-    "priority": 1
-  },
-  {
-    "id": "spot-1kn1kgw",
-    "priority": 1
-  },
-  {
-    "id": "spot-1kn8j39",
-    "priority": 1
-  },
-  {
-    "id": "spot-1knjc0z",
-    "priority": 1
-  },
-  {
-    "id": "spot-1kqjj0q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ks0gfo",
-    "priority": 1
-  },
-  {
-    "id": "spot-1l0k3zk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1l12qel",
-    "priority": 1
-  },
-  {
-    "id": "spot-1l6n02b",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lgmlra",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lilt9z",
-    "priority": 1
-  },
-  {
     "id": "spot-1ljalze",
     "priority": 3
   },
   {
-    "id": "spot-1lkbjpm",
-    "priority": 1
-  },
-  {
     "id": "spot-1lkn46v",
-    "priority": 1
-  },
-  {
-    "id": "spot-1llns5y",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lmcsse",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lmeofc",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1loiq5f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lojklc",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lr74dp",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lumpvu",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lvut0s",
-    "priority": 1
-  },
-  {
-    "id": "spot-1lwfxme",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ly4ucm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1m0lt58",
-    "priority": 1
-  },
-  {
-    "id": "spot-1m2u4ea",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1m4b6zg",
-    "priority": 1
-  },
-  {
-    "id": "spot-1m4mbkt",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1m5uepr",
     "priority": 3
-  },
-  {
-    "id": "spot-1m9853e",
-    "priority": 1
-  },
-  {
-    "id": "spot-1maleu7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mfquwr",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mfu0eq",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mfx5wp",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mg0beo",
-    "priority": 1
-  },
-  {
-    "id": "spot-1midnk6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mj7qsd",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mly2y0",
-    "priority": 1
   },
   {
     "id": "spot-1msvmgm",
@@ -1281,1195 +173,143 @@
   },
   {
     "id": "spot-1mwmkdt",
-    "priority": 1
-  },
-  {
-    "id": "spot-1mzq5oj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1n4qtlh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1nhyqus",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1nkwulk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1nts0vl",
-    "priority": 1
-  },
-  {
-    "id": "spot-1nvteua",
-    "priority": 1
-  },
-  {
-    "id": "spot-1nzayt9",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1o27tup",
-    "priority": 1
-  },
-  {
-    "id": "spot-1o68r2n",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ofwrzi",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ohfmgs",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ojtu9q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1opt86i",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ot3vyh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1p4gcfn",
-    "priority": 1
-  },
-  {
-    "id": "spot-1p5tz32",
-    "priority": 1
-  },
-  {
-    "id": "spot-1p7wcce",
-    "priority": 1
-  },
-  {
-    "id": "spot-1paol87",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pcu0w",
-    "priority": 1
-  },
-  {
-    "id": "spot-1phssje",
-    "priority": 1
-  },
-  {
-    "id": "spot-1phvy1d",
-    "priority": 1
-  },
-  {
-    "id": "spot-1piz1qm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pjv6re",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pjyc9d",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pklb0i",
-    "priority": 1
-  },
-  {
-    "id": "spot-1plq729",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1prod6p",
     "priority": 2
   },
   {
-    "id": "spot-1pt1sxk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ptxxyc",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pwe4e3",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pydxp0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1pzz9up",
-    "priority": 1
-  },
-  {
-    "id": "spot-1q7ra93",
-    "priority": 1
-  },
-  {
     "id": "spot-1q9cua",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qa6q1k",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qcxutj",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1qdx5ca",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qjzsv1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qmxgii",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qqdrm7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qr13ta",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qs6z4k",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qt9g8b",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1quxpb9",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qwx27h",
-    "priority": 1
-  },
-  {
-    "id": "spot-1qymgzc",
-    "priority": 1
-  },
-  {
-    "id": "spot-1r2yytt",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rb3gp7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rbe2u2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rkzww7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rl32e6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rqwb53",
-    "priority": 1
-  },
-  {
-    "id": "spot-1rtmr0j",
-    "priority": 1
-  },
-  {
-    "id": "spot-1s08h2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1scg6ey",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1seomao",
-    "priority": 1
-  },
-  {
-    "id": "spot-1sf1vh3",
-    "priority": 1
-  },
-  {
-    "id": "spot-1sfqkh2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1spd4ht",
-    "priority": 1
-  },
-  {
-    "id": "spot-1sqgs73",
-    "priority": 1
-  },
-  {
-    "id": "spot-1swj3c0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1t6ip0z",
-    "priority": 1
-  },
-  {
-    "id": "spot-1tdocq7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1tgiapy",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1tigy0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1toalgt",
-    "priority": 1
-  },
-  {
-    "id": "spot-1tqhwex",
-    "priority": 1
-  },
-  {
-    "id": "spot-1tzz1fv",
-    "priority": 1
-  },
-  {
-    "id": "spot-1u0hi3w",
-    "priority": 1
-  },
-  {
-    "id": "spot-1u232ko",
-    "priority": 1
-  },
-  {
-    "id": "spot-1u8bk1v",
-    "priority": 1
-  },
-  {
-    "id": "spot-1u8js24",
-    "priority": 1
-  },
-  {
-    "id": "spot-1uah3sv",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ud13ta",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1uevc7f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1uhp0i2",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ukgphu",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1uobqca",
     "priority": 3
   },
   {
-    "id": "spot-1up1w52",
-    "priority": 1
-  },
-  {
-    "id": "spot-1urgak0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1usy34g",
-    "priority": 1
-  },
-  {
-    "id": "spot-1uugb6t",
-    "priority": 1
-  },
-  {
-    "id": "spot-1uvlj57",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v1cqr0",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v427uy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v4j2dr",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v5l4u6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v64kwy",
-    "priority": 1
-  },
-  {
-    "id": "spot-1v82xrz",
-    "priority": 1
-  },
-  {
-    "id": "spot-1van3qz",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vc1gxt",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vcxaie",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vhgdv8",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vl52h8",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vli94w",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vnespq",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vof49q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vr6pgm",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vr7dsf",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vsrvw1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vwwhwc",
-    "priority": 1
-  },
-  {
     "id": "spot-1vwzneb",
     "priority": 2
   },
   {
-    "id": "spot-1vyepyp",
-    "priority": 1
-  },
-  {
-    "id": "spot-1vzjxx3",
-    "priority": 1
-  },
-  {
-    "id": "spot-1w0fui7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1w4lwtw",
-    "priority": 1
-  },
-  {
-    "id": "spot-1w549v6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1w9un20",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wa31mf",
-    "priority": 1
-  },
-  {
-    "id": "spot-1weliiv",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wf7i1q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wfdwpu",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wgvpaa",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wik38f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wjj5b1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1wkbjhc",
-    "priority": 1
-  },
-  {
     "id": "spot-1woimh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1worf7s",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1x27jox",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xa4qlh",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-1xbvsg",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xiq8ap",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xkr1nk",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xogm60",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xtdduh",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xuwv94",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xw6cru",
-    "priority": 1
-  },
-  {
-    "id": "spot-1xyc18",
-    "priority": 1
-  },
-  {
-    "id": "spot-1y0gt00",
-    "priority": 1
-  },
-  {
-    "id": "spot-1y5azq6",
-    "priority": 1
-  },
-  {
-    "id": "spot-1y722ge",
-    "priority": 1
-  },
-  {
-    "id": "spot-1y9s7hj",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ybep0o",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ycvq0m",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yg5o2q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yiff8x",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yo1oba",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yovoc1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1ypkpwt",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yqq7l1",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yw7x3p",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yw9e7q",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yxch42",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yxra8s",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yxsbrl",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yxzo15",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yyp24f",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yyva10",
-    "priority": 1
-  },
-  {
-    "id": "spot-1yz72n7",
-    "priority": 1
-  },
-  {
-    "id": "spot-1z0mr8b",
-    "priority": 1
-  },
-  {
-    "id": "spot-20u1yv",
-    "priority": 1
-  },
-  {
-    "id": "spot-21okfb",
-    "priority": 1
-  },
-  {
-    "id": "spot-23q0n7",
-    "priority": 1
-  },
-  {
-    "id": "spot-25uclm",
-    "priority": 1
-  },
-  {
-    "id": "spot-29x60g",
-    "priority": 1
-  },
-  {
-    "id": "spot-2bph86",
-    "priority": 1
-  },
-  {
-    "id": "spot-2dsa58",
-    "priority": 1
-  },
-  {
-    "id": "spot-2et4ha",
-    "priority": 1
-  },
-  {
-    "id": "spot-2gnq0f",
-    "priority": 1
-  },
-  {
-    "id": "spot-2iodwn",
-    "priority": 1
-  },
-  {
-    "id": "spot-2ivq3",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-2jbn3t",
-    "priority": 1
-  },
-  {
-    "id": "spot-2juqe0",
-    "priority": 1
-  },
-  {
-    "id": "spot-2jwrpf",
-    "priority": 1
-  },
-  {
-    "id": "spot-2lu611",
-    "priority": 1
-  },
-  {
-    "id": "spot-2mprgf",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-2y9t0q",
-    "priority": 1
-  },
-  {
-    "id": "spot-2ywcfw",
-    "priority": 1
-  },
-  {
-    "id": "spot-33uxdq",
-    "priority": 1
-  },
-  {
-    "id": "spot-34a05e",
-    "priority": 1
-  },
-  {
-    "id": "spot-384gz7",
-    "priority": 1
-  },
-  {
-    "id": "spot-386pj7",
-    "priority": 1
-  },
-  {
-    "id": "spot-38ad2i",
-    "priority": 1
-  },
-  {
-    "id": "spot-38vy4v",
-    "priority": 1
-  },
-  {
-    "id": "spot-3cxdyz",
-    "priority": 1
-  },
-  {
-    "id": "spot-3h6vuf",
-    "priority": 1
-  },
-  {
-    "id": "spot-3icxd1",
-    "priority": 1
-  },
-  {
-    "id": "spot-3mrqur",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-3nybza",
-    "priority": 1
-  },
-  {
-    "id": "spot-3pi5n",
-    "priority": 1
-  },
-  {
-    "id": "spot-3pl3rn",
-    "priority": 1
-  },
-  {
-    "id": "spot-3ss00u",
-    "priority": 1
-  },
-  {
-    "id": "spot-41qccu",
-    "priority": 1
-  },
-  {
-    "id": "spot-42rlpt",
-    "priority": 1
-  },
-  {
-    "id": "spot-42ur7s",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-45a6j6",
-    "priority": 1
-  },
-  {
-    "id": "spot-47yqw8",
-    "priority": 1
-  },
-  {
-    "id": "spot-4a41g5",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-4aqj48",
-    "priority": 1
-  },
-  {
-    "id": "spot-4ggntb",
-    "priority": 1
-  },
-  {
-    "id": "spot-4gpkbq",
-    "priority": 1
-  },
-  {
-    "id": "spot-4i0fm3",
-    "priority": 1
-  },
-  {
-    "id": "spot-4mtylq",
-    "priority": 1
-  },
-  {
-    "id": "spot-4rxya6",
-    "priority": 1
-  },
-  {
-    "id": "spot-4t206t",
-    "priority": 1
-  },
-  {
-    "id": "spot-4wtkap",
-    "priority": 1
-  },
-  {
-    "id": "spot-4xk8eo",
-    "priority": 1
-  },
-  {
-    "id": "spot-4y1ch4",
-    "priority": 1
-  },
-  {
-    "id": "spot-51wr80",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-538c3k",
     "priority": 3
   },
   {
-    "id": "spot-54k2ys",
-    "priority": 1
-  },
-  {
-    "id": "spot-56fhqf",
-    "priority": 1
-  },
-  {
-    "id": "spot-576p8m",
-    "priority": 1
-  },
-  {
     "id": "spot-58jqy5",
-    "priority": 1
-  },
-  {
-    "id": "spot-5djb7y",
-    "priority": 1
-  },
-  {
-    "id": "spot-5djfu8",
-    "priority": 1
-  },
-  {
-    "id": "spot-5etl17",
-    "priority": 1
-  },
-  {
-    "id": "spot-5f3msp",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-5fnu4u",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-5n6oza",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-5s68eb",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-5uhpzl",
-    "priority": 1
-  },
-  {
-    "id": "spot-5xi66u",
-    "priority": 1
-  },
-  {
-    "id": "spot-615ibj",
-    "priority": 1
-  },
-  {
-    "id": "spot-64hbok",
-    "priority": 1
-  },
-  {
-    "id": "spot-64y4vc",
-    "priority": 1
-  },
-  {
-    "id": "spot-6aqf7i",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-6cqkdv",
     "priority": 3
   },
   {
-    "id": "spot-6ems6j",
-    "priority": 1
-  },
-  {
-    "id": "spot-6fypxz",
-    "priority": 1
-  },
-  {
-    "id": "spot-6hhum4",
-    "priority": 1
-  },
-  {
-    "id": "spot-6hl043",
-    "priority": 1
-  },
-  {
-    "id": "spot-6m51h8",
-    "priority": 1
-  },
-  {
-    "id": "spot-6nqh5e",
-    "priority": 1
-  },
-  {
-    "id": "spot-6rgz9r",
-    "priority": 1
-  },
-  {
-    "id": "spot-6rklt2",
-    "priority": 1
-  },
-  {
-    "id": "spot-6s5qeo",
-    "priority": 1
-  },
-  {
-    "id": "spot-71h202",
-    "priority": 1
-  },
-  {
-    "id": "spot-75ycae",
-    "priority": 1
-  },
-  {
-    "id": "spot-7648v6",
-    "priority": 1
-  },
-  {
-    "id": "spot-7dogfa",
-    "priority": 1
-  },
-  {
-    "id": "spot-7kgcka",
-    "priority": 1
-  },
-  {
-    "id": "spot-7m4jhl",
-    "priority": 1
-  },
-  {
-    "id": "spot-7nb9ll",
-    "priority": 1
-  },
-  {
-    "id": "spot-7rkcqv",
-    "priority": 1
-  },
-  {
-    "id": "spot-7sksne",
-    "priority": 1
-  },
-  {
-    "id": "spot-7toc7e",
-    "priority": 1
-  },
-  {
-    "id": "spot-7w0zol",
-    "priority": 1
-  },
-  {
     "id": "spot-7w456k",
     "priority": 2
   },
   {
-    "id": "spot-85im9x",
-    "priority": 1
-  },
-  {
     "id": "spot-8byxky",
-    "priority": 1
-  },
-  {
-    "id": "spot-8dgc5o",
-    "priority": 1
-  },
-  {
-    "id": "spot-8fyq90",
-    "priority": 1
-  },
-  {
-    "id": "spot-8igxrc",
-    "priority": 1
-  },
-  {
-    "id": "spot-8js5qk",
-    "priority": 1
-  },
-  {
-    "id": "spot-8sgjgb",
-    "priority": 1
-  },
-  {
-    "id": "spot-8x6kre",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-8zhfcu",
     "priority": 3
   },
   {
-    "id": "spot-916zse",
-    "priority": 1
-  },
-  {
     "id": "spot-99h11t",
-    "priority": 1
-  },
-  {
-    "id": "spot-9cg8ik",
-    "priority": 1
-  },
-  {
-    "id": "spot-9ciwc8",
-    "priority": 1
-  },
-  {
-    "id": "spot-9lgfg6",
-    "priority": 1
-  },
-  {
-    "id": "spot-9tgdww",
-    "priority": 1
-  },
-  {
-    "id": "spot-9u4xzu",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-9wey87",
-    "priority": 1
-  },
-  {
-    "id": "spot-9wi3q6",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-a40yqc",
-    "priority": 1
-  },
-  {
-    "id": "spot-a5qrhw",
-    "priority": 1
-  },
-  {
-    "id": "spot-aeiz0c",
-    "priority": 1
-  },
-  {
-    "id": "spot-aftiou",
-    "priority": 1
-  },
-  {
-    "id": "spot-ag1pur",
-    "priority": 1
-  },
-  {
-    "id": "spot-ag88ti",
-    "priority": 1
-  },
-  {
-    "id": "spot-ah99yl",
-    "priority": 1
-  },
-  {
-    "id": "spot-akdb4j",
-    "priority": 1
-  },
-  {
-    "id": "spot-alqo9x",
-    "priority": 1
-  },
-  {
-    "id": "spot-am58l4",
-    "priority": 1
-  },
-  {
-    "id": "spot-an5kyw",
-    "priority": 1
-  },
-  {
-    "id": "spot-an8zyp",
-    "priority": 1
-  },
-  {
-    "id": "spot-aohla2",
-    "priority": 1
-  },
-  {
-    "id": "spot-azsq2s",
-    "priority": 1
-  },
-  {
-    "id": "spot-b61059",
-    "priority": 1
-  },
-  {
-    "id": "spot-b8yiqd",
-    "priority": 1
-  },
-  {
-    "id": "spot-big6jt",
-    "priority": 1
-  },
-  {
-    "id": "spot-blo6jd",
-    "priority": 1
-  },
-  {
-    "id": "spot-bobpwf",
-    "priority": 1
-  },
-  {
-    "id": "spot-bsza16",
-    "priority": 1
-  },
-  {
-    "id": "spot-bxldo6",
-    "priority": 1
-  },
-  {
-    "id": "spot-bzbvl5",
-    "priority": 1
-  },
-  {
-    "id": "spot-c0v5wn",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-c68iix",
-    "priority": 1
-  },
-  {
-    "id": "spot-ccbtf1",
-    "priority": 1
-  },
-  {
-    "id": "spot-cd9bnj",
-    "priority": 1
-  },
-  {
-    "id": "spot-cjbc7g",
-    "priority": 1
-  },
-  {
-    "id": "spot-cmp0hj",
-    "priority": 1
-  },
-  {
-    "id": "spot-ctda4u",
-    "priority": 1
-  },
-  {
-    "id": "spot-cxo9li",
-    "priority": 1
-  },
-  {
-    "id": "spot-cxspzb",
-    "priority": 1
-  },
-  {
-    "id": "spot-cyyqy7",
-    "priority": 1
-  },
-  {
-    "id": "spot-d3lphe",
-    "priority": 1
-  },
-  {
-    "id": "spot-d8vwqr",
-    "priority": 1
-  },
-  {
-    "id": "spot-d9lsp7",
-    "priority": 1
-  },
-  {
-    "id": "spot-d9opg7",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-d9oy76",
-    "priority": 1
-  },
-  {
-    "id": "spot-dat0mg",
-    "priority": 1
-  },
-  {
-    "id": "spot-ditdnn",
-    "priority": 1
-  },
-  {
-    "id": "spot-dsv44p",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-dwdii0",
@@ -2480,84 +320,8 @@
     "priority": 3
   },
   {
-    "id": "spot-e1cfhf",
-    "priority": 1
-  },
-  {
-    "id": "spot-e5rn6v",
-    "priority": 1
-  },
-  {
-    "id": "spot-echdu1",
-    "priority": 1
-  },
-  {
-    "id": "spot-edcama",
-    "priority": 1
-  },
-  {
     "id": "spot-edqih1",
     "priority": 2
-  },
-  {
-    "id": "spot-efhnx8",
-    "priority": 1
-  },
-  {
-    "id": "spot-efjgqk",
-    "priority": 1
-  },
-  {
-    "id": "spot-ek6iao",
-    "priority": 1
-  },
-  {
-    "id": "spot-ekdaop",
-    "priority": 1
-  },
-  {
-    "id": "spot-enf1t8",
-    "priority": 1
-  },
-  {
-    "id": "spot-eni7b7",
-    "priority": 1
-  },
-  {
-    "id": "spot-epj2fj",
-    "priority": 1
-  },
-  {
-    "id": "spot-eucwdo",
-    "priority": 1
-  },
-  {
-    "id": "spot-ex457j",
-    "priority": 1
-  },
-  {
-    "id": "spot-exeni7",
-    "priority": 1
-  },
-  {
-    "id": "spot-exj0zu",
-    "priority": 1
-  },
-  {
-    "id": "spot-exjob0",
-    "priority": 1
-  },
-  {
-    "id": "spot-f10fc2",
-    "priority": 1
-  },
-  {
-    "id": "spot-f1c3xn",
-    "priority": 1
-  },
-  {
-    "id": "spot-f4fnkm",
-    "priority": 1
   },
   {
     "id": "spot-f6ci14",
@@ -2565,743 +329,91 @@
   },
   {
     "id": "spot-f6uzwe",
-    "priority": 1
-  },
-  {
-    "id": "spot-f6wa3j",
-    "priority": 1
-  },
-  {
-    "id": "spot-fa08x4",
-    "priority": 1
-  },
-  {
-    "id": "spot-fa5h9c",
-    "priority": 1
-  },
-  {
-    "id": "spot-falp8z",
-    "priority": 1
-  },
-  {
-    "id": "spot-fb0111",
-    "priority": 1
-  },
-  {
-    "id": "spot-fb9agi",
-    "priority": 1
-  },
-  {
-    "id": "spot-fbaxnc",
-    "priority": 1
-  },
-  {
-    "id": "spot-fdnc9y",
-    "priority": 1
-  },
-  {
-    "id": "spot-fi7h8v",
-    "priority": 1
-  },
-  {
-    "id": "spot-finzq4",
-    "priority": 1
-  },
-  {
-    "id": "spot-fnmxyx",
-    "priority": 1
-  },
-  {
-    "id": "spot-fobpgl",
-    "priority": 1
-  },
-  {
-    "id": "spot-frab35",
-    "priority": 1
-  },
-  {
-    "id": "spot-fsnlf3",
-    "priority": 1
-  },
-  {
-    "id": "spot-fu2lt1",
-    "priority": 1
-  },
-  {
-    "id": "spot-fx9d8u",
-    "priority": 1
-  },
-  {
-    "id": "spot-fxmjnw",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-fy55b",
-    "priority": 1
-  },
-  {
-    "id": "spot-fybb5k",
-    "priority": 1
-  },
-  {
-    "id": "spot-g0rxoh",
-    "priority": 1
-  },
-  {
-    "id": "spot-g427i0",
-    "priority": 1
-  },
-  {
-    "id": "spot-g4qvem",
-    "priority": 1
-  },
-  {
-    "id": "spot-g71005",
-    "priority": 1
-  },
-  {
-    "id": "spot-g7mio0",
-    "priority": 1
-  },
-  {
-    "id": "spot-g7ub1f",
-    "priority": 1
-  },
-  {
-    "id": "spot-g8awuj",
-    "priority": 1
-  },
-  {
-    "id": "spot-gd9fdv",
-    "priority": 1
-  },
-  {
-    "id": "spot-gf28iq",
-    "priority": 1
-  },
-  {
-    "id": "spot-gi1kr0",
-    "priority": 1
-  },
-  {
-    "id": "spot-gido1h",
-    "priority": 1
-  },
-  {
-    "id": "spot-glnc0t",
-    "priority": 1
-  },
-  {
-    "id": "spot-go1evy",
-    "priority": 1
-  },
-  {
-    "id": "spot-grinok",
-    "priority": 1
-  },
-  {
-    "id": "spot-gy10kx",
-    "priority": 1
-  },
-  {
-    "id": "spot-gy734v",
-    "priority": 1
-  },
-  {
-    "id": "spot-h22xjf",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-h4pb7t",
     "priority": 2
   },
   {
-    "id": "spot-h5bh1z",
-    "priority": 1
-  },
-  {
-    "id": "spot-h6ohiy",
-    "priority": 1
-  },
-  {
-    "id": "spot-h80m9w",
-    "priority": 1
-  },
-  {
-    "id": "spot-h9hfug",
-    "priority": 1
-  },
-  {
-    "id": "spot-hbi14u",
-    "priority": 1
-  },
-  {
-    "id": "spot-heowws",
-    "priority": 1
-  },
-  {
     "id": "spot-hfgj3c",
     "priority": 3
-  },
-  {
-    "id": "spot-hir4qg",
-    "priority": 1
-  },
-  {
-    "id": "spot-hmaxfq",
-    "priority": 1
   },
   {
     "id": "spot-hqffu",
     "priority": 2
   },
   {
-    "id": "spot-hr3oqy",
-    "priority": 1
-  },
-  {
-    "id": "spot-ht0k8o",
-    "priority": 1
-  },
-  {
-    "id": "spot-hvadki",
-    "priority": 1
-  },
-  {
-    "id": "spot-hvy45w",
-    "priority": 1
-  },
-  {
-    "id": "spot-hwboic",
-    "priority": 1
-  },
-  {
-    "id": "spot-hzdfmv",
-    "priority": 1
-  },
-  {
-    "id": "spot-hzgl4u",
-    "priority": 1
-  },
-  {
-    "id": "spot-i0keyv",
-    "priority": 1
-  },
-  {
-    "id": "spot-i5iri8",
-    "priority": 1
-  },
-  {
-    "id": "spot-ifxbju",
-    "priority": 1
-  },
-  {
-    "id": "spot-ih4fu8",
-    "priority": 1
-  },
-  {
-    "id": "spot-iinboo",
-    "priority": 1
-  },
-  {
-    "id": "spot-imopyh",
-    "priority": 1
-  },
-  {
-    "id": "spot-inpgfp",
-    "priority": 1
-  },
-  {
-    "id": "spot-ipc9lo",
-    "priority": 1
-  },
-  {
-    "id": "spot-iwobng",
-    "priority": 1
-  },
-  {
-    "id": "spot-ixesfk",
-    "priority": 1
-  },
-  {
-    "id": "spot-j2gdir",
-    "priority": 1
-  },
-  {
-    "id": "spot-j3ezwq",
-    "priority": 1
-  },
-  {
     "id": "spot-j6r2ue",
-    "priority": 1
-  },
-  {
-    "id": "spot-j75wg2",
-    "priority": 1
-  },
-  {
-    "id": "spot-jg0fjt",
-    "priority": 1
-  },
-  {
-    "id": "spot-jgnj1e",
-    "priority": 1
-  },
-  {
-    "id": "spot-josdcw",
-    "priority": 1
-  },
-  {
-    "id": "spot-jqn4qd",
-    "priority": 1
-  },
-  {
-    "id": "spot-jxu7k",
-    "priority": 1
-  },
-  {
-    "id": "spot-k0pvxb",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-k3h2gk",
     "priority": 2
   },
   {
-    "id": "spot-kj4iam",
-    "priority": 1
-  },
-  {
-    "id": "spot-kkp3b9",
-    "priority": 1
-  },
-  {
-    "id": "spot-knyop",
-    "priority": 1
-  },
-  {
-    "id": "spot-kuyewb",
-    "priority": 1
-  },
-  {
-    "id": "spot-kv6y6z",
-    "priority": 1
-  },
-  {
-    "id": "spot-l17qzj",
-    "priority": 1
-  },
-  {
     "id": "spot-l9s1p",
     "priority": 3
   },
   {
-    "id": "spot-l9s1xd",
-    "priority": 1
-  },
-  {
-    "id": "spot-lbsha4",
-    "priority": 1
-  },
-  {
-    "id": "spot-lbuog4",
-    "priority": 1
-  },
-  {
-    "id": "spot-lhbg1d",
-    "priority": 1
-  },
-  {
-    "id": "spot-ljw9x",
-    "priority": 1
-  },
-  {
-    "id": "spot-llczxi",
-    "priority": 1
-  },
-  {
-    "id": "spot-llv8h2",
-    "priority": 1
-  },
-  {
     "id": "spot-lv6k2g",
-    "priority": 1
-  },
-  {
-    "id": "spot-lvroo2",
-    "priority": 1
-  },
-  {
-    "id": "spot-lwwdez",
-    "priority": 1
-  },
-  {
-    "id": "spot-lyn3s4",
-    "priority": 1
-  },
-  {
-    "id": "spot-m1anfb",
-    "priority": 1
-  },
-  {
-    "id": "spot-m1v6h1",
-    "priority": 1
-  },
-  {
-    "id": "spot-m22h47",
-    "priority": 1
-  },
-  {
-    "id": "spot-m49fuw",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-m9of2p",
-    "priority": 1
-  },
-  {
-    "id": "spot-mc22t6",
-    "priority": 1
-  },
-  {
-    "id": "spot-mdwmso",
-    "priority": 1
-  },
-  {
-    "id": "spot-miyec0",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-ml9ut9",
-    "priority": 1
-  },
-  {
-    "id": "spot-mo4c3d",
-    "priority": 1
-  },
-  {
-    "id": "spot-msy00z",
-    "priority": 1
-  },
-  {
-    "id": "spot-mx4jhq",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-n0vtms",
-    "priority": 1
-  },
-  {
-    "id": "spot-n1rciq",
-    "priority": 1
-  },
-  {
-    "id": "spot-n1ui0p",
-    "priority": 1
-  },
-  {
-    "id": "spot-n2w263",
-    "priority": 1
-  },
-  {
-    "id": "spot-nd68ul",
-    "priority": 1
-  },
-  {
-    "id": "spot-nfzydb",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-nmhzi8",
-    "priority": 1
-  },
-  {
-    "id": "spot-nmrp8h",
-    "priority": 1
-  },
-  {
-    "id": "spot-npeumo",
-    "priority": 1
-  },
-  {
-    "id": "spot-nuzd1y",
-    "priority": 1
-  },
-  {
-    "id": "spot-nw41xe",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-nwhl77",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-o0be8i",
-    "priority": 1
-  },
-  {
-    "id": "spot-o7nmoe",
-    "priority": 1
-  },
-  {
-    "id": "spot-o8x9gq",
-    "priority": 1
-  },
-  {
-    "id": "spot-obiick",
-    "priority": 1
-  },
-  {
-    "id": "spot-ofmnwk",
-    "priority": 1
-  },
-  {
-    "id": "spot-ogvm6t",
-    "priority": 1
-  },
-  {
-    "id": "spot-oh8vy7",
-    "priority": 1
-  },
-  {
-    "id": "spot-ovhpqi",
-    "priority": 1
-  },
-  {
-    "id": "spot-p0ciim",
-    "priority": 1
-  },
-  {
-    "id": "spot-p114kp",
-    "priority": 1
-  },
-  {
-    "id": "spot-p4jwr",
-    "priority": 1
-  },
-  {
-    "id": "spot-p5hbfh",
-    "priority": 1
-  },
-  {
-    "id": "spot-p9ctx1",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-patgg6",
-    "priority": 1
-  },
-  {
-    "id": "spot-pc5tg3",
-    "priority": 1
-  },
-  {
-    "id": "spot-pk47pi",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-pp4x29",
-    "priority": 1
-  },
-  {
-    "id": "spot-prpfcs",
-    "priority": 1
-  },
-  {
-    "id": "spot-pub0to",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-putmno",
-    "priority": 1
-  },
-  {
-    "id": "spot-pyzl59",
-    "priority": 1
-  },
-  {
-    "id": "spot-pz5de5",
-    "priority": 1
-  },
-  {
-    "id": "spot-q1ikko",
-    "priority": 1
-  },
-  {
-    "id": "spot-qeaizh",
-    "priority": 1
-  },
-  {
-    "id": "spot-qetqpf",
-    "priority": 1
-  },
-  {
-    "id": "spot-qf416m",
-    "priority": 1
-  },
-  {
-    "id": "spot-qg0ecs",
-    "priority": 1
-  },
-  {
-    "id": "spot-qjij8l",
-    "priority": 1
-  },
-  {
-    "id": "spot-qlhrym",
-    "priority": 1
-  },
-  {
-    "id": "spot-qotcee",
-    "priority": 1
-  },
-  {
-    "id": "spot-qq001r",
-    "priority": 1
-  },
-  {
-    "id": "spot-qxkuyf",
-    "priority": 1
-  },
-  {
-    "id": "spot-qy2u22",
-    "priority": 1
-  },
-  {
-    "id": "spot-qzzlqq",
-    "priority": 1
-  },
-  {
-    "id": "spot-r5tqzu",
-    "priority": 1
-  },
-  {
-    "id": "spot-r8vpab",
-    "priority": 1
-  },
-  {
-    "id": "spot-r9z7fp",
-    "priority": 1
-  },
-  {
-    "id": "spot-raawvi",
-    "priority": 1
-  },
-  {
-    "id": "spot-rbyvd2",
-    "priority": 1
-  },
-  {
-    "id": "spot-rde6tj",
-    "priority": 1
-  },
-  {
-    "id": "spot-rfgl1j",
-    "priority": 1
-  },
-  {
-    "id": "spot-rgctjx",
-    "priority": 1
-  },
-  {
-    "id": "spot-rhxz98",
-    "priority": 1
-  },
-  {
-    "id": "spot-ricf7u",
-    "priority": 1
-  },
-  {
-    "id": "spot-rm1ctu",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-roaxe7",
-    "priority": 1
-  },
-  {
-    "id": "spot-rsx5if",
-    "priority": 1
-  },
-  {
-    "id": "spot-rxpol",
-    "priority": 1
-  },
-  {
-    "id": "spot-s4z8z",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-s6n4n0",
-    "priority": 1
-  },
-  {
-    "id": "spot-s8l1ts",
-    "priority": 1
-  },
-  {
-    "id": "spot-sg3l4w",
-    "priority": 1
-  },
-  {
-    "id": "spot-sgieqk",
-    "priority": 1
-  },
-  {
-    "id": "spot-siocyl",
-    "priority": 1
-  },
-  {
-    "id": "spot-smz43b",
-    "priority": 1
-  },
-  {
-    "id": "spot-sq36tv",
-    "priority": 1
-  },
-  {
-    "id": "spot-sqi0fj",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-sqj7cp",
-    "priority": 1
-  },
-  {
-    "id": "spot-sql5xi",
-    "priority": 1
-  },
-  {
-    "id": "spot-sqo5cw",
-    "priority": 1
-  },
-  {
-    "id": "spot-t0hm4i",
-    "priority": 1
-  },
-  {
-    "id": "spot-t0krmh",
-    "priority": 1
-  },
-  {
-    "id": "spot-takdbg",
-    "priority": 1
-  },
-  {
-    "id": "spot-tdyozk",
-    "priority": 1
-  },
-  {
-    "id": "spot-tfss34",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-tfyp4p",
-    "priority": 1
-  },
-  {
-    "id": "spot-thl8qy",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-tjqp8z",
@@ -3309,375 +421,59 @@
   },
   {
     "id": "spot-tpsds3",
-    "priority": 1
-  },
-  {
-    "id": "spot-tqwsxe",
-    "priority": 1
-  },
-  {
-    "id": "spot-txko0k",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-tzrzh2",
-    "priority": 1
-  },
-  {
-    "id": "spot-u1ydve",
-    "priority": 1
-  },
-  {
-    "id": "spot-ug7u95",
-    "priority": 1
-  },
-  {
-    "id": "spot-ugazr4",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-ujr6v0",
-    "priority": 1
-  },
-  {
-    "id": "spot-uqskjq",
-    "priority": 1
-  },
-  {
-    "id": "spot-urdp5c",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-uubx5l",
-    "priority": 1
-  },
-  {
-    "id": "spot-uutosx",
-    "priority": 1
-  },
-  {
-    "id": "spot-uz4m9v",
-    "priority": 1
-  },
-  {
-    "id": "spot-v0s68p",
-    "priority": 1
-  },
-  {
-    "id": "spot-v0vbqo",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-v4biuk",
-    "priority": 1
-  },
-  {
-    "id": "spot-varrxo",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-vbzxwk",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-vdpzxx",
-    "priority": 1
-  },
-  {
-    "id": "spot-vgg8mj",
-    "priority": 1
-  },
-  {
-    "id": "spot-vj0y66",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-vjmnkh",
-    "priority": 1
-  },
-  {
-    "id": "spot-vk9ej0",
-    "priority": 1
-  },
-  {
-    "id": "spot-vkrdmn",
-    "priority": 1
-  },
-  {
-    "id": "spot-vl8z38",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-vnplmw",
-    "priority": 1
-  },
-  {
-    "id": "spot-voshvu",
-    "priority": 1
-  },
-  {
-    "id": "spot-vpsyu",
-    "priority": 1
-  },
-  {
-    "id": "spot-vvc3x8",
-    "priority": 1
-  },
-  {
-    "id": "spot-vwbmcy",
-    "priority": 1
-  },
-  {
-    "id": "spot-vygmxf",
-    "priority": 1
-  },
-  {
-    "id": "spot-w1jz6x",
-    "priority": 1
-  },
-  {
-    "id": "spot-w475rw",
-    "priority": 1
-  },
-  {
-    "id": "spot-w4twry",
-    "priority": 1
-  },
-  {
-    "id": "spot-w5bpm7",
-    "priority": 1
-  },
-  {
-    "id": "spot-w7xpsm",
-    "priority": 1
-  },
-  {
-    "id": "spot-w82l41",
-    "priority": 1
-  },
-  {
-    "id": "spot-w891y",
-    "priority": 1
-  },
-  {
-    "id": "spot-wakjg",
-    "priority": 1
-  },
-  {
-    "id": "spot-wbed3b",
-    "priority": 1
-  },
-  {
-    "id": "spot-wcgyjk",
-    "priority": 1
-  },
-  {
-    "id": "spot-wetc7j",
-    "priority": 1
-  },
-  {
-    "id": "spot-wf7s65",
-    "priority": 1
-  },
-  {
-    "id": "spot-wfbbb6",
-    "priority": 1
-  },
-  {
-    "id": "spot-wh6q1j",
-    "priority": 1
-  },
-  {
-    "id": "spot-wiojx3",
-    "priority": 1
-  },
-  {
-    "id": "spot-wnv9wy",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-wscaid",
-    "priority": 1
-  },
-  {
-    "id": "spot-wts8yq",
-    "priority": 1
-  },
-  {
-    "id": "spot-wue93e",
-    "priority": 1
-  },
-  {
-    "id": "spot-x55mq9",
-    "priority": 1
-  },
-  {
-    "id": "spot-x870ou",
-    "priority": 1
-  },
-  {
-    "id": "spot-xfc2uu",
-    "priority": 1
-  },
-  {
-    "id": "spot-xg69rd",
-    "priority": 1
-  },
-  {
-    "id": "spot-xj8185",
-    "priority": 1
-  },
-  {
-    "id": "spot-xjcup7",
-    "priority": 1
-  },
-  {
-    "id": "spot-xjkdwp",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-xp2fjn",
-    "priority": 1
-  },
-  {
-    "id": "spot-xxp4xq",
-    "priority": 1
-  },
-  {
-    "id": "spot-xzkcjp",
-    "priority": 1
-  },
-  {
-    "id": "spot-xzxqc3",
-    "priority": 1
-  },
-  {
-    "id": "spot-y0ia6o",
-    "priority": 1
-  },
-  {
-    "id": "spot-y47aga",
-    "priority": 1
-  },
-  {
-    "id": "spot-y4rkur",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-yd8j5z",
     "priority": 3
   },
   {
-    "id": "spot-yjmd86",
-    "priority": 1
-  },
-  {
-    "id": "spot-ylherv",
-    "priority": 1
-  },
-  {
-    "id": "spot-ynn982",
-    "priority": 1
-  },
-  {
-    "id": "spot-yt3zti",
-    "priority": 1
-  },
-  {
     "id": "spot-ytwjf0",
-    "priority": 1
-  },
-  {
-    "id": "spot-yum47x",
-    "priority": 1
-  },
-  {
-    "id": "spot-yv7dir",
-    "priority": 1
-  },
-  {
-    "id": "spot-yxmux1",
-    "priority": 1
-  },
-  {
-    "id": "spot-z3r0i",
-    "priority": 1
-  },
-  {
-    "id": "spot-z3w53z",
-    "priority": 1
-  },
-  {
-    "id": "spot-z76pvx",
-    "priority": 1
-  },
-  {
-    "id": "spot-z7mgm0",
-    "priority": 1
-  },
-  {
-    "id": "spot-z8cvah",
-    "priority": 1
-  },
-  {
-    "id": "spot-zaekhf",
-    "priority": 1
-  },
-  {
-    "id": "spot-zaftzc",
-    "priority": 1
-  },
-  {
-    "id": "spot-zdoxdj",
-    "priority": 1
-  },
-  {
-    "id": "spot-zdvqsy",
-    "priority": 1
-  },
-  {
-    "id": "spot-zg34xi",
-    "priority": 1
-  },
-  {
-    "id": "spot-zha3fu",
-    "priority": 1
-  },
-  {
-    "id": "spot-zhm2az",
-    "priority": 1
-  },
-  {
-    "id": "spot-zkbowg",
-    "priority": 1
-  },
-  {
-    "id": "spot-zpa7c",
-    "priority": 1
-  },
-  {
-    "id": "spot-zqk731",
-    "priority": 1
-  },
-  {
-    "id": "spot-zudrvd",
-    "priority": 1
+    "priority": 2
   },
   {
     "id": "spot-zuyd7a",
     "priority": 3
-  },
-  {
-    "id": "spot-zvps8y",
-    "priority": 1
-  },
-  {
-    "id": "spot-zy2p04",
-    "priority": 1
-  },
-  {
-    "id": "spot-zywx5t",
-    "priority": 1
   },
   {
     "id": "third-avenue",
