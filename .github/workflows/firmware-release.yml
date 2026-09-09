@@ -51,7 +51,10 @@ jobs:
 
       - name: Install browser test runtime
         working-directory: web
-        run: npx playwright install --with-deps chromium
+        run: |
+          # Playwright downloads its own Chromium; the runner's Chrome apt feed is unused.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources
+          npx playwright install --with-deps chromium
 
       - name: Render device previews from the 3D scene
         working-directory: web
@@ -83,6 +86,8 @@ jobs:
 
       - name: Install host test dependencies
         run: |
+          # libpng comes from Ubuntu; an inconsistent Chrome apt feed must not block it.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources
           sudo apt-get update
           sudo apt-get install --yes libpng-dev
 
