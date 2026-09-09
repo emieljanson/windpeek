@@ -26,6 +26,7 @@ typedef struct {
     wind_swell_sample_t samples[WIND_SWELL_MAX_SAMPLES];
 } wind_swell_t;
 const char *wind_swell_preferred_model(const char *model, double latitude);
+const char *wind_swell_base_model(const char *model);
 void wind_swell_overlay(wind_swell_t *base, const wind_swell_t *preferred);
 bool wind_swell_validate(const wind_swell_t *swell);
 esp_err_t wind_swell_parse(const open_meteo_marine_config_t *config, const char *json, size_t length, int64_t now, wind_swell_t *out);

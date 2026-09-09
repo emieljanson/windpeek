@@ -91,7 +91,7 @@ function restoreFocus(event) {
             <p>Your wind model also supplies weather and temperature. Waves use a separate model.</p>
           </template>
           <template v-else>
-            <p>Beyond the detailed forecast. GFS uses 25 km data when 16 km data is missing. EWAM uses global GWAM outside its coverage and for missing or later hours.</p>
+            <p>Missing coverage or later hours are filled automatically: Best Match and MFWAM use GFS, GFS uses its global grid, and EWAM uses global GWAM. Available data from your chosen model comes first.</p>
             <p>Heights are in metres. Arrows point where the swell is travelling; the period in seconds is the time between waves.</p>
             <p>MFWAM and GFS can show a main swell and a dashed second swell. Direction and period belong to the main swell. EWAM combines swell into one line.</p>
           </template>

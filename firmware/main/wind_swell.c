@@ -12,6 +12,11 @@ const char *wind_swell_preferred_model(const char *model, double latitude) {
         ? "ncep_gfswave016" : model;
 }
 
+const char *wind_swell_base_model(const char *model) {
+    if (!model || !strcmp(model, "best_match") || !strcmp(model, "meteofrance_wave")) return "ncep_gfswave025";
+    return !strcmp(model, "dwd_ewam") ? "dwd_gwam" : model;
+}
+
 void wind_swell_overlay(wind_swell_t *base, const wind_swell_t *preferred) {
     size_t p = 0;
     for (size_t b = 0; b < base->sample_count; ++b) {
@@ -166,7 +171,7 @@ static esp_err_t fetch_model(const open_meteo_marine_config_t *config, const cha
 esp_err_t wind_swell_fetch(const open_meteo_marine_config_t *config, int64_t now, wind_swell_t *out) {
     if (!open_meteo_marine_config_valid(config) || !out) return ESP_ERR_INVALID_STATE;
     const char *selected_model = config->swell_model ? config->swell_model : "best_match";
-    const char *base_model = !strcmp(selected_model, "dwd_ewam") ? "dwd_gwam" : selected_model;
+    const char *base_model = wind_swell_base_model(selected_model);
     const char *preferred_model = wind_swell_preferred_model(selected_model, config->latitude);
     esp_err_t base_result = fetch_model(config, base_model, now, out);
     if (!strcmp(base_model, preferred_model)) return base_result;

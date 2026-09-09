@@ -90,6 +90,43 @@ describe('live swell preview', () => {
 })
 
 describe('automatic GFS resolution', () => {
+  it('keeps the selected forecast when its fallback request fails', async () => {
+    const result = await fetchOpenMeteoSwell(spot, { fetchImpl: async url => {
+      if (new URL(url).searchParams.get('models') === 'ncep_gfswave025') throw new Error('offline')
+      return { ok: true, json: async () => response() }
+    } })
+    expect(result.model).toBe('best_match')
+    expect(result.samples).toHaveLength(25)
+    expect(result.samples.every(sample => sample.heightCm === 124)).toBe(true)
+  })
+  it('uses real global swell when MFWAM has no coverage at the spot', async () => {
+    const result = await fetchOpenMeteoSwell(spot, { model: 'meteofrance_wave', fetchImpl: async url => {
+      const r = response()
+      if (new URL(url).searchParams.get('models') === 'meteofrance_wave') {
+        for (const field of ['swell_wave_height', 'swell_wave_period', 'swell_wave_direction']) r.hourly[field].fill(null)
+      }
+      return { ok: true, json: async () => r }
+    } })
+    expect(result.available).toBe(true)
+    expect(result.model).toBe('meteofrance_wave')
+    expect(result.samples).toHaveLength(25)
+    expect(result.samples.every(sample => sample.heightCm === 124 && sample.periodTenths === 94)).toBe(true)
+  })
+  it('fills the five-day Best Match forecast when the provider ends early', async () => {
+    const result = await fetchOpenMeteoSwell(spot, { fetchImpl: async url => {
+      const r = response()
+      if (new URL(url).searchParams.get('models') === 'best_match') {
+        r.hourly.swell_wave_height.fill(2)
+        for (const field of ['swell_wave_height', 'swell_wave_period', 'swell_wave_direction']) {
+          r.hourly[field].fill(null, 16)
+        }
+      }
+      return { ok: true, json: async () => r }
+    } })
+    expect(result.model).toBe('best_match')
+    expect(result.samples[0].heightCm).toBe(200)
+    expect(result.samples.slice(16).every(sample => sample.heightCm === 124 && sample.periodTenths === 94)).toBe(true)
+  })
   it('fills missing high-resolution hours with complete lower-resolution samples', async () => {
     const requested = []
     const result = await fetchOpenMeteoSwell(spot, { model: 'ncep_gfswave025', fetchImpl: async url => {

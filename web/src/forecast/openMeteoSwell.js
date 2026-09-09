@@ -48,6 +48,8 @@ export function normalizeSwell(response, spot, { retrievedAt = Date.now() } = {}
 // Keep the stored GFS id compatible with existing installations; it now selects
 // the family. Open-Meteo exposes 16 km between 15°S and 52.5°N, and 25 km globally.
 export function swellModelCandidates(model, latitude) {
+  // Best Match can stop early; MFWAM can return no data near some coasts.
+  if (model === 'best_match' || model === 'meteofrance_wave') return [model, 'ncep_gfswave025']
   if (model === 'dwd_ewam') return ['dwd_ewam', 'dwd_gwam']
   return model === 'ncep_gfswave025' && latitude >= -15 && latitude <= 52.5
     ? ['ncep_gfswave016', 'ncep_gfswave025'] : [model]

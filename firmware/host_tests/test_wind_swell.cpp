@@ -48,6 +48,11 @@ TEST(WindSwell, PreservesSecondaryComponentAndCache) {
 }
 
 TEST(WindSwell, ChoosesFinestAvailableGfsGrid) {
+    EXPECT_STREQ(wind_swell_base_model("best_match"), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model(nullptr), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model("meteofrance_wave"), "ncep_gfswave025");
+    EXPECT_STREQ(wind_swell_base_model("dwd_ewam"), "dwd_gwam");
+    EXPECT_STREQ(wind_swell_base_model("ncep_gfswave025"), "ncep_gfswave025");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", 51.76), "ncep_gfswave016");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", -15), "ncep_gfswave016");
     EXPECT_STREQ(wind_swell_preferred_model("ncep_gfswave025", 52.5), "ncep_gfswave016");
