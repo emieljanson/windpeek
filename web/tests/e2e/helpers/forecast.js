@@ -15,16 +15,21 @@ export function tideTimes(timezone) {
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   })
   const midnight = (offset) => {
-    const wallTime = Date.parse(`${amsterdamDate(offset, timezone)}T00:00:00Z`)
-    let timestamp = wallTime
-    for (let pass = 0; pass < 3; pass++) {
-      const p = Object.fromEntries(formatter.formatToParts(timestamp).map(({ type, value }) => [type, value]))
-      timestamp += wallTime - Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute))
+    const wallDate = amsterdamDate(offset, timezone)
+    const nominal = Date.parse(`${wallDate}T00:00:00Z`) / 1000
+    let low = nominal - 36 * 3600, high = nominal + 36 * 3600
+    // Find the first instant belonging to this date, even if midnight is skipped.
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2)
+      const p = Object.fromEntries(formatter.formatToParts(middle * 1000).map(({ type, value }) => [type, value]))
+      const localDate = `${p.year}-${p.month}-${p.day}`
+      if (localDate < wallDate) low = middle + 1
+      else high = middle
     }
-    return timestamp / 1000
+    return low
   }
   const start = midnight(0), end = midnight(5)
-  return Array.from({ length: (end - start) / 3600 }, (_, index) => start + index * 3600)
+  return Array.from({ length: Math.ceil((end - start) / 3600) }, (_, index) => start + index * 3600)
 }
 
 export function forecastResponseForLatitude(latitude, timezone = 'Europe/Amsterdam') {
