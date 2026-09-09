@@ -1,0 +1,1454 @@
+{
+  "stats": {
+    "requests": 154,
+    "cacheHits": 0
+  },
+  "samples": [
+    {
+      "id": "spot-c8z415",
+      "name": "Bondi Beach",
+      "displayName": "BONDI BEACH",
+      "latitude": -33.8923,
+      "longitude": 151.2845,
+      "timezone": "Australia/Sydney",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Sydney"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 190,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1qj8yf0",
+      "name": "Manly",
+      "displayName": "MANLY",
+      "latitude": -33.8004,
+      "longitude": 151.3036,
+      "timezone": "Australia/Sydney",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Sydney"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 826,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1rmpjgw",
+      "name": "Maroubra Beach",
+      "displayName": "MAROUBRA BEACH",
+      "latitude": -33.9489,
+      "longitude": 151.2666,
+      "timezone": "Australia/Sydney",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Australia/Sydney"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 831,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-3d1u0d",
+      "name": "Burleigh Heads",
+      "displayName": "BURLEIGH HEADS",
+      "latitude": -28.09,
+      "longitude": 153.4583,
+      "timezone": "Australia/Brisbane",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1pa0wdb",
+      "name": "Snapper Rocks",
+      "displayName": "SNAPPER ROCKS",
+      "latitude": -28.1642,
+      "longitude": 153.552,
+      "timezone": "Australia/Brisbane",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-rn2utl",
+      "name": "Noosa Main Beach",
+      "displayName": "NOOSA MAIN BEACH",
+      "latitude": -26.3854,
+      "longitude": 153.0911,
+      "timezone": "Australia/Brisbane",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1176,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1s0yen8",
+      "name": "Coolum Beach",
+      "displayName": "COOLUM BEACH",
+      "latitude": -26.5306,
+      "longitude": 153.0938,
+      "timezone": "Australia/Brisbane",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Brisbane"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 640,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1dob529",
+      "name": "Jan Juc",
+      "displayName": "JAN JUC",
+      "latitude": -38.3481,
+      "longitude": 144.3084,
+      "timezone": "Australia/Melbourne",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Melbourne"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 929,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-wmgduy",
+      "name": "Torquay Front Beach",
+      "displayName": "TORQUAY FRONT BEACH",
+      "latitude": -38.3366,
+      "longitude": 144.3266,
+      "timezone": "Australia/Melbourne",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Melbourne"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 359,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-ulbm7j",
+      "name": "Cottesloe Beach",
+      "displayName": "COTTESLOE BEACH",
+      "latitude": -31.9936,
+      "longitude": 115.7446,
+      "timezone": "Australia/Perth",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Perth"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-7aiwkh",
+      "name": "Trigg Beach",
+      "displayName": "TRIGG BEACH",
+      "latitude": -31.8667,
+      "longitude": 115.7443,
+      "timezone": "Australia/Perth",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Perth"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-qkfkfk",
+      "name": "Clifton Beach",
+      "displayName": "CLIFTON BEACH",
+      "latitude": -42.9923,
+      "longitude": 147.5278,
+      "timezone": "Australia/Hobart",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Hobart"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1906,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-c7b8lv",
+      "name": "Muriwai Beach",
+      "displayName": "MURIWAI BEACH",
+      "latitude": -36.8482,
+      "longitude": 174.4331,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 826,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-emnjyh",
+      "name": "Mount Maunganui",
+      "displayName": "MOUNT MAUNGANUI",
+      "latitude": -37.6306,
+      "longitude": 176.1789,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1074,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1fxt2xc",
+      "name": "Lyall Bay",
+      "displayName": "LYALL BAY",
+      "latitude": -41.3305,
+      "longitude": 174.7992,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1226,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-s8auvu",
+      "name": "Dunedin - St Clair",
+      "displayName": "DUNEDIN - ST CLAIR",
+      "latitude": -45.9135,
+      "longitude": 170.5012,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1q4qspd",
+      "name": "Sumner Bar",
+      "displayName": "SUMNER BAR",
+      "latitude": -43.5581,
+      "longitude": 172.7557,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-43o5jc",
+      "name": "Kuta Beach",
+      "displayName": "KUTA BEACH",
+      "latitude": -8.716,
+      "longitude": 115.1664,
+      "timezone": "Asia/Makassar",
+      "countryCode": "id",
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-yark5q",
+      "name": "Canggu",
+      "displayName": "CANGGU",
+      "latitude": -8.6735,
+      "longitude": 115.1296,
+      "timezone": "Asia/Makassar",
+      "countryCode": "id",
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-yn5p7s",
+      "name": "Uluwatu",
+      "displayName": "ULUWATU",
+      "latitude": -8.8175,
+      "longitude": 115.0855,
+      "timezone": "Asia/Makassar",
+      "countryCode": "id",
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1wyob22",
+      "name": "Kuta Bay-Lombok",
+      "displayName": "KUTA BAY-LOMBOK",
+      "latitude": -8.919,
+      "longitude": 116.2889,
+      "timezone": "Asia/Makassar",
+      "countryCode": "id",
+      "observed": {
+        "reverse": {
+          "countryCode": "id",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-vmtzp7",
+      "name": "Lakey Peak",
+      "displayName": "LAKEY PEAK",
+      "latitude": -8.7933,
+      "longitude": 118.3756,
+      "timezone": "Asia/Makassar",
+      "countryCode": "id",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Asia/Makassar"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-hoycdp",
+      "name": "Arugam Bay",
+      "displayName": "ARUGAM BAY",
+      "latitude": 6.8399,
+      "longitude": 81.8398,
+      "timezone": "Asia/Colombo",
+      "countryCode": "lk",
+      "observed": {
+        "reverse": {
+          "countryCode": "lk",
+          "timezone": "Asia/Colombo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 951,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-1y8ivjk",
+      "name": "Weligama",
+      "displayName": "WELIGAMA",
+      "latitude": 5.9533,
+      "longitude": 80.4187,
+      "timezone": "Asia/Colombo",
+      "countryCode": "lk",
+      "observed": {
+        "reverse": {
+          "countryCode": "lk",
+          "timezone": "Asia/Colombo"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-9vt7qn",
+      "name": "Mahabalipuram (Shore Temple)",
+      "displayName": "MAHABALIPURAM (SHORE TEMPLE)",
+      "latitude": 12.6201,
+      "longitude": 80.1993,
+      "timezone": "Asia/Kolkata",
+      "countryCode": "in",
+      "observed": {
+        "reverse": {
+          "countryCode": "in",
+          "timezone": "Asia/Kolkata"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-qbfp0t",
+      "name": "Varkala",
+      "displayName": "VARKALA",
+      "latitude": 8.7285,
+      "longitude": 76.6975,
+      "timezone": "Asia/Kolkata",
+      "countryCode": "in",
+      "observed": {
+        "reverse": {
+          "countryCode": "in",
+          "timezone": "Asia/Kolkata"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-4uerlo",
+      "name": "Kovalam",
+      "displayName": "KOVALAM",
+      "latitude": 8.385,
+      "longitude": 76.978,
+      "timezone": "Asia/Kolkata",
+      "countryCode": "in",
+      "observed": {
+        "reverse": {
+          "countryCode": "in",
+          "timezone": "Asia/Kolkata"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1290,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-1amk0c",
+      "name": "Kata Beach",
+      "displayName": "KATA BEACH",
+      "latitude": 7.8206,
+      "longitude": 98.2967,
+      "timezone": "Asia/Bangkok",
+      "countryCode": "th",
+      "observed": {
+        "reverse": {
+          "countryCode": "th",
+          "timezone": "Asia/Bangkok"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 848,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1htp9ko",
+      "name": "Cherating",
+      "displayName": "CHERATING",
+      "latitude": 4.1243,
+      "longitude": 103.3979,
+      "timezone": "Asia/Kuala_Lumpur",
+      "countryCode": "my",
+      "observed": {
+        "reverse": {
+          "countryCode": "my",
+          "timezone": "Asia/Kuala_Lumpur"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 210,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1h9dln4",
+      "name": "My Khe / Da Nang",
+      "displayName": "MY KHE / DA NANG",
+      "latitude": 16.0719,
+      "longitude": 108.2515,
+      "timezone": "Asia/Ho_Chi_Minh",
+      "countryCode": "vn",
+      "observed": {
+        "reverse": {
+          "countryCode": "vn",
+          "timezone": "Asia/Ho_Chi_Minh"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-172493x",
+      "name": "Cloud 9",
+      "displayName": "CLOUD 9",
+      "latitude": 9.8202,
+      "longitude": 126.1728,
+      "timezone": "Asia/Manila",
+      "countryCode": "ph",
+      "observed": {
+        "reverse": {
+          "countryCode": "ph",
+          "timezone": "Asia/Manila"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-895epf",
+      "name": "Baler - Sabang",
+      "displayName": "BALER - SABANG",
+      "latitude": 15.7689,
+      "longitude": 121.5754,
+      "timezone": "Asia/Manila",
+      "countryCode": "ph",
+      "observed": {
+        "reverse": {
+          "countryCode": "ph",
+          "timezone": "Asia/Manila"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1xnvmd4",
+      "name": "Shonan",
+      "displayName": "SHONAN",
+      "latitude": 35.3187,
+      "longitude": 139.4448,
+      "timezone": "Asia/Tokyo",
+      "countryCode": "jp",
+      "observed": {
+        "reverse": {
+          "countryCode": "jp",
+          "timezone": "Asia/Tokyo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 450,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-7qgvz4",
+      "name": "Shichirigahama",
+      "displayName": "SHICHIRIGAHAMA",
+      "latitude": 35.2956,
+      "longitude": 139.5057,
+      "timezone": "Asia/Tokyo",
+      "countryCode": "jp",
+      "observed": {
+        "reverse": {
+          "countryCode": "jp",
+          "timezone": "Asia/Tokyo"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1916,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-1ny5xoz",
+      "name": "Aoshima",
+      "displayName": "AOSHIMA",
+      "latitude": 31.8057,
+      "longitude": 131.4697,
+      "timezone": "Asia/Tokyo",
+      "countryCode": "jp",
+      "observed": {
+        "reverse": {
+          "countryCode": "jp",
+          "timezone": "Asia/Tokyo"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1u1uyrp",
+      "name": "Katagai",
+      "displayName": "KATAGAI",
+      "latitude": 35.534,
+      "longitude": 140.461,
+      "timezone": "Asia/Tokyo",
+      "countryCode": "jp",
+      "observed": {
+        "reverse": {
+          "countryCode": "jp",
+          "timezone": "Asia/Tokyo"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1trjxml",
+      "name": "Kenting",
+      "displayName": "KENTING",
+      "latitude": 21.9486,
+      "longitude": 120.7435,
+      "timezone": "Asia/Taipei",
+      "countryCode": "tw",
+      "observed": {
+        "reverse": {
+          "countryCode": "tw",
+          "timezone": "Asia/Taipei"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 454,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-1yn29mw",
+      "name": "Big Wave Bay",
+      "displayName": "BIG WAVE BAY",
+      "latitude": 22.2477,
+      "longitude": 114.2499,
+      "timezone": "Asia/Hong_Kong",
+      "countryCode": "hk",
+      "observed": {
+        "reverse": {
+          "countryCode": "hk",
+          "timezone": "Asia/Hong_Kong"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1702,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1956cdc",
+      "name": "Busan (Haeundae Beach)",
+      "displayName": "BUSAN (HAEUNDAE BEACH)",
+      "latitude": 35.1587,
+      "longitude": 129.1619,
+      "timezone": "Asia/Seoul",
+      "countryCode": "kr",
+      "observed": {
+        "reverse": {
+          "countryCode": "kr",
+          "timezone": "Asia/Seoul"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-wc3hw1",
+      "name": "Muizenberg",
+      "displayName": "MUIZENBERG",
+      "latitude": -34.1026,
+      "longitude": 18.4737,
+      "timezone": "Africa/Johannesburg",
+      "countryCode": "za",
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1erxbmm",
+      "name": "Dairy Beach (New Pier)",
+      "displayName": "DAIRY BEACH (NEW PIER)",
+      "latitude": -29.8479,
+      "longitude": 31.0385,
+      "timezone": "Africa/Johannesburg",
+      "countryCode": "za",
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1xtocia",
+      "name": "Nahoon Beach",
+      "displayName": "NAHOON BEACH",
+      "latitude": -32.9902,
+      "longitude": 27.9526,
+      "timezone": "Africa/Johannesburg",
+      "countryCode": "za",
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-rrgldl",
+      "name": "Victoria Bay",
+      "displayName": "VICTORIA BAY",
+      "latitude": -34.0049,
+      "longitude": 22.5492,
+      "timezone": "Africa/Johannesburg",
+      "countryCode": "za",
+      "observed": {
+        "reverse": {
+          "countryCode": "za",
+          "timezone": "Africa/Johannesburg"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-3uujy5",
+      "name": "Anchor Point",
+      "displayName": "ANCHOR POINT",
+      "latitude": 30.5485,
+      "longitude": -9.7288,
+      "timezone": "Africa/Casablanca",
+      "countryCode": "ma",
+      "observed": {
+        "reverse": {
+          "countryCode": "ma",
+          "timezone": "Africa/Casablanca"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-bp0zrl",
+      "name": "Ngor Rights",
+      "displayName": "NGOR RIGHTS",
+      "latitude": 14.7569,
+      "longitude": -17.521,
+      "timezone": "Africa/Dakar",
+      "countryCode": "sn",
+      "observed": {
+        "reverse": {
+          "countryCode": "sn",
+          "timezone": "Africa/Dakar"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1312,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-anpsfl",
+      "name": "Busua Beach",
+      "displayName": "BUSUA BEACH",
+      "latitude": 4.8131,
+      "longitude": -1.9202,
+      "timezone": "Africa/Accra",
+      "countryCode": "gh",
+      "observed": {
+        "reverse": {
+          "countryCode": "gh",
+          "timezone": "Africa/Accra"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-34bv9d",
+      "name": "Kokrobite",
+      "displayName": "KOKROBITE",
+      "latitude": 5.5057,
+      "longitude": -0.3288,
+      "timezone": "Africa/Accra",
+      "countryCode": "gh",
+      "observed": {
+        "reverse": {
+          "countryCode": "gh",
+          "timezone": "Africa/Accra"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1l5szip",
+      "name": "Watamu Bay",
+      "displayName": "WATAMU BAY",
+      "latitude": -3.3583,
+      "longitude": 40.0333,
+      "timezone": "Africa/Nairobi",
+      "countryCode": "ke",
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-qwlbu6",
+      "name": "Carcavelos",
+      "displayName": "CARCAVELOS",
+      "latitude": 38.6775,
+      "longitude": -9.3345,
+      "timezone": "Europe/Lisbon",
+      "countryCode": "pt",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Europe/Lisbon"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 991,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-1rqogs5",
+      "name": "Hossegor - La Centrale",
+      "displayName": "HOSSEGOR - LA CENTRALE",
+      "latitude": 43.6608,
+      "longitude": -1.4435,
+      "timezone": "Europe/Paris",
+      "countryCode": "fr",
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1093,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-to6xwu",
+      "name": "Biarritz - Grande Plage",
+      "displayName": "BIARRITZ - GRANDE PLAGE",
+      "latitude": 43.4893,
+      "longitude": -1.5552,
+      "timezone": "Europe/Paris",
+      "countryCode": "fr",
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-prhu41",
+      "name": "Lacanau Ocean",
+      "displayName": "LACANAU OCEAN",
+      "latitude": 45.003,
+      "longitude": -1.2061,
+      "timezone": "Europe/Paris",
+      "countryCode": "fr",
+      "observed": {
+        "reverse": {
+          "countryCode": "fr",
+          "timezone": "Europe/Paris"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1p54d5u",
+      "name": "Fistral-North",
+      "displayName": "FISTRAL-NORTH",
+      "latitude": 50.4159,
+      "longitude": -5.1027,
+      "timezone": "Europe/London",
+      "countryCode": "gb",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-ooys1k",
+      "name": "Bundoran",
+      "displayName": "BUNDORAN",
+      "latitude": 54.489,
+      "longitude": -8.3011,
+      "timezone": "Europe/Dublin",
+      "countryCode": "ie",
+      "observed": {
+        "reverse": {
+          "countryCode": "ie",
+          "timezone": "Europe/Dublin"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-nhzm8q",
+      "name": "Lahinch Strand",
+      "displayName": "LAHINCH STRAND",
+      "latitude": 52.9312,
+      "longitude": -9.352,
+      "timezone": "Europe/Dublin",
+      "countryCode": "ie",
+      "observed": {
+        "reverse": {
+          "countryCode": "ie",
+          "timezone": "Europe/Dublin"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-9x5tis",
+      "name": "Inch Strand",
+      "displayName": "INCH STRAND",
+      "latitude": 52.1169,
+      "longitude": -9.9645,
+      "timezone": "Europe/Dublin",
+      "countryCode": "ie",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Europe/Dublin"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-n38d6w",
+      "name": "Rossnowlagh",
+      "displayName": "ROSSNOWLAGH",
+      "latitude": 54.5695,
+      "longitude": -8.2293,
+      "timezone": "Europe/Dublin",
+      "countryCode": "ie",
+      "observed": {
+        "reverse": {
+          "countryCode": "",
+          "timezone": "Europe/Dublin"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-ec4h8i",
+      "name": "Zarautz",
+      "displayName": "ZARAUTZ",
+      "latitude": 43.2897,
+      "longitude": -2.1696,
+      "timezone": "Europe/Madrid",
+      "countryCode": "es",
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 751,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-hq69ki",
+      "name": "Sopelana",
+      "displayName": "SOPELANA",
+      "latitude": 43.3908,
+      "longitude": -2.9939,
+      "timezone": "Europe/Madrid",
+      "countryCode": "es",
+      "observed": {
+        "reverse": {
+          "countryCode": "es",
+          "timezone": "Europe/Madrid"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-zn4tr6",
+      "name": "La Jolla Shores",
+      "displayName": "LA JOLLA SHORES",
+      "latitude": 32.859,
+      "longitude": -117.258,
+      "timezone": "America/Los_Angeles",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Los_Angeles"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1000,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-okxd1b",
+      "name": "Ocean City",
+      "displayName": "OCEAN CITY",
+      "latitude": 38.4026,
+      "longitude": -75.0555,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1370,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-15im6bk",
+      "name": "Virginia Beach",
+      "displayName": "VIRGINIA BEACH",
+      "latitude": 36.8215,
+      "longitude": -75.967,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 722,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-kz7sk1",
+      "name": "Wrightsville Beach",
+      "displayName": "WRIGHTSVILLE BEACH",
+      "latitude": 34.2076,
+      "longitude": -77.7834,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1c0bhp",
+      "name": "Cocoa Beach Pier",
+      "displayName": "COCOA BEACH PIER",
+      "latitude": 28.3169,
+      "longitude": -80.6058,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-5q4sb8",
+      "name": "Deerfield Beach Pier",
+      "displayName": "DEERFIELD BEACH PIER",
+      "latitude": 26.317,
+      "longitude": -80.074,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-4yjlx4",
+      "name": "Galveston",
+      "displayName": "GALVESTON",
+      "latitude": 29.3056,
+      "longitude": -94.7714,
+      "timezone": "America/Chicago",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/Chicago"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1jdxuep",
+      "name": "Scarborough Beach",
+      "displayName": "SCARBOROUGH BEACH",
+      "latitude": -31.8946,
+      "longitude": 115.7542,
+      "timezone": "Australia/Perth",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Perth"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-130gqpx",
+      "name": "Middleton Beach",
+      "displayName": "MIDDLETON BEACH",
+      "latitude": -35.516,
+      "longitude": 138.72,
+      "timezone": "Australia/Adelaide",
+      "countryCode": "au",
+      "observed": {
+        "reverse": {
+          "countryCode": "au",
+          "timezone": "Australia/Adelaide"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-q7ryai",
+      "name": "Raglan - Ngarunui Beach",
+      "displayName": "RAGLAN - NGARUNUI BEACH",
+      "latitude": -37.8167,
+      "longitude": 174.8272,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-sz904v",
+      "name": "Piha North",
+      "displayName": "PIHA NORTH",
+      "latitude": -36.9413,
+      "longitude": 174.4666,
+      "timezone": "Pacific/Auckland",
+      "countryCode": "nz",
+      "observed": {
+        "reverse": {
+          "countryCode": "nz",
+          "timezone": "Pacific/Auckland"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1347,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-126rqo0",
+      "name": "Portrush (East Strand)",
+      "displayName": "PORTRUSH (EAST STRAND)",
+      "latitude": 55.2046,
+      "longitude": -6.645,
+      "timezone": "Europe/London",
+      "countryCode": "gb",
+      "observed": {
+        "reverse": {
+          "countryCode": "gb",
+          "timezone": "Europe/London"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-a215gs",
+      "name": "South Beach (Miami)",
+      "displayName": "SOUTH BEACH (MIAMI)",
+      "latitude": 25.7688,
+      "longitude": -80.1322,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-12ttgsz",
+      "name": "Folly Beach",
+      "displayName": "FOLLY BEACH",
+      "latitude": 32.6611,
+      "longitude": -79.9268,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    },
+    {
+      "id": "spot-1ca6lgk",
+      "name": "Narragansett Town Beach",
+      "displayName": "NARRAGANSETT TOWN BEACH",
+      "latitude": 41.437,
+      "longitude": -71.452,
+      "timezone": "America/New_York",
+      "countryCode": "us",
+      "observed": {
+        "reverse": {
+          "countryCode": "us",
+          "timezone": "America/New_York"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1141,
+          "category": "natural.coastal"
+        }
+      }
+    },
+    {
+      "id": "spot-eeil71",
+      "name": "Lawrencetown Left Point",
+      "displayName": "LAWRENCETOWN LEFT POINT",
+      "latitude": 44.6378,
+      "longitude": -63.3255,
+      "timezone": "America/Halifax",
+      "countryCode": "ca",
+      "observed": {
+        "reverse": {
+          "countryCode": "ca",
+          "timezone": "America/Halifax"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1189,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-y41y7e",
+      "name": "Matosinhos",
+      "displayName": "MATOSINHOS",
+      "latitude": 41.1719,
+      "longitude": -8.6941,
+      "timezone": "Europe/Lisbon",
+      "countryCode": "pt",
+      "observed": {
+        "reverse": {
+          "countryCode": "pt",
+          "timezone": "Europe/Lisbon"
+        },
+        "water": {
+          "nearby": true,
+          "distanceMeters": 1328,
+          "category": "natural.water"
+        }
+      }
+    },
+    {
+      "id": "spot-1f5b0lh",
+      "name": "San Juan",
+      "displayName": "SAN JUAN",
+      "latitude": 16.6663,
+      "longitude": 120.3164,
+      "timezone": "Asia/Manila",
+      "countryCode": "ph",
+      "observed": {
+        "reverse": {
+          "countryCode": "ph",
+          "timezone": "Asia/Manila"
+        },
+        "water": {
+          "nearby": false
+        }
+      }
+    }
+  ]
+}

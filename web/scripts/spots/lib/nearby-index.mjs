@@ -4,6 +4,7 @@ const LAUNCH_WORD = /\blaunch\b/i
 
 export function buildNearbyIndex({ catalog, popularSpots, baselineSpotIds = [] }) {
   const catalogById = new Map(catalog.map((spot) => [spot.id, spot]))
+  for (const spot of catalog) for (const id of spot.aliasIds ?? []) catalogById.set(id, spot)
   const recommended = new Map()
   const popularIds = new Set()
 
@@ -12,26 +13,26 @@ export function buildNearbyIndex({ catalog, popularSpots, baselineSpotIds = [] }
     if (!spot || !isPlaceName(spot.name)) {
       throw new Error(`Baseline spot ${id} must be a named place in the catalog.`)
     }
-    recommended.set(id, 1)
+    recommended.set(spot.id, 1)
   }
 
   for (const popularSpot of popularSpots) {
-    if (popularIds.has(popularSpot.id)) {
-      throw new Error(`Popular spot ${popularSpot.id} is listed more than once.`)
-    }
-    popularIds.add(popularSpot.id)
     const catalogSpot = catalogById.get(popularSpot.id)
     if (!catalogSpot) throw new Error(`Popular spot ${popularSpot.id} is missing from the catalog.`)
+    if (popularIds.has(catalogSpot.id)) {
+      throw new Error(`Popular spot ${popularSpot.id} is listed more than once.`)
+    }
+    popularIds.add(catalogSpot.id)
     if (!isPlaceName(catalogSpot.name)) {
       throw new Error(`Popular spot ${popularSpot.id} is not a geographic place name.`)
     }
-    if (catalogSpot.name !== popularSpot.name) {
+    if (catalogSpot.name !== popularSpot.name && !catalogSpot.aliases?.includes(popularSpot.name)) {
       throw new Error(`Popular spot ${popularSpot.id} changed name from ${popularSpot.name} to ${catalogSpot.name}.`)
     }
     if (!Number.isInteger(popularSpot.priority) || popularSpot.priority < 2) {
       throw new Error(`Popular spot ${popularSpot.id} needs an integer priority of 2 or higher.`)
     }
-    recommended.set(popularSpot.id, popularSpot.priority)
+    recommended.set(catalogSpot.id, Math.max(recommended.get(catalogSpot.id) ?? 0, popularSpot.priority))
   }
 
   return [...recommended]

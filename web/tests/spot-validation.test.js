@@ -88,6 +88,42 @@ describe('deterministic spot validation', () => {
     expect(spots).toHaveLength(3)
   })
 
+  it('retains distinct nearby breaks and same names in different regions', () => {
+    const spots = [
+      candidate({ id: 'a', name: 'Pipeline', featureType: 'surf-break' }),
+      candidate({ id: 'b', name: 'Backdoor', latitude: 52.0001, featureType: 'surf-break' }),
+      candidate({ id: 'c', name: 'Pipeline', latitude: 53 }),
+    ]
+    expect(detectDuplicates(spots)).toHaveLength(1)
+    expect([...selectDuplicateSuppressions(spots, detectDuplicates(spots))]).toEqual([])
+  })
+
+  it('does not merge a chain whose endpoints are more than 5 km apart', () => {
+    const spots = [
+      candidate({ id: 'a', latitude: 52 }),
+      candidate({ id: 'b', latitude: 52.04 }),
+      candidate({ id: 'c', latitude: 52.08 }),
+    ]
+    expect([...selectDuplicateSuppressions(spots, detectDuplicates(spots))]).toEqual(['b'])
+    expect([...selectDuplicateSuppressions([...spots].reverse(), detectDuplicates(spots))]).toEqual(['b'])
+  })
+
+  it('merges beach-name variants but preserves point versus beach and distant namesakes', () => {
+    const spots = [
+      candidate({ id: 'a', name: 'Praia da Armação', featureType: 'surf-break' }),
+      candidate({ id: 'b', name: 'Armacao', latitude: 52.01, featureType: 'surf-break' }),
+      candidate({ id: 'c', name: 'Armacao', latitude: 53, featureType: 'surf-break' }),
+      candidate({ id: 'd', name: 'Point Plomer', featureType: 'surf-break' }),
+      candidate({ id: 'e', name: 'Point Plomer Beach', latitude: 52.001, featureType: 'surf-break' }),
+    ]
+    expect([...selectDuplicateSuppressions(spots, detectDuplicates(spots))]).toEqual(['b'])
+  })
+
+  it('consolidates adjacent non-break facilities into one forecast location', () => {
+    const spots = [candidate({ id: 'a', name: 'Sailing Club' }), candidate({ id: 'b', name: 'Sailing School', latitude: 52.0001 })]
+    expect([...selectDuplicateSuppressions(spots, detectDuplicates(spots))]).toEqual(['b'])
+  })
+
   it('automatically keeps one forecast location per duplicate group', () => {
     const spots = [
       candidate({ id: 'osm:node/1', source: 'osm', featureType: 'club' }),

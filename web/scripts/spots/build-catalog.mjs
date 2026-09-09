@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { buildRuntimeCatalog } from './lib/catalog-builder.mjs'
+import { consolidateLocations } from './lib/consolidate-locations.mjs'
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const dataRoot = path.join(webRoot, 'data/spots')
@@ -26,17 +27,19 @@ async function json(filePath, fallback) {
   }
 }
 
-const [candidateData, validationData, decisionData] = await Promise.all([
+const [candidateData, validationData, decisionData, popularData, mergeData] = await Promise.all([
   json(path.join(dataRoot, 'candidates.json')),
   json(path.join(dataRoot, 'validation-results.json')),
   json(path.join(dataRoot, 'review-decisions.json'), { decisions: [] }),
+  json(path.join(dataRoot, 'popular-spots.json'), { spots: [] }),
+  json(path.join(dataRoot, 'location-merges.json'), { merges: [] }),
 ])
-const catalog = buildRuntimeCatalog({
+const catalog = consolidateLocations(buildRuntimeCatalog({
   existing,
   candidates: candidateData.candidates ?? [],
   validationResults: validationData.results ?? [],
   decisions: decisionData.decisions ?? [],
-})
+}), { preferred: popularData.spots, protectedIds: existing.map((spot) => spot.id), reviewedMerges: mergeData.merges, coordinateCorrections: mergeData.coordinateCorrections })
 const output = `${JSON.stringify(catalog, null, 2)}\n`
 if (checkOnly) {
   if (await readFile(outputPath, 'utf8') !== output) throw new Error('src/spots/catalog.generated.json is stale.')

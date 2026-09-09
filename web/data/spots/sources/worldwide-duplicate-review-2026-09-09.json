@@ -1,0 +1,484 @@
+{
+  "automaticSuppressions": [
+    "osm:node/10114670368",
+    "osm:node/11026531204",
+    "osm:node/11046277487",
+    "osm:node/11047825855",
+    "osm:node/11163291765",
+    "osm:node/12020513410",
+    "osm:node/12100736008",
+    "osm:node/12534805701",
+    "osm:node/12636281121",
+    "osm:node/12929060901",
+    "osm:node/13013552199",
+    "osm:node/13068405626",
+    "osm:node/13374525080",
+    "osm:node/13481908265",
+    "osm:node/13481922791",
+    "osm:node/13623611001",
+    "osm:node/13623618301",
+    "osm:node/13623618401",
+    "osm:node/13978961907",
+    "osm:node/1400896177",
+    "osm:node/1881576111",
+    "osm:node/3122675057",
+    "osm:node/4046852258",
+    "osm:node/4046852259",
+    "osm:node/4054670024",
+    "osm:node/4181996540",
+    "osm:node/4236313681",
+    "osm:node/4299090273",
+    "osm:node/4358995092",
+    "osm:node/4390731413",
+    "osm:node/4390731420",
+    "osm:node/4390731421",
+    "osm:node/4508458788",
+    "osm:node/4508462925",
+    "osm:node/454209465",
+    "osm:node/4868177047",
+    "osm:node/5046352966",
+    "osm:node/5103270391",
+    "osm:node/5203970912",
+    "osm:node/5257252795",
+    "osm:node/5679487010",
+    "osm:node/5801813845",
+    "osm:node/5923571479",
+    "osm:node/608632131",
+    "osm:node/6144773031",
+    "osm:node/6144773033",
+    "osm:node/6374566381",
+    "osm:node/6440136752",
+    "osm:node/6496466191",
+    "osm:node/6552951652",
+    "osm:node/6701819719",
+    "osm:node/6766662414",
+    "osm:node/6779119177",
+    "osm:node/7012267708",
+    "osm:node/7221019055",
+    "osm:node/7680951578",
+    "osm:node/778585858",
+    "osm:node/7859005546",
+    "osm:node/8951413979",
+    "osm:node/8959676144",
+    "osm:node/9224973547",
+    "osm:node/9224973548",
+    "osm:node/9243755653",
+    "osm:node/931541271",
+    "osm:node/9792902645",
+    "osm:node/9809627151",
+    "osm:node/9812655823",
+    "osm:node/9812655827",
+    "osm:node/9812655831",
+    "osm:node/981554268",
+    "osm:relation/9248967",
+    "osm:way/159308937",
+    "osm:way/204616555",
+    "osm:way/243919362",
+    "osm:way/991050234",
+    "surf-forecast:Aberavon",
+    "surf-forecast:Ahtopol",
+    "surf-forecast:Armacao",
+    "surf-forecast:Barmouth",
+    "surf-forecast:Bergenaan-Zee",
+    "surf-forecast:Borth",
+    "surf-forecast:British-Beach_1",
+    "surf-forecast:Broadhaven",
+    "surf-forecast:Camber-Sands",
+    "surf-forecast:Castlerock",
+    "surf-forecast:Chia",
+    "surf-forecast:Chipiona",
+    "surf-forecast:Comporta",
+    "surf-forecast:Conildela-Frontera",
+    "surf-forecast:Croyde",
+    "surf-forecast:Domburg",
+    "surf-forecast:Druridge-Bay",
+    "surf-forecast:El-Huayco",
+    "surf-forecast:El-Zonte",
+    "surf-forecast:Espinho",
+    "surf-forecast:Fernandina-Pier",
+    "surf-forecast:Fonte-da-Telha",
+    "surf-forecast:Fortunes-Rocks-Beach",
+    "surf-forecast:Fraserburgh",
+    "surf-forecast:Freshwater-West",
+    "surf-forecast:Getares",
+    "surf-forecast:Gozo-Ramla-Bay",
+    "surf-forecast:Gruissan-Plage",
+    "surf-forecast:Gwithian",
+    "surf-forecast:Hayling-Island",
+    "surf-forecast:Ilha-de-Tavira",
+    "surf-forecast:Juodkrante",
+    "surf-forecast:Kijkduin",
+    "surf-forecast:Klitmoller",
+    "surf-forecast:Kos-Theologos",
+    "surf-forecast:La-Manga",
+    "surf-forecast:La-Tranchesur-Mer",
+    "surf-forecast:Laredo",
+    "surf-forecast:Las-Tunas",
+    "surf-forecast:Le-Morne",
+    "surf-forecast:Llangennith",
+    "surf-forecast:Lossiemouth",
+    "surf-forecast:Lowestoft",
+    "surf-forecast:Machrihanish",
+    "surf-forecast:Marazion",
+    "surf-forecast:Marina-di-Pisa",
+    "surf-forecast:Matalascanas",
+    "surf-forecast:Misty-Cliffs",
+    "surf-forecast:Nazare",
+    "surf-forecast:Newgale",
+    "surf-forecast:Nida",
+    "surf-forecast:Norderney",
+    "surf-forecast:Olivia-Beach",
+    "surf-forecast:Oxwich-Bay",
+    "surf-forecast:Pacasmayo",
+    "surf-forecast:Pampilla",
+    "surf-forecast:Pavilosta",
+    "surf-forecast:Plage-Des-Casernes",
+    "surf-forecast:Playa-Pantaleta",
+    "surf-forecast:Playa-Pelua",
+    "surf-forecast:Poetto_Cagliari",
+    "surf-forecast:Pointdela-Torche",
+    "surf-forecast:Pontal_1",
+    "surf-forecast:Portrush_East-Strand",
+    "surf-forecast:Praia-Brava_Rio_1",
+    "surf-forecast:Praia-Vermelhado-Norte",
+    "surf-forecast:Praia-Vitoria",
+    "surf-forecast:Praia-de-Intermares",
+    "surf-forecast:Praia-do-Gravata",
+    "surf-forecast:Praiade-Mira",
+    "surf-forecast:Praiado-Pinho",
+    "surf-forecast:Punta-Roca",
+    "surf-forecast:Punta-Roquitas",
+    "surf-forecast:Rhosneigr",
+    "surf-forecast:Salinas",
+    "surf-forecast:Sandys-Beach",
+    "surf-forecast:Seaton-Carew",
+    "surf-forecast:Sele",
+    "surf-forecast:Serrambi",
+    "surf-forecast:Shabla",
+    "surf-forecast:Shoreham",
+    "surf-forecast:Skegness",
+    "surf-forecast:Southbourne",
+    "surf-forecast:St-Augustine-Pier",
+    "surf-forecast:Tanga-Roa",
+    "surf-forecast:Thurso-Beach",
+    "surf-forecast:Troia",
+    "surf-forecast:Turtle-Islands-Moot",
+    "surf-forecast:Unstad",
+    "surf-forecast:Vianado-Castelo",
+    "surf-forecast:Vila-Novade-Milfontes",
+    "surf-forecast:Watergate-Bay",
+    "surf-forecast:Wells-next-the-sea",
+    "surf-forecast:West-Wittering",
+    "surf-forecast:Westward-Ho",
+    "surf-forecast:Wilderness",
+    "surf-forecast:Wissant",
+    "surf-forecast:Zaharadelos-Atunes",
+    "surf-forecast:Zandvoort",
+    "surf-forecast:hellesto"
+  ],
+  "nameVariants": [
+    {
+      "leftId": "surf-forecast:Caravelle",
+      "leftName": "Caravelle",
+      "rightId": "surf-forecast:La-Caravelle",
+      "rightName": "La Caravelle",
+      "distanceMeters": 3462
+    },
+    {
+      "leftId": "surf-forecast:Dump-Beach",
+      "leftName": "Dump Beach",
+      "rightId": "surf-forecast:The-Dump_1",
+      "rightName": "The Dump",
+      "distanceMeters": 3096
+    },
+    {
+      "leftId": "surf-forecast:Point-Plomer",
+      "leftName": "Point Plomer",
+      "rightId": "surf-forecast:Point-Plomer-Beach",
+      "rightName": "Point Plomer Beach",
+      "distanceMeters": 760
+    }
+  ],
+  "proximityOnly": [
+    {
+      "leftId": "osm:node/11873651917",
+      "rightId": "osm:node/9809798376",
+      "distanceMeters": 38,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Солнечный ветер",
+      "rightName": "AquaLeto"
+    },
+    {
+      "leftId": "osm:node/2330850554",
+      "rightId": "surf-forecast:Capitola-Rivermouth",
+      "distanceMeters": 61,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Toes Over",
+      "rightName": "Capitola Rivermouth"
+    },
+    {
+      "leftId": "osm:node/3659137147",
+      "rightId": "surf-forecast:Honolii-Beach-Park",
+      "distanceMeters": 37,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Honoli‘i",
+      "rightName": "Honolii Beach Park"
+    },
+    {
+      "leftId": "osm:node/6773182808",
+      "rightId": "surf-forecast:Anse-de-Remire",
+      "distanceMeters": 73,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Association de Sports de Plein Air en Guyane",
+      "rightName": "Anse de Rémire (L'apcat)"
+    },
+    {
+      "leftId": "osm:way/1009395310",
+      "rightId": "osm:way/450617292",
+      "distanceMeters": 33,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Spot du Helleux",
+      "rightName": "Plage de Gros Sable"
+    },
+    {
+      "leftId": "osm:way/218679862",
+      "rightId": "surf-forecast:Canoes",
+      "distanceMeters": 64,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Waikīkī Beach",
+      "rightName": "Canoes"
+    },
+    {
+      "leftId": "osm:way/244597751",
+      "rightId": "surf-forecast:Playa-Grande_4",
+      "distanceMeters": 34,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Playa Grande",
+      "rightName": "Choroni - Playa Grande"
+    },
+    {
+      "leftId": "surf-forecast:Ansede-Cabestan",
+      "rightId": "surf-forecast:Saint-Tugen",
+      "distanceMeters": 67,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Anse de Cabestan",
+      "rightName": "St Tugen"
+    },
+    {
+      "leftId": "surf-forecast:Antenot",
+      "rightId": "surf-forecast:Ha-Radar",
+      "distanceMeters": 22,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Antenot",
+      "rightName": "Ha`Radar or Ha`Basiz"
+    },
+    {
+      "leftId": "surf-forecast:Argamans-Beach",
+      "rightId": "surf-forecast:Green-Beach",
+      "distanceMeters": 44,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Argaman's Beach",
+      "rightName": "Green Beach"
+    },
+    {
+      "leftId": "surf-forecast:Bica",
+      "rightId": "surf-forecast:Sao-Pedro-1",
+      "distanceMeters": 69,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Bica",
+      "rightName": "Sao Pedro"
+    },
+    {
+      "leftId": "surf-forecast:Bunbury-Fragles",
+      "rightId": "surf-forecast:Bunbury-Surf-Club-Backbeach",
+      "distanceMeters": 24,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Bunbury Fragles",
+      "rightName": "Bunbury Surf Club Backbeach"
+    },
+    {
+      "leftId": "surf-forecast:Cowrie-Beach",
+      "rightId": "surf-forecast:Left-Point",
+      "distanceMeters": 56,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Cowrie Beach",
+      "rightName": "Left Point"
+    },
+    {
+      "leftId": "surf-forecast:Crushers",
+      "rightId": "surf-forecast:Supertubes_1",
+      "distanceMeters": 67,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Crushers",
+      "rightName": "Supertubes"
+    },
+    {
+      "leftId": "surf-forecast:Emery-s-Left",
+      "rightId": "surf-forecast:Windansea",
+      "distanceMeters": 30,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Emery s Left",
+      "rightName": "Windansea"
+    },
+    {
+      "leftId": "surf-forecast:Escambron-Beach-La-Ocho",
+      "rightId": "surf-forecast:Little-Fiji-Escambron",
+      "distanceMeters": 22,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "La Ocho (Escambron Beach)",
+      "rightName": "Little Fiji (Escambron Beach)"
+    },
+    {
+      "leftId": "surf-forecast:Gouerou_1",
+      "rightId": "surf-forecast:Lampaul-Plouarzel",
+      "distanceMeters": 31,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Le Gouerou",
+      "rightName": "Lampaul Plouarzel"
+    },
+    {
+      "leftId": "surf-forecast:High-Doggies",
+      "rightId": "surf-forecast:Pango-Point",
+      "distanceMeters": 64,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "High Doggies",
+      "rightName": "Pango Point"
+    },
+    {
+      "leftId": "surf-forecast:Indicators",
+      "rightId": "surf-forecast:Steamer-Lane-Middle-Peak",
+      "distanceMeters": 43,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Indicators",
+      "rightName": "Steamer Lane-Middle Peak"
+    },
+    {
+      "leftId": "surf-forecast:Indicators",
+      "rightId": "surf-forecast:Steamer-Lane-The-Slot",
+      "distanceMeters": 28,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Indicators",
+      "rightName": "Steamer Lane-The Slot"
+    },
+    {
+      "leftId": "surf-forecast:Injidup-Carpark",
+      "rightId": "surf-forecast:Pea-Break",
+      "distanceMeters": 35,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Injidup Carpark",
+      "rightName": "Pea Break"
+    },
+    {
+      "leftId": "surf-forecast:L-Isoletto",
+      "rightId": "varun:windguru-1522",
+      "distanceMeters": 22,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "L'Isoletto",
+      "rightName": "Chia"
+    },
+    {
+      "leftId": "surf-forecast:Nuns-Beach-1",
+      "rightId": "surf-forecast:Stone-Harbour",
+      "distanceMeters": 17,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Nuns Beach",
+      "rightName": "Stone Harbour Point"
+    },
+    {
+      "leftId": "surf-forecast:San-Augustine",
+      "rightId": "surf-forecast:St-Augustine-Point",
+      "distanceMeters": 35,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "San Augustine",
+      "rightName": "St Augustine Point"
+    },
+    {
+      "leftId": "surf-forecast:Son-Serra-de-Marina",
+      "rightId": "surf-forecast:Son-Serra-Nova",
+      "distanceMeters": 36,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Mallorca - Son Serra de Marina",
+      "rightName": "Mallorca - Son Serra Nova"
+    },
+    {
+      "leftId": "surf-forecast:Steamer-Lane-Middle-Peak",
+      "rightId": "surf-forecast:Steamer-Lane-The-Slot",
+      "distanceMeters": 71,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Steamer Lane-Middle Peak",
+      "rightName": "Steamer Lane-The Slot"
+    },
+    {
+      "leftId": "surf-forecast:Steamer-Lane-The-Point",
+      "rightId": "surf-forecast:Steamer-Lane-The-Slot",
+      "distanceMeters": 71,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Steamer Lane-The Point",
+      "rightName": "Steamer Lane-The Slot"
+    },
+    {
+      "leftId": "surf-forecast:Vari",
+      "rightId": "varun:windguru-42527",
+      "distanceMeters": 62,
+      "reasons": [
+        "within-75m"
+      ],
+      "leftName": "Vari",
+      "rightName": "Varkiza (Attica)"
+    }
+  ]
+}

@@ -41,6 +41,314 @@
           "evidence": "Permission relayed directly to the Windpeek project owner"
         }
       }
+    },
+    {
+      "id": "osm-americas-reviewed-2026-09-09",
+      "adapter": "osm",
+      "input": "sources/osm-americas-reviewed-2026-09-09.json",
+      "upstream": "https://www.openstreetmap.org/",
+      "snapshot": "2026-09-09T13:04:41Z",
+      "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geoapify-reverse",
+        "review": "docs/reviews/2026-09-09-americas-spots.md"
+      },
+      "rights": {
+        "license": "ODbL-1.0",
+        "redistribution": true,
+        "attribution": "© OpenStreetMap contributors"
+      }
+    },
+    {
+      "id": "surf-forecast-worldwide-2026-09-09",
+      "adapter": "surf-forecast",
+      "input": "sources/surf-forecast-worldwide-2026-09-09.json",
+      "upstream": "https://www.surf-forecast.com/countries",
+      "snapshot": "2026-09-09T13:34:20.641Z",
+      "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geo-tz@8.1.8/all with Geoapify fallback",
+        "review": "docs/reviews/2026-09-09-worldwide-spots.md"
+      },
+      "rights": {
+        "license": "Direct permission for Windscout",
+        "redistribution": true,
+        "attribution": "Surf-Forecast.com spot catalog",
+        "permission": {
+          "recorded": "2026-09-09",
+          "scope": "Import and use Surf-Forecast spot data in Windscout",
+          "evidence": "Project owner confirmed existing permission in this task: we mogen overnemen van surf-forecast hoor, hebben we permissie."
+        }
+      },
+      "excludedRecords": [
+        {
+          "sourceId": "Kapoho-Bay",
+          "reason": "historic-coastline-filled-by-2018-lava; needs current spot verification",
+          "evidence": "https://www.usgs.gov/node/278666"
+        },
+        {
+          "sourceId": "Tereza",
+          "reason": "Brazil spot has positive latitude 28.5249, placing it in the North Atlantic",
+          "evidence": "https://www.surf-forecast.com/breaks/Tereza"
+        },
+        {
+          "sourceId": "Barranquito",
+          "reason": "reviewed-same-place-as-osm:way/394441608",
+          "evidence": "https://www.openstreetmap.org/way/394441608"
+        },
+        {
+          "sourceId": "Caballeros",
+          "reason": "reviewed-same-place-as-osm:way/399820054",
+          "evidence": "https://www.openstreetmap.org/way/399820054"
+        },
+        {
+          "sourceId": "Cacimbado-Padre",
+          "reason": "reviewed-same-place-as-osm:relation/5476220",
+          "evidence": "https://www.openstreetmap.org/relation/5476220"
+        },
+        {
+          "sourceId": "Campeche",
+          "reason": "reviewed-same-place-as-osm:relation/6455060",
+          "evidence": "https://www.openstreetmap.org/relation/6455060"
+        },
+        {
+          "sourceId": "Chapadmalal",
+          "reason": "reviewed-same-place-as-osm:way/1002825877",
+          "evidence": "https://www.openstreetmap.org/way/1002825877"
+        },
+        {
+          "sourceId": "Cox-Bay",
+          "reason": "reviewed-same-place-as-osm:relation/19056949",
+          "evidence": "https://www.openstreetmap.org/relation/19056949"
+        },
+        {
+          "sourceId": "Cupe",
+          "reason": "reviewed-same-place-as-osm:way/189121624",
+          "evidence": "https://www.openstreetmap.org/way/189121624"
+        },
+        {
+          "sourceId": "Cuyagua-Toda-San",
+          "reason": "reviewed-same-place-as-osm:way/519081277",
+          "evidence": "https://www.openstreetmap.org/way/519081277"
+        },
+        {
+          "sourceId": "El-Silencio",
+          "reason": "reviewed-same-place-as-osm:way/399820226",
+          "evidence": "https://www.openstreetmap.org/way/399820226"
+        },
+        {
+          "sourceId": "Geriba",
+          "reason": "reviewed-same-place-as-osm:way/162009070",
+          "evidence": "https://www.openstreetmap.org/way/162009070"
+        },
+        {
+          "sourceId": "Herradura",
+          "reason": "reviewed-same-place-as-osm:way/165080724",
+          "evidence": "https://www.openstreetmap.org/way/165080724"
+        },
+        {
+          "sourceId": "Ingleses",
+          "reason": "reviewed-same-place-as-osm:relation/6435396",
+          "evidence": "https://www.openstreetmap.org/relation/6435396"
+        },
+        {
+          "sourceId": "Itamambuca",
+          "reason": "reviewed-same-place-as-osm:relation/7573250",
+          "evidence": "https://www.openstreetmap.org/relation/7573250"
+        },
+        {
+          "sourceId": "Joaquina",
+          "reason": "reviewed-same-place-as-osm:relation/6455059",
+          "evidence": "https://www.openstreetmap.org/relation/6455059"
+        },
+        {
+          "sourceId": "Keaau",
+          "reason": "reviewed-same-place-as-osm:way/904924436",
+          "evidence": "https://www.openstreetmap.org/way/904924436"
+        },
+        {
+          "sourceId": "Kon-Tiki",
+          "reason": "reviewed-same-place-as-osm:node/6294552157",
+          "evidence": "https://www.openstreetmap.org/node/6294552157"
+        },
+        {
+          "sourceId": "Los-Cocos",
+          "reason": "reviewed-same-place-as-osm:way/1206286178",
+          "evidence": "https://www.openstreetmap.org/way/1206286178"
+        },
+        {
+          "sourceId": "Madeiro",
+          "reason": "reviewed-same-place-as-osm:relation/1365085",
+          "evidence": "https://www.openstreetmap.org/relation/1365085"
+        },
+        {
+          "sourceId": "Makaha",
+          "reason": "reviewed-same-place-as-osm:way/904924438",
+          "evidence": "https://www.openstreetmap.org/way/904924438"
+        },
+        {
+          "sourceId": "Makaha_2",
+          "reason": "reviewed-same-place-as-osm:way/396258998",
+          "evidence": "https://www.openstreetmap.org/way/396258998"
+        },
+        {
+          "sourceId": "Maracaipe",
+          "reason": "reviewed-same-place-as-osm:way/189121608",
+          "evidence": "https://www.openstreetmap.org/way/189121608"
+        },
+        {
+          "sourceId": "Maresias",
+          "reason": "reviewed-same-place-as-osm:relation/4812919",
+          "evidence": "https://www.openstreetmap.org/relation/4812919"
+        },
+        {
+          "sourceId": "Matadeiro",
+          "reason": "reviewed-same-place-as-osm:relation/6442371",
+          "evidence": "https://www.openstreetmap.org/relation/6442371"
+        },
+        {
+          "sourceId": "Pereque-Acu",
+          "reason": "reviewed-same-place-as-osm:way/1247741871",
+          "evidence": "https://www.openstreetmap.org/way/1247741871"
+        },
+        {
+          "sourceId": "Praiade-Tucuns",
+          "reason": "reviewed-same-place-as-osm:way/162866403",
+          "evidence": "https://www.openstreetmap.org/way/162866403"
+        },
+        {
+          "sourceId": "Redondo",
+          "reason": "reviewed-same-place-as-osm:way/1458301379",
+          "evidence": "https://www.openstreetmap.org/way/1458301379"
+        },
+        {
+          "sourceId": "Rosa",
+          "reason": "reviewed-same-place-as-osm:relation/6445104",
+          "evidence": "https://www.openstreetmap.org/relation/6445104"
+        },
+        {
+          "sourceId": "Rosarito",
+          "reason": "reviewed-same-place-as-osm:way/1089340805",
+          "evidence": "https://www.openstreetmap.org/way/1089340805"
+        },
+        {
+          "sourceId": "Sunset_1",
+          "reason": "reviewed-same-place-as-osm:way/12541972",
+          "evidence": "https://www.openstreetmap.org/way/12541972"
+        },
+        {
+          "sourceId": "T-Street",
+          "reason": "reviewed-same-place-as-osm:way/389455902",
+          "evidence": "https://www.openstreetmap.org/way/389455902"
+        },
+        {
+          "sourceId": "Titanzinho",
+          "reason": "reviewed-same-place-as-osm:way/428024507",
+          "evidence": "https://www.openstreetmap.org/way/428024507"
+        },
+        {
+          "sourceId": "Waikiki_3",
+          "reason": "reviewed-same-place-as-osm:way/218679862",
+          "evidence": "https://www.openstreetmap.org/way/218679862"
+        },
+        {
+          "sourceId": "Wickaninnish",
+          "reason": "reviewed-same-place-as-osm:way/596267557",
+          "evidence": "https://www.openstreetmap.org/way/596267557"
+        },
+        {
+          "sourceId": "Shacks",
+          "reason": "historic-Kapoho-coastline; current break unverified after 2018 lava",
+          "evidence": "https://recovery.hawaiicounty.gov/resources/2018-eruption"
+        },
+        {
+          "sourceId": "Cortez-Banks",
+          "reason": "remote-offshore-bank; local shore timezone cannot be reliably resolved",
+          "evidence": "https://www.surf-forecast.com/breaks/Cortez-Banks"
+        },
+        {
+          "sourceId": "Blyth-and-Seaton",
+          "reason": "reviewed-name-variant-of:varun:windguru-500685",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Hendaye-Plage",
+          "reason": "reviewed-name-variant-of:varun:windguru-48576",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Praia-do-Bordeira",
+          "reason": "reviewed-name-variant-of:varun:windguru-112689",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Praiado-Guincho",
+          "reason": "reviewed-name-variant-of:varun:windguru-1102295",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Banzai_2",
+          "reason": "reviewed-name-variant-of:varun:windguru-159431",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Praiada-Barra",
+          "reason": "reviewed-name-variant-of:varun:windguru-48948",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Six-Fours",
+          "reason": "reviewed-name-variant-of:varun:windguru-824",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Playa-Langosta",
+          "reason": "reviewed-name-variant-of:surf-forecast:Langosta",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Neurim-Youth-Beach",
+          "reason": "reviewed-name-variant-of:surf-forecast:Neurim-Beach",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Northwall",
+          "reason": "reviewed-name-variant-of:surf-forecast:Ballina-North-Wall",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Assinie_1",
+          "reason": "source coordinate is in Ghana rather than named Assinie in Ivory Coast; needs correction",
+          "evidence": "https://www.surf-forecast.com/breaks/Assinie_1"
+        },
+        {
+          "sourceId": "Cement-Factory",
+          "reason": "positive latitude places Indonesian spot in South China Sea; probable sign error, not corrected by guess",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Eilat-Green-Beach",
+          "reason": "coordinate offshore near Jordan differs from named Eilat beach; timezone ambiguous",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Ocos",
+          "reason": "coordinate is west of named Ocos on Mexico side; source point needs correction",
+          "evidence": "docs/reviews/2026-09-09-worldwide-spots.md"
+        },
+        {
+          "sourceId": "Playa-Jaco",
+          "reason": "reviewed-name-variant-of:surf-forecast:Jaco-Beach",
+          "evidence": "https://www.surf-forecast.com/breaks/Playa-Jaco"
+        },
+        {
+          "sourceId": "Praia-Cardoso",
+          "reason": "reviewed-name-variant-of:surf-forecast:Cardoso",
+          "evidence": "https://www.surf-forecast.com/breaks/Praia-Cardoso"
+        }
+      ]
     }
   ]
 }

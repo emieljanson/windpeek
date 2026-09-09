@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { importOsmElements } from './lib/osm-source.mjs'
 import { importVarunRecords } from './lib/varun-source.mjs'
+import { importSurfForecastRecords } from './lib/surf-forecast-source.mjs'
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const dataRoot = path.join(webRoot, 'data/spots')
@@ -60,6 +61,8 @@ for (const source of manifest.sources ?? []) {
     result = await importVarunRecords(input, { resolutions, releaseEligible })
   } else if (source.adapter === 'osm') {
     result = importOsmElements(input.elements, { releaseEligible })
+  } else if (source.adapter === 'surf-forecast') {
+    result = importSurfForecastRecords(input.records, { releaseEligible, excludedRecords: source.excludedRecords })
   } else {
     throw new Error(`Unsupported spot source adapter: ${source.adapter}`)
   }
@@ -93,4 +96,3 @@ console.log(JSON.stringify({
   failures: failures.length,
   sources,
 }, null, 2))
-

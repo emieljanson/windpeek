@@ -19,8 +19,8 @@ describe('spot source import', () => {
   })
 
   it('normalizes supported semicolon-separated activities', () => {
-    expect(normalizeActivities('sailing;kitesurfing;swimming;wing_foiling'))
-      .toEqual(['kitesurfing', 'sailing', 'wingfoil'])
+    expect(normalizeActivities('sailing;kitesurfing;swimming;wing_foiling;surfing;kiteboarding'))
+      .toEqual(['kitesurfing', 'sailing', 'surfing', 'wingfoil'])
   })
 
   it('imports direct Varun coordinates without copying descriptive content', async () => {

@@ -2,6 +2,8 @@ const ACTIVITY_ALIASES = new Map([
   ['kitesurf', 'kitesurfing'],
   ['kitesurfing', 'kitesurfing'],
   ['kite_surfing', 'kitesurfing'],
+  ['kiteboarding', 'kitesurfing'],
+  ['surfing', 'surfing'],
   ['sailing', 'sailing'],
   ['windsurf', 'windsurfing'],
   ['windsurfing', 'windsurfing'],
@@ -84,4 +86,3 @@ export function normalizeCandidate(candidate) {
 export function compareCandidates(left, right) {
   return left.id.localeCompare(right.id)
 }
-
