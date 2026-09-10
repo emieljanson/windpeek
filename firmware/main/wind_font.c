@@ -76,9 +76,9 @@ static const wind_font_glyph_t *find_glyph(const wind_font_asset_t *asset,
      * absent. '?' retains the normal fallback for ligatures and nonletters. */
     static const char latin_fallback[] =
         "AAAAAA?CEEEEIIII" /* U+00C0 */
-        "?NOOOOO?OUUUUY??" /* U+00D0 */
+        "DNOOOOO?OUUUUYT?" /* U+00D0 */
         "aaaaaa?ceeeeiiii" /* U+00E0 */
-        "?nooooo?ouuuuy?y" /* U+00F0 */
+        "dnooooo?ouuuuyty" /* U+00F0 */
         "AaAaAaCcCcCcCcDd" /* U+0100 */
         "DdEeEeEeEeEeGgGg" /* U+0110 */
         "GgGgHhHhIiIiIiIi" /* U+0120 */

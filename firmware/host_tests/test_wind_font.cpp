@@ -85,6 +85,7 @@ TEST(WindFont, FallsBackToReadableLatinLettersForUnsupportedAccents) {
         {"Kuźnica", "Kuznica"}, {"KUŹNICA", "KUZNICA"},
         {"Łeba ž č ą ę ś ń ż", "Leba z c a e s n z"},
         {"Âãå Øø", "Aaa Oo"},
+        {"Þþ Ðð", "Tt Dd"},
     };
     const std::pair<wind_font_family_t, int> fonts[] = {
         {WIND_FONT_BERKELEY_MONO_BOLD, 15},

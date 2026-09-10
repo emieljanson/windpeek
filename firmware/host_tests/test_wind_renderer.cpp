@@ -860,9 +860,18 @@ TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {
 TEST(WindRenderer, ShowsUnsupportedSpotAccentsAsUppercaseLatinLetters) {
     auto accented = Dashboard();
     auto plain = accented;
-    accented.spot_name = "Kuźnica ž Łeba";
-    plain.spot_name = "KUZNICA Z LEBA";
-    EXPECT_EQ(Render(accented), Render(plain));
+    const std::pair<const char *, const char *> cases[] = {
+        {"Kuźnica ž Łeba", "KUZNICA Z LEBA"},
+        {"São ø ÿ ð þ", "SAO O Y D T"},
+        {"ı ſ ĸ", "I S K"},
+        {"Þorlákshöfn", "TORLÁKSHÖFN"},
+    };
+    for (const auto &[name, expected] : cases) {
+        SCOPED_TRACE(name);
+        accented.spot_name = name;
+        plain.spot_name = expected;
+        EXPECT_TRUE(Render(accented) == Render(plain));
+    }
 }
 
 TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
