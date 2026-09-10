@@ -72,6 +72,23 @@ static const wind_font_glyph_t *find_glyph(const wind_font_asset_t *asset,
     }
     if (lo < asset->glyph_count && asset->glyphs[lo].codepoint == codepoint)
         return &asset->glyphs[lo];
+    /* Single-letter Latin approximations, used only when the actual glyph is
+     * absent. '?' retains the normal fallback for ligatures and nonletters. */
+    static const char latin_fallback[] =
+        "AAAAAA?CEEEEIIII" /* U+00C0 */
+        "?NOOOOO?OUUUUY??" /* U+00D0 */
+        "aaaaaa?ceeeeiiii" /* U+00E0 */
+        "?nooooo?ouuuuy?y" /* U+00F0 */
+        "AaAaAaCcCcCcCcDd" /* U+0100 */
+        "DdEeEeEeEeEeGgGg" /* U+0110 */
+        "GgGgHhHhIiIiIiIi" /* U+0120 */
+        "Ii??JjKkkLlLlLl?" /* U+0130 */
+        "?LlNnNnNn?NnOoOo" /* U+0140 */
+        "Oo??RrRrRrSsSsSs" /* U+0150 */
+        "SsTtTt??UuUuUuUu" /* U+0160 */
+        "UuUuWwYyYZzZzZzs"; /* U+0170 */
+    if (codepoint >= 0x00c0 && codepoint <= 0x017f)
+        return find_glyph(asset, (uint32_t)latin_fallback[codepoint - 0x00c0]);
     return &asset->glyphs[asset->fallback_index];
 }
 

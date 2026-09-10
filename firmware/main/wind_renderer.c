@@ -114,6 +114,21 @@ static void uppercase_spot_name(char *output, size_t output_size, const char *in
             ++source;
             continue;
         }
+        if ((source[0] == 0xc4 || source[0] == 0xc5) &&
+            (source[1] & 0xc0) == 0x80 && used + 2 < output_size) {
+            unsigned int cp = ((source[0] & 0x1f) << 6) | (source[1] & 0x3f);
+            /* Latin Extended-A pairs change parity at U+0139 and U+014A. */
+            if ((cp <= 0x012f && (cp & 1)) ||
+                (cp >= 0x0133 && cp <= 0x0137 && (cp & 1)) ||
+                (cp >= 0x013a && cp <= 0x0148 && !(cp & 1)) ||
+                (cp >= 0x014b && cp <= 0x0177 && (cp & 1)) ||
+                (cp >= 0x017a && cp <= 0x017e && !(cp & 1)))
+                --cp;
+            output[used++] = (char)(0xc0 | (cp >> 6));
+            output[used++] = (char)(0x80 | (cp & 0x3f));
+            source += 2;
+            continue;
+        }
         if (source[0] == 0xc3 && source[1] && used + 2 < output_size) {
             unsigned char second = source[1];
             switch (second) {

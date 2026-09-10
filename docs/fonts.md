@@ -13,8 +13,11 @@ the firmware cost to the characters and sizes used by the 800 x 480 layout.
 | Inter Black | 43 | Uppercase spot name |
 
 Each size contains printable ASCII, `°`, `…`, and common Western European
-accented characters used in Dutch place names. Any unsupported or malformed
-UTF-8 character uses the generated `?` glyph. Unsupported family/size pairs
+accented characters used in Dutch place names. Missing accented Latin glyphs
+in U+00C0–U+017F fall back to a single ASCII letter where possible (for example,
+`Kuźnica` becomes `Kuznica`); existing glyphs retain their accents. Other unsupported
+characters, including ligatures without a single-letter approximation, and malformed
+UTF-8 use the generated `?` glyph. Unsupported family/size pairs
 measure as zero and draw nothing; the renderer should use the named constants
 in `wind_font.h`.
 

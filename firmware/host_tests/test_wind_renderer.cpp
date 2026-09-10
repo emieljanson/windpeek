@@ -857,6 +857,14 @@ TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {
     EXPECT_EQ(Render(mixed_case), Render(uppercase));
 }
 
+TEST(WindRenderer, ShowsUnsupportedSpotAccentsAsUppercaseLatinLetters) {
+    auto accented = Dashboard();
+    auto plain = accented;
+    accented.spot_name = "Kuźnica ž Łeba";
+    plain.spot_name = "KUZNICA Z LEBA";
+    EXPECT_EQ(Render(accented), Render(plain));
+}
+
 TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
     auto dashboard = Dashboard();
     dashboard.spot_name = "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";
