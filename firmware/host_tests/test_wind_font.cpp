@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -77,6 +78,36 @@ TEST(WindFont, DrawsGlyphCoverageAsSolidBlackOrWhitePixels) {
                             [](uint8_t value) {
                                 return value == 0 || value == 255;
                             }));
+}
+
+TEST(WindFont, FallsBackToReadableLatinLettersForUnsupportedAccents) {
+    const std::pair<const char *, const char *> cases[] = {
+        {"Kuźnica", "Kuznica"}, {"KUŹNICA", "KUZNICA"},
+        {"Łeba ž č ą ę ś ń ż", "Leba z c a e s n z"},
+        {"Âãå Øø", "Aaa Oo"},
+        {"Þþ Ðð", "Tt Dd"},
+    };
+    const std::pair<wind_font_family_t, int> fonts[] = {
+        {WIND_FONT_BERKELEY_MONO_BOLD, 15},
+        {WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, 12},
+        {WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, 15},
+        {WIND_FONT_INTER, 43},
+    };
+    for (const auto &[family, size] : fonts) {
+        for (const auto &item : cases) {
+            SCOPED_TRACE(item.first);
+            EXPECT_EQ(wind_font_measure(family, size, item.first).width,
+                      wind_font_measure(family, size, item.second).width);
+            for (bool antialiased : {false, true}) {
+                std::vector<uint8_t> actual(800 * 60, 255), expected(actual);
+                const auto draw = antialiased ? wind_font_draw_antialiased
+                                              : wind_font_draw;
+                draw(actual.data(), 800, 60, 800, 0, 45, family, size, 0, item.first);
+                draw(expected.data(), 800, 60, 800, 0, 45, family, size, 0, item.second);
+                EXPECT_TRUE(actual == expected);
+            }
+        }
+    }
 }
 
 TEST(WindFont, UsesBaselineMetricsForCrossFamilyPlacement) {

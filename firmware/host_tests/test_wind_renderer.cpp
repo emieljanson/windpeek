@@ -857,6 +857,23 @@ TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {
     EXPECT_EQ(Render(mixed_case), Render(uppercase));
 }
 
+TEST(WindRenderer, ShowsUnsupportedSpotAccentsAsUppercaseLatinLetters) {
+    auto accented = Dashboard();
+    auto plain = accented;
+    const std::pair<const char *, const char *> cases[] = {
+        {"Kuźnica ž Łeba", "KUZNICA Z LEBA"},
+        {"São ø ÿ ð þ", "SAO O Y D T"},
+        {"ı ſ ĸ", "I S K"},
+        {"Þorlákshöfn", "TORLÁKSHÖFN"},
+    };
+    for (const auto &[name, expected] : cases) {
+        SCOPED_TRACE(name);
+        accented.spot_name = name;
+        plain.spot_name = expected;
+        EXPECT_TRUE(Render(accented) == Render(plain));
+    }
+}
+
 TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
     auto dashboard = Dashboard();
     dashboard.spot_name = "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";

@@ -114,31 +114,36 @@ static void uppercase_spot_name(char *output, size_t output_size, const char *in
             ++source;
             continue;
         }
+        if ((source[0] == 0xc4 || source[0] == 0xc5) &&
+            (source[1] & 0xc0) == 0x80 && used + 2 < output_size) {
+            unsigned int cp = ((source[0] & 0x1f) << 6) | (source[1] & 0x3f);
+            if (cp == 0x0131 || cp == 0x0138 || cp == 0x017f) {
+                output[used++] = cp == 0x0131 ? 'I' : cp == 0x0138 ? 'K' : 'S';
+                source += 2;
+                continue;
+            }
+            /* Latin Extended-A pairs change parity at U+0139 and U+014A. */
+            if ((cp <= 0x012f && (cp & 1)) ||
+                (cp >= 0x0133 && cp <= 0x0137 && (cp & 1)) ||
+                (cp >= 0x013a && cp <= 0x0148 && !(cp & 1)) ||
+                (cp >= 0x014b && cp <= 0x0177 && (cp & 1)) ||
+                (cp >= 0x017a && cp <= 0x017e && !(cp & 1)))
+                --cp;
+            output[used++] = (char)(0xc0 | (cp >> 6));
+            output[used++] = (char)(0x80 | (cp & 0x3f));
+            source += 2;
+            continue;
+        }
         if (source[0] == 0xc3 && source[1] && used + 2 < output_size) {
             unsigned char second = source[1];
-            switch (second) {
-                case 0xa0:
-                case 0xa1:
-                case 0xa4:
-                case 0xa7:
-                case 0xa8:
-                case 0xa9:
-                case 0xab:
-                case 0xac:
-                case 0xad:
-                case 0xaf:
-                case 0xb1:
-                case 0xb2:
-                case 0xb3:
-                case 0xb6:
-                case 0xb9:
-                case 0xba:
-                case 0xbc:
-                    second = (unsigned char)(second - 0x20);
-                    break;
-                default:
-                    break;
+            if (second == 0xbf) { /* U+00FF uppercases to U+0178. */
+                output[used++] = (char)0xc5;
+                output[used++] = (char)0xb8;
+                source += 2;
+                continue;
             }
+            if (second >= 0xa0 && second <= 0xbe && second != 0xb7)
+                second = (unsigned char)(second - 0x20);
             output[used++] = (char)source[0];
             output[used++] = (char)second;
             source += 2;
