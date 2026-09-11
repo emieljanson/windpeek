@@ -193,6 +193,15 @@ function applyStudioTheme() {
   keyLight.angle = lighting.key.angle
   keyLight.penumbra = lighting.key.penumbra
   keyLight.target.position.set(...(lighting.key.target ?? [0, -0.02, 0]))
+  if (dark && props.boardId === BOARD_IDS.E1003) {
+    // Cover the larger face evenly instead of leaving its edges in shadow.
+    keyLight.angle = 0.75
+    keyLight.intensity *= 1.4
+    softbox.width = 0.32
+    softbox.height = 0.28
+    softbox.intensity *= 2
+    hemisphereLight.intensity *= 2
+  }
   const floor = scene.getObjectByName('STUDIO_LIT_FLOOR')
   if (floor) floor.visible = dark
   usbCable?.setDistanceFade(

@@ -28,7 +28,7 @@ export function siteDisplayDefaults(variant = siteVariant()) {
   return {
     windSize: swell ? 'small' : 'large', swellSize: swell ? 'large' : 'off',
     moduleOrder: swell ? ['swell', 'wind', 'weather', 'temperature', 'tide'] : ['wind', 'swell', 'weather', 'temperature', 'tide'],
-    showWeather: true, showTemperature: !swell, showTide: true, showThreshold: !swell,
+    showWeather: true, showTemperature: false, showTide: true, showThreshold: !swell,
   }
 }
 

@@ -24,6 +24,15 @@ function storeWith(browser, storage = null) {
 }
 
 describe('site entry and share URLs', () => {
+  it('starts the wind configurator with a wind graph, weather and tide', () => {
+    for (const search of ['?configure', '?configure&site=wind']) {
+      const store = storeWith(browserAt(`https://windpeek.com/${search}`))
+      expect(store.$state).toMatchObject({
+        windSize: 'large', swellSize: 'off', showWeather: true,
+        showTemperature: false, showTide: true,
+      })
+    }
+  })
   it('supports the swell link in production and preserves it when configuring', () => {
     expect(siteVariant(new URL('https://swellpeek.com/')).id).toBe('swell')
     expect(siteVariant(new URL('https://windpeek.com/?site=swell')).id).toBe('swell')
