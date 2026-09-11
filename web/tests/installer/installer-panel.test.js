@@ -53,10 +53,12 @@ describe('installer inspector panel', () => {
     const screens = [...dialog.querySelectorAll('.hardware-spec--screen dd')]
     expect(screens.map(node => [...node.querySelectorAll('.hardware-spec__line')].map(line => line.textContent.trim())))
       .toEqual([
-        ['7.5″, 4 greys', '800 × 480'],
-        ['7.3″, 6 colours', '800 × 480'],
-        ['10.3″, 16 greys', '1872 × 1404'],
+        ['7.5″, 4 greys'],
+        ['7.3″, 6 colours'],
+        ['10.3″, 16 greys'],
       ])
+    expect([...dialog.querySelectorAll('.hardware-spec--resolution dd')].map(node => node.textContent.trim()))
+      .toEqual(['Standard screen', 'Standard screen', 'High-res screen'])
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await wrapper.vm.$nextTick()

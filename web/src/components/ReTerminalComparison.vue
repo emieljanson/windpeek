@@ -6,8 +6,10 @@ const variant = siteVariant()
 const hardwareModels = [
   {
     model: 'E1001',
+    spots: 'Monitor 1 spot',
+    spotsCompact: '1 spot',
     screen: '7.5″, 4 greys',
-    resolution: '800 × 480',
+    resolution: 'Standard screen',
     threshold: 'Black threshold',
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
@@ -17,8 +19,10 @@ const hardwareModels = [
   },
   {
     model: 'E1002',
+    spots: 'Monitor 1 spot',
+    spotsCompact: '1 spot',
     screen: '7.3″, 6 colours',
-    resolution: '800 × 480',
+    resolution: 'Standard screen',
     threshold: 'Red threshold',
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
@@ -28,8 +32,10 @@ const hardwareModels = [
   },
   {
     model: 'E1003',
+    spots: 'Monitor up to 3 spots',
+    spotsCompact: 'Up to 3 spots',
     screen: '10.3″, 16 greys',
-    resolution: '1872 × 1404',
+    resolution: 'High-res screen',
     threshold: 'Black threshold',
     battery: '6 month battery',
     batteryCompact: '6 mo battery',
@@ -40,7 +46,9 @@ const hardwareModels = [
 ]
 
 const hardwareSpecs = [
-  { id: 'screen', label: 'Screen', keys: ['screen', 'resolution'] },
+  { id: 'screen', label: 'Screen', keys: ['screen'] },
+  { id: 'resolution', label: 'Screen resolution', keys: ['resolution'] },
+  { id: 'spots', label: 'Spots you can monitor', keys: ['spots'] },
   { id: 'threshold', label: 'Threshold line', keys: ['threshold'] },
   { id: 'battery', label: 'Battery', keys: ['battery'] },
 ]
@@ -66,8 +74,8 @@ const hardwareSpecs = [
                 :key="key"
                 class="hardware-spec__line"
               >
-                <span :class="{ 'hardware-spec__copy--desktop': key === 'battery' }">{{ device[key] }}</span>
-                <span v-if="key === 'battery'" class="hardware-spec__copy--mobile">{{ device.batteryCompact }}</span>
+                <span :class="{ 'hardware-spec__copy--desktop': device[`${key}Compact`] }">{{ device[key] }}</span>
+                <span v-if="device[`${key}Compact`]" class="hardware-spec__copy--mobile">{{ device[`${key}Compact`] }}</span>
               </span>
             </dd>
           </div>

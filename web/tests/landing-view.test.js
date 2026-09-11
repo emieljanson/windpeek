@@ -44,15 +44,19 @@ describe('Windpeek landing page', () => {
     expect(devices).toHaveLength(3)
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1001', 'E1002', 'E1003'])
     const specs = wrapper.findAll('.hardware-spec')
-    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Threshold line', 'Battery'])
+    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Spots you can monitor', 'Threshold line', 'Battery'])
     wrapper.findAll('.hardware-spec__copy--mobile').forEach(copy => {
       expect(copy.attributes('aria-hidden')).toBeUndefined()
     })
     expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.find('.hardware-spec__copy--desktop').exists() ? line.get('.hardware-spec__copy--desktop').text() : line.text())))).toEqual([
-      [['7.5″, 4 greys', '800 × 480'], ['7.3″, 6 colours', '800 × 480'], ['10.3″, 16 greys', '1872 × 1404']],
+      [['7.5″, 4 greys'], ['7.3″, 6 colours'], ['10.3″, 16 greys']],
+      [['Standard screen'], ['Standard screen'], ['High-res screen']],
+      [['Monitor 1 spot'], ['Monitor 1 spot'], ['Monitor up to 3 spots']],
       [['Black threshold'], ['Red threshold'], ['Black threshold']],
       [['3 month battery'], ['3 month battery'], ['6 month battery']],
     ])
+    expect(wrapper.findAll('.hardware-spec--spots .hardware-spec__copy--mobile').map(copy => copy.text()))
+      .toEqual(['1 spot', '1 spot', 'Up to 3 spots'])
     devices.forEach((device, index) => {
       const model = `E100${index + 1}`
       const image = device.get('img')

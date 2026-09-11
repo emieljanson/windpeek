@@ -161,7 +161,7 @@ function applyStudioTheme() {
   if (!scene || !renderer || !keyLight) return
   const dark = themeQuery.matches && !props.captureMode
   const lighting = dark ? DARK_PRODUCT_LIGHTING : PRODUCT_LIGHTING
-  renderer.toneMappingExposure = dark ? 0.7 : 1.0
+  renderer.toneMappingExposure = dark ? 1.4 : 1.0
   scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
   scene.fog = dark ? new THREE.FogExp2(lighting.background, 1.5) : null
   if (environmentPalette !== lighting.environment) {
@@ -208,7 +208,7 @@ function applyStudioTheme() {
     grid.visible = true
     grid.material.uniforms.lineColor.value.set(dark ? 0x7f7f81 : 0x6f7784)
     grid.material.uniforms.veilOpacity.value = dark ? 0 : 0.032
-    grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 0.7 : 0.24
+    grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 1.4 : 0.24
     grid.material.uniforms.stageFadeStart.value = dark ? 0.055 : 0.28
     grid.material.uniforms.stageFadeEnd.value = dark ? 0.22 : 0.82
   }
