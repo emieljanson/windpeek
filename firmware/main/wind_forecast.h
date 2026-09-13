@@ -8,10 +8,11 @@
 extern "C" {
 #endif
 
-#define WIND_FORECAST_SCHEMA_VERSION 3u
+#define WIND_FORECAST_SCHEMA_VERSION 4u
 #define WIND_FORECAST_DAY_COUNT 5
 #define WIND_FORECAST_SAMPLES_PER_DAY 5
 #define WIND_FORECAST_SAMPLE_COUNT 25
+#define WIND_FORECAST_HOURLY_COUNT 13
 #define WIND_FORECAST_SPOT_ID_MAX 32
 #define WIND_FORECAST_SPOT_NAME_MAX 64
 #define WIND_FORECAST_TIMEZONE_MAX 40
@@ -61,6 +62,8 @@ typedef struct {
     char model[WIND_FORECAST_MODEL_MAX];
     int64_t retrieved_at;
     wind_forecast_day_t days[WIND_FORECAST_DAY_COUNT];
+    /* Optional 08–20 hourly observations; zero timestamp means unavailable. */
+    wind_forecast_sample_t hourly[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_HOURLY_COUNT];
 } wind_forecast_t;
 
 void wind_forecast_clear(wind_forecast_t *forecast);

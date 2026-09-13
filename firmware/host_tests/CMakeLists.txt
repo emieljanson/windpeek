@@ -396,6 +396,7 @@ target_link_libraries(render_battery_empty m)
 add_test(NAME BatteryEmptyPreviewExport
          COMMAND render_battery_empty ${CMAKE_CURRENT_BINARY_DIR}/battery-empty.ppm)
 
+
 add_wind_test(wind_swell_test test_wind_swell.cpp ../main/wind_swell.c ../main/wind_swell_cache.c ../main/open_meteo_marine_provider.c ../main/wind_tide.c)
 target_link_libraries(wind_swell_test cjson)
 target_include_directories(wind_swell_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
@@ -414,4 +415,4 @@ target_compile_definitions(wind_navigation_test PRIVATE
   WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windpeek_main.c")
 add_wind_test(wind_overview_test test_wind_overview.cpp ../main/wind_overview.c)
 
-add_wind_test(e1003_touch_test test_e1003_touch.cpp)
+add_wind_test(e1003_touch_test test_e1003_touch.cpp ../main/wind_overview.c)

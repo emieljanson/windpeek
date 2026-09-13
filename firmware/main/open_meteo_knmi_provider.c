@@ -247,16 +247,14 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
                 break;
             }
         }
-        if (target_slot < 0) {
-            continue;
-        }
+        if (local.hour < 8 || local.hour > 20) continue;
         model_arrays_t *sample_arrays = &primary;
         cJSON *speed_item = cJSON_GetArrayItem(primary.speeds, i);
         cJSON *gust_item = cJSON_GetArrayItem(primary.gusts, i);
         cJSON *direction_item = cJSON_GetArrayItem(primary.directions, i);
         if (cJSON_IsNumber(speed_item) && cJSON_IsNumber(gust_item) &&
             cJSON_IsNumber(direction_item)) {
-            ++primary_selected;
+            if (target_slot >= 0) ++primary_selected;
         } else if (has_fallback) {
             sample_arrays = &fallback;
             speed_item = cJSON_GetArrayItem(fallback.speeds, i);
@@ -266,11 +264,13 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         if (!cJSON_IsNumber(speed_item) || !cJSON_IsNumber(gust_item) ||
             !cJSON_IsNumber(direction_item) || !isfinite(speed_item->valuedouble) ||
             !isfinite(gust_item->valuedouble) || !isfinite(direction_item->valuedouble)) {
+            if (target_slot < 0) continue;
             goto cleanup;
         }
         int day = selected / WIND_FORECAST_SAMPLES_PER_DAY;
         int expected_slot = selected % WIND_FORECAST_SAMPLES_PER_DAY;
-        if (day >= WIND_FORECAST_DAY_COUNT || target_slot != expected_slot ||
+        if (day >= WIND_FORECAST_DAY_COUNT) continue;
+        if ((target_slot >= 0 && target_slot != expected_slot) ||
             (target_slot == 0 && day == 0 && strcmp(date, first_date) != 0) ||
             (target_slot > 0 && strcmp(parsed.days[day].local_date, date) != 0)) {
             goto cleanup;
@@ -283,6 +283,7 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         int gust = wind_forecast_round_knots(gust_item->valuedouble);
         uint16_t direction = wind_forecast_destination_degrees(direction_item->valuedouble);
         if (wind < 0 || gust < 0 || direction == UINT16_MAX) {
+            if (target_slot < 0) continue;
             goto cleanup;
         }
         int64_t timestamp = 0;
@@ -320,8 +321,11 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
                 normalized.temperature_available = 1;
             }
         }
-        parsed.days[day].samples[target_slot] = normalized;
-        ++selected;
+        parsed.hourly[day][local.hour - 8] = normalized;
+        if (target_slot >= 0) {
+            parsed.days[day].samples[target_slot] = normalized;
+            ++selected;
+        }
     }
 
     if (selected != WIND_FORECAST_SAMPLE_COUNT || (has_fallback && primary_selected == 0) ||

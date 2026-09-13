@@ -249,7 +249,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics
 // change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000F)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000010)
 
 static const char *TAG = "wind_app";
 typedef struct {
@@ -282,6 +282,7 @@ static bool s_ready;
 static bool s_last_render_succeeded;
 static bool s_force_next_display;
 RTC_DATA_ATTR static bool s_overview_open;
+RTC_DATA_ATTR static char s_focused_date[WIND_FORECAST_DATE_LENGTH];
 RTC_DATA_ATTR static size_t s_overview_page;
 RTC_DATA_ATTR static uint64_t s_overview_configuration;
 static esp_err_t show_overview_unlocked(size_t page, bool force);
@@ -483,34 +484,34 @@ static void load_or_refresh_swell(wind_spot_runtime_t *runtime, bool force, int6
     free(fresh);
 }
 
-static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast,
+static esp_err_t render_dashboard_with_workspace(void *context, const wind_forecast_t *forecast,
                                   wind_freshness_t freshness, bool refresh_failed,
-                                  int64_t now, uint8_t *bitmap, size_t bitmap_size) {
+                                  int64_t now, uint8_t *bitmap, size_t bitmap_size,
+                                  wind_renderer_dashboard_t *dashboard, wind_forecast_t *calendar) {
     const wind_spot_runtime_t *runtime = (const wind_spot_runtime_t *)context;
     const wind_spot_t *spot = runtime->spot;
     const wind_display_config_t display = config_manager_get_wind_display_config();
-    wind_renderer_dashboard_t dashboard = {0};
     char updated[32] = "";
     char dates[WIND_RENDERER_DAY_COUNT][16] = {{0}};
-    char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][8] = {{{0}}};
+    char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_MAX_SAMPLES_PER_DAY][8] = {{{0}}};
     wind_local_datetime_t local = {0};
 
-    wind_forecast_t calendar = {0};
+    const wind_forecast_t *hourly_forecast = forecast;
     const bool weather_required = display.wind_size || display.show_weather || display.show_temperature;
     const bool weather_missing = !forecast;
     bool calendar_used = false;
     bool calendar_weather[5][5] = {{false}};
     if (display.swell_size && runtime->have_swell) {
         calendar_used = true;
-        if (forecast) calendar = *forecast;
-        snprintf(calendar.spot_name, sizeof(calendar.spot_name), "%s", spot->display_name);
-        calendar.retrieved_at = weather_required && forecast && forecast->retrieved_at < runtime->swell.retrieved_at
+        if (forecast) *calendar = *forecast;
+        snprintf(calendar->spot_name, sizeof(calendar->spot_name), "%s", spot->display_name);
+        calendar->retrieved_at = weather_required && forecast && forecast->retrieved_at < runtime->swell.retrieved_at
             ? forecast->retrieved_at : runtime->swell.retrieved_at;
         wind_local_datetime_t date;
         if (wind_timezone_from_unix(spot->timezone, now, &date) != ESP_OK) return ESP_ERR_INVALID_STATE;
         const int hours[] = {8,11,14,17,20};
         for (int day = 0; day < 5; ++day) {
-            wind_timezone_format_date(&date, calendar.days[day].local_date, sizeof(calendar.days[day].local_date));
+            wind_timezone_format_date(&date, calendar->days[day].local_date, sizeof(calendar->days[day].local_date));
             for (int i = 0; i < 5; ++i) {
                 date.hour = hours[i]; date.minute = date.second = 0;
                 int64_t timestamp;
@@ -518,44 +519,44 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                 wind_forecast_sample_t sample = { .timestamp = timestamp, .local_hour = hours[i] };
                 if (forecast) for (int d = 0; d < 5; ++d) for (int j = 0; j < 5; ++j)
                     if (forecast->days[d].samples[j].timestamp == timestamp) { sample = forecast->days[d].samples[j]; calendar_weather[day][i] = true; }
-                calendar.days[day].samples[i] = sample;
+                calendar->days[day].samples[i] = sample;
             }
             wind_timezone_shift_date(&date, 1);
         }
-        forecast = &calendar;
+        forecast = calendar;
     }
-    dashboard.spot_name = forecast ? forecast->spot_name : spot->display_name;
-    dashboard.provider =
+    dashboard->spot_name = forecast ? forecast->spot_name : spot->display_name;
+    dashboard->provider =
         wind_forecast_model_screen_name(forecast ? forecast->model : WIND_MODEL);
-    dashboard.updated_time = updated;
-    dashboard.state = display.swell_size && runtime->have_swell ? renderer_state(freshness_for(forecast, now)) : renderer_state(freshness);
-    dashboard.refresh_failed = (weather_required && refresh_failed) || (display.swell_size && runtime->swell_failed);
-    if (display.swell_size) dashboard.provider = "OPEN-METEO";
-    dashboard.age_hours = forecast && now > forecast->retrieved_at
+    dashboard->updated_time = updated;
+    dashboard->state = display.swell_size && runtime->have_swell ? renderer_state(freshness_for(forecast, now)) : renderer_state(freshness);
+    dashboard->refresh_failed = (weather_required && refresh_failed) || (display.swell_size && runtime->swell_failed);
+    if (display.swell_size) dashboard->provider = "OPEN-METEO";
+    dashboard->age_hours = forecast && now > forecast->retrieved_at
                               ? (int)((now - forecast->retrieved_at) / 3600)
                               : 0;
-    dashboard.battery_percent = board_hal_get_battery_percent();
-    dashboard.display_mode = (wind_renderer_display_mode_t)display.display_mode;
-    dashboard.custom_modules = 1;
-    dashboard.ordered_modules = 1;
-    dashboard.wind_size = display.wind_size;
-    dashboard.swell_size = display.swell_size;
-    for (int i = 0; i < 5; ++i) dashboard.module_order[i] = display.module_order[i];
+    dashboard->battery_percent = board_hal_get_battery_percent();
+    dashboard->display_mode = (wind_renderer_display_mode_t)display.display_mode;
+    dashboard->custom_modules = 1;
+    dashboard->ordered_modules = 1;
+    dashboard->wind_size = display.wind_size;
+    dashboard->swell_size = display.swell_size;
+    for (int i = 0; i < 5; ++i) dashboard->module_order[i] = display.module_order[i];
     for (int day = 0; day < 5; ++day) {
         for (int hour = 0; hour < 24; ++hour) {
-            dashboard.swell_hourly[day][hour] = -1;
-            dashboard.secondary_swell_hourly[day][hour] = -1;
+            dashboard->swell_hourly[day][hour] = -1;
+            dashboard->secondary_swell_hourly[day][hour] = -1;
         }
-        for (int i = 0; i < 5; ++i) dashboard.swell[day][i] = (wind_renderer_swell_sample_t){-1,-1,-1};
+        for (int i = 0; i < 5; ++i) dashboard->swell[day][i] = (wind_renderer_swell_sample_t){-1,-1,-1};
     }
-    if (display.wind_size != 2) dashboard.display_mode = WIND_RENDERER_MODE_SOLID;
-    dashboard.threshold_kt = display.threshold_kt;
-    dashboard.show_weather = display.show_weather;
-    dashboard.show_temperature = display.show_temperature;
-    dashboard.show_tide = display.show_tide;
-    dashboard.show_dedicated_footer = display.show_dedicated_footer;
-    dashboard.use_24_hour = display.use_24_hour;
-    dashboard.temperature_fahrenheit = display.temperature_fahrenheit;
+    if (display.wind_size != 2) dashboard->display_mode = WIND_RENDERER_MODE_SOLID;
+    dashboard->threshold_kt = display.threshold_kt;
+    dashboard->show_weather = display.show_weather;
+    dashboard->show_temperature = display.show_temperature;
+    dashboard->show_tide = display.show_tide;
+    dashboard->show_dedicated_footer = display.show_dedicated_footer;
+    dashboard->use_24_hour = display.use_24_hour;
+    dashboard->temperature_fahrenheit = display.temperature_fahrenheit;
     if (forecast) {
         char update_date[16] = "";
         if (wind_timezone_from_unix(runtime->device_timezone, forecast->retrieved_at, &local) !=
@@ -582,11 +583,11 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                                         &local) != ESP_OK) {
                 return ESP_ERR_INVALID_STATE;
             }
-            dashboard.days[day].day =
+            dashboard->days[day].day =
                 day == 0 ? "TODAY" : day_name(wind_timezone_weekday(&local));
             snprintf(dates[day], sizeof(dates[day]), "%02u %s", local.day,
                      month_name(local.month));
-            dashboard.days[day].date = dates[day];
+            dashboard->days[day].date = dates[day];
             for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
                 const wind_forecast_sample_t *source = &source_day->samples[sample];
                 const unsigned hour = source->local_hour <= 23 ? source->local_hour : 0;
@@ -598,7 +599,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                     snprintf(times[day][sample], sizeof(times[day][sample]), "%u%s",
                              hour_12, hour < 12 ? "AM" : "PM");
                 }
-                dashboard.days[day].samples[sample] = (wind_renderer_sample_t){
+                dashboard->days[day].samples[sample] = (wind_renderer_sample_t){
                     .time = times[day][sample],
                     .sustained_kt = source->wind_knots,
                     .gust_kt = source->gust_knots,
@@ -614,10 +615,10 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
 
         if (display.show_tide && runtime->have_tide &&
             runtime->tide.capability == WIND_TIDE_AVAILABLE) {
-            dashboard.tide_available = 1;
+            dashboard->tide_available = 1;
             for (size_t tide_index = 0;
                  tide_index < runtime->tide.sample_count &&
-                 dashboard.tide_sample_count < WIND_RENDERER_MAX_TIDE_SAMPLES;
+                 dashboard->tide_sample_count < WIND_RENDERER_MAX_TIDE_SAMPLES;
                  ++tide_index) {
                 const wind_tide_sample_t *source = &runtime->tide.samples[tide_index];
                 for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
@@ -625,7 +626,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                         0) {
                         continue;
                     }
-                    dashboard.tide_samples[dashboard.tide_sample_count++] =
+                    dashboard->tide_samples[dashboard->tide_sample_count++] =
                         (wind_renderer_tide_sample_t){
                             .day_index = day,
                             .local_hour = source->local_hour,
@@ -637,14 +638,14 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
             }
             for (size_t extremum_index = 0;
                  extremum_index < runtime->tide.extremum_count &&
-                 dashboard.tide_extremum_count < WIND_RENDERER_MAX_TIDE_EXTREMA;
+                 dashboard->tide_extremum_count < WIND_RENDERER_MAX_TIDE_EXTREMA;
                  ++extremum_index) {
                 const wind_tide_extremum_t *source =
                     &runtime->tide.extrema[extremum_index];
                 for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
                     if (strcmp(source->local_date, forecast->days[day].local_date) != 0)
                         continue;
-                    dashboard.tide_extrema[dashboard.tide_extremum_count++] =
+                    dashboard->tide_extrema[dashboard->tide_extremum_count++] =
                         (wind_renderer_tide_extremum_t){
                             .day_index = day,
                             .local_hour = source->local_hour,
@@ -668,25 +669,102 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
             wind_timezone_format_date(&date, local_date, sizeof(local_date));
             for (int day = 0; day < 5; ++day) {
                 if (!forecast || strcmp(local_date, forecast->days[day].local_date)) continue;
-                dashboard.swell_hourly[day][date.hour] = source->height_cm;
-                dashboard.secondary_swell_hourly[day][date.hour] = source->secondary_height_cm;
+                dashboard->swell_hourly[day][date.hour] = source->height_cm;
+                dashboard->secondary_swell_hourly[day][date.hour] = source->secondary_height_cm;
                 for (int slot = 0; slot < 5; ++slot) {
                     if (forecast->days[day].samples[slot].local_hour == date.hour) {
-                        dashboard.swell[day][slot] = (wind_renderer_swell_sample_t){ source->height_cm, source->period_tenths, source->destination_degrees };
-                        dashboard.secondary_swell[day][slot] = (wind_renderer_swell_sample_t){ source->secondary_height_cm, source->secondary_period_tenths, source->secondary_destination_degrees };
+                        dashboard->swell[day][slot] = (wind_renderer_swell_sample_t){ source->height_cm, source->period_tenths, source->destination_degrees };
+                        dashboard->secondary_swell[day][slot] = (wind_renderer_swell_sample_t){ source->secondary_height_cm, source->secondary_period_tenths, source->secondary_destination_degrees };
                     }
                 }
             }
         }
     }
+    if (active_renderer_display() == WIND_RENDERER_DISPLAY_E1003_GC16 && !s_preview_configuration) {
+        dashboard->visible_day_count = 3;
+        int focused = -1;
+        if (forecast && s_focused_date[0]) {
+            for (int day = 0; day < 3; ++day)
+                if (!strcmp(s_focused_date, forecast->days[day].local_date)) focused = day;
+        }
+        if (focused < 0 && forecast) s_focused_date[0] = 0;
+        if (focused >= 0) {
+            dashboard->visible_day_count = 1;
+            dashboard->visible_sample_count = WIND_RENDERER_MAX_SAMPLES_PER_DAY;
+            dashboard->days[0] = dashboard->days[focused];
+            memmove(dashboard->swell_hourly[0], dashboard->swell_hourly[focused], sizeof(dashboard->swell_hourly[0]));
+            memmove(dashboard->secondary_swell_hourly[0], dashboard->secondary_swell_hourly[focused], sizeof(dashboard->secondary_swell_hourly[0]));
+            for (int i = 0; i < WIND_RENDERER_MAX_SAMPLES_PER_DAY; ++i) {
+                const int hour = 8 + i;
+                const wind_forecast_sample_t *source = NULL;
+                if (hourly_forecast) for (int day = 0; day < WIND_FORECAST_DAY_COUNT; ++day) {
+                    if (strcmp(forecast->days[focused].local_date, hourly_forecast->days[day].local_date)) continue;
+                    if (hourly_forecast->hourly[day][i].timestamp) source = &hourly_forecast->hourly[day][i];
+                    /* A migrated cache still has its five original observations. */
+                    if (!source) for (int j = 0; j < WIND_FORECAST_SAMPLES_PER_DAY; ++j)
+                        if (hourly_forecast->days[day].samples[j].local_hour == hour)
+                            source = &hourly_forecast->days[day].samples[j];
+                }
+                if (display.use_24_hour) snprintf(times[0][i], sizeof(times[0][i]), "%02d", hour);
+                else snprintf(times[0][i], sizeof(times[0][i]), "%d%s", hour%12 ? hour%12 : 12, hour<12 ? "AM" : "PM");
+                dashboard->days[0].samples[i] = (wind_renderer_sample_t){.time=times[0][i]};
+                if (source) dashboard->days[0].samples[i] = (wind_renderer_sample_t){
+                    .time=times[0][i], .available=1, .sustained_kt=source->wind_knots,
+                    .gust_kt=source->gust_knots, .destination_degrees=source->destination_degrees,
+                    .weather=(wind_renderer_weather_t)wind_forecast_weather_state(source),
+                    .temperature_available=source->temperature_available,
+                    .temperature_tenths_c=source->temperature_tenths_c};
+                dashboard->swell[0][i] = dashboard->secondary_swell[0][i] = (wind_renderer_swell_sample_t){-1,-1,-1};
+                if (runtime->have_swell) for (size_t j = 0; j < runtime->swell.sample_count; ++j) {
+                    const wind_swell_sample_t *swell = &runtime->swell.samples[j];
+                    wind_local_datetime_t date;
+                    char local_date[WIND_FORECAST_DATE_LENGTH];
+                    if (wind_timezone_from_unix(spot->timezone, swell->timestamp, &date) != ESP_OK || date.hour != hour) continue;
+                    wind_timezone_format_date(&date, local_date, sizeof(local_date));
+                    if (strcmp(local_date, forecast->days[focused].local_date)) continue;
+                    dashboard->swell[0][i] = (wind_renderer_swell_sample_t){swell->height_cm,swell->period_tenths,swell->destination_degrees};
+                    dashboard->secondary_swell[0][i] = (wind_renderer_swell_sample_t){swell->secondary_height_cm,swell->secondary_period_tenths,swell->secondary_destination_degrees};
+                    break;
+                }
+            }
+            int count = 0;
+            for (int i = 0; i < dashboard->tide_sample_count; ++i) if (dashboard->tide_samples[i].day_index == focused) {
+                dashboard->tide_samples[count] = dashboard->tide_samples[i];
+                dashboard->tide_samples[count++].day_index = 0;
+            }
+            dashboard->tide_sample_count = count;
+            dashboard->tide_available = count >= 2;
+            count = 0;
+            for (int i = 0; i < dashboard->tide_extremum_count; ++i) if (dashboard->tide_extrema[i].day_index == focused) {
+                dashboard->tide_extrema[count] = dashboard->tide_extrema[i];
+                dashboard->tide_extrema[count++].day_index = 0;
+            }
+            dashboard->tide_extremum_count = count;
+        }
+    }
     wind_renderer_stats_t stats;
     int render_result = wind_renderer_render_for_display(
-        &dashboard, active_renderer_display(), bitmap, bitmap_size, &stats);
+        dashboard, active_renderer_display(), bitmap, bitmap_size, &stats);
     if (render_result != 0) {
         ESP_LOGE(TAG, "Dashboard render failed: %d", render_result);
         return ESP_FAIL;
     }
     return ESP_OK;
+}
+
+static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast,
+                                  wind_freshness_t freshness, bool refresh_failed,
+                                  int64_t now, uint8_t *bitmap, size_t bitmap_size) {
+    /* Hourly detail expands the workspace beyond the task stack budget. */
+    struct {
+        wind_renderer_dashboard_t dashboard;
+        wind_forecast_t calendar;
+    } *workspace = calloc(1, sizeof(*workspace));
+    if (!workspace) return ESP_ERR_NO_MEM;
+    esp_err_t result = render_dashboard_with_workspace(context, forecast, freshness,
+        refresh_failed, now, bitmap, bitmap_size, &workspace->dashboard, &workspace->calendar);
+    free(workspace);
+    return result;
 }
 
 static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
@@ -766,6 +844,7 @@ static esp_err_t ensure_ready(void) {
     uint64_t digest = installed_configuration_digest(&s_installed_configuration);
     if (!s_preview_configuration && s_overview_configuration != digest) {
         s_overview_open=false; s_overview_page=0; s_overview_configuration=digest;
+        s_focused_date[0]=0;
     }
     if (wind_spots_load_selected(&s_selected_index) != ESP_OK ||
         !wind_spots_at(s_selected_index)) {
@@ -992,7 +1071,7 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
         /* The regular dashboard hash must never suppress returning from this page. */
         (void)clear_panel_confirmation_unlocked();
         result = display_dashboard(NULL,bitmap,WIND_RENDERER_E1003_COMPOSITION_BYTES);
-        if (result == ESP_OK) { s_overview_open=true; s_overview_page=page; }
+        if (result == ESP_OK) { s_overview_open=true; s_overview_page=page; s_focused_date[0]=0; }
     }
     free(rows); free(cached); free(bitmap);
     return result;
@@ -1135,6 +1214,9 @@ static esp_err_t navigate(int direction, bool absolute) {
         xSemaphoreGive(s_app_lock); xSemaphoreGive(s_runtime_lock); return ESP_ERR_INVALID_ARG;
     }
     wind_spot_runtime_t *runtime = &s_spots[target];
+    char previous_focus[sizeof(s_focused_date)];
+    memcpy(previous_focus, s_focused_date, sizeof(previous_focus));
+    s_focused_date[0] = 0;
     apply_spot_display(target);
     wind_forecast_t cached;
     const bool have_cache =
@@ -1159,6 +1241,7 @@ static esp_err_t navigate(int direction, bool absolute) {
         ESP_LOGI(TAG, "Selected spot %s (cached=%d)", runtime->spot->id, have_cache);
     }
     if (result != ESP_OK) {
+        memcpy(s_focused_date, previous_focus, sizeof(s_focused_date));
         apply_spot_display(s_selected_index);
         refresh_render_signatures();
     }
@@ -1171,6 +1254,53 @@ static esp_err_t navigate(int direction, bool absolute) {
                      esp_err_to_name(analytics_result));
         }
     }
+    return result;
+}
+
+esp_err_t wind_app_toggle_day(size_t day_index) {
+    if (day_index >= 3 || active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16)
+        return ESP_ERR_INVALID_ARG;
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = ensure_ready();
+    if (result != ESP_OK || s_overview_open || s_preview_configuration) {
+        xSemaphoreGive(s_runtime_lock);
+        return result != ESP_OK ? result : ESP_ERR_INVALID_STATE;
+    }
+    xSemaphoreTake(s_app_lock, portMAX_DELAY);
+    char previous[sizeof(s_focused_date)];
+    memcpy(previous, s_focused_date, sizeof(previous));
+    time_t now; time(&now);
+    wind_spot_runtime_t *runtime = &s_spots[s_selected_index];
+    if (s_focused_date[0]) s_focused_date[0] = 0;
+    else {
+        wind_forecast_t *cached = malloc(sizeof(*cached));
+        if (!cached) result = ESP_ERR_NO_MEM;
+        else {
+            const wind_display_config_t display = config_manager_get_wind_display_config();
+            if (display.swell_size && runtime->have_swell) {
+                wind_local_datetime_t date;
+                result = wind_timezone_from_unix(runtime->spot->timezone, now, &date);
+                if (result == ESP_OK) {
+                    wind_timezone_shift_date(&date, (int)day_index);
+                    result = wind_timezone_format_date(&date, s_focused_date, sizeof(s_focused_date));
+                }
+            } else {
+                result = wind_cache_load(runtime->forecast_path, &runtime->app.config.identity, cached);
+                if (result == ESP_OK) memcpy(s_focused_date, cached->days[day_index].local_date, sizeof(s_focused_date));
+            }
+            free(cached);
+        }
+    }
+    if (result == ESP_OK) {
+        runtime->app.force_display = true;
+        wind_app_outcome_t outcome;
+        result = wind_app_show_cached(&runtime->app, now, &outcome);
+        s_last_render_succeeded = result == ESP_OK && (outcome.displayed || outcome.display_unchanged);
+    }
+    if (result != ESP_OK) memcpy(s_focused_date, previous, sizeof(s_focused_date));
+    xSemaphoreGive(s_app_lock);
+    xSemaphoreGive(s_runtime_lock);
     return result;
 }
 
@@ -1334,16 +1464,17 @@ bool wind_app_last_render_succeeded(void) {
     return s_last_render_succeeded;
 }
 #else
-esp_err_t wind_app_show_battery_empty(void) {
-    return ESP_ERR_NOT_SUPPORTED;
-}
 bool wind_app_spot_requires_network(size_t index) { (void)index; return false; }
 bool wind_app_overview_requires_network(int direction) { (void)direction; return false; }
+esp_err_t wind_app_toggle_day(size_t day_index) { (void)day_index; return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_show_overview(void) { return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_overview_page(int direction) { (void)direction; return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_select_spot(size_t index) { (void)index; return ESP_ERR_NOT_SUPPORTED; }
 void wind_app_overview_state(bool *open,size_t *page) { if (open) *open=false; if (page) *page=0; }
 esp_err_t wind_app_configure_runtime(void) {
+    return ESP_ERR_NOT_SUPPORTED;
+}
+esp_err_t wind_app_show_battery_empty(void) {
     return ESP_ERR_NOT_SUPPORTED;
 }
 esp_err_t wind_app_start(void) {

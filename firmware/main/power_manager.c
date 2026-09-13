@@ -356,7 +356,17 @@ esp_err_t power_manager_init(void)
 }
 
 static unsigned active_work;
-void power_manager_work_begin(void) { __atomic_add_fetch(&active_work,1,__ATOMIC_SEQ_CST); }
+/* Atomically exclude new work once the sleep transition owns the device. */
+#define SLEEP_PENDING (1U << 31)
+void power_manager_work_begin(void) {
+    for (;;) {
+        unsigned current=__atomic_load_n(&active_work,__ATOMIC_SEQ_CST);
+        if (!(current&SLEEP_PENDING) &&
+            __atomic_compare_exchange_n(&active_work,&current,current+1,false,
+                                        __ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)) return;
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
 void power_manager_work_end(void) { __atomic_sub_fetch(&active_work,1,__ATOMIC_SEQ_CST); }
 bool power_manager_work_active(void) { return __atomic_load_n(&active_work,__ATOMIC_SEQ_CST)!=0; }
 
@@ -374,6 +384,14 @@ void power_manager_enter_sleep(void)
     if (board_hal_is_usb_connected() || installer_active) {
         ESP_LOGI(TAG, "External power or installer active; staying awake");
         return;
+    }
+
+    unsigned idle=0;
+    if (!battery_empty) {
+        if (!__atomic_compare_exchange_n(&active_work,&idle,SLEEP_PENDING,false,
+                                         __ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)) return;
+    } else {
+        if (__atomic_fetch_or(&active_work,SLEEP_PENDING,__ATOMIC_SEQ_CST)&SLEEP_PENDING) return;
     }
 
     power_manager_disable_auto_light_sleep();
@@ -441,8 +459,10 @@ void power_manager_enter_sleep(void)
 
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     if (!battery_empty && board_hal_touch_available()) {
-        /* EXT0 permits the controller's configured polarity independently of buttons. */
-        esp_sleep_enable_ext0_wakeup(BOARD_HAL_TOUCH_INT, board_hal_touch_wake_level());
+        (void)board_hal_touch_prepare_sleep();
+        /* Doze uses active HIGH; an unsupported controller retains normal polarity. */
+        if (board_hal_touch_available())
+            esp_sleep_enable_ext0_wakeup(BOARD_HAL_TOUCH_INT, board_hal_touch_wake_level());
     }
 #endif
 

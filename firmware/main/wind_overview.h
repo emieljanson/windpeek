@@ -20,12 +20,13 @@ enum {
 
 typedef enum {
     WIND_TOUCH_NONE, WIND_TOUCH_OPEN, WIND_TOUCH_SELECT,
-    WIND_TOUCH_NEXT_PAGE, WIND_TOUCH_PREVIOUS_PAGE,
+    WIND_TOUCH_NEXT_PAGE, WIND_TOUCH_PREVIOUS_PAGE, WIND_TOUCH_TOGGLE_DAY,
 } wind_touch_action_kind_t;
 
 typedef struct {
     wind_touch_action_kind_t kind;
     size_t spot_index;
+    size_t day_index;
 } wind_touch_action_t;
 
 typedef struct {

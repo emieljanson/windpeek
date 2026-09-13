@@ -12,6 +12,7 @@
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "pcf8563.h"
 #include "sensor.h"
 #include "sy6974b.h"

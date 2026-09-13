@@ -171,3 +171,27 @@ TEST(WindProvider, AcceptsEveryConfiguratorModelAndSpotTimezone)
     config.model = "unknown_model";
     EXPECT_FALSE(open_meteo_knmi_config_valid(&config));
 }
+
+TEST(WindProvider, RetainsIntermediateHoursWithoutInventingMissingValues) {
+    cJSON *root = cJSON_Parse(fixture().c_str());
+    cJSON *hourly = cJSON_GetObjectItem(root, "hourly");
+    cJSON *array = nullptr;
+    cJSON_ArrayForEach(array, hourly) {
+        cJSON *extra = std::strcmp(array->string, "time") == 0
+            ? cJSON_CreateString("2026-08-24T09:00")
+            : cJSON_Duplicate(cJSON_GetArrayItem(array, 0), true);
+        cJSON_InsertItemInArray(array, 1, extra);
+    }
+    cJSON_ReplaceItemInArray(cJSON_GetObjectItem(hourly, "wind_speed_10m"), 1, cJSON_CreateNumber(27));
+    char *json = cJSON_PrintUnformatted(root);
+    auto cfg = config();
+    wind_forecast_t forecast{};
+    ASSERT_EQ(open_meteo_knmi_parse_json(&cfg, json, std::strlen(json), 1787544000, "2026-08-24", &forecast), ESP_OK);
+    EXPECT_EQ(forecast.hourly[0][1].local_hour, 9);
+    EXPECT_EQ(forecast.hourly[0][1].wind_knots, 27);
+    EXPECT_GT(forecast.hourly[0][1].timestamp, forecast.hourly[0][0].timestamp);
+    EXPECT_EQ(forecast.hourly[0][2].timestamp, 0); // 10:00 was absent, not interpolated.
+    EXPECT_EQ(forecast.days[0].samples[1].wind_knots, 12);
+    cJSON_free(json);
+    cJSON_Delete(root);
+}

@@ -74,3 +74,17 @@ TEST(WindOverview, HiddenSpotRetryCannotKeepOverviewRefreshing) {
     EXPECT_EQ(wind_overview_next_wake(deadlines,7,0,false,1,1000),100);
     EXPECT_EQ(wind_overview_next_wake(nullptr,0,0,true,0,1000),1000);
 }
+
+TEST(WindOverview, EntireTitleOpensSpotsAndForecastTapsIdentifyDay) {
+    EXPECT_EQ(wind_overview_hit_test(780, 40, false, 0, 3).kind, WIND_TOUCH_OPEN);
+    for (int y : {81, 110, 240, 420, 599}) {
+        for (int x : {20, 400, 780}) {
+            EXPECT_NE(wind_overview_hit_test(x, y, false, 0, 3).kind, WIND_TOUCH_NONE);
+        }
+    }
+    EXPECT_EQ(wind_overview_hit_test(269, 200, false, 0, 3).day_index, 0u);
+    EXPECT_EQ(wind_overview_hit_test(270, 200, false, 0, 3).day_index, 1u);
+    EXPECT_EQ(wind_overview_hit_test(527, 420, false, 0, 3).day_index, 1u);
+    EXPECT_EQ(wind_overview_hit_test(528, 420, false, 0, 3).day_index, 2u);
+    EXPECT_EQ(wind_overview_hit_test(800, 200, false, 0, 3).kind, WIND_TOUCH_NONE);
+}

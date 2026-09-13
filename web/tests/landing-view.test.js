@@ -46,7 +46,7 @@ describe('Windpeek landing page', () => {
     expect(devices).toHaveLength(3)
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1003Our pick', 'E1002', 'E1001'])
     const specs = wrapper.findAll('.hardware-spec')
-    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Saved spots', 'Forecast view', 'Touchscreen', 'Battery'])
+    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Saved spots', 'Forecast view', 'Hourly detail', 'Touchscreen', 'Battery'])
     wrapper.findAll('.hardware-spec__copy--mobile').forEach(copy => {
       expect(copy.attributes('aria-hidden')).toBeUndefined()
     })
@@ -55,6 +55,7 @@ describe('Windpeek landing page', () => {
       [['High-res screen'], ['Standard screen'], ['Standard screen']],
       [['Up to 10 spots'], ['1 spot'], ['1 spot']],
       [['3-spot overview'], ['—'], ['—']],
+      [['Hourly detail'], ['—'], ['—']],
       [['Touchscreen'], ['—'], ['—']],
       [['6 month battery'], ['3 month battery'], ['3 month battery']],
     ])

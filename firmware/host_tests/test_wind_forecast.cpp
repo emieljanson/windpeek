@@ -124,3 +124,13 @@ TEST(WindForecast, ClassifiesWeatherAtExactCloudAndRainBoundaries)
     sample.weather_available = 0;
     EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_UNAVAILABLE);
 }
+
+TEST(WindForecast, RejectsHourlyTimestampsOutOfOrderAcrossDays)
+{
+    auto forecast = complete_forecast();
+    forecast.hourly[0][12] = forecast.days[0].samples[4];
+    forecast.hourly[1][0] = forecast.days[1].samples[0];
+    ASSERT_TRUE(wind_forecast_validate(&forecast));
+    forecast.hourly[1][0].timestamp = forecast.hourly[0][12].timestamp - 3600;
+    EXPECT_FALSE(wind_forecast_validate(&forecast));
+}
