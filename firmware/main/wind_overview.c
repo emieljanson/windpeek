@@ -8,9 +8,16 @@ size_t wind_overview_last_page(size_t count) {
 wind_touch_action_t wind_overview_hit_test(int x, int y, bool overview,
                                           size_t page, size_t count) {
     wind_touch_action_t action = {WIND_TOUCH_NONE, 0};
-    if (x < 12 || x > 799 || y < 12 || y > 587) return action;
+    if (x < 12 || x > 799 || y < 12 || y > 599) return action;
     if (!overview) {
-        if (x >= 30 && x <= 630 && y <= 80 && count) action.kind = WIND_TOUCH_OPEN;
+        if (x > 787) return action;
+        if (y <= 80) {
+            if (count) action.kind = WIND_TOUCH_OPEN;
+        } else {
+            action.kind = WIND_TOUCH_TOGGLE_DAY;
+            while (action.day_index < 2 &&
+                   x >= 12 + 775 * (int)(action.day_index + 1) / 3) ++action.day_index;
+        }
         return action;
     }
     if (page > wind_overview_last_page(count)) return action;

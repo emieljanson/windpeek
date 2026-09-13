@@ -200,6 +200,7 @@ static bool s_have_boot_gesture;
 static uint32_t s_boot_release_ms;
 
 static void capture_boot_touch(void) {
+    if (board_hal_touch_gesture_wake()) return;
     board_touch_sample_t sample;
     uint32_t started=(uint32_t)(esp_timer_get_time()/1000);
     if (board_hal_touch_read(&sample)!=ESP_OK || sample.contacts!=1) return;
@@ -223,7 +224,7 @@ static void run_touch_action(wind_touch_action_t action) {
     power_manager_work_begin();
     power_manager_reset_sleep_timer();
     /* Fetching is lazy, and overview rendering reads only its visible three spots. */
-    bool need_network = action.kind==WIND_TOUCH_SELECT
+    bool need_network = action.kind==WIND_TOUCH_TOGGLE_DAY ? false : action.kind==WIND_TOUCH_SELECT
         ? wind_app_spot_requires_network(action.spot_index)
         : wind_app_overview_requires_network(action.kind==WIND_TOUCH_NEXT_PAGE ? 1 :
             action.kind==WIND_TOUCH_PREVIOUS_PAGE ? -1 : 0);
@@ -231,6 +232,7 @@ static void run_touch_action(wind_touch_action_t action) {
     esp_err_t result=ESP_OK;
     switch (action.kind) {
         case WIND_TOUCH_OPEN: result=wind_app_show_overview(); break;
+        case WIND_TOUCH_TOGGLE_DAY: result=wind_app_toggle_day(action.day_index); break;
         case WIND_TOUCH_SELECT: result=wind_app_select_spot(action.spot_index); break;
         case WIND_TOUCH_NEXT_PAGE: result=wind_app_overview_page(1); break;
         case WIND_TOUCH_PREVIOUS_PAGE: result=wind_app_overview_page(-1); break;
@@ -248,8 +250,9 @@ static void e1003_input_task(void *argument) {
     bool down[3]={false}, armed[3]={false};
     TickType_t pressed_at[3]={0};
     wind_touch_gesture_t gesture={0};
-    bool discard_until_release=false;
-    uint32_t last_frame=0;
+    /* The second wake tap may still be held after the controller resets. */
+    bool discard_until_release=board_hal_touch_gesture_wake();
+    uint32_t last_frame=(uint32_t)(esp_timer_get_time()/1000);
     while (true) {
         uint32_t now=(uint32_t)(esp_timer_get_time()/1000);
         bool held[3];
@@ -444,7 +447,18 @@ void app_main(void)
     ESP_ERROR_CHECK(wind_installer_service_start());
 
     power_manager_work_begin();
-    const bool connected = connect_installed_wifi();
+    const wakeup_source_t wake = power_manager_get_wakeup_source();
+    bool touch_wake=false;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    touch_wake=wake==WAKEUP_SOURCE_TOUCH;
+    /* Reject a stray gesture interrupt without starting Wi-Fi or refreshing. */
+    if (touch_wake && board_hal_touch_gesture_wake() && !board_hal_touch_double_tap()) {
+        power_manager_work_end();
+        power_manager_enter_sleep();
+        power_manager_work_begin(); // USB may have arrived during boot.
+    }
+#endif
+    const bool connected = !touch_wake && connect_installed_wifi();
     if (connected && synchronize_clock() != ESP_OK) {
         ESP_LOGW(TAG, "Clock sync timed out; using the retained RTC clock");
     }
@@ -456,15 +470,20 @@ void app_main(void)
         power_manager_work_begin();
     }
 
-    const wakeup_source_t wake = power_manager_get_wakeup_source();
     const bool previous_spot = wake == WAKEUP_SOURCE_ROTATE_BUTTON && wind_spots_count() > 1;
     const bool next_spot = wake == WAKEUP_SOURCE_CLEAR_BUTTON && wind_spots_count() > 1;
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     if (wake==WAKEUP_SOURCE_BOOT_BUTTON) result=wind_app_show_overview();
-    else if (wake==WAKEUP_SOURCE_TOUCH && s_have_boot_gesture) {
+    else if (touch_wake) {
         bool open; size_t page; wind_app_overview_state(&open,&page);
-        wind_touch_action_t action=wind_touch_update(&s_boot_gesture,0,0,0,
-            s_boot_release_ms,open,page,wind_spots_count());
+        wind_touch_action_t action={WIND_TOUCH_NONE,0};
+        board_touch_sample_t point;
+        if (board_hal_touch_wake_sample(&point))
+            action=wind_overview_hit_test((uint32_t)point.x*800/1872,
+                (uint32_t)point.y*600/1404,open,page,wind_spots_count());
+        else if (s_have_boot_gesture)
+            action=wind_touch_update(&s_boot_gesture,0,0,0,
+                s_boot_release_ms,open,page,wind_spots_count());
         run_touch_action(action);
         result=ESP_OK;
     } else result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() : wind_app_start();

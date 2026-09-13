@@ -70,6 +70,7 @@ esp_err_t wind_app_configure_runtime(void);
 esp_err_t wind_app_start(void);
 esp_err_t wind_app_refresh(bool force_refresh);
 esp_err_t wind_app_show_overview(void);
+esp_err_t wind_app_toggle_day(size_t day_index);
 esp_err_t wind_app_overview_page(int direction);
 esp_err_t wind_app_select_spot(size_t index);
 void wind_app_overview_state(bool *open, size_t *page);

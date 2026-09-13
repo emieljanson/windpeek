@@ -16,6 +16,7 @@ enum {
     WIND_RENDERER_E1003_HEIGHT = 1404,
     WIND_RENDERER_DAY_COUNT = 5,
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
+    WIND_RENDERER_MAX_SAMPLES_PER_DAY = 13,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_E1003_COMPOSITION_BYTES =
         WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
@@ -102,7 +103,7 @@ typedef struct {
 typedef struct {
     const char *day;
     const char *date;
-    wind_renderer_sample_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_sample_t samples[WIND_RENDERER_MAX_SAMPLES_PER_DAY];
 } wind_renderer_day_t;
 
 typedef struct {
@@ -123,8 +124,8 @@ typedef struct {
     int module_order[5];
     int swell_hourly[WIND_RENDERER_DAY_COUNT][24];
     int secondary_swell_hourly[WIND_RENDERER_DAY_COUNT][24];
-    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
-    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_MAX_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_MAX_SAMPLES_PER_DAY];
     int show_weather;
     int show_temperature;
     int show_tide;
@@ -137,6 +138,9 @@ typedef struct {
     int tide_extremum_count;
     wind_renderer_tide_extremum_t tide_extrema[WIND_RENDERER_MAX_TIDE_EXTREMA];
     wind_renderer_day_t days[WIND_RENDERER_DAY_COUNT];
+    /* Zero retains the five-day, five-sample contract used by other displays. */
+    int visible_day_count;
+    int visible_sample_count;
 } wind_renderer_dashboard_t;
 
 /*

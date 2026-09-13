@@ -1048,3 +1048,38 @@ TEST(SpotOverviewRenderer, RejectsInvalidPagesWithoutWriting) {
     EXPECT_NE(wind_renderer_render_overview(&row,1,0,7,pixels.data(),pixels.size()-1,nullptr),0);
     EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end(),[](uint8_t p){return p==0xA5;}));
 }
+
+TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
+    auto d=Dashboard();
+    d.custom_modules=1; d.ordered_modules=1; d.wind_size=2; d.swell_size=2;
+    d.show_temperature=1;
+    for(int i=0;i<5;++i)d.module_order[i]=i;
+    d.visible_day_count=3;
+    const auto render=[](const wind_renderer_dashboard_t &dashboard) {
+        Frame out(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+        wind_renderer_stats_t stats{};
+        EXPECT_EQ(wind_renderer_render_for_display(&dashboard,WIND_RENDERER_DISPLAY_E1003_GC16,out.data(),out.size(),&stats),0);
+        EXPECT_EQ(stats.clipped_primitives,0u);
+        return out;
+    };
+    const auto wide=render(d);
+    d.visible_day_count=1; d.visible_sample_count=13;
+    static const char *hours[]={"08","09","10","11","12","13","14","15","16","17","18","19","20"};
+    for(int i=0;i<13;++i){d.days[0].samples[i]=d.days[0].samples[0];d.days[0].samples[i].time=hours[i];}
+    const auto focus=render(d);
+    EXPECT_NE(wide,focus);
+    // Horizontal module boundaries remain at exactly the same y positions.
+    for(int y=80;y<570;++y){
+        const auto line=[&](const Frame &f){for(int x=12;x<=787;++x)if(f[y*800+x]!=0)return false;return true;};
+        EXPECT_EQ(line(wide),line(focus)) << y;
+    }
+    d.days[0].samples[1].time="XX";
+    const auto changed_time=render(d);
+    EXPECT_FALSE(std::equal(focus.begin()+800*570,focus.end(),changed_time.begin()+800*570));
+    d.days[0].samples[1].time=hours[1];
+    d.days[0].samples[12].sustained_kt=39;
+    EXPECT_NE(focus,render(d)); // The last hourly sample reaches the renderer.
+    d.visible_day_count=3;
+    Frame invalid(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
+}
