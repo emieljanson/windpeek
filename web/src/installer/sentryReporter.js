@@ -202,8 +202,16 @@ function createDeliveryTracker() {
   return { settle, wait }
 }
 
+function productionReportingEnabled() {
+  // A production build also runs in local previews and browser QA.
+  const hostname = globalThis.location?.hostname ?? ''
+  const local = hostname === 'localhost' || hostname.endsWith('.localhost') ||
+    /^127\./.test(hostname) || hostname === '[::1]' || hostname === '::1'
+  return Boolean(import.meta.env.PROD) && !local && globalThis.navigator?.webdriver !== true
+}
+
 export function createSentryReporter({
-  enabled = Boolean(import.meta.env.PROD),
+  enabled = productionReportingEnabled(),
   dsn = import.meta.env.VITE_SENTRY_DSN ?? '',
   release = import.meta.env.VITE_SENTRY_RELEASE ?? '',
   environment = 'production',
