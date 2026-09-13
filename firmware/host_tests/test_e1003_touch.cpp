@@ -221,3 +221,11 @@ TEST_F(E1003Touch, FailedGestureStatusReadRestoresCoordinateMode)
     ASSERT_EQ(board_hal_touch_read(&point),ESP_OK);
     EXPECT_EQ(point.x,500);
 }
+
+TEST_F(E1003Touch, FailedGestureProbeDoesNotAdvertiseAnAvailableController)
+{
+    std::memcpy(registers.data()+0x8140,"GEST",4);
+    failed_register=0x814b;
+    EXPECT_FALSE(touch_probe());
+    EXPECT_FALSE(board_hal_touch_available());
+}

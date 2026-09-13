@@ -14,7 +14,7 @@ These images were rendered from the release source with the previously captured 
 
 ## Verification
 
-- 317 firmware host tests passed, including navigation, cache migration, touch gestures and rendering.
+- 318 firmware host tests passed, including navigation, cache migration, touch gestures and rendering.
 - Web unit tests passed after updating the comparison-table expectation for the new row.
 - E1003 firmware built with ESP-IDF 6.0.2.
 - The shared WebAssembly renderer reproduces byte-for-byte with Emscripten 4.0.10.

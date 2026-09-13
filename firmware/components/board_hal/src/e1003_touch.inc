@@ -37,7 +37,10 @@ static bool touch_probe(void) {
             if (product[0]=='G' && product[1]=='E' && product[2]=='S' && product[3]=='T') {
                 uint8_t gesture=0;
                 /* A failed status read must still reset GEST to coordinate mode. */
-                if (touch_read_register(0x814b,&gesture,1)!=ESP_OK) return false;
+                if (touch_read_register(0x814b,&gesture,1)!=ESP_OK) {
+                    i2c_master_bus_rm_device(touch_device); touch_device=NULL;
+                    return false;
+                }
                 touch_boot_gesture=true;
                 touch_boot_double_tap=gesture==0xcc;
                 uint8_t size[4], point[4];
