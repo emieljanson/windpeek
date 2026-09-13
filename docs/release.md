@@ -16,6 +16,9 @@ next spot, including after a sleep wake.
 1. It verifies the renderer, spot catalog, web unit tests and browser tests.
 2. It runs the firmware host tests and installer-bundle tests.
 3. It builds the shared E1001/E1002 firmware and the E1003 firmware with ESP-IDF 6.0.2.
+   Web-only PRs skip these builds. Main-branch releases reuse cached bundles only
+   when all firmware, contract, shared, workflow and analytics-token inputs match.
+   Missing caches fall back to a full build; tags and manual runs always build fresh.
 4. It creates both the downloadable GitHub Release files and the nested,
    same-origin firmware bundle used by the website from that one build.
 5. It places the website bundle in `web/public/firmware`, builds the site and
@@ -28,6 +31,20 @@ The browser uses `./firmware/` by default, so the same artifact works on the
 custom domain and on the repository's temporary GitHub Pages URL. Do not point
 `VITE_FIRMWARE_BASE_URL` directly at GitHub Releases: those downloads are not a
 same-origin browser installer host.
+
+## Release speed
+
+Browser tests run in four independent jobs, with one worker per machine to avoid
+WebGL contention. The existing `Verify configurator` check waits for every shard
+and the web checks; a failed or skipped shard cannot pass the gate. Unit tests,
+preview rendering and firmware checks run alongside the browser tests.
+
+Device previews are cached by their web source inputs. A cache miss regenerates
+them. Production firmware caches are separate from PR builds, use exact keys and
+retain their original firmware version: a web-only deployment does not create a
+new firmware version. The website still verifies both boards' manifests, sizes
+and SHA-256 hashes before deployment. Changing the analytics token invalidates
+the firmware cache. Use a manual workflow run to force fresh firmware builds.
 
 ## One-time GitHub setup
 
