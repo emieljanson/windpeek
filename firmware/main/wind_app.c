@@ -929,7 +929,6 @@ static esp_err_t ensure_ready(void) {
         }
         runtime->app.force_display = s_force_next_display;
     }
-    s_force_next_display = false;
     apply_spot_display(s_selected_index);
     s_ready = true;
     return ESP_OK;

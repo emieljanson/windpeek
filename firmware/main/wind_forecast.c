@@ -50,6 +50,7 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
 
     int64_t previous_day = 0;
     int64_t previous_timestamp = 0;
+    int64_t previous_hour = 0;
     for (size_t d = 0; d < WIND_FORECAST_DAY_COUNT; ++d) {
         int64_t day_number = 0;
         if (!parse_date(forecast->days[d].local_date, &day_number) ||
@@ -57,7 +58,6 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
             return false;
         }
         previous_day = day_number;
-        int64_t previous_hour = 0;
         for (size_t h = 0; h < WIND_FORECAST_HOURLY_COUNT; ++h) {
             const wind_forecast_sample_t *sample = &forecast->hourly[d][h];
             if (!sample->timestamp) continue; /* Older caches lack intermediate hours. */

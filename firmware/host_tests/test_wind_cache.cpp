@@ -155,5 +155,8 @@ TEST_F(WindCacheTest, MigratesPreviousCacheWithoutDiscardingOfflineForecast) {
     EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
     EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
     ASSERT_EQ(wind_cache_store(path.c_str(),&loaded),ESP_OK);
+    loaded = {};
     ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
+    EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
+    EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
 }

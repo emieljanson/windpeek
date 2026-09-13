@@ -205,3 +205,19 @@ TEST_F(E1003Touch, InvalidGestureCoordinatesWakeWithoutAnAction) {
         EXPECT_FALSE(board_hal_touch_wake_sample(&point));
     }
 }
+
+TEST_F(E1003Touch, FailedGestureStatusReadRestoresCoordinateMode)
+{
+    touch_init(); ASSERT_EQ(board_hal_touch_prepare_sleep(),ESP_OK);
+    registers[0x814b]=0xcc;
+    failed_register=0x814b;
+    touch_init();
+    EXPECT_FALSE(board_hal_touch_gesture_wake());
+    EXPECT_FALSE(board_hal_touch_double_tap());
+    EXPECT_TRUE(board_hal_touch_available());
+    EXPECT_EQ(resets,1);
+    contact(1,500,400);
+    board_touch_sample_t point{};
+    ASSERT_EQ(board_hal_touch_read(&point),ESP_OK);
+    EXPECT_EQ(point.x,500);
+}
