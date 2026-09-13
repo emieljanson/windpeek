@@ -41,8 +41,9 @@ preview rendering and firmware checks run alongside the browser tests.
 
 Device previews are cached by their web source inputs. A cache miss regenerates
 them. Production firmware caches are separate from PR builds, use exact keys and
-retain their original firmware version: a web-only deployment does not create a
-new firmware version. The website still verifies both boards' manifests, sizes
+retain their original firmware version. A cache hit on a web-only deployment
+does not create a new firmware version; a cache miss rebuilds and versions the
+firmware for the current commit. The website still verifies both boards' manifests, sizes
 and SHA-256 hashes before deployment. Changing the analytics token invalidates
 the firmware cache. Use a manual workflow run to force fresh firmware builds.
 
