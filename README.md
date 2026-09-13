@@ -11,8 +11,10 @@ Owner instructions are in [`docs/setup.md`](docs/setup.md), USB recovery in
 [`docs/recovery.md`](docs/recovery.md), and release evidence in
 [`docs/release.md`](docs/release.md).
 
-Every push to `main` builds the configurator, universal E1001/E1002 firmware and
-E1003 firmware together, then deploys a website containing those exact bundles.
+Every push to `main` builds the configurator and deploys it with the universal
+E1001/E1002 and E1003 firmware bundles. Firmware builds are reused when their
+source and build inputs match the production cache, retaining the original
+firmware version. Cache misses rebuild both targets for the current commit.
 Tagged releases (`v*`) additionally publish the application and browser-installer
 files as a GitHub Release. The bundle is generated from ESP-IDF's
 `flasher_args.json`, contains separate checksummed flash parts, and exposes

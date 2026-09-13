@@ -17,8 +17,8 @@ concurrency:
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
-  verify-web:
-    name: Verify configurator
+  web-checks:
+    name: Web checks and device previews
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -28,6 +28,14 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
+
+      # Hash only checked-in inputs, before npm ci creates node_modules.
+      - name: Restore device previews
+        id: previews
+        uses: actions/cache@v5
+        with:
+          path: web/public/devices/previews
+          key: device-previews-v1-${{ runner.os }}-${{ hashFiles('web/**', '!web/public/devices/previews/**', '.github/workflows/firmware-release.yml') }}
 
       - name: Install web dependencies
         working-directory: web
@@ -50,6 +58,7 @@ jobs:
           npm run deploy -- --dry-run
 
       - name: Install browser test runtime
+        if: steps.previews.outputs.cache-hit != 'true'
         working-directory: web
         run: |
           # Playwright downloads its own Chromium; the runner's Chrome apt feed is unused.
@@ -57,6 +66,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Render device previews from the 3D scene
+        if: steps.previews.outputs.cache-hit != 'true'
         working-directory: web
         run: npm run devices:previews
 
@@ -67,14 +77,58 @@ jobs:
           path: web/public/devices/previews/*.png
           if-no-files-found: error
 
-      - name: Run web browser tests
-        working-directory: web
-        run: npm run test:e2e
-
       - name: Build web configurator
         if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
         working-directory: web
         run: npm run build
+
+  browser-tests:
+    name: Browser tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+      - name: Install browser test runtime
+        working-directory: web
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources
+          npx playwright install --with-deps chromium
+      # Keep one worker per runner: WebGL tests compete for the same GPU.
+      - name: Run web browser tests
+        working-directory: web
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4 --workers=1
+      - name: Upload failure traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-failures-${{ matrix.shard }}
+          path: web/test-results
+          retention-days: 7
+
+  verify-web:
+    # Preserve the existing check name and require every shard to pass.
+    name: Verify configurator
+    if: ${{ !cancelled() }}
+    needs: [web-checks, browser-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all web checks
+        env:
+          WEB_RESULT: ${{ needs.web-checks.result }}
+          BROWSER_RESULT: ${{ needs.browser-tests.result }}
+        run: test "$WEB_RESULT" = success && test "$BROWSER_RESULT" = success
 
   build-firmware:
     name: Verify and build E1002 + E1003 firmware
@@ -83,6 +137,48 @@ jobs:
       WINDPEEK_POSTHOG_PROJECT_TOKEN: ${{ github.event_name != 'pull_request' && vars.WINDPEEK_POSTHOG_PROJECT_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine whether firmware needs building
+        id: firmware-scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          required=true
+          if [[ "$EVENT_NAME" == pull_request ]]; then
+            # A diff error must fail the job, never silently skip a build.
+            status=0
+            git diff --quiet "$BASE_SHA" HEAD -- firmware contracts shared .github || status=$?
+            if [[ "$status" == 0 ]]; then
+              required=false
+            elif [[ "$status" != 1 ]]; then
+              exit "$status"
+            fi
+          fi
+          echo "required=$required" >> "$GITHUB_OUTPUT"
+
+      - name: Fingerprint production build configuration
+        id: firmware-config
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          digest=$(printf '%s' "$WINDPEEK_POSTHOG_PROJECT_TOKEN" | sha256sum | cut -d ' ' -f 1)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      # Only main can populate production firmware. Tags and manual runs rebuild.
+      # No prefix fallback: reuse requires identical firmware and shared inputs.
+      - name: Restore unchanged production firmware
+        id: firmware-cache
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/cache@v5
+        with:
+          path: |
+            release
+            site-firmware
+          key: production-firmware-v1-${{ runner.os }}-${{ steps.firmware-config.outputs.digest }}-${{ hashFiles('firmware/**', 'contracts/**', 'shared/**', '.github/**') }}
 
       - name: Install host test dependencies
         run: |
@@ -116,6 +212,7 @@ jobs:
           }
 
       - name: Build reTerminal E1001/E1002 firmware
+        if: steps.firmware-scope.outputs.required == 'true' && steps.firmware-cache.outputs.cache-hit != 'true'
         uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d # v1
         with:
           esp_idf_version: v6.0.2
@@ -129,6 +226,7 @@ jobs:
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 
       - name: Prepare E1001/E1002 release bundles
+        if: steps.firmware-scope.outputs.required == 'true' && steps.firmware-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p release
           cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1002.bin
@@ -145,6 +243,7 @@ jobs:
             --version '${{ steps.version.outputs.value }}'
 
       - name: Build reTerminal E1003 firmware
+        if: steps.firmware-scope.outputs.required == 'true' && steps.firmware-cache.outputs.cache-hit != 'true'
         uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d # v1
         with:
           esp_idf_version: v6.0.2
@@ -158,6 +257,7 @@ jobs:
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 
       - name: Prepare E1003 release bundles
+        if: steps.firmware-scope.outputs.required == 'true' && steps.firmware-cache.outputs.cache-hit != 'true'
         run: |
           cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1003.bin
           python3 firmware/scripts/generate_installer_manifest.py \
@@ -175,6 +275,7 @@ jobs:
             --board-id seeedstudio_reterminal_e1003
 
       - name: Upload GitHub Release files
+        if: steps.firmware-scope.outputs.required == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: windpeek-firmware-release
@@ -182,6 +283,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload website firmware files
+        if: steps.firmware-scope.outputs.required == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: windpeek-site-firmware

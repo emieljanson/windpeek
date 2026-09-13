@@ -812,6 +812,8 @@ test('shows the ten-spot toast when trying to add one more', async ({ page }) =>
   await expect(page.locator('.spot-list__row')).toHaveCount(10)
   const addSpot = page.getByRole('combobox', { name: 'Add spot', exact: true })
   const limitToast = page.getByText("Can't add more spots", { exact: true })
+  // Shader initialization can block toast timers on a cold CI renderer.
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   // Autofocus can show the first toast before the page finishes loading.
   // Clicking the already-focused field must show it again after it expires.
   await expect(addSpot).toBeFocused()
