@@ -18,3 +18,6 @@ web/public/firmware/*
 **/.DS_Store
 **/__pycache__/
 *.py[cod]
+
+# Generated previews, screenshots, and local QA artifacts
+/output/
