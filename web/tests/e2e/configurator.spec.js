@@ -343,7 +343,7 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   await expect(page.getByRole('combobox', { name: 'Wind', exact: true })).toBeVisible()
   await expect(page.getByRole('combobox', { name: 'Waves', exact: true })).toBeVisible()
-  await expect(page.getByRole('switch', { name: 'Temperature', exact: true })).not.toBeChecked()
+  await expect(page.getByRole('switch', { name: 'Temperature', exact: true })).toBeChecked()
   await page.locator('.forecast-advanced > summary').click()
   const threshold = page.getByRole('switch', { name: 'Wind threshold' })
   await expect(threshold).toBeChecked()
