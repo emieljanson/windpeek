@@ -12,7 +12,7 @@ Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endi
 | --- | --- | --- |
 | Identity | `hello` | Board ID, firmware and flash-layout versions, protocol/config ranges, capabilities |
 | Hardware | `set_hardware_profile` with `hardwareModel` and `expectedRevision` | Persists the selected E1001/E1002 profile and reports its new revision |
-| State | `get_state` | Configuration digest, Wi-Fi health, last render status, and asynchronous apply status; never credentials |
+| State | `get_state` | Configuration digest, Wi-Fi health, last render status, asynchronous apply status, and numeric `applyError` (ESP-IDF error code, zero before/after successful apply); never credentials. Older firmware omits `applyError`. |
 | Session | `begin` with browser `unixTime` | Sets the system clock and battery-backed RTC before configuration or network work |
 | Wi-Fi | `scan_networks` | Deduplicated SSIDs with signal/security metadata |
 | Wi-Fi | `test_wifi` | Write-only `ssid` and `password`; returns status only |

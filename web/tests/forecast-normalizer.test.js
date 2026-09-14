@@ -162,4 +162,21 @@ describe('forecast normalizer', () => {
     expect(forecasts[regionalId].days[4].samples[0].sustainedKt)
       .toBe(forecasts.best_match.days[4].samples[0].sustainedKt)
   })
+
+  it('keeps a complete Best Match forecast when another global model is unavailable', () => {
+    const response = responseFor()
+    for (const [field, values] of Object.entries(response.hourly)) {
+      if (field === 'time') continue
+      response.hourly[`${field}_best_match`] = values
+      response.hourly[`${field}_ncep_gfs_seamless`] = values.map(() => null)
+      response.hourly_units[`${field}_best_match`] = response.hourly_units[field] ?? ''
+      response.hourly_units[`${field}_ncep_gfs_seamless`] = response.hourly_units[field] ?? ''
+    }
+    const forecasts = normalizeForecastModels(response, SPOTS[1], {
+      models: [getForecastModel('best_match'), getForecastModel('ncep_gfs_seamless')],
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+    expect(forecasts.best_match.days[4].samples.every(sample => sample.available)).toBe(true)
+    expect(forecasts.ncep_gfs_seamless).toBeUndefined()
+  })
 })

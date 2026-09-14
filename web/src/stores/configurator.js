@@ -517,6 +517,16 @@ export const useConfiguratorStore = defineStore('configurator', {
         return this.refreshForecast({ storage, ...refreshOptions })
       }
 
+      const requiredDates = [
+        ...(this.forecast.spotId === this.selectedSpotId ? this.forecast.days : []),
+        ...(this.swellSize !== 'off' && this.swell?.spotId === this.selectedSpotId
+          ? this.swell.samples : []),
+      ].map(sample => sample.localDate)
+      if (!requestInFlight && requiredDates.some(date =>
+        !available.days.some(day => day.localDate === date))) {
+        return this.refreshForecast({ storage, ...refreshOptions })
+      }
+
       this.forecastsByModel[modelId] = available
       this.forecast = available
       this.forecastRevision += 1

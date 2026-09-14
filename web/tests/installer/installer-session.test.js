@@ -58,6 +58,39 @@ function appProtocol(state = {}) {
 }
 
 describe('installer session', () => {
+  it.each([257, undefined, 'secret'])('records only numeric device apply errors (%s)', async (applyError) => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    let wifiReady = false
+    protocol.request.mockImplementation(async (command, values) => {
+      if (command === 'test_wifi') {
+        wifiReady = true
+        return { status: 'wifi_ready' }
+      }
+      if (command === 'get_state' && wifiReady) {
+        return { wifi: 'connected', render: 'pending', apply: 'commit_failed', applyError }
+      }
+      return originalRequest(command, values)
+    })
+    const diagnostics = { record: vi.fn() }
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+      diagnostics,
+    })
+
+    await session.connect()
+    await session.submitWifi({ ssid: 'Home', password: 'secret' })
+
+    expect(session.getState().phase).toBe('error')
+    expect(diagnostics.record).toHaveBeenCalledWith({
+      category: 'verification', operation: 'device-state', status: 'commit_failed',
+      message: applyError === 257 ? 'Device apply error: 257' : undefined,
+    })
+  })
+
   it('registers only private spot text for diagnostic redaction', () => {
     const diagnostics = { registerSensitiveValues: vi.fn(), setContext: vi.fn() }
     createInstallerSession({

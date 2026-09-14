@@ -501,6 +501,24 @@ describe('configurator store', () => {
     expect(store.forecastMessage).toBe('Live GFS forecast for Brouwersdam.')
   })
 
+  it('refreshes an older cached model instead of losing the newest forecast day', async () => {
+    const store = useConfiguratorStore()
+    const storage = memoryStorage()
+    const oldGfs = liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless')
+    oldGfs.days = oldGfs.days.map(day => ({ ...day,
+      localDate: new Date(Date.parse(`${day.localDate}T12:00:00Z`) - 86400000).toISOString().slice(0, 10),
+    }))
+    await store.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast(), oldGfs)), storage,
+    })
+    await store.refreshForecast({ fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast())), storage })
+    const freshGfs = liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless')
+    const fetcher = vi.fn().mockResolvedValue(forecastSet(liveForecast(), freshGfs))
+    await store.selectModel('ncep_gfs_seamless', { fetcher, storage })
+    expect(fetcher).toHaveBeenCalledOnce()
+    expect(store.forecast.days[4].localDate).toBe(freshGfs.days[4].localDate)
+  })
+
   it('changes the requested model during initial loading without duplicating the API call', async () => {
     const store = useConfiguratorStore()
     const request = deferred()
