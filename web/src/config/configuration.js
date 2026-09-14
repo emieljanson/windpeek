@@ -35,7 +35,7 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showThreshold: false,
   threshold: DEFAULT_THRESHOLD,
   showWeather: true,
-  showTemperature: false,
+  showTemperature: true,
   showTide: false,
   showDedicatedFooter: false,
   timeFormat: '24-hour',

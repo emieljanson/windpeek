@@ -14,6 +14,12 @@ function createStore(storage) {
 }
 
 describe('module configuration', () => {
+  it('shows temperature by default but preserves a saved choice to hide it', () => {
+    const store = createStore(null)
+    expect(store.showTemperature).toBe(true)
+    const restored = createStore({ getItem: () => JSON.stringify({ showTemperature: false }), setItem() {} })
+    expect(restored.showTemperature).toBe(false)
+  })
   it('restores sizes and order and keeps an off module in its position', () => {
     let saved = null
     const storage = { getItem: () => saved, setItem: (_key, value) => { saved = value } }
