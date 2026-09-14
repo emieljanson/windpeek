@@ -15,6 +15,7 @@
 extern "C" {
 #include "wind_renderer.h"
 #include "wind_tide_labels.h"
+#include "tide_falmouth_fixture.h"
 #include "wind_renderer_fixture.h"
 }
 
@@ -1153,4 +1154,76 @@ TEST(WindRenderer, OmitsCrowdedMiddleTideTimeWithoutChangingCurveOrOtherRow) {
     dashboard.tide_extrema[3].available = 1;
     std::swap(dashboard.tide_extrema[0], dashboard.tide_extrema[3]);
     EXPECT_EQ(crowded, Render(dashboard));
+}
+
+TEST(TideLabels, KeepsTheMaximumNumberThatCanFit) {
+    // Independent exhaustive oracle: try every subset, rather than repeat
+    // the production selection algorithm. Include widths of 12-hour labels.
+    uint32_t seed = 42;
+    const auto random = [&]() { seed = seed * 1664525u + 1013904223u; return seed; };
+    for (int trial = 0; trial < 2000; ++trial) {
+        const int count = 3 + random() % 6;
+        const int max_shift = trial % 2 == 0 ? 12 : 24;
+        std::vector<wind_tide_label_position_t> labels;
+        for (int i = 0; i < count; ++i) labels.push_back({static_cast<int>(random() % 161), 14 + static_cast<int>(random() % 14)});
+        std::sort(labels.begin(), labels.end(), [](const auto &a, const auto &b) { return a.anchor < b.anchor; });
+        int expected = 0;
+        for (unsigned mask = 1; mask < (1u << count); ++mask) {
+            int right = -1000, shown = 0;
+            bool fits = true;
+            for (int i = 0; i < count && fits; ++i) {
+                if (!(mask & (1u << i))) continue;
+                const auto &label = labels[i];
+                const int anchor = std::clamp(label.anchor, 10 + label.half_width, 150 - label.half_width);
+                const int minimum = std::max(10 + label.half_width, anchor - max_shift);
+                const int maximum = std::min(150 - label.half_width, anchor + max_shift);
+                const int center = std::max(minimum, right + 6 + label.half_width);
+                fits = center <= maximum;
+                right = center + label.half_width;
+                ++shown;
+            }
+            if (fits) expected = std::max(expected, shown);
+        }
+        wind_tide_labels_place(labels.data(), count, 10, 150, max_shift, 6);
+        int shown = 0, previous_right = -1000;
+        for (const auto &label : labels) {
+            if (!label.visible) continue;
+            ++shown;
+            const int anchor = std::clamp(label.anchor, 10 + label.half_width, 150 - label.half_width);
+            EXPECT_LE(std::abs(label.center - anchor), max_shift);
+            EXPECT_GE(label.center - label.half_width, std::max(10, previous_right + 6));
+            EXPECT_LE(label.center + label.half_width, 150);
+            previous_right = label.center + label.half_width;
+        }
+        ASSERT_EQ(shown, expected) << "trial " << trial;
+    }
+}
+
+TEST(WindRenderer, RetainsEveryVisibleFalmouthTideTimeInBothClockFormats) {
+    for (int variant = 0; variant < 4; ++variant) {
+        const bool use_24_hour = (variant & 1) != 0;
+        auto dashboard = Dashboard();
+        dashboard.custom_modules = (variant & 2) != 0;
+        dashboard.wind_size = 2;
+        dashboard.show_tide = 1;
+        dashboard.tide_available = 1;
+        dashboard.use_24_hour = use_24_hour;
+        dashboard.tide_sample_count = std::size(falmouth_tide_samples);
+        dashboard.tide_extremum_count = std::size(falmouth_tide_extrema);
+        std::copy(std::begin(falmouth_tide_samples), std::end(falmouth_tide_samples), dashboard.tide_samples);
+        std::copy(std::begin(falmouth_tide_extrema), std::end(falmouth_tide_extrema), dashboard.tide_extrema);
+        const auto all_times = Render(dashboard);
+        int visible_window = 0;
+        for (int i = 0; i < dashboard.tide_extremum_count; ++i) {
+            auto &event = dashboard.tide_extrema[i];
+            if (event.local_hour < 8 || event.local_hour > 20) continue;
+            ++visible_window;
+            event.available = 0;
+            EXPECT_TRUE(all_times != Render(dashboard)) << "missing day=" << event.day_index
+                << " time=" << event.local_hour << ":" << event.local_minute
+                << " 24h=" << use_24_hour;
+            event.available = 1;
+        }
+        EXPECT_EQ(visible_window, 16);
+    }
 }

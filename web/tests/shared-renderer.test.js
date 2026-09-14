@@ -78,6 +78,36 @@ function fixtureInput(displayMode = 2, thresholdKt = 17, rowMask = 1, missingDat
 }
 
 describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, () => {
+  it('keeps every Falmouth Wednesday tide time in both clock formats and displays', async () => {
+    const renderer = await loadRealRenderer()
+    // Captured Open-Meteo Falmouth data, 2026-09-16. The 20:00 low was
+    // unnecessarily hidden by the original 12-pixel spacing limit.
+    const levels = [-240, -440, -710, -770, -650, -610, -700, -750, -660, -520, -390, -220, -60, -110, -370, -530, -470, -410, -510, -670, -700, -640, -570, -490]
+    const input = fixtureInput(2, 17, 4)
+    input.tideSamples = levels.map((seaLevelMm, localHour) => ({ dayIndex: 2, localHour, seaLevelMm, available: true }))
+    input.tideExtrema = [
+      { localHour: 12, localMinute: 15, seaLevelMm: -50, isHigh: true },
+      { localHour: 15, localMinute: 15, seaLevelMm: -530, isHigh: false },
+      { localHour: 17, localMinute: 0, seaLevelMm: -410, isHigh: true },
+      { localHour: 20, localMinute: 0, seaLevelMm: -700, isHigh: false },
+    ].map(event => ({ ...event, dayIndex: 2, available: true }))
+    for (const windSize of [undefined, 2]) {
+      input.windSize = windSize
+      for (const use24Hour of [false, true]) {
+        input.use24Hour = use24Hour
+        for (const display of [2, 3]) {
+          const complete = renderer.renderPreviewForDisplay(input, display).data.slice()
+          for (const event of input.tideExtrema) {
+            event.available = false
+            const withoutTime = renderer.renderPreviewForDisplay(input, display).data
+            expect(complete.some((pixel, index) => pixel !== withoutTime[index]), `${event.localHour}:${event.localMinute}, display ${display}, 24h ${use24Hour}`).toBe(true)
+            event.available = true
+          }
+        }
+      }
+    }
+  })
+
   it('gives high- and low-tide times balanced outer padding', async () => {
     const renderer = await loadRealRenderer()
     const input = fixtureInput(2, 17, 4)

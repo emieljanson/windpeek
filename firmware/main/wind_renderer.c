@@ -833,9 +833,9 @@ static void draw_tide_time_labels(canvas_t *canvas, int day,
             indices[row_count++] = i;
         }
         // Six pixels also leave room for the white text outline. Limit any
-        // extra movement to 12 pixels beyond the existing day-edge inset.
+        // extra movement to 24 pixels beyond the existing day-edge inset.
         wind_tide_labels_place(positions, row_count, day_column_x(canvas, day) + 10,
-                              day_column_x(canvas, day + 1) - 10, 12, 6);
+                              day_column_x(canvas, day + 1) - 10, 24, 6);
         for (int i = 0; i < row_count; ++i) {
             if (!positions[i].visible) continue;
             const tide_time_label_t *label = &labels[indices[i]];
