@@ -24,12 +24,16 @@ function storeWith(browser, storage = null) {
 }
 
 describe('site entry and share URLs', () => {
-  it('starts the wind configurator with a wind graph, weather and tide', () => {
+  it('keeps an explicit saved temperature-off choice at startup', () => {
+    const store = storeWith(browserAt('https://windpeek.com/?configure'), storageWith({ showTemperature: false }))
+    expect(store.showTemperature).toBe(false)
+  })
+  it('starts the wind configurator with a wind graph, weather, temperature and tide', () => {
     for (const search of ['?configure', '?configure&site=wind']) {
       const store = storeWith(browserAt(`https://windpeek.com/${search}`))
       expect(store.$state).toMatchObject({
         windSize: 'large', swellSize: 'off', showWeather: true,
-        showTemperature: false, showTide: true,
+        showTemperature: true, showTide: true,
       })
     }
   })
@@ -45,11 +49,11 @@ describe('site entry and share URLs', () => {
     expect(configure.searchParams.get('site')).toBe('swell')
     expect(storeWith(browserAt(configure.href)).swellSize).toBe('large')
   })
-  it('starts each configurator with the same layout as its landing', () => {
+  it('starts each configurator with its site layout and temperature enabled', () => {
     for (const site of ['wind', 'swell']) {
       const browser = browserAt(`http://localhost/?configure&site=${site}`)
       const store = storeWith(browser)
-      expect(store.$state).toMatchObject(siteDisplayDefaults(siteVariant(browser.location)))
+      expect(store.$state).toMatchObject({ ...siteDisplayDefaults(siteVariant(browser.location)), showTemperature: true })
       expect(store.swellFocus).toBe(site === 'swell')
       expect(browser.location.searchParams.get('cfg')).toBe('1')
     }

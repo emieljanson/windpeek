@@ -1,4 +1,5 @@
 import { siteVariant, siteDisplayDefaults } from '../marketing/siteVariant'
+import { DEFAULT_DISPLAY_CONFIGURATION } from './configuration'
 import { persistConfigurator } from './configuratorPreferences'
 import { applyConfigurationUrl, syncConfigurationUrl } from './configurationUrl'
 import { availableStorage } from '../storage'
@@ -11,6 +12,7 @@ export function initializeConfigurator(context, { browser = window, storage = av
   const preview = params.has('devicePreview') || params.has('installerDemo')
   const configuring = isConfiguratorLocation(browser.location) && !preview
   store.$patch(siteDisplayDefaults(siteVariant(browser.location)))
+  if (configuring) store.showTemperature = DEFAULT_DISPLAY_CONFIGURATION.showTemperature
   // Restore first without subscribing, so a shared link cannot persist a half-applied draft.
   if (!preview) persistConfigurator(context, storage, { subscribe: false })
   if (configuring) {
