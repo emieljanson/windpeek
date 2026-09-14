@@ -1,4 +1,4 @@
-import { sanitizeDiagnosticText } from './installerDiagnostics'
+import { sanitizeDiagnosticText, sanitizeDeviceState } from './installerDiagnostics'
 
 const REFERENCE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const REFERENCE_PATTERN = /^WS-[0-9A-HJKMNP-TV-Z]{10}$/
@@ -21,6 +21,8 @@ const ENTRY_FIELDS = new Set(['offsetMs', 'category', 'operation', 'status', 'me
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
+  'requestTimeoutMs', 'receivedBytes', 'receivedChunks', 'discardedBytes',
+  'staleFrames', 'bufferedBytes', 'expectedFrameBytes',
 ])
 
 function safeString(value, maxLength = 240) {
@@ -47,6 +49,8 @@ function filterTimeline(input) {
   if (!Array.isArray(input)) return []
   return input.slice(-100).map((candidate) => {
     const entry = pickScalars(candidate, ENTRY_FIELDS, 512)
+    const deviceState = sanitizeDeviceState(candidate?.deviceState)
+    if (deviceState) entry.deviceState = deviceState
     if (candidate?.measurements && typeof candidate.measurements === 'object') {
       const measurements = {}
       for (const field of MEASUREMENT_FIELDS) {
@@ -231,6 +235,8 @@ export function createSentryReporter({
         release: release || undefined,
         environment,
         defaultIntegrations: false,
+        // extra.timeline[].measurements/deviceState must survive SDK normalization.
+        normalizeDepth: 6,
         sendClientReports: false,
         enableLogs: false,
         enableMetrics: false,

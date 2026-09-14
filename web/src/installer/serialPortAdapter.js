@@ -1,4 +1,5 @@
 import { InstallerError, INSTALLER_ERROR_CODES, isChooserCancellation } from './installerErrors'
+import { sanitizeDeviceState } from './installerDiagnostics'
 
 const MAGIC = new TextEncoder().encode('WINDSC01')
 const HEADER_SIZE = 24
@@ -107,15 +108,17 @@ export function createSerialProtocol(port, {
     buffered = combined
   }
 
-  function takeResponse(requestId) {
+  function takeResponse(requestId, measurements) {
     while (true) {
       const offset = magicOffset(buffered, buffered.length)
       if (offset < 0) {
         const retainedOffset = Math.max(0, buffered.length - (MAGIC.length - 1))
+        measurements.discardedBytes += retainedOffset
         buffered = buffered.slice(retainedOffset)
         return null
       }
       if (offset > 0) {
+        measurements.discardedBytes += offset
         buffered = buffered.slice(offset)
       }
       if (buffered.length < HEADER_SIZE) return null
@@ -124,12 +127,17 @@ export function createSerialProtocol(port, {
         throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device returned an invalid response.')
       }
       const frameSize = HEADER_SIZE + declared
+      measurements.expectedFrameBytes = frameSize
       if (buffered.length < frameSize) return null
       const response = decodeProtocolFrame(buffered.slice(0, frameSize))
       buffered = buffered.slice(frameSize)
+      measurements.expectedFrameBytes = 0
       // A delayed response from an older request must not poison the next
       // exchange. Consume it and continue looking in the retained byte stream.
-      if (response.requestId !== requestId) continue
+      if (response.requestId !== requestId) {
+        measurements.staleFrames += 1
+        continue
+      }
       if (response.messageType !== 2 || response.payload?.error) {
         throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device rejected the request.')
       }
@@ -140,6 +148,10 @@ export function createSerialProtocol(port, {
   async function performRequest(command, values, requestedTimeout) {
     const id = ++requestId
     const startedAt = Date.now()
+    const measurements = {
+      requestTimeoutMs: requestedTimeout, receivedBytes: 0, receivedChunks: 0,
+      discardedBytes: 0, staleFrames: 0, expectedFrameBytes: 0,
+    }
     record({ category: 'protocol', operation: command, status: 'started' })
     await writer.write(encodeProtocolFrame({ requestId: id, payload: { command, ...values } }))
     let timeoutId
@@ -151,10 +163,12 @@ export function createSerialProtocol(port, {
     })
     const read = (async () => {
       while (true) {
-        const response = takeResponse(id)
+        const response = takeResponse(id, measurements)
         if (response) return response
         const result = await reader.read()
         if (result.done) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'The USB connection was lost.')
+        measurements.receivedBytes += result.value.length
+        measurements.receivedChunks += 1
         append(result.value)
       }
     })()
@@ -162,13 +176,14 @@ export function createSerialProtocol(port, {
       const response = await Promise.race([read, timeout])
       record({
         category: 'protocol', operation: command, status: response?.status ?? 'ok',
-        measurements: { durationMs: Date.now() - startedAt },
+        ...(command === 'get_state' ? { deviceState: sanitizeDeviceState(response) } : {}),
+        measurements: { ...measurements, bufferedBytes: buffered.length, durationMs: Date.now() - startedAt },
       })
       return response
     } catch (error) {
       record({
         category: 'protocol', operation: command, status: 'failed', message: error?.message,
-        measurements: { durationMs: Date.now() - startedAt },
+        measurements: { ...measurements, bufferedBytes: buffered.length, durationMs: Date.now() - startedAt },
       })
       throw error
     } finally { clearTimeout(timeoutId) }

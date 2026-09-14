@@ -1,8 +1,54 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, requestInstallerPort } from '../../src/installer/serialPortAdapter'
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
+import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
+import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it.each(['silent', 'partial', 'logs', 'stale'])('diagnoses a %s timeout without recording USB contents', async (kind) => {
+    vi.useFakeTimers()
+    try {
+      const frame = encodeProtocolFrame({ requestId: kind === 'stale' ? 99 : 1, messageType: 2, payload: { status: 'ok', ssid: 'private-network' } })
+      const chunks = kind === 'silent' ? [] : [kind === 'partial' ? frame.slice(0, 25)
+        : kind === 'logs' ? new TextEncoder().encode('password=private-password\n') : frame]
+      const receivedBytes = chunks[0]?.length ?? 0
+      const reader = { read: vi.fn(() => chunks.length ? Promise.resolve({ value: chunks.shift(), done: false }) : new Promise(() => {})), cancel: vi.fn(async () => {}), releaseLock: vi.fn() }
+      const writer = { write: vi.fn(async () => {}), releaseLock: vi.fn() }
+      const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+      const diagnostics = createInstallerDiagnostics()
+      const protocol = createSerialProtocol(port, { diagnostics, timeoutMs: 10 })
+      await protocol.open()
+      const rejected = expect(protocol.request('get_state')).rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.CONNECTION_LOST })
+      await vi.advanceTimersByTimeAsync(10)
+      await rejected
+      const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { timeline: diagnostics.snapshot().entries } })
+      expect(event.extra.timeline.at(-1)).toMatchObject({ operation: 'get_state', status: 'failed', measurements: {
+        requestTimeoutMs: 10, receivedBytes, receivedChunks: kind === 'silent' ? 0 : 1,
+        bufferedBytes: kind === 'partial' ? 25 : kind === 'logs' ? 7 : 0,
+        expectedFrameBytes: kind === 'partial' ? frame.length : 0,
+        staleFrames: kind === 'stale' ? 1 : 0,
+        discardedBytes: kind === 'logs' ? receivedBytes - 7 : 0,
+      } })
+      expect(JSON.stringify(event)).not.toMatch(/private-network|private-password/)
+      await protocol.close()
+    } finally { vi.useRealTimers() }
+  })
+
+  it('records only known device status fields from a successful state response', async () => {
+    const payload = { status: 'ok', wifi: 'connected', wifiConfigured: true, render: 'pending', apply: 'applying', applyError: 0, ssid: 'private-network', configurationDigest: 'private-digest' }
+    const reader = { read: vi.fn(async () => ({ done: false, value: encodeProtocolFrame({ requestId: 1, messageType: 2, payload }) })), cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: vi.fn(), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const diagnostics = createInstallerDiagnostics()
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await expect(protocol.request('get_state')).resolves.toEqual(payload)
+    const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { timeline: diagnostics.snapshot().entries } })
+    expect(event.extra.timeline.at(-1).deviceState).toEqual({ wifi: 'connected', wifiConfigured: true, render: 'pending', apply: 'applying', applyError: 0 })
+    expect(JSON.stringify(event)).not.toMatch(/private-network|private-digest/)
+    await protocol.close()
+  })
+
   it('supports Firefox desktop when Web Serial is available', () => {
     const requestPort = vi.fn()
     expect(getSerialSupport({

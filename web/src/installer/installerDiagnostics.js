@@ -12,7 +12,25 @@ const CONTEXT_FIELDS = new Set([
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
+  'requestTimeoutMs', 'receivedBytes', 'receivedChunks', 'discardedBytes',
+  'staleFrames', 'bufferedBytes', 'expectedFrameBytes',
 ])
+
+// Deliberately exclude configuration, network names and arbitrary device text.
+export function sanitizeDeviceState(input) {
+  if (!input || typeof input !== 'object') return undefined
+  const state = {}
+  for (const [field, allowed] of Object.entries({
+    wifi: ['connected', 'disconnected'],
+    render: ['valid', 'pending'],
+    apply: ['idle', 'applying', 'complete', 'render_failed', 'commit_failed'],
+  })) {
+    if (allowed.includes(input[field])) state[field] = input[field]
+  }
+  if (typeof input.wifiConfigured === 'boolean') state.wifiConfigured = input.wifiConfigured
+  if (Number.isSafeInteger(input.applyError)) state.applyError = input.applyError
+  return Object.keys(state).length ? state : undefined
+}
 
 function byteLength(value) {
   return new TextEncoder().encode(value).byteLength
@@ -144,6 +162,8 @@ export function createInstallerDiagnostics({
       message = safeScalar(candidate.message)
     } catch {}
     if (status !== undefined) entry.status = sanitizeKey(status, sensitiveValues)
+    const deviceState = sanitizeDeviceState(candidate.deviceState)
+    if (deviceState) entry.deviceState = deviceState
     // Credentials may be split across multiple serial messages, which makes
     // exact-value redaction insufficient. Keep the structured event, but no
     // free-form text, for the short period credentials are in memory.

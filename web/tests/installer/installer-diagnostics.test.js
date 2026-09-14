@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { createInstallerDiagnostics, sanitizeDiagnosticText } from '../../src/installer/installerDiagnostics'
 
 describe('installer diagnostics', () => {
+  it('drops unknown device-state values and private fields even while credentials are locked', () => {
+    const diagnostics = createInstallerDiagnostics()
+    const release = diagnostics.acquireCredentialLock({ password: 'private-password' })
+    diagnostics.record({ category: 'protocol', operation: 'get_state', deviceState: {
+      wifi: 'private-network', apply: 'private-password', render: 'valid',
+      wifiConfigured: 'private-setting', applyError: Infinity, ssid: 'private-network',
+    } })
+    release()
+    expect(diagnostics.snapshot().entries[0].deviceState).toEqual({ render: 'valid' })
+    expect(JSON.stringify(diagnostics.snapshot())).not.toContain('private-')
+  })
   it('keeps a bounded in-memory timeline and evicts the oldest text', () => {
     let time = 1000
     const diagnostics = createInstallerDiagnostics({
