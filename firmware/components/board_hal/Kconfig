@@ -2,6 +2,8 @@ menu "Board Configuration"
 
     config BOARD_CAP_WINDPEEK
         bool
+        # Forecast/NVS writes must not pause the installer's UART receiver.
+        select UART_ISR_IN_IRAM
 
     choice BOARD_TYPE
         prompt "Board Driver"

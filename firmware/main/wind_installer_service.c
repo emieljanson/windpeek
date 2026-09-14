@@ -628,6 +628,10 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
 #include "wind_spots.h"
 #include "wind_usb_protocol.h"
 
+#if defined(CONFIG_BOARD_CAP_WINDPEEK) && !defined(CONFIG_UART_ISR_IN_IRAM)
+#error "Windpeek USB reception must remain available during flash writes"
+#endif
+
 #define WIND_INSTALLER_APPLY_STACK_SIZE 32768
 
 typedef enum {
