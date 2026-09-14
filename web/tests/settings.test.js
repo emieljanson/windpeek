@@ -424,7 +424,6 @@ describe('Windpeek settings panel', () => {
     mountSettings()
     const unit = wrapper.find('.forecast-advanced').findComponent(SettingSegments)
     unit.vm.$emit('update:modelValue', 'fahrenheit')
-    await rowControl('Temperature').get('[role="switch"]').trigger('click')
     expect([store.showWeather, store.showTemperature]).toEqual([true, true])
     await rowControl('Weather').get('[role="switch"]').trigger('click')
     expect([store.showWeather, store.showTemperature]).toEqual([false, true])

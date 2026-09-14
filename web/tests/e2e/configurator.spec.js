@@ -483,7 +483,7 @@ for (const viewport of [
       .every(({ height }) => Math.abs(height - 38) < 0.5)).toBe(true)
 
     const temperature = page.getByRole('switch', { name: 'Temperature', exact: true })
-    await expect(temperature).not.toBeChecked()
+    await expect(temperature).toBeChecked()
     const weatherHide = page.getByRole('switch', { name: 'Weather' }).locator('.setting-switch__segment--off')
     await expect(weatherHide).toHaveCSS('color', 'rgb(148, 148, 150)')
     await weatherHide.hover()

@@ -8,6 +8,7 @@
 
 #include "bootstrap_weather_icons.h"
 #include "wind_font.h"
+#include "wind_tide_labels.h"
 #include "wind_overview.h"
 
 enum {
@@ -770,12 +771,21 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *poi
     }
 }
 
-static void draw_tide_time_label(canvas_t *canvas,
+typedef struct {
+    char text[8];
+    int anchor;
+    int half_width;
+    int baseline;
+    bool is_high;
+} tide_time_label_t;
+
+static void prepare_tide_time_label(tide_time_label_t *labels, int *count,
                                  const wind_renderer_dashboard_t *dashboard,
-                                 const dashboard_layout_t *layout, int day, int hour,
+                                 const dashboard_layout_t *layout, int hour,
                                  int minute, bool is_high, bool show_minutes,
                                  int center_x, int extremum_y) {
-    if (hour < FORECAST_FIRST_HOUR || hour > FORECAST_LAST_HOUR) return;
+    if (hour < FORECAST_FIRST_HOUR || hour > FORECAST_LAST_HOUR ||
+        *count >= WIND_RENDERER_MAX_TIDE_EXTREMA) return;
     char time[8];
     if (dashboard->use_24_hour) {
         snprintf(time, sizeof(time), "%02d:%02d", hour, minute);
@@ -791,17 +801,49 @@ static void draw_tide_time_label(canvas_t *canvas,
 
     const wind_text_metrics_t metrics = wind_font_measure(
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, time);
-    const int label_margin = metrics.width / 2 + 10;
-    const int label_center = clamp_int(center_x, day_column_x(canvas, day) + label_margin,
-                                       day_column_x(canvas, day + 1) - label_margin);
     const int baseline = dashboard->custom_modules
         ? module_text_baseline(is_high ? module_text_center(layout->tide_top, 0, false) :
             layout->tide_bottom + 1 - MODULE_PADDING - MODULE_TEXT_CELL / 2)
         : clamp_int(is_high ? extremum_y - 3 : extremum_y + 16,
                     layout->tide_top + 14, layout->tide_bottom - 5);
-    draw_outlined_text_center(canvas, label_center, baseline,
-                              WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                              WIND_FONT_SIZE_STATUS, time);
+    tide_time_label_t label = {
+        .anchor = center_x, .half_width = (metrics.width + 1) / 2,
+        .baseline = baseline, .is_high = is_high,
+    };
+    snprintf(label.text, sizeof(label.text), "%s", time);
+    // Providers need not return extrema in time order.
+    int position = (*count)++;
+    while (position > 0 && labels[position - 1].anchor > label.anchor) {
+        labels[position] = labels[position - 1];
+        --position;
+    }
+    labels[position] = label;
+}
+
+static void draw_tide_time_labels(canvas_t *canvas, int day,
+                                 const tide_time_label_t *labels, int count) {
+    for (int high = 0; high <= 1; ++high) {
+        wind_tide_label_position_t positions[WIND_RENDERER_MAX_TIDE_EXTREMA] = {0};
+        int indices[WIND_RENDERER_MAX_TIDE_EXTREMA];
+        int row_count = 0;
+        for (int i = 0; i < count; ++i) {
+            if (labels[i].is_high != (high != 0)) continue;
+            positions[row_count].anchor = labels[i].anchor;
+            positions[row_count].half_width = labels[i].half_width;
+            indices[row_count++] = i;
+        }
+        // Six pixels also leave room for the white text outline. Limit any
+        // extra movement to 24 pixels beyond the existing day-edge inset.
+        wind_tide_labels_place(positions, row_count, day_column_x(canvas, day) + 10,
+                              day_column_x(canvas, day + 1) - 10, 24, 6);
+        for (int i = 0; i < row_count; ++i) {
+            if (!positions[i].visible) continue;
+            const tide_time_label_t *label = &labels[indices[i]];
+            draw_outlined_text_center(canvas, positions[i].center, label->baseline,
+                                      WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                                      WIND_FONT_SIZE_STATUS, label->text);
+        }
+    }
 }
 
 static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
@@ -933,6 +975,8 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
         draw_tide_curve(canvas, point_x, point_y, point_count, first_x, last_x,
                         curve_top, curve_bottom);
 
+        tide_time_label_t labels[WIND_RENDERER_MAX_TIDE_EXTREMA];
+        int label_count = 0;
         bool has_explicit_extrema = false;
         for (int extremum = 0; extremum < dashboard->tide_extremum_count; ++extremum) {
             const wind_renderer_tide_extremum_t *event =
@@ -947,21 +991,25 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
                                                        (curve_bottom - curve_top),
                                                    range),
                                 curve_top, curve_bottom);
-            draw_tide_time_label(
-                canvas, dashboard, layout, day, event->local_hour, event->local_minute,
+            prepare_tide_time_label(
+                labels, &label_count, dashboard, layout, event->local_hour, event->local_minute,
                 event->is_high != 0, true,
                 tide_time_x(canvas, day, event->local_hour, event->local_minute), event_y);
         }
-        if (has_explicit_extrema) continue;
+        if (has_explicit_extrema) {
+            draw_tide_time_labels(canvas, day, labels, label_count);
+            continue;
+        }
 
         for (int extremum = 0; extremum < extrema_count; ++extremum) {
             const int position = extrema[extremum];
             const int index = points[position];
-            draw_tide_time_label(canvas, dashboard, layout, day,
+            prepare_tide_time_label(labels, &label_count, dashboard, layout,
                                  dashboard->tide_samples[index].local_hour, 0,
                                  extrema_is_high[extremum], false, point_x[position],
                                  point_y[position]);
         }
+        draw_tide_time_labels(canvas, day, labels, label_count);
     }
 }
 

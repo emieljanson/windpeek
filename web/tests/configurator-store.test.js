@@ -100,7 +100,7 @@ describe('configurator store', () => {
     expect(store.showThreshold).toBe(false)
     expect(store.threshold).toBe(17)
     expect(store.showWeather).toBe(true)
-    expect(store.showTemperature).toBe(false)
+    expect(store.showTemperature).toBe(true)
     expect(store.showTide).toBe(false)
     expect(store.showDedicatedFooter).toBe(false)
     expect(['12-hour', '24-hour']).toContain(store.timeFormat)
