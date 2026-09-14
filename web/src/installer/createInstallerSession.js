@@ -222,6 +222,8 @@ export function createInstallerSession({
         category: 'verification',
         operation: 'device-state',
         status: status?.apply ?? 'incomplete',
+        message: Number.isSafeInteger(status?.applyError)
+          ? `Device apply error: ${status.applyError}` : undefined,
       })
     } catch {}
   }

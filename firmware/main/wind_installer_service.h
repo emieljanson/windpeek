@@ -55,6 +55,8 @@ typedef struct {
     wind_installer_set_clock_fn set_clock;
     wind_installer_get_hardware_profile_fn get_hardware_profile;
     wind_installer_select_hardware_profile_fn select_hardware_profile;
+    /* Numeric ESP-IDF failure code only; never diagnostic text or credentials. */
+    esp_err_t (*apply_error)(void *context);
 } wind_installer_dependencies_t;
 
 typedef struct {

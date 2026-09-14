@@ -151,6 +151,17 @@ TEST(InstallerServiceTest, HelloAndStateAreRedacted)
     const std::string state = request(&service, R"({"command":"get_state"})");
     EXPECT_EQ(state.find("password"), std::string::npos);
     EXPECT_NE(state.find("\"wifiConfigured\":false"), std::string::npos);
+    EXPECT_NE(state.find("\"applyError\":0"), std::string::npos);
+}
+
+TEST(InstallerServiceTest, ReportsTheUnderlyingApplyErrorWithoutDeviceLogs)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.apply_error = [](void *) { return ESP_ERR_NO_MEM; };
+    const std::string state = request(&service, R"({"command":"get_state"})");
+    EXPECT_NE(state.find("\"applyError\":" + std::to_string(ESP_ERR_NO_MEM)), std::string::npos);
+    EXPECT_EQ(state.find("password"), std::string::npos);
 }
 
 TEST(InstallerServiceTest, UniversalFirmwarePublishesAndPersistsHardwareProfile)

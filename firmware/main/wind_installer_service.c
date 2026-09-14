@@ -375,7 +375,7 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
         response, response_size,
         "{\"status\":\"ok\",\"boardId\":\"%s\",\"configurationDigest\":"
         "\"%016" PRIx64 "\",\"wifi\":\"%s\",\"wifiConfigured\":%s,"
-        "\"render\":\"%s\",\"apply\":\"%s\"}",
+        "\"render\":\"%s\",\"apply\":\"%s\",\"applyError\":%d}",
         WINDPEEK_BOARD_ID, installed_configuration_digest(&active),
         service->dependencies.wifi_connected &&
                 service->dependencies.wifi_connected(service->dependencies.context)
@@ -384,7 +384,9 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
         service->dependencies.render_succeeded &&
                 service->dependencies.render_succeeded(service->dependencies.context)
             ? "valid" : "pending",
-        apply ? apply : "idle");
+        apply ? apply : "idle",
+        service->dependencies.apply_error
+            ? service->dependencies.apply_error(service->dependencies.context) : ESP_OK);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -621,6 +623,7 @@ typedef struct {
     bool had_previous_wifi;
     bool candidate_wifi_active;
     atomic_int apply_state;
+    atomic_int apply_error;
     installed_configuration_t apply_candidate;
     char apply_ssid[WIND_INSTALLER_SSID_MAX + 1];
     char apply_password[WIND_INSTALLER_PASSWORD_MAX + 1];
@@ -629,6 +632,11 @@ typedef struct {
 } physical_installer_t;
 
 static physical_installer_t s_physical_installer;
+// Reserve internal RAM before Wi-Fi/HTTPS can fragment the heap. The apply
+// pipeline writes flash, so its stack must not live in external PSRAM.
+static StackType_t s_apply_stack[WIND_INSTALLER_APPLY_STACK_SIZE];
+static StaticTask_t s_apply_task_buffer;
+static TaskHandle_t s_apply_task;
 
 static void physical_clear_previous_wifi(physical_installer_t *installer)
 {
@@ -716,25 +724,30 @@ static void physical_clear_apply(physical_installer_t *installer)
 static void physical_apply_task(void *argument)
 {
     physical_installer_t *installer = (physical_installer_t *) argument;
-    ESP_LOGI("wind_installer", "Applying configuration (stack free: %u bytes)",
-             (unsigned) uxTaskGetStackHighWaterMark(NULL));
-    esp_err_t result = physical_render(installer, &installer->apply_candidate);
-    if (result != ESP_OK) {
-        wind_installer_service_complete_apply(&installer->service, false);
-        atomic_store(&installer->apply_state, PHYSICAL_APPLY_RENDER_FAILED);
-    } else {
-        ESP_LOGI("wind_installer", "Preview rendered (stack free: %u bytes)",
+    for (;;) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        ESP_LOGI("wind_installer", "Applying configuration (stack free: %u bytes)",
                  (unsigned) uxTaskGetStackHighWaterMark(NULL));
-        result = physical_commit(installer, &installer->apply_candidate,
-                                 installer->apply_has_wifi ? installer->apply_ssid : NULL,
-                                 installer->apply_has_wifi ? installer->apply_password : NULL);
-        wind_installer_service_complete_apply(&installer->service, result == ESP_OK);
-        atomic_store(&installer->apply_state,
-                     result == ESP_OK ? PHYSICAL_APPLY_COMPLETE
-                                      : PHYSICAL_APPLY_COMMIT_FAILED);
+        esp_err_t result = physical_render(installer, &installer->apply_candidate);
+        physical_apply_state_t final_state = PHYSICAL_APPLY_RENDER_FAILED;
+        if (result != ESP_OK) {
+            wind_installer_service_complete_apply(&installer->service, false);
+        } else {
+            ESP_LOGI("wind_installer", "Preview rendered (stack free: %u bytes)",
+                     (unsigned) uxTaskGetStackHighWaterMark(NULL));
+            result = physical_commit(installer, &installer->apply_candidate,
+                                     installer->apply_has_wifi ? installer->apply_ssid : NULL,
+                                     installer->apply_has_wifi ? installer->apply_password : NULL);
+            wind_installer_service_complete_apply(&installer->service, result == ESP_OK);
+            final_state = result == ESP_OK ? PHYSICAL_APPLY_COMPLETE
+                                          : PHYSICAL_APPLY_COMMIT_FAILED;
+        }
+        physical_clear_apply(installer);
+        atomic_store(&installer->apply_error, result);
+        // Publish completion only after cleanup, so the next attempt cannot have
+        // its configuration or credentials erased by the previous worker.
+        atomic_store(&installer->apply_state, final_state);
     }
-    physical_clear_apply(installer);
-    vTaskDelete(NULL);
 }
 
 static esp_err_t physical_begin_apply(void *context,
@@ -746,6 +759,7 @@ static esp_err_t physical_begin_apply(void *context,
         return ESP_ERR_INVALID_STATE;
     }
     physical_clear_apply(installer);
+    atomic_store(&installer->apply_error, ESP_OK);
     installer->apply_candidate = *candidate;
     if (ssid && password) {
         snprintf(installer->apply_ssid, sizeof(installer->apply_ssid), "%s", ssid);
@@ -759,17 +773,19 @@ static esp_err_t physical_begin_apply(void *context,
 static esp_err_t physical_start_apply(void *context)
 {
     physical_installer_t *installer = (physical_installer_t *) context;
-    // Rendering and HTTPS forecast parsing run on this task. Keep its stack in
-    // line with the main task, which executes the same pipeline during normal
-    // refreshes. An 8 KiB stack corrupts the FreeRTOS task state on real E1002
-    // hardware before the first preview can finish.
-    if (xTaskCreate(physical_apply_task, "wind_apply", WIND_INSTALLER_APPLY_STACK_SIZE,
-                    installer, 6, NULL) != pdPASS) {
+    if (!s_apply_task) {
+        atomic_store(&installer->apply_error, ESP_ERR_NO_MEM);
         atomic_store(&installer->apply_state, PHYSICAL_APPLY_COMMIT_FAILED);
         physical_clear_apply(installer);
         return ESP_ERR_NO_MEM;
     }
+    xTaskNotifyGive(s_apply_task);
     return ESP_OK;
+}
+
+static esp_err_t physical_apply_error(void *context)
+{
+    return atomic_load(&((physical_installer_t *)context)->apply_error);
 }
 
 static const char *physical_apply_state(void *context)
@@ -918,6 +934,9 @@ static void physical_frame(const wind_usb_frame_t *frame, void *context)
             written == (int) output_size && transmit_result == ESP_OK;
         if (wind_installer_service_confirm_pending_apply_response(
                 &installer->service, response_transmitted) != ESP_OK) {
+            if (!response_transmitted)
+                atomic_store(&installer->apply_error,
+                             transmit_result != ESP_OK ? transmit_result : ESP_FAIL);
             atomic_store(&installer->apply_state, PHYSICAL_APPLY_COMMIT_FAILED);
         }
     }
@@ -948,6 +967,7 @@ static void installer_usb_task(void *argument)
 
 esp_err_t wind_installer_service_start(void)
 {
+    if (s_apply_task) return ESP_ERR_INVALID_STATE;
     esp_err_t result = ESP_OK;
     if (!uart_is_driver_installed(UART_NUM_0)) {
         result = uart_driver_install(UART_NUM_0, 4096, 4096, 0, NULL, 0);
@@ -955,6 +975,7 @@ esp_err_t wind_installer_service_start(void)
     }
     memset(&s_physical_installer, 0, sizeof(s_physical_installer));
     atomic_init(&s_physical_installer.apply_state, PHYSICAL_APPLY_IDLE);
+    atomic_init(&s_physical_installer.apply_error, ESP_OK);
     wind_usb_parser_init(&s_physical_installer.parser);
     const wind_installer_dependencies_t dependencies = {
         .context = &s_physical_installer,
@@ -964,6 +985,7 @@ esp_err_t wind_installer_service_start(void)
         .begin_apply = physical_begin_apply,
         .start_apply = physical_start_apply,
         .apply_state = physical_apply_state,
+        .apply_error = physical_apply_error,
         .set_wake_lock = physical_wake_lock,
         .abort = physical_abort,
         .scan_wifi = physical_scan_wifi,
@@ -977,7 +999,14 @@ esp_err_t wind_installer_service_start(void)
     };
     wind_installer_service_init(&s_physical_installer.service, &dependencies);
     s_physical_installer.last_activity_us = esp_timer_get_time();
-    return xTaskCreate(installer_usb_task, "wind_usb", 16384, &s_physical_installer, 6, NULL) == pdPASS
-               ? ESP_OK : ESP_ERR_NO_MEM;
+    s_apply_task = xTaskCreateStatic(physical_apply_task, "wind_apply",
+        sizeof(s_apply_stack), &s_physical_installer, 6, s_apply_stack, &s_apply_task_buffer);
+    if (!s_apply_task) return ESP_ERR_NO_MEM;
+    if (xTaskCreate(installer_usb_task, "wind_usb", 16384, &s_physical_installer, 6, NULL) != pdPASS) {
+        vTaskDelete(s_apply_task);
+        s_apply_task = NULL;
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
 }
 #endif

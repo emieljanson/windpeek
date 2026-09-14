@@ -256,7 +256,9 @@ export function normalizeForecastModels(response, spot, {
         suffixed: true,
       })
     } catch (error) {
-      if (model.availability !== 'regional') throw error
+      // A temporary outage in an alternative model must not discard the
+      // complete five-day Best Match forecast returned in the same response.
+      if (model.id === fallbackModel?.id || (!fallbackModel && model.availability !== 'regional')) throw error
     }
   }
   return forecasts
