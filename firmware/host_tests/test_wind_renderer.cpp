@@ -14,6 +14,7 @@
 
 extern "C" {
 #include "wind_renderer.h"
+#include "wind_tide_labels.h"
 #include "wind_renderer_fixture.h"
 }
 
@@ -1082,4 +1083,74 @@ TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
     d.visible_day_count=3;
     Frame invalid(WIND_RENDERER_E1003_COMPOSITION_BYTES);
     EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
+}
+
+TEST(TideLabels, SpreadsCloseLabelsWithoutLeaderLines) {
+    wind_tide_label_position_t labels[] = {{50, 20}, {85, 20}};
+    wind_tide_labels_place(labels, 2, 10, 140, 12, 6);
+    EXPECT_TRUE(labels[0].visible);
+    EXPECT_TRUE(labels[1].visible);
+    EXPECT_GE(labels[1].center - labels[0].center, 46);
+    EXPECT_LE(std::abs(labels[0].center - 50), 12);
+    EXPECT_LE(std::abs(labels[1].center - 85), 12);
+}
+
+TEST(TideLabels, DropsMiddleOfCrowdedClusterAndKeepsOuterTimes) {
+    wind_tide_label_position_t labels[] = {{50, 20}, {65, 20}, {85, 20}};
+    wind_tide_labels_place(labels, 3, 10, 140, 12, 6);
+    EXPECT_TRUE(labels[0].visible);
+    EXPECT_FALSE(labels[1].visible);
+    EXPECT_TRUE(labels[2].visible);
+    EXPECT_GE(labels[2].center - labels[0].center, 46);
+}
+
+TEST(TideLabels, PreservesUncrowdedPositionsAndFitsDayEdges) {
+    wind_tide_label_position_t labels[] = {{0, 20}, {80, 20}, {160, 20}};
+    wind_tide_labels_place(labels, 3, 10, 150, 12, 6);
+    EXPECT_EQ(labels[0].center, 30);
+    EXPECT_EQ(labels[1].center, 80);
+    EXPECT_EQ(labels[2].center, 130);
+    for (const auto &label : labels) EXPECT_TRUE(label.visible);
+}
+
+TEST(TideLabels, DenseMixedWidthsNeverOverlapOrEscapeTheirDay) {
+    for (int count = 1; count <= 32; ++count) {
+        std::vector<wind_tide_label_position_t> labels;
+        for (int i = 0; i < count; ++i) labels.push_back({i * 5, 14 + i % 10});
+        wind_tide_labels_place(labels.data(), count, 10, 150, 12, 6);
+        int previous_right = -1000;
+        int shown = 0;
+        for (const auto &label : labels) {
+            if (!label.visible) continue;
+            EXPECT_GE(label.center - label.half_width, 10);
+            EXPECT_LE(label.center + label.half_width, 150);
+            EXPECT_GE(label.center - label.half_width, previous_right + 6);
+            previous_right = label.center + label.half_width;
+            ++shown;
+        }
+        EXPECT_GT(shown, 0);
+    }
+}
+
+TEST(WindRenderer, OmitsCrowdedMiddleTideTimeWithoutChangingCurveOrOtherRow) {
+    auto dashboard = Dashboard();
+    dashboard.show_tide = 1;
+    dashboard.tide_available = 1;
+    dashboard.tide_sample_count = 24;
+    for (int hour = 0; hour < 24; ++hour) {
+        dashboard.tide_samples[hour] = {0, hour, static_cast<int>(std::sin(hour / 6.0) * 800), 1};
+    }
+    dashboard.tide_extremum_count = 4;
+    dashboard.tide_extrema[0] = {0, 12, 0, 800, 1, 1};
+    dashboard.tide_extrema[1] = {0, 12, 15, 800, 1, 1};
+    dashboard.tide_extrema[2] = {0, 16, 0, 800, 1, 1};
+    dashboard.tide_extrema[3] = {0, 12, 15, -800, 0, 1};
+    const auto crowded = Render(dashboard);
+    dashboard.tide_extrema[1].available = 0;
+    EXPECT_EQ(crowded, Render(dashboard));
+    dashboard.tide_extrema[3].available = 0;
+    EXPECT_NE(crowded, Render(dashboard));
+    dashboard.tide_extrema[3].available = 1;
+    std::swap(dashboard.tide_extrema[0], dashboard.tide_extrema[3]);
+    EXPECT_EQ(crowded, Render(dashboard));
 }
