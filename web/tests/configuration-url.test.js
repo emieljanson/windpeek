@@ -65,7 +65,7 @@ describe('site entry and share URLs', () => {
         expect(siteVariant(landing).id).toBe(site)
         const browser = browserAt(new URL(configuratorLink(landing), landing).href)
         const source = storeWith(browser)
-        expect(source.$state).toMatchObject(siteDisplayDefaults(siteVariant(landing)))
+        expect(source.$state).toMatchObject({ ...siteDisplayDefaults(siteVariant(landing)), showTemperature: true })
         source.$patch({ windSize: 'small', swellSize: 'large', showTemperature: false })
         const shared = configurationUrl(source, browser.location.href)
         expect(shared.searchParams.get('site')).toBe(site)
