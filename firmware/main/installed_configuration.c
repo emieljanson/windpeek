@@ -503,23 +503,25 @@ esp_err_t installed_configuration_load(installed_configuration_t *out_config)
 {
     if (!out_config) return ESP_ERR_INVALID_ARG;
     nvs_handle_t handle;
-    configuration_record_t record;
+    configuration_record_t *record = calloc(1, sizeof(*record));
+    if (!record) return ESP_ERR_NO_MEM;
     bool was_migrated = false;
     esp_err_t result = nvs_open(CONFIG_NAMESPACE, NVS_READONLY, &handle);
     if (result == ESP_OK) {
-        result = read_record(handle, ACTIVE_KEY, &record, &was_migrated);
+        result = read_record(handle, ACTIVE_KEY, record, &was_migrated);
         nvs_close(handle);
     }
     if (result == ESP_OK) {
-        *out_config = record.config;
+        *out_config = record->config;
         if (was_migrated) {
             result = installed_configuration_promote_setup(
-                &record.config, record.has_credentials ? record.ssid : NULL,
-                record.has_credentials ? record.password : NULL);
-            if (result != ESP_OK) return result;
+                &record->config, record->has_credentials ? record->ssid : NULL,
+                record->has_credentials ? record->password : NULL);
         }
-        return ESP_OK;
+        free(record);
+        return result;
     }
+    free(record);
     installed_configuration_default(out_config);
     nvs_handle_t legacy_handle;
     if (nvs_open("wind", NVS_READONLY, &legacy_handle) == ESP_OK) {

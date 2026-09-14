@@ -358,8 +358,13 @@ static esp_err_t handle_set_hardware_profile(wind_installer_service_t *service,
 static esp_err_t handle_state(wind_installer_service_t *service, char *response,
                               size_t response_size)
 {
-    installed_configuration_t active;
-    esp_err_t result = installed_configuration_load(&active);
+    // Configurations contain up to ten spots. Keep them off the 16 KiB UART
+    // stack, including while loading/migrating the persisted record.
+    installed_configuration_t *active = malloc(sizeof(*active));
+    if (!active) return write_response(response, response_size, "state_unavailable", NULL);
+    esp_err_t result = installed_configuration_load(active);
+    const uint64_t digest = result == ESP_OK ? installed_configuration_digest(active) : 0;
+    free(active);
     if (result != ESP_OK) return write_response(response, response_size, "state_unavailable", NULL);
     char configured_ssid[WIND_INSTALLER_SSID_MAX + 1] = {0};
     char configured_password[WIND_INSTALLER_PASSWORD_MAX + 1] = {0};
@@ -376,7 +381,7 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
         "{\"status\":\"ok\",\"boardId\":\"%s\",\"configurationDigest\":"
         "\"%016" PRIx64 "\",\"wifi\":\"%s\",\"wifiConfigured\":%s,"
         "\"render\":\"%s\",\"apply\":\"%s\",\"applyError\":%d}",
-        WINDPEEK_BOARD_ID, installed_configuration_digest(&active),
+        WINDPEEK_BOARD_ID, digest,
         service->dependencies.wifi_connected &&
                 service->dependencies.wifi_connected(service->dependencies.context)
             ? "connected" : "disconnected",
@@ -401,6 +406,46 @@ static esp_err_t set_clock_from_request(wind_installer_service_t *service,
     }
     return service->dependencies.set_clock(service->dependencies.context,
                                            (int64_t) unix_time->valuedouble);
+}
+
+static esp_err_t handle_stage_configuration(wind_installer_service_t *service,
+                                             const cJSON *request, char *response,
+                                             size_t response_size)
+{
+    // Stack locals in the command dispatcher consume space even for hello and
+    // get_state. Allocate staging's two full configurations only on this path.
+    installed_configuration_t *candidate = malloc(sizeof(*candidate));
+    installed_configuration_t *active = malloc(sizeof(*active));
+    if (!candidate || !active) {
+        free(candidate);
+        free(active);
+        return ESP_ERR_NO_MEM;
+    }
+    const cJSON *json = cJSON_GetObjectItemCaseSensitive(request, "configuration");
+    char supplied_digest[17] = {0};
+    esp_err_t result;
+    if (!parse_configuration(json, candidate, supplied_digest)) {
+        result = write_response(response, response_size, "configuration_rejected", NULL);
+    } else {
+        char calculated_digest[17];
+        snprintf(calculated_digest, sizeof(calculated_digest), "%016" PRIx64,
+                 installed_configuration_digest(candidate));
+        if (strcmp(calculated_digest, supplied_digest) != 0) {
+            result = write_response(response, response_size, "digest_mismatch", NULL);
+        } else {
+            result = installed_configuration_load(active);
+            if (result == ESP_OK) {
+                candidate->generation = active->generation + 1;
+                service->candidate = *candidate;
+                service->candidate_staged = true;
+                result = write_response(response, response_size, "configuration_staged",
+                                        calculated_digest);
+            }
+        }
+    }
+    free(active);
+    free(candidate);
+    return result;
 }
 
 esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
@@ -454,27 +499,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
             result = write_response(response, response_size, "ready", NULL);
         }
     } else if (strcmp(command->valuestring, "stage_configuration") == 0) {
-        const cJSON *json = cJSON_GetObjectItemCaseSensitive(request, "configuration");
-        char supplied_digest[17] = {0};
-        installed_configuration_t candidate;
-        if (!parse_configuration(json, &candidate, supplied_digest)) {
-            result = write_response(response, response_size, "configuration_rejected", NULL);
-        } else {
-            char calculated_digest[17];
-            snprintf(calculated_digest, sizeof(calculated_digest), "%016" PRIx64,
-                     installed_configuration_digest(&candidate));
-            if (strcmp(calculated_digest, supplied_digest) != 0) {
-                result = write_response(response, response_size, "digest_mismatch", NULL);
-            } else {
-                installed_configuration_t active;
-                installed_configuration_load(&active);
-                candidate.generation = active.generation + 1;
-                service->candidate = candidate;
-                service->candidate_staged = true;
-                result = write_response(response, response_size, "configuration_staged",
-                                        calculated_digest);
-            }
-        }
+        result = handle_stage_configuration(service, request, response, response_size);
     } else if (strcmp(command->valuestring, "test_wifi") == 0) {
         static const char *const credential_keys[] = {"command", "ssid", "password"};
         if (service->dependencies.abort) {
@@ -602,6 +627,10 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
 #include "wind_clock.h"
 #include "wind_spots.h"
 #include "wind_usb_protocol.h"
+
+#if defined(CONFIG_BOARD_CAP_WINDPEEK) && !defined(CONFIG_UART_ISR_IN_IRAM)
+#error "Windpeek USB reception must remain available during flash writes"
+#endif
 
 #define WIND_INSTALLER_APPLY_STACK_SIZE 32768
 

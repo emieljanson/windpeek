@@ -178,6 +178,8 @@ endif()
 
 if(CONFIG_BOARD_CAP_WINDPEEK)
     target_include_directories(${COMPONENT_LIB} PRIVATE "../components/acetimec/src")
+    set_source_files_properties(wind_installer_service.c installed_configuration.c
+        PROPERTIES COMPILE_OPTIONS "-fstack-usage")
 endif()
 
 if(NOT CONFIG_BOARD_CAP_WINDPEEK)
