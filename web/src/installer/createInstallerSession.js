@@ -14,12 +14,12 @@ import {
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
-import { installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
+import { browserContext, filterInstallerEvent, installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
 import { createSerialProtocol, findGrantedInstallerPort, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
-  diagnosticStatus: 'idle', diagnosticReference: null,
+  diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null,
 })
 const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync']
 // A failed candidate may take 45 seconds, followed by up to 45 seconds to
@@ -119,7 +119,7 @@ export function createInstallerSession({
     latestDiagnosticOccurrence = null
     update({
       phase: 'complete', progress: 1, safeToDisconnect: true,
-      diagnosticStatus: 'idle', diagnosticReference: null, ...patch,
+      diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null, ...patch,
     })
     try { diagnostics.destroy?.() } catch {}
   }
@@ -167,7 +167,11 @@ export function createInstallerSession({
       return
     }
     latestDiagnosticOccurrence = failure.occurrence
-    update({ diagnosticStatus: 'sending', diagnosticReference: null })
+    const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
+      contexts: { installer: { ...snapshot.context, ...browserContext() } },
+      extra: { timeline: snapshot.entries, deviceEvidence: snapshot.deviceEvidence, textBytes: snapshot.textBytes } })
+    update({ diagnosticStatus: 'sending', diagnosticReference: null,
+      diagnosticReport: JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra }, null, 2) })
     let report
     try {
       report = reporter.report({ ...failure, snapshot })
@@ -309,6 +313,10 @@ export function createInstallerSession({
       try { await candidate.close() } catch {}
       return null
     }
+    // Capture the running app even if its first state request fails.
+    try {
+      diagnostics.setContext?.({ detectedBoardId: hello.boardId, detectedFirmwareVersion: hello.firmwareVersion })
+    } catch {}
     try {
       let current = await candidate.request('get_state')
       // Opening Web Serial performs a normal device reset. A saved network

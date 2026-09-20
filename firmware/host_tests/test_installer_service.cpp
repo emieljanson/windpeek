@@ -139,6 +139,23 @@ std::string request(wind_installer_service_t *service, const char *json)
 }
 }
 
+TEST(InstallerService, ReportsNumericHealthWithoutConfigurationContents)
+{
+    FakeDevice device;
+    auto service = make_service(&device);
+    service.dependencies.health = [](void *, wind_installer_health_t *health) {
+        *health = {4, 30000, 20000, 5000, 3, 1234};
+    };
+    const std::string state = request(&service, R"({"command":"get_state"})");
+    EXPECT_NE(state.find("\"deviceStage\":4"), std::string::npos);
+    EXPECT_NE(state.find("\"freeHeap\":30000"), std::string::npos);
+    EXPECT_NE(state.find("\"minimumHeap\":20000"), std::string::npos);
+    EXPECT_NE(state.find("\"taskStackFree\":5000"), std::string::npos);
+    EXPECT_NE(state.find("\"resetReason\":3"), std::string::npos);
+    EXPECT_NE(state.find("\"uptimeMs\":1234"), std::string::npos);
+    EXPECT_EQ(state.find("password"), std::string::npos);
+}
+
 TEST(InstallerServiceTest, HelloAndStateAreRedacted)
 {
     FakeDevice fake;

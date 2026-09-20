@@ -10,6 +10,7 @@ const props = defineProps({
   scanning: Boolean,
   diagnosticStatus: { type: String, default: 'idle' },
   diagnosticReference: { type: String, default: '' },
+  diagnosticReport: { type: String, default: '' },
 })
 const emit = defineEmits(['submit', 'rescan'])
 const ssid = ref('')
@@ -82,7 +83,7 @@ function submit() {
         />
       </label>
       <p v-if="error" id="installer-wifi-error" class="installer-message is-error">{{ error }}</p>
-      <InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" />
+      <InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" :report="diagnosticReport" />
     </div>
     <div class="installer-actions">
       <button class="installer-secondary" type="button" :disabled="busy || scanning" @click="$emit('rescan')">{{ scanning ? 'Scanning…' : 'Scan again' }}</button>

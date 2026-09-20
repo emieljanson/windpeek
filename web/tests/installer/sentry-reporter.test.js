@@ -175,6 +175,7 @@ describe('Sentry installer reporter', () => {
     sdk.setUser({ email: 'planted@example.test', ip_address: '2001:db8::1' })
 
     const input = reportInput({ occurrence: 'real-sdk' })
+    input.snapshot.deviceEvidence = [{ kind: 'backtrace', addresses: [0x42001234, 0x42005678], password: 'private-crash-secret' }]
     input.snapshot.entries[0].deviceState = {
       wifi: 'connected', wifiConfigured: true, render: 'pending', apply: 'applying', applyError: 0,
       ssid: 'private-network', configurationDigest: 'private-digest',
@@ -186,7 +187,8 @@ describe('Sentry installer reporter', () => {
     expect(serialized).toContain('windpeek.reference')
     expect(envelope[1][0][1].extra.timeline[0].measurements).toEqual({ writtenBytes: 10 })
     expect(envelope[1][0][1].extra.timeline[0].deviceState).toEqual({ wifi: 'connected', wifiConfigured: true, render: 'pending', apply: 'applying', applyError: 0 })
-    expect(serialized).not.toMatch(/private-network|private-digest/)
+    expect(envelope[1][0][1].extra.deviceEvidence).toEqual([{ kind: 'backtrace', addresses: [0x42001234, 0x42005678] }])
+    expect(serialized).not.toMatch(/private-network|private-digest|private-crash-secret/)
     expect(serialized).not.toMatch(/planted@example\.test|2001:db8::1|request|cookies|user_agent/)
     await sdk.close()
   })

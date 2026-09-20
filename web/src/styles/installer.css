@@ -165,12 +165,14 @@
 }
 
 .installer-message.is-error { color: var(--settings-control-danger); text-align: center; }
-.installer-diagnostic-status {
+.installer-diagnostic-status,
+.installer-diagnostic-download {
   margin: 0;
   color: var(--settings-control-muted);
   font: 400 0.6875rem/1.35 'Inter Variable', Inter, sans-serif;
   text-align: center;
 }
+.installer-diagnostic-download a { color: var(--settings-control-ink); text-decoration: underline; }
 .installer-diagnostic-status code {
   color: var(--settings-control-ink);
   font: inherit;

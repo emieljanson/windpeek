@@ -1,3 +1,4 @@
+import { createDeviceConsoleDecoder } from './deviceEvidence'
 import { InstallerError, INSTALLER_ERROR_CODES, isChooserCancellation } from './installerErrors'
 import { sanitizeDeviceState } from './installerDiagnostics'
 
@@ -96,6 +97,9 @@ export function createSerialProtocol(port, {
   let writer
   let buffered = new Uint8Array(0)
   let requestQueue = Promise.resolve()
+  const consoleDecoder = createDeviceConsoleDecoder((evidence) => {
+    try { diagnostics?.recordDeviceEvidence?.(evidence) } catch {}
+  })
 
   function record(entry) {
     try { diagnostics?.record?.(entry) } catch {}
@@ -113,14 +117,17 @@ export function createSerialProtocol(port, {
       const offset = magicOffset(buffered, buffered.length)
       if (offset < 0) {
         const retainedOffset = Math.max(0, buffered.length - (MAGIC.length - 1))
+        consoleDecoder.feed(buffered.subarray(0, retainedOffset))
         measurements.discardedBytes += retainedOffset
         buffered = buffered.slice(retainedOffset)
         return null
       }
       if (offset > 0) {
+        consoleDecoder.feed(buffered.subarray(0, offset))
         measurements.discardedBytes += offset
         buffered = buffered.slice(offset)
       }
+      consoleDecoder.flush()
       if (buffered.length < HEADER_SIZE) return null
       const declared = new DataView(buffered.buffer, buffered.byteOffset).getUint32(16, true)
       if (declared > MAX_PAYLOAD_SIZE) {
@@ -174,6 +181,13 @@ export function createSerialProtocol(port, {
     })()
     try {
       const response = await Promise.race([read, timeout])
+      if (command === 'get_state' && Number.isInteger(response.deviceStage)) {
+        try {
+          diagnostics?.recordDeviceEvidence?.({ kind: 'checkpoint', stage: response.deviceStage,
+            heap: response.freeHeap, min: response.minimumHeap, stack: response.taskStackFree,
+            reset: response.resetReason, uptimeMs: response.uptimeMs })
+        } catch {}
+      }
       record({
         category: 'protocol', operation: command, status: response?.status ?? 'ok',
         ...(command === 'get_state' ? { deviceState: sanitizeDeviceState(response) } : {}),
@@ -181,6 +195,10 @@ export function createSerialProtocol(port, {
       })
       return response
     } catch (error) {
+      // The magic search retains seven bytes; include that tail before taking
+      // the failure snapshot so the final crash/checkpoint line is complete.
+      if (measurements.expectedFrameBytes === 0 && buffered.length < MAGIC.length) consoleDecoder.feed(buffered)
+      consoleDecoder.flush()
       record({
         category: 'protocol', operation: command, status: 'failed', message: error?.message,
         measurements: { ...measurements, bufferedBytes: buffered.length, durationMs: Date.now() - startedAt },
@@ -227,6 +245,7 @@ export function createSerialProtocol(port, {
       return result
     },
     async close() {
+      consoleDecoder.flush()
       try { await reader?.cancel() } catch {}
       try { reader?.releaseLock() } catch {}
       try { writer?.releaseLock() } catch {}

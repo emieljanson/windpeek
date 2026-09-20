@@ -1,3 +1,5 @@
+import { sanitizeDeviceEvidence } from './deviceEvidence'
+
 const DEFAULT_MAX_ENTRIES = 100
 const DEFAULT_MAX_TEXT_BYTES = 50 * 1024
 const DEFAULT_MAX_TEXT_ENTRY_CHARS = 512
@@ -29,6 +31,9 @@ export function sanitizeDeviceState(input) {
   }
   if (typeof input.wifiConfigured === 'boolean') state.wifiConfigured = input.wifiConfigured
   if (Number.isSafeInteger(input.applyError)) state.applyError = input.applyError
+  for (const field of ['deviceStage', 'freeHeap', 'minimumHeap', 'taskStackFree', 'resetReason', 'uptimeMs']) {
+    if (Number.isSafeInteger(input[field]) && input[field] >= 0 && input[field] <= 0xffffffff) state[field] = input[field]
+  }
   return Object.keys(state).length ? state : undefined
 }
 
@@ -102,6 +107,7 @@ export function createInstallerDiagnostics({
   const sensitiveValues = new Set()
   const context = {}
   const entries = []
+  const deviceEvidence = []
   let textBytes = 0
   let credentialLocks = 0
   let destroyed = false
@@ -187,6 +193,19 @@ export function createInstallerDiagnostics({
     evictToBounds()
   }
 
+  function recordDeviceEvidence(candidate) {
+    if (destroyed) return
+    const evidence = sanitizeDeviceEvidence({ ...candidate, offsetMs: Math.max(0, now() - startedAt) })
+    if (!evidence) return
+    // Keep the latest checkpoint without letting polling evict a crash.
+    if (evidence.kind === 'checkpoint') {
+      const previous = deviceEvidence.findIndex((item) => item.kind === 'checkpoint')
+      if (previous !== -1) deviceEvidence.splice(previous, 1)
+    }
+    deviceEvidence.push(evidence)
+    if (deviceEvidence.length > 24) deviceEvidence.shift()
+  }
+
   function snapshot() {
     if (credentialLocks > 0) return null
     if (destroyed) return { context: {}, entries: [], textBytes: 0 }
@@ -201,12 +220,13 @@ export function createInstallerDiagnostics({
       if (safeEntry.message) safeEntry.message = sanitizeDiagnosticText(safeEntry.message, sensitiveValues)
       return safeEntry
     })
-    return { context: safeContext, entries: safeEntries, textBytes }
+    return { context: safeContext, entries: safeEntries, textBytes, ...(deviceEvidence.length ? { deviceEvidence: deviceEvidence.map((item) => ({ ...item })) } : {}) }
   }
 
   function destroy() {
     destroyed = true
     entries.splice(0)
+    deviceEvidence.splice(0)
     for (const key of Object.keys(context)) delete context[key]
     sensitiveValues.clear()
     textBytes = 0
@@ -215,6 +235,7 @@ export function createInstallerDiagnostics({
 
   return {
     registerSensitiveValues,
+    recordDeviceEvidence,
     acquireCredentialLock,
     setContext,
     record,

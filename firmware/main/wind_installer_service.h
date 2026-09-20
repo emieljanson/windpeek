@@ -15,6 +15,11 @@ extern "C" {
 #define WIND_INSTALLER_SSID_MAX 32
 #define WIND_INSTALLER_PASSWORD_MAX 64
 
+/* Fixed numeric health fields; no console text or configuration contents. */
+typedef struct {
+    uint32_t stage, heap, minimum_heap, stack, reset_reason, uptime_ms;
+} wind_installer_health_t;
+
 typedef esp_err_t (*wind_installer_test_wifi_fn)(void *context, const char *ssid,
                                                   const char *password);
 typedef esp_err_t (*wind_installer_render_fn)(void *context,
@@ -57,6 +62,7 @@ typedef struct {
     wind_installer_select_hardware_profile_fn select_hardware_profile;
     /* Numeric ESP-IDF failure code only; never diagnostic text or credentials. */
     esp_err_t (*apply_error)(void *context);
+    void (*health)(void *context, wind_installer_health_t *health);
 } wind_installer_dependencies_t;
 
 typedef struct {

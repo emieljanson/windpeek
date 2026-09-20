@@ -1,3 +1,4 @@
+import { filterDeviceEvidence } from './deviceEvidence'
 import { sanitizeDiagnosticText, sanitizeDeviceState } from './installerDiagnostics'
 
 const REFERENCE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
@@ -103,6 +104,7 @@ export function filterInstallerEvent(event) {
     contexts: { installer: pickScalars(event.contexts?.installer, CONTEXT_FIELDS, 240) },
     extra: {
       timeline: filterTimeline(event.extra?.timeline),
+      ...(event.extra?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(event.extra.deviceEvidence) } : {}),
       textBytes: Number.isFinite(event.extra?.textBytes) ? event.extra.textBytes : 0,
     },
   }
@@ -145,7 +147,7 @@ function defaultRandomBytes() {
   return bytes
 }
 
-function browserContext(navigatorApi = globalThis.navigator) {
+export function browserContext(navigatorApi = globalThis.navigator) {
   const userAgent = String(navigatorApi?.userAgent ?? '')
   const candidates = [
     ['Edge', /Edg\/(\d+)/],
@@ -322,6 +324,7 @@ export function createSentryReporter({
         contexts: { installer: context },
         extra: {
           timeline: filterTimeline(input.snapshot?.entries),
+          ...(input.snapshot?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(input.snapshot.deviceEvidence) } : {}),
           textBytes: Number.isFinite(input.snapshot?.textBytes) ? input.snapshot.textBytes : 0,
         },
       })
