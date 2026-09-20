@@ -58,6 +58,44 @@ function appProtocol(state = {}) {
 }
 
 describe('installer session', () => {
+  it('reports the running firmware when its very first state request fails', async () => {
+    const protocol = appProtocol({ firmwareVersion: 'actual-device-version' })
+    const originalRequest = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values) => {
+      if (command === 'get_state') throw new Error('device stopped responding')
+      return originalRequest(command, values)
+    })
+    const reporter = { report: vi.fn(async () => ({ status: 'failed' })) }
+    const diagnostics = createInstallerDiagnostics()
+    diagnostics.recordDeviceEvidence({ kind: 'backtrace', addresses: [0x42001234, 0x3fca0000], password: 'private-password' })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol, reporter, diagnostics })
+    await session.connect()
+    expect(reporter.report).toHaveBeenCalledWith(expect.objectContaining({
+      snapshot: expect.objectContaining({ context: expect.objectContaining({ detectedFirmwareVersion: 'actual-device-version' }) }),
+    }))
+    await vi.waitFor(() => expect(session.getState().diagnosticStatus).toBe('failed'))
+    expect(JSON.parse(session.getState().diagnosticReport).context.detectedFirmwareVersion).toBe('actual-device-version')
+    expect(JSON.parse(session.getState().diagnosticReport).context.browser).toBeTruthy()
+    expect(JSON.parse(session.getState().diagnosticReport).deviceEvidence[0].addresses).toEqual([0x42001234])
+    expect(session.getState().diagnosticReport).not.toContain('private-password')
+    await session.cancel()
+    expect(session.getState().diagnosticReport).toBeNull()
+  })
+
+  it('does not offer the previous report when a retry cannot collect a snapshot', async () => {
+    const diagnostics = createInstallerDiagnostics()
+    const reporter = { report: vi.fn(async () => ({ status: 'failed' })) }
+    const session = createInstallerSession({ configuration, requestPort: async () => { throw new Error('USB unavailable') }, diagnostics, reporter })
+    await session.connect()
+    await vi.waitFor(() => expect(session.getState().diagnosticStatus).toBe('failed'))
+    expect(session.getState().diagnosticReport).toBeTruthy()
+    vi.spyOn(diagnostics, 'snapshot').mockImplementation(() => { throw new Error('collector failed') })
+    await session.connect()
+    expect(session.getState().diagnosticStatus).toBe('failed')
+    expect(session.getState().diagnosticReport).toBeNull()
+  })
+
   it.each([257, undefined, 'secret'])('records only numeric device apply errors (%s)', async (applyError) => {
     const protocol = appProtocol({ wifiHealthy: false })
     const originalRequest = protocol.request.getMockImplementation()

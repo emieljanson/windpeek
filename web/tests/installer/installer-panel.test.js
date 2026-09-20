@@ -348,6 +348,16 @@ describe('installer inspector panel', () => {
     expect(wrapper.text()).not.toMatch(/WS-[0-9A-Z]{10}/)
   })
 
+  it.each(['error', 'reconnect', 'wifi'])('offers the saved report when Sentry delivery fails during %s', (phase) => {
+    const report = JSON.stringify({ version: 1, deviceEvidence: [{ kind: 'abort', addresses: [0x42001234] }] })
+    mountPanel(fakeSession({ phase, safeToDisconnect: true, error: { message: 'USB connection lost' },
+      diagnosticStatus: 'failed', diagnosticReport: report }))
+    const link = wrapper.get('a[download="windpeek-diagnostic.json"]')
+    expect(link.text()).toBe('Download report')
+    expect(decodeURIComponent(link.attributes('href').split(',')[1])).toBe(report)
+    expect(wrapper.text()).toContain('Technical details could not be sent.')
+  })
+
   it('closes with Escape only when disconnecting is safe', async () => {
     const safe = fakeSession()
     mountPanel(safe)

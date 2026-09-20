@@ -139,6 +139,28 @@ std::string request(wind_installer_service_t *service, const char *json)
 }
 }
 
+TEST(InstallerServiceTest, ReportsNumericHealthWithoutConfigurationContents)
+{
+    FakeDevice device;
+    auto service = make_service(&device);
+    service.dependencies.health = [](void *, wind_installer_health_t *health) {
+        *health = {4, 30000, 20000, 5000, 3, 1234};
+    };
+    EXPECT_NE(request(&service, R"({"command":"test_wifi","ssid":"private-network","password":"private-secret"})")
+                  .find("wifi_ready"), std::string::npos);
+    ASSERT_EQ(device.password, "private-secret");
+    const std::string state = request(&service, R"({"command":"get_state"})");
+    EXPECT_NE(state.find("\"deviceStage\":4"), std::string::npos);
+    EXPECT_NE(state.find("\"freeHeap\":30000"), std::string::npos);
+    EXPECT_NE(state.find("\"minimumHeap\":20000"), std::string::npos);
+    EXPECT_NE(state.find("\"taskStackFree\":5000"), std::string::npos);
+    EXPECT_NE(state.find("\"resetReason\":3"), std::string::npos);
+    EXPECT_NE(state.find("\"uptimeMs\":1234"), std::string::npos);
+    EXPECT_EQ(state.find("password"), std::string::npos);
+    EXPECT_EQ(state.find("private-secret"), std::string::npos);
+    EXPECT_EQ(state.find("private-network"), std::string::npos);
+}
+
 TEST(InstallerServiceTest, HelloAndStateAreRedacted)
 {
     FakeDevice fake;

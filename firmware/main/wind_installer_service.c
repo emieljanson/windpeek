@@ -392,6 +392,20 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
         apply ? apply : "idle",
         service->dependencies.apply_error
             ? service->dependencies.apply_error(service->dependencies.context) : ESP_OK);
+    if (written < 1 || (size_t) written >= response_size) return ESP_ERR_INVALID_SIZE;
+    if (service->dependencies.health) {
+        wind_installer_health_t health = {0};
+        service->dependencies.health(service->dependencies.context, &health);
+        const size_t offset = (size_t) written - 1;
+        written = snprintf(response + offset, response_size - offset,
+            ",\"deviceStage\":%" PRIu32 ",\"freeHeap\":%" PRIu32
+            ",\"minimumHeap\":%" PRIu32 ",\"taskStackFree\":%" PRIu32
+            ",\"resetReason\":%" PRIu32 ",\"uptimeMs\":%" PRIu32 "}",
+            health.stage, health.heap, health.minimum_heap, health.stack,
+            health.reset_reason, health.uptime_ms);
+        return written >= 0 && (size_t) written < response_size - offset
+            ? ESP_OK : ESP_ERR_INVALID_SIZE;
+    }
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -619,6 +633,8 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
 #include "esp_log_level.h"
 #include "esp_rom_serial_output.h"
 #include "esp_timer.h"
+#include "esp_system.h"
+#include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "power_manager.h"
@@ -653,6 +669,7 @@ typedef struct {
     bool candidate_wifi_active;
     atomic_int apply_state;
     atomic_int apply_error;
+    atomic_uint diagnostic_stage;
     installed_configuration_t apply_candidate;
     char apply_ssid[WIND_INSTALLER_SSID_MAX + 1];
     char apply_password[WIND_INSTALLER_PASSWORD_MAX + 1];
@@ -666,6 +683,39 @@ static physical_installer_t s_physical_installer;
 static StackType_t s_apply_stack[WIND_INSTALLER_APPLY_STACK_SIZE];
 static StaticTask_t s_apply_task_buffer;
 static TaskHandle_t s_apply_task;
+
+// Stable diagnostic IDs: retain these values across firmware releases.
+enum {
+    DIAG_READY = 0, DIAG_WIFI_BEGIN = 1, DIAG_WIFI_DONE = 2,
+    DIAG_PREVIEW_BEGIN = 3, DIAG_PREVIEW_DONE = 4, DIAG_ACTIVATE = 5,
+    DIAG_PERSIST = 6, DIAG_RELOAD = 7, DIAG_COMPLETE = 8,
+    DIAG_IDLE_TIMEOUT = 9,
+};
+
+static void physical_health(void *context, wind_installer_health_t *health)
+{
+    physical_installer_t *installer = context;
+    *health = (wind_installer_health_t) {
+        .stage = atomic_load(&installer->diagnostic_stage),
+        .heap = heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+        .minimum_heap = heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+        .stack = uxTaskGetStackHighWaterMark(NULL),
+        .reset_reason = esp_reset_reason(),
+        .uptime_ms = (uint32_t) (esp_timer_get_time() / 1000),
+    };
+}
+
+static void physical_checkpoint(physical_installer_t *installer, unsigned stage)
+{
+    atomic_store(&installer->diagnostic_stage, stage);
+    wind_installer_health_t health;
+    physical_health(installer, &health);
+    // Deliberately fixed numeric output: never include credentials or settings.
+    printf("WINDDIAG stage=%u heap=%" PRIu32 " min=%" PRIu32
+           " stack=%" PRIu32 " reset=%" PRIu32 " uptime=%" PRIu32 "\n",
+           stage, health.heap, health.minimum_heap, health.stack, health.reset_reason,
+           health.uptime_ms);
+}
 
 static void physical_clear_previous_wifi(physical_installer_t *installer)
 {
@@ -690,10 +740,12 @@ static void physical_abort(void *context)
 static esp_err_t physical_test_wifi(void *context, const char *ssid, const char *password)
 {
     physical_installer_t *installer = (physical_installer_t *) context;
+    physical_checkpoint(installer, DIAG_WIFI_BEGIN);
     physical_clear_previous_wifi(installer);
     installer->had_previous_wifi = wifi_manager_load_credentials(
         installer->previous_ssid, installer->previous_password) == ESP_OK;
     const esp_err_t result = wifi_manager_connect(ssid, password);
+    physical_checkpoint(installer, DIAG_WIFI_DONE);
     if (result == ESP_OK) {
         installer->candidate_wifi_active = true;
         return ESP_OK;
@@ -707,8 +759,10 @@ static esp_err_t physical_test_wifi(void *context, const char *ssid, const char 
 
 static esp_err_t physical_render(void *context, const installed_configuration_t *candidate)
 {
-    (void) context;
-    return wind_app_preview_configuration(candidate);
+    physical_checkpoint(context, DIAG_PREVIEW_BEGIN);
+    esp_err_t result = wind_app_preview_configuration(candidate);
+    physical_checkpoint(context, DIAG_PREVIEW_DONE);
+    return result;
 }
 
 static esp_err_t physical_commit(void *context, const installed_configuration_t *candidate,
@@ -717,14 +771,17 @@ static esp_err_t physical_commit(void *context, const installed_configuration_t 
     physical_installer_t *installer = (physical_installer_t *) context;
     installed_configuration_t previous;
     if (installed_configuration_load(&previous) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    physical_checkpoint(installer, DIAG_ACTIVATE);
     esp_err_t result = wind_app_activate_configuration(candidate);
     if (result != ESP_OK) return result;
+    physical_checkpoint(installer, DIAG_PERSIST);
     result = installed_configuration_promote_setup(candidate, ssid, password);
     if (result != ESP_OK) {
         (void) wind_app_activate_configuration(&previous);
         physical_abort(installer);
         return result;
     }
+    physical_checkpoint(installer, DIAG_RELOAD);
     result = wind_spots_reload_installed();
     if (result != ESP_OK) {
         (void) installed_configuration_promote_setup(
@@ -773,6 +830,7 @@ static void physical_apply_task(void *argument)
         }
         physical_clear_apply(installer);
         atomic_store(&installer->apply_error, result);
+        if (result == ESP_OK) physical_checkpoint(installer, DIAG_COMPLETE);
         // Publish completion only after cleanup, so the next attempt cannot have
         // its configuration or credentials erased by the previous worker.
         atomic_store(&installer->apply_state, final_state);
@@ -989,6 +1047,7 @@ static void installer_usb_task(void *argument)
         if (installer->service.wake_lock_held &&
             atomic_load(&installer->apply_state) != PHYSICAL_APPLY_RUNNING &&
             esp_timer_get_time() - installer->last_activity_us > INT64_C(120000000)) {
+            physical_checkpoint(installer, DIAG_IDLE_TIMEOUT);
             wind_installer_service_timeout(&installer->service);
         }
     }
@@ -1005,6 +1064,7 @@ esp_err_t wind_installer_service_start(void)
     memset(&s_physical_installer, 0, sizeof(s_physical_installer));
     atomic_init(&s_physical_installer.apply_state, PHYSICAL_APPLY_IDLE);
     atomic_init(&s_physical_installer.apply_error, ESP_OK);
+    atomic_init(&s_physical_installer.diagnostic_stage, DIAG_READY);
     wind_usb_parser_init(&s_physical_installer.parser);
     const wind_installer_dependencies_t dependencies = {
         .context = &s_physical_installer,
@@ -1015,6 +1075,7 @@ esp_err_t wind_installer_service_start(void)
         .start_apply = physical_start_apply,
         .apply_state = physical_apply_state,
         .apply_error = physical_apply_error,
+        .health = physical_health,
         .set_wake_lock = physical_wake_lock,
         .abort = physical_abort,
         .scan_wifi = physical_scan_wifi,

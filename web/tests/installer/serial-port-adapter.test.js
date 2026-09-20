@@ -5,6 +5,54 @@ import { createInstallerDiagnostics } from '../../src/installer/installerDiagnos
 import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it('preserves a fragmented device panic through timeout, credential locking and timeline eviction', async () => {
+    vi.useFakeTimers()
+    try {
+      const bytes = new TextEncoder().encode(
+        'wifi password=private-password\nGuru Meditation Error: Core  0 panic\'ed (LoadProhibited). Exception was unhandled.\n' +
+        'PC      : 0x42001234  PS      : 0x00060030\nBacktrace: 0x42001234:0x3fca0000 0x42005678:0x3fca0040\n' +
+        'ELF file SHA256: aabbccddeeff0011\nWINDDIAG stage=4 heap=30000 min=20000 stack=5000 reset=3\n')
+      const chunks = Array.from({ length: Math.ceil(bytes.length / 5) }, (_, i) => bytes.slice(i * 5, i * 5 + 5))
+      const reader = { read: vi.fn(() => chunks.length ? Promise.resolve({ value: chunks.shift(), done: false }) : new Promise(() => {})), cancel: vi.fn(async () => {}), releaseLock: vi.fn() }
+      const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => ({ write: vi.fn(), releaseLock: vi.fn() }) } }
+      const diagnostics = createInstallerDiagnostics({ maxEntries: 2 })
+      const unlock = diagnostics.acquireCredentialLock({ password: 'private-password' })
+      const protocol = createSerialProtocol(port, { diagnostics, timeoutMs: 10 })
+      await protocol.open()
+      const rejected = expect(protocol.request('get_state')).rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.CONNECTION_LOST })
+      await vi.advanceTimersByTimeAsync(10)
+      await rejected
+      expect(diagnostics.snapshot()).toBeNull()
+      unlock()
+      for (let i = 0; i < 120; i++) diagnostics.record({ category: 'protocol', operation: 'get_state', status: 'ok' })
+      expect(diagnostics.snapshot().entries).toHaveLength(2)
+      const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { deviceEvidence: diagnostics.snapshot().deviceEvidence } })
+      expect(event.extra.deviceEvidence).toEqual(expect.arrayContaining([
+        expect.objectContaining({ kind: 'panic', reason: 'LoadProhibited' }),
+        expect.objectContaining({ kind: 'backtrace', addresses: [0x42001234, 0x42005678] }),
+        expect.objectContaining({ kind: 'checkpoint', stage: 4, heap: 30000, min: 20000, stack: 5000, reset: 3 }),
+      ]))
+      expect(JSON.stringify(event)).not.toMatch(/private-password|wifi password|3fca0000/)
+      await protocol.close()
+    } finally { vi.useRealTimers() }
+  })
+
+  it('retains console evidence buffered after a successful response when closing', async () => {
+    const frame = encodeProtocolFrame({ requestId: 1, messageType: 2, payload: { status: 'ok' } })
+    const tail = new TextEncoder().encode('Backtrace: 0x42001234:0x3fca0000\n')
+    const chunk = new Uint8Array([...frame, ...tail])
+    const reader = { read: vi.fn(async () => ({ value: chunk, done: false })), cancel: vi.fn(), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => ({ write: vi.fn(), releaseLock: vi.fn() }) } }
+    const diagnostics = createInstallerDiagnostics()
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await protocol.request('hello')
+    await protocol.close()
+    expect(diagnostics.snapshot().deviceEvidence).toEqual([
+      expect.objectContaining({ kind: 'backtrace', addresses: [0x42001234] }),
+    ])
+  })
+
   it.each(['silent', 'partial', 'logs', 'stale'])('diagnoses a %s timeout without recording USB contents', async (kind) => {
     vi.useFakeTimers()
     try {

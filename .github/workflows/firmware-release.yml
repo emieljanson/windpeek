@@ -178,6 +178,7 @@ jobs:
           path: |
             release
             site-firmware
+            release-debug
           key: production-firmware-v1-${{ runner.os }}-${{ steps.firmware-config.outputs.digest }}-${{ hashFiles('firmware/**', 'contracts/**', 'shared/**', '.github/**') }}
 
       - name: Install host test dependencies
@@ -231,6 +232,9 @@ jobs:
         run: |
           mkdir -p release
           cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1002.bin
+          mkdir -p release-debug/e1002
+          cp firmware/build/windpeek.bin firmware/build/windpeek.elf firmware/build/windpeek.map firmware/sdkconfig release-debug/e1002/
+          (cd release-debug/e1002 && sha256sum windpeek.bin windpeek.elf windpeek.map sdkconfig > SHA256SUMS)
           python3 firmware/scripts/generate_installer_manifest.py \
             --build-dir firmware/build \
             --partitions firmware/partitions.csv \
@@ -262,6 +266,9 @@ jobs:
         if: steps.firmware-scope.outputs.required == 'true' && steps.firmware-cache.outputs.cache-hit != 'true'
         run: |
           cp firmware/build/windpeek.bin release/windpeek-seeedstudio_reterminal_e1003.bin
+          mkdir -p release-debug/e1003
+          cp firmware/build/windpeek.bin firmware/build/windpeek.elf firmware/build/windpeek.map firmware/sdkconfig release-debug/e1003/
+          (cd release-debug/e1003 && sha256sum windpeek.bin windpeek.elf windpeek.map sdkconfig > SHA256SUMS)
           python3 firmware/scripts/generate_installer_manifest.py \
             --build-dir firmware/build \
             --partitions firmware/partitions.csv \
@@ -275,6 +282,17 @@ jobs:
             --output site-firmware/e1003 \
             --version '${{ steps.version.outputs.value }}' \
             --board-id seeedstudio_reterminal_e1003
+
+      # Preserve both exact ELFs before the second board's fullclean removes the
+      # first. These are debugging artifacts, never part of the public website.
+      - name: Upload firmware debug symbols
+        if: steps.firmware-scope.outputs.required == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: windpeek-firmware-debug
+          path: release-debug/
+          retention-days: 90
+          if-no-files-found: error
 
       - name: Upload GitHub Release files
         if: steps.firmware-scope.outputs.required == 'true'

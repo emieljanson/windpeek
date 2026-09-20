@@ -150,6 +150,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
     :data-phase="displayPhase"
     :data-has-error="Boolean(state.error)"
     :data-has-diagnostic-reference="state.diagnosticStatus === 'sent' && isInstallerDiagnosticReference(state.diagnosticReference)"
+    :data-has-diagnostic-download="state.diagnosticStatus === 'failed' && Boolean(state.diagnosticReport)"
     aria-labelledby="installer-title"
   >
     <button class="installer-back" type="button" aria-label="Back to configurator" :disabled="critical" @click="close">
@@ -201,19 +202,19 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
             </div>
             <div class="installer-actions">
               <p v-if="state.error" class="installer-message is-error">{{ state.error.message }}</p>
-              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" />
+              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
               <button data-autofocus class="installer-primary" type="button" @click="session.reconnect()">Choose USB device</button>
             </div>
           </div>
 
-          <InstallerWifi v-else-if="state.phase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" @submit="submitWifi" @rescan="scanNetworks" />
+          <InstallerWifi v-else-if="state.phase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" :diagnostic-report="state.diagnosticReport" @submit="submitWifi" @rescan="scanNetworks" />
           <InstallerComplete v-else-if="state.phase === 'complete'" @done="close" />
 
           <div v-else-if="state.phase === 'error'" class="installer-step installer-step--error">
             <div class="installer-step__copy">
               <h2 id="installer-title">Windpeek could not continue</h2>
               <p role="alert">{{ state.error?.message }}</p>
-              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" />
+              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
               <p class="installer-connection-state">{{ state.safeToDisconnect ? 'It is safe to disconnect the USB cable.' : 'Keep the cable connected while the writer stops.' }}</p>
             </div>
             <div v-if="state.safeToDisconnect" class="installer-actions">
