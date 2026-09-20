@@ -43,8 +43,8 @@ export function createDeviceConsoleDecoder(record) {
       emit({ kind: 'reset', reset: parseInt(match[1], 16) })
     } else if ((match = text.match(/^ELF file SHA256:\s*([0-9a-f]{8,64})\s*$/i))) {
       emit({ kind: 'elf', elf: match[1] })
-    } else if ((match = text.match(/^WINDDIAG stage=(\d+) heap=(\d+) min=(\d+) stack=(\d+) reset=(\d+)$/))) {
-      emit({ kind: 'checkpoint', ...Object.fromEntries(['stage', 'heap', 'min', 'stack', 'reset'].map((key, i) => [key, Number(match[i + 1])])) })
+    } else if ((match = text.match(/^WINDDIAG stage=(\d+) heap=(\d+) min=(\d+) stack=(\d+) reset=(\d+)(?: uptime=(\d+))?$/))) {
+      emit({ kind: 'checkpoint', ...Object.fromEntries(['stage', 'heap', 'min', 'stack', 'reset'].map((key, i) => [key, Number(match[i + 1])])), ...(match[6] ? { uptimeMs: Number(match[6]) } : {}) })
     } else if (/^\*\*\*ERROR\*\*\* A stack overflow in task /.test(text)) {
       emit({ kind: 'stack-overflow' })
     } else if (/^Brownout detector was triggered/.test(text)) {

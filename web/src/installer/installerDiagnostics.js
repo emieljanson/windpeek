@@ -197,6 +197,9 @@ export function createInstallerDiagnostics({
     if (destroyed) return
     const evidence = sanitizeDeviceEvidence({ ...candidate, offsetMs: Math.max(0, now() - startedAt) })
     if (!evidence) return
+    // Reconnect boots must not displace a previous crash or its matching ELF.
+    if (['reset', 'elf'].includes(evidence.kind) && deviceEvidence.some((item) =>
+      item.kind === evidence.kind && item.reset === evidence.reset && item.elf === evidence.elf)) return
     // Keep the latest checkpoint without letting polling evict a crash.
     if (evidence.kind === 'checkpoint') {
       const previous = deviceEvidence.findIndex((item) => item.kind === 'checkpoint')

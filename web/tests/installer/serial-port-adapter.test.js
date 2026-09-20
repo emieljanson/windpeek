@@ -25,6 +25,7 @@ describe('serial port adapter', () => {
       expect(diagnostics.snapshot()).toBeNull()
       unlock()
       for (let i = 0; i < 120; i++) diagnostics.record({ category: 'protocol', operation: 'get_state', status: 'ok' })
+      expect(diagnostics.snapshot().entries).toHaveLength(2)
       const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { deviceEvidence: diagnostics.snapshot().deviceEvidence } })
       expect(event.extra.deviceEvidence).toEqual(expect.arrayContaining([
         expect.objectContaining({ kind: 'panic', reason: 'LoadProhibited' }),
@@ -34,6 +35,22 @@ describe('serial port adapter', () => {
       expect(JSON.stringify(event)).not.toMatch(/private-password|wifi password|3fca0000/)
       await protocol.close()
     } finally { vi.useRealTimers() }
+  })
+
+  it('retains console evidence buffered after a successful response when closing', async () => {
+    const frame = encodeProtocolFrame({ requestId: 1, messageType: 2, payload: { status: 'ok' } })
+    const tail = new TextEncoder().encode('Backtrace: 0x42001234:0x3fca0000\n')
+    const chunk = new Uint8Array([...frame, ...tail])
+    const reader = { read: vi.fn(async () => ({ value: chunk, done: false })), cancel: vi.fn(), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => ({ write: vi.fn(), releaseLock: vi.fn() }) } }
+    const diagnostics = createInstallerDiagnostics()
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await protocol.request('hello')
+    await protocol.close()
+    expect(diagnostics.snapshot().deviceEvidence).toEqual([
+      expect.objectContaining({ kind: 'backtrace', addresses: [0x42001234] }),
+    ])
   })
 
   it.each(['silent', 'partial', 'logs', 'stale'])('diagnoses a %s timeout without recording USB contents', async (kind) => {

@@ -83,6 +83,19 @@ describe('installer session', () => {
     expect(session.getState().diagnosticReport).toBeNull()
   })
 
+  it('does not offer the previous report when a retry cannot collect a snapshot', async () => {
+    const diagnostics = createInstallerDiagnostics()
+    const reporter = { report: vi.fn(async () => ({ status: 'failed' })) }
+    const session = createInstallerSession({ configuration, requestPort: async () => { throw new Error('USB unavailable') }, diagnostics, reporter })
+    await session.connect()
+    await vi.waitFor(() => expect(session.getState().diagnosticStatus).toBe('failed'))
+    expect(session.getState().diagnosticReport).toBeTruthy()
+    vi.spyOn(diagnostics, 'snapshot').mockImplementation(() => { throw new Error('collector failed') })
+    await session.connect()
+    expect(session.getState().diagnosticStatus).toBe('failed')
+    expect(session.getState().diagnosticReport).toBeNull()
+  })
+
   it.each([257, undefined, 'secret'])('records only numeric device apply errors (%s)', async (applyError) => {
     const protocol = appProtocol({ wifiHealthy: false })
     const originalRequest = protocol.request.getMockImplementation()

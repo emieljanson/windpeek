@@ -9,6 +9,31 @@ describe('device crash evidence', () => {
     decoder.feed(new TextEncoder().encode('rst:0xc (RTC_SW_CPU_RST),boot:0x28 (SPI_FAST_FLASH_BOOT)\n'))
     expect(evidence).toEqual([{ kind: 'reset', reset: 12 }])
   })
+  it('retains panic evidence through repeated normal reconnect boots', () => {
+    const diagnostics = createInstallerDiagnostics()
+    diagnostics.recordDeviceEvidence({ kind: 'panic', reason: 'LoadProhibited' })
+    diagnostics.recordDeviceEvidence({ kind: 'backtrace', addresses: [0x42001234] })
+    diagnostics.recordDeviceEvidence({ kind: 'elf', elf: 'aabbccddeeff' })
+    diagnostics.recordDeviceEvidence({ kind: 'reset', reset: 12 })
+    for (let i = 0; i < 40; i++) {
+      diagnostics.recordDeviceEvidence({ kind: 'reset', reset: 1 })
+      diagnostics.recordDeviceEvidence({ kind: 'elf', elf: '112233445566' })
+    }
+    expect(diagnostics.snapshot().deviceEvidence).toHaveLength(6)
+    expect(diagnostics.snapshot().deviceEvidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'backtrace', addresses: [0x42001234] }),
+      expect.objectContaining({ kind: 'elf', elf: 'aabbccddeeff' }),
+      expect.objectContaining({ kind: 'reset', reset: 12 }),
+    ]))
+  })
+
+  it('decodes uptime from console checkpoints while accepting older firmware', () => {
+    const evidence = []
+    const decoder = createDeviceConsoleDecoder((item) => evidence.push(item))
+    decoder.feed(new TextEncoder().encode('WINDDIAG stage=9 heap=1 min=1 stack=2 reset=1 uptime=120003\n'))
+    expect(evidence).toEqual([{ kind: 'checkpoint', stage: 9, heap: 1, min: 1, stack: 2, reset: 1, uptimeMs: 120003 }])
+  })
+
   it('ignores arbitrary logs, oversized lines and private register/stack data', () => {
     const evidence = []
     const decoder = createDeviceConsoleDecoder((item) => evidence.push(item))

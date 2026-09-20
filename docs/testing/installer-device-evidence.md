@@ -4,7 +4,7 @@
 
 USB timeouts previously recorded byte counts but discarded the console bytes containing ESP32 crash details. The installer now recognizes fixed crash signatures and retains only numeric reset reasons, code addresses, an ELF hash, and numeric checkpoints. It never uploads arbitrary console lines, register contents, stack contents, Wi-Fi names/passwords, or location/configuration contents.
 
-Crash evidence is separate from the bounded command timeline. State polling replaces the latest checkpoint rather than evicting a crash. Evidence is retained while credentials temporarily prevent sending; the report is created after the credential lock is released. Completion/cancellation clears it. A failed Sentry delivery exposes a downloadable JSON report on the error, reconnect, and Wi-Fi screens. Download it before closing or refreshing the installer.
+Crash evidence is separate from the bounded command timeline. State polling replaces the latest checkpoint rather than evicting a crash. Repeated identical reset reasons and ELF hashes are deduplicated so normal reconnect boots cannot displace a crash. Console bytes already buffered after a response are decoded before closing the port. Evidence is retained while credentials temporarily prevent sending; the report is created after the credential lock is released. Completion/cancellation clears it. A failed Sentry delivery exposes a downloadable JSON report on the error, reconnect, and Wi-Fi screens. Download it before closing or refreshing the installer.
 
 `hello` records the actual running firmware before the first `get_state`, including when that request fails or the firmware has just been upgraded. Existing firmware remains compatible: health fields are optional, and its existing panic output can still be decoded.
 
@@ -27,7 +27,9 @@ A stage marks progress, not success; inspect `apply` and `applyError` too. `free
 
 ## Matching a crash to source
 
-Download `windpeek-firmware-debug` from the release workflow that produced the device's firmware. Select `e1002` (also E1001) or `e1003`, and match the panic's `elf` prefix to the archived ELF SHA256 before decoding addresses. The artifact contains the exact ELF, linker map, SDK configuration and binary/ELF hashes for both builds, including production cache reuse. It is separate from the website bundle. GitHub retains it for 90 days; archive the matching artifact before expiry for an ongoing investigation.
+Download `windpeek-firmware-debug` from the release workflow that produced the device's firmware. Select `e1002` (also E1001) or `e1003`, and match the panic's `elf` prefix to the archived ELF SHA256 before decoding addresses. The artifact contains the exact application binary, ELF, linker map, SDK configuration and checksums for both builds, including production cache reuse. It is separate from the website bundle. GitHub retains it for 90 days; archive the matching artifact before expiry for an ongoing investigation.
+
+Run `sha256sum -c SHA256SUMS` inside the chosen artifact board directory to verify its files.
 
 Use the matching ESP-IDF toolchain's `xtensa-esp32s3-elf-addr2line -pfiaC -e windpeek.elf <addresses>`. Sentry stores addresses as integers; convert them to hexadecimal. Do not substitute a later rebuild just because its version label matches.
 
@@ -51,7 +53,7 @@ After the fix, the same fresh device waited ten minutes without requests. All fo
 
 A subsequent fresh Falmouth setup completed with the expected digest, Wi-Fi connected and rendering valid. Five more state requests after completion all returned in 0.309–0.310 seconds, covering wake-lock release at the end of apply.
 
-The fix leaves automatic light sleep disabled while the board detects USB power. The credential timeout still clears staged credentials, and battery operation retains automatic light sleep and scheduled deep sleep. Boards that cannot detect their USB supply are outside this physical verification; the connected E1002 uses its SY6974B power-good signal.
+At boot and installer wake-lock release, the fix leaves automatic light sleep disabled when the board detects USB power. Opening the installer explicitly resets the E1002 through its UART bridge before `hello`, so plugging in a previously battery-powered device re-evaluates that policy. The credential timeout still clears staged credentials, and battery operation retains automatic light sleep and scheduled deep sleep. Boards that cannot detect their USB supply are outside this physical verification; the connected E1002 uses its SY6974B power-good signal.
 
 To repeat the hardware regression, back up settings first, use a fresh NVS configuration, select E1002, send `hello`, `get_state`, and `scan_networks`, then send no commands for ten minutes. Send `begin` and `get_state` four times and require valid responses. Complete a fresh Falmouth setup and require a matching digest, valid render, connected Wi-Fi and responsive state polling after completion. Restore the original settings afterward. This relies on actual ESP32 power management and UART behavior; a source-text assertion or a mocked host test would not prove the fix.
 

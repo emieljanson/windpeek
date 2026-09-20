@@ -712,8 +712,9 @@ static void physical_checkpoint(physical_installer_t *installer, unsigned stage)
     physical_health(installer, &health);
     // Deliberately fixed numeric output: never include credentials or settings.
     printf("WINDDIAG stage=%u heap=%" PRIu32 " min=%" PRIu32
-           " stack=%" PRIu32 " reset=%" PRIu32 "\n",
-           stage, health.heap, health.minimum_heap, health.stack, health.reset_reason);
+           " stack=%" PRIu32 " reset=%" PRIu32 " uptime=%" PRIu32 "\n",
+           stage, health.heap, health.minimum_heap, health.stack, health.reset_reason,
+           health.uptime_ms);
 }
 
 static void physical_clear_previous_wifi(physical_installer_t *installer)

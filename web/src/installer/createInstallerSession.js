@@ -126,7 +126,7 @@ export function createInstallerSession({
 
   function resetDiagnosticDelivery() {
     latestDiagnosticOccurrence = null
-    update({ diagnosticStatus: 'idle', diagnosticReference: null })
+    update({ diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null })
   }
 
   function setReleaseDiagnosticContext() {
@@ -155,18 +155,18 @@ export function createInstallerSession({
   }
 
   function sendFailure(failure) {
+    latestDiagnosticOccurrence = failure.occurrence
     let snapshot
     try {
       snapshot = diagnostics.snapshot?.()
     } catch {
-      if (failure.attempt === attempt) update({ diagnosticStatus: 'failed', diagnosticReference: null })
+      if (failure.attempt === attempt) update({ diagnosticStatus: 'failed', diagnosticReference: null, diagnosticReport: null })
       return
     }
     if (!snapshot) {
       pendingFailures.push(failure)
       return
     }
-    latestDiagnosticOccurrence = failure.occurrence
     const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
       contexts: { installer: { ...snapshot.context, ...browserContext() } },
       extra: { timeline: snapshot.entries, deviceEvidence: snapshot.deviceEvidence, textBytes: snapshot.textBytes } })
@@ -199,7 +199,8 @@ export function createInstallerSession({
       if (diagnostics.credentialsLocked) return
     } catch {
       pendingFailures.length = 0
-      update({ diagnosticStatus: 'failed', diagnosticReference: null })
+      latestDiagnosticOccurrence = null
+      update({ diagnosticStatus: 'failed', diagnosticReference: null, diagnosticReport: null })
       return
     }
     for (const failure of pendingFailures.splice(0)) sendFailure(failure)

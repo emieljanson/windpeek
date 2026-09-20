@@ -245,6 +245,11 @@ export function createSerialProtocol(port, {
       return result
     },
     async close() {
+      // A completed response may leave console bytes in the same USB chunk.
+      // Stop before a following binary frame; its payload is not console text.
+      const nextFrame = magicOffset(buffered, buffered.length)
+      consoleDecoder.feed(nextFrame < 0 ? buffered : buffered.subarray(0, nextFrame))
+      buffered = new Uint8Array(0)
       consoleDecoder.flush()
       try { await reader?.cancel() } catch {}
       try { reader?.releaseLock() } catch {}
