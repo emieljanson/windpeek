@@ -787,3 +787,14 @@ void installed_configuration_seed_v3_host_storage(const installed_configuration_
     record->digest = configuration_v3_digest(&record->config);
 }
 #endif
+
+bool installed_configuration_has_setup(void)
+{
+    char ssid[33] = {0};
+    char password[65] = {0};
+    const bool ready = installed_configuration_load_credentials(
+        ssid, sizeof(ssid), password, sizeof(password)) == ESP_OK;
+    volatile unsigned char *secret = (volatile unsigned char *)password;
+    for (size_t i = 0; i < sizeof(password); ++i) secret[i] = 0;
+    return ready;
+}

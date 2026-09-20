@@ -88,3 +88,51 @@ TEST(E1003Spots, MigratesV5WithoutLosingWifiOrDisplaySettings) {
     EXPECT_STREQ(ssid, "old-wifi");
     EXPECT_STREQ(password, "old-password");
 }
+
+TEST(E1003Spots, SetupSurvivesFiveHoursAndRetriesWithoutCommittingAFailedPreview) {
+    installed_configuration_reset_host_storage();
+    struct State { bool wifi_ok = false; bool forecast_ok = false; } state;
+    wind_installer_dependencies_t dependencies = {};
+    dependencies.context = &state;
+    dependencies.set_clock = [](void *, int64_t) { return ESP_OK; };
+    dependencies.test_wifi = [](void *context, const char *, const char *) {
+        return static_cast<State *>(context)->wifi_ok ? ESP_OK : ESP_FAIL;
+    };
+    dependencies.render_candidate = [](void *context, const installed_configuration_t *) {
+        return static_cast<State *>(context)->forecast_ok ? ESP_OK : ESP_ERR_TIMEOUT;
+    };
+    dependencies.commit = [](void *, const installed_configuration_t *candidate,
+                              const char *ssid, const char *password) {
+        return installed_configuration_promote_setup(candidate, ssid, password);
+    };
+    wind_installer_service_t service;
+    wind_installer_service_init(&service, &dependencies);
+    auto request = [&](const char *json) {
+        char response[2048] = {};
+        EXPECT_EQ(wind_installer_service_handle_json(&service, json, strlen(json),
+            response, sizeof(response)), ESP_OK);
+        return std::string(response);
+    };
+    request(R"({"command":"hello"})");
+    wind_installer_service_check_idle(&service, true, INT64_C(5) * 60 * 60 * 1000000);
+    EXPECT_TRUE(service.wake_lock_held);
+    request(R"({"command":"begin","unixTime":1787932800})");
+    ASSERT_NE(stage(&service, fixture()).find("configuration_staged"), std::string::npos);
+    const char *wifi = R"({"command":"test_wifi","ssid":"Test network","password":"test-value"})";
+    EXPECT_NE(request(wifi).find("wifi_rejected"), std::string::npos);
+    EXPECT_TRUE(service.credentials_cleared);
+    state.wifi_ok = true;
+    EXPECT_NE(request(wifi).find("wifi_ready"), std::string::npos);
+    EXPECT_NE(request(R"({"command":"apply_configuration"})").find("render_failed"), std::string::npos);
+    EXPECT_FALSE(installed_configuration_has_setup());
+    EXPECT_TRUE(service.credentials_cleared);
+    state.forecast_ok = true;
+    request(R"({"command":"begin","unixTime":1787932860})");
+    EXPECT_NE(request(wifi).find("wifi_ready"), std::string::npos);
+    EXPECT_NE(request(R"({"command":"apply_configuration"})").find("complete"), std::string::npos);
+    EXPECT_TRUE(installed_configuration_has_setup());
+    installed_configuration_t installed;
+    ASSERT_EQ(installed_configuration_load(&installed), ESP_OK);
+    EXPECT_EQ(installed.additional_spot_count, 9u);
+    EXPECT_TRUE(service.credentials_cleared);
+}

@@ -74,6 +74,7 @@ esp_err_t installed_configuration_load(installed_configuration_t *out_config);
 esp_err_t installed_configuration_promote(const installed_configuration_t *candidate);
 esp_err_t installed_configuration_promote_setup(const installed_configuration_t *candidate,
                                                  const char *ssid, const char *password);
+bool installed_configuration_has_setup(void);
 esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
                                                     char *password, size_t password_size);
 

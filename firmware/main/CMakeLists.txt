@@ -28,6 +28,7 @@ set(LEGACY_SOURCES
     "installed_configuration.c"
     "wind_usb_protocol.c"
     "wind_installer_service.c"
+    "wind_installer_device.c"
     "open_meteo_knmi_provider.c"
     "wind_tide.c"
     "open_meteo_marine_provider.c"
@@ -44,6 +45,7 @@ set(LEGACY_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_app_cycle.c"
     "wind_analytics.c"
 )
 
@@ -63,6 +65,7 @@ set(WINDPEEK_SOURCES
     "installed_configuration.c"
     "wind_usb_protocol.c"
     "wind_installer_service.c"
+    "wind_installer_device.c"
     "open_meteo_knmi_provider.c"
     "wind_tide.c"
     "open_meteo_marine_provider.c"
@@ -81,6 +84,7 @@ set(WINDPEEK_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_app_cycle.c"
     "wind_analytics.c"
 )
 

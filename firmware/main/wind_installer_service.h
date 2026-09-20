@@ -7,6 +7,7 @@
 #include "esp_err.h"
 #include "hardware_profile.h"
 #include "installed_configuration.h"
+#include "wind_provider.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +19,9 @@ extern "C" {
 /* Fixed numeric health fields; no console text or configuration contents. */
 typedef struct {
     uint32_t stage, heap, minimum_heap, stack, reset_reason, uptime_ms;
+    uint32_t internal_largest_bytes;
+    int64_t device_time;
+    wind_provider_diagnostics_t forecast;
 } wind_installer_health_t;
 
 typedef esp_err_t (*wind_installer_test_wifi_fn)(void *context, const char *ssid,
@@ -83,6 +87,8 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                              const char *payload, size_t payload_length,
                                              char *response, size_t response_size);
 void wind_installer_service_timeout(wind_installer_service_t *service);
+bool wind_installer_service_check_idle(wind_installer_service_t *service,
+                                       bool usb_connected, int64_t idle_us);
 void wind_installer_service_disconnect(wind_installer_service_t *service);
 void wind_installer_service_complete_apply(wind_installer_service_t *service, bool succeeded);
 esp_err_t wind_installer_service_start_pending_apply(wind_installer_service_t *service);

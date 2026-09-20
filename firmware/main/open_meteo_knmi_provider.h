@@ -13,16 +13,9 @@ extern "C" {
 #define OPEN_METEO_ENDPOINT "https://api.open-meteo.com/v1/forecast"
 #define OPEN_METEO_RESPONSE_LIMIT (16u * 1024u)
 
-typedef struct {
-    int perform_result;
-    int http_status;
-    int parse_result;
-    size_t response_length;
-    bool too_large;
-    bool allocation_failed;
-} open_meteo_knmi_diagnostics_t;
 
-void open_meteo_knmi_get_diagnostics(open_meteo_knmi_diagnostics_t *out_diagnostics);
+
+void open_meteo_knmi_get_diagnostics(wind_provider_diagnostics_t *out_diagnostics);
 #define OPEN_METEO_REQUEST_TIMEOUT_MS 15000
 
 typedef struct {

@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 esp_err_t wind_app_show_battery_empty(void);
+esp_err_t wind_app_show_setup(void);
 
 typedef enum {
     WIND_FRESHNESS_UNAVAILABLE = 0,
@@ -63,6 +64,8 @@ typedef struct {
 esp_err_t wind_app_init(wind_app_t *app, const wind_app_config_t *config);
 esp_err_t wind_app_run(wind_app_t *app, bool force_refresh, int64_t now,
                        wind_app_outcome_t *outcome);
+// Requires a newly fetched forecast and confirmed panel output.
+esp_err_t wind_app_run_setup(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
 esp_err_t wind_app_prefetch(wind_app_t *app, bool force_refresh, int64_t now,
                             wind_app_outcome_t *outcome);
 esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
@@ -82,7 +85,8 @@ bool wind_app_spot_requires_network(size_t index);
 bool wind_app_overview_requires_network(int page_direction);
 esp_err_t wind_app_clear_panel_confirmation(void);
 int wind_app_seconds_until_next_wake(void);
-esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate);
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
+                                         wind_provider_diagnostics_t *diagnostics);
 esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration);
 bool wind_app_last_render_succeeded(void);
 

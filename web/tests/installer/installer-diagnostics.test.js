@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { createInstallerDiagnostics, sanitizeDiagnosticText } from '../../src/installer/installerDiagnostics'
+import { createInstallerDiagnostics, sanitizeDiagnosticText, sanitizeDeviceState } from '../../src/installer/installerDiagnostics'
 
 describe('installer diagnostics', () => {
+  it('retains only signed 32-bit device error codes', () => {
+    for (const field of ['applyError', 'transportError', 'parseError']) {
+      for (const value of [-0x80000000, -1, 0, 0x7fffffff]) {
+        expect(sanitizeDeviceState({ [field]: value })).toEqual({ [field]: value })
+      }
+      for (const value of [-0x80000001, 0x80000000, Number.MAX_SAFE_INTEGER, 1.5]) {
+        expect(sanitizeDeviceState({ [field]: value })).toBeUndefined()
+      }
+    }
+  })
   it('drops unknown device-state values and private fields even while credentials are locked', () => {
     const diagnostics = createInstallerDiagnostics()
     const release = diagnostics.acquireCredentialLock({ password: 'private-password' })

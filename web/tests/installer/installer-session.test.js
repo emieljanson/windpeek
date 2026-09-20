@@ -58,6 +58,32 @@ function appProtocol(state = {}) {
 }
 
 describe('installer session', () => {
+  it.each([BOARD_IDS.E1001, BOARD_IDS.E1002, BOARD_IDS.E1003])(
+    'uses the current clock after five hours at Wi-Fi on %s', async (boardId) => {
+    let clock = 1787932800000
+    let wifiReady = false
+    const targetRelease = { ...release, manifest: { ...release.manifest,
+      boardId: boardId === BOARD_IDS.E1003 ? BOARD_IDS.E1003 : BOARD_IDS.E1002 } }
+    const protocol = appProtocol({ wifiHealthy: false, boardId: targetRelease.manifest.boardId,
+      ...(boardId === BOARD_IDS.E1001 ? { hardwareModel: 'e1001' } : {}) })
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'get_state' && wifiReady) {
+        return { configurationDigest: 'wanted', wifi: 'connected', render: 'valid', apply: 'complete' }
+      }
+      return original(command, values, timeout)
+    })
+    const session = createInstallerSession({ configuration: { ...configuration, boardId }, requestPort: async () => ({}),
+      releaseLoader: async () => targetRelease, protocolFactory: () => protocol, now: () => clock })
+    await session.connect()
+    expect(session.getState().phase).toBe('wifi')
+    clock += 5 * 60 * 60 * 1000
+    await session.submitWifi({ ssid: 'Test network', password: 'test-value' })
+    expect(protocol.request).toHaveBeenCalledWith('begin', { unixTime: clock / 1000 })
+    expect(session.getState().phase).toBe('complete')
+  })
+
   it('reports the running firmware when its very first state request fails', async () => {
     const protocol = appProtocol({ firmwareVersion: 'actual-device-version' })
     const originalRequest = protocol.request.getMockImplementation()

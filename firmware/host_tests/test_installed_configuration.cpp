@@ -183,3 +183,17 @@ TEST(InstalledConfigurationTest, PersistsEwamModel) {
     EXPECT_STREQ(restored.display.swell_model, "dwd_ewam");
     EXPECT_EQ(installed_configuration_digest(&config), installed_configuration_digest(&restored));
 }
+
+TEST(InstalledConfigurationTest, OnlyPersistedWifiCompletesSetupIncludingOpenNetworks)
+{
+    installed_configuration_reset_host_storage();
+    EXPECT_FALSE(installed_configuration_has_setup());
+    installed_configuration_t config;
+    ASSERT_EQ(installed_configuration_load(&config), ESP_OK);
+    EXPECT_FALSE(installed_configuration_has_setup());
+    ASSERT_EQ(installed_configuration_promote(&config), ESP_OK);
+    EXPECT_FALSE(installed_configuration_has_setup());
+    ASSERT_EQ(installed_configuration_promote_setup(&config, "Test network", ""), ESP_OK);
+    EXPECT_TRUE(installed_configuration_has_setup());
+    installed_configuration_reset_host_storage();
+}

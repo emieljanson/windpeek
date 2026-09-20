@@ -119,6 +119,17 @@ def generate_splash(board):
         sys.exit(e.returncode)
 
 
+def validate_board_config(board, config_path=Path("sdkconfig")):
+    """Defaults do not override a board retained in an existing sdkconfig."""
+    if not config_path.exists():
+        return
+    selected = [line for line in config_path.read_text().splitlines()
+                if line.startswith("CONFIG_BOARD_DRIVER_") and line.endswith("=y")]
+    expected = f"CONFIG_BOARD_DRIVER_{board.upper()}=y"
+    if selected != [expected]:
+        raise ValueError(f"sdkconfig does not select {board}. Rebuild with --fullclean.")
+
+
 def build_firmware(board, extra_args, debug=False):
     """Build firmware with idf.py."""
     print(f"\n=== Building firmware for {board}{' [debug]' if debug else ''} ===")
@@ -140,7 +151,12 @@ def build_firmware(board, extra_args, debug=False):
     print(f"Running: {' '.join(build_cmd)}")
 
     try:
+        validate_board_config(board)
         run_idf(build_cmd)
+        validate_board_config(board)
+    except ValueError as e:
+        print(f"Build stopped: {e}")
+        sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(f"Build failed with exit code {e.returncode}")
         sys.exit(e.returncode)

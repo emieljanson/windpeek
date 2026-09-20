@@ -375,14 +375,14 @@ TEST(WindAppProductionContractTest, SendsHeartbeatOnlyAfterRefreshLocksAreReleas
     const std::string source = read_wind_app_source();
     ASSERT_FALSE(source.empty());
 
-    EXPECT_NE(source.find("wind_app_refresh_unlocked(true, NULL)"), std::string::npos);
-    EXPECT_NE(source.find("wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast)"),
+    EXPECT_NE(source.find("wind_app_refresh_unlocked(true, &outcome)"), std::string::npos);
+    EXPECT_NE(source.find("wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_t *outcome)"),
               std::string::npos);
 
     const size_t public_refresh = source.find("esp_err_t wind_app_refresh(bool force_refresh)");
     ASSERT_NE(public_refresh, std::string::npos);
     const size_t refresh_call = source.find(
-        "wind_app_refresh_unlocked(force_refresh, &published_forecast)", public_refresh);
+        "wind_app_refresh_unlocked(force_refresh, &outcome)", public_refresh);
     const size_t unlock = source.find("xSemaphoreGive(s_runtime_lock)", refresh_call);
     const size_t heartbeat = source.find("wind_analytics_maybe_send", unlock);
 
@@ -391,7 +391,7 @@ TEST(WindAppProductionContractTest, SendsHeartbeatOnlyAfterRefreshLocksAreReleas
     ASSERT_NE(heartbeat, std::string::npos);
     EXPECT_LT(refresh_call, unlock);
     EXPECT_LT(unlock, heartbeat);
-    EXPECT_NE(source.find("if (published_forecast)", unlock), std::string::npos);
+    EXPECT_NE(source.find("if (outcome.published_forecast)", unlock), std::string::npos);
 }
 
 TEST_F(WindAppTest, ForcedDisplayIgnoresStaleDiskConfirmationAndThenResumesDeduplication)
@@ -461,4 +461,84 @@ TEST_F(WindAppTest, OverviewPrefetchConsumesFailedRetryWithoutWritingIndividualS
     EXPECT_EQ(app.schedule.retry_at,0);
     EXPECT_GT(wind_schedule_next_attempt(&app.schedule,retry),retry);
     EXPECT_EQ(fake.displays,0);EXPECT_EQ(fake.renders,0);
+}
+
+TEST_F(WindAppTest, SetupRejectsUnavailableEvenWhenThePanelRefreshSucceeds)
+{
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_ERR_TIMEOUT);
+    EXPECT_FALSE(outcome.displayed);
+    EXPECT_EQ(fake.renders, 0);
+    EXPECT_EQ(fake.displays, 0);
+    EXPECT_EQ(outcome.freshness, WIND_FRESHNESS_UNAVAILABLE);
+}
+
+
+TEST_F(WindAppTest, SetupAfterFiveOfflineHoursFetchesImmediatelyAndCanRetry)
+{
+    const int64_t boot = 1787544000;
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, false, boot, &outcome), ESP_OK);
+    ASSERT_EQ(wind_app_run(&app, false, boot + 300, &outcome), ESP_OK);
+    EXPECT_EQ(wind_app_run_setup(&app, boot + 5 * 3600, &outcome), ESP_ERR_TIMEOUT);
+    fake.fetch_result = ESP_OK;
+    EXPECT_EQ(wind_app_run_setup(&app, boot + 5 * 3600 + 60, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_TRUE(outcome.published_forecast);
+    EXPECT_EQ(outcome.freshness, WIND_FRESHNESS_FRESH);
+    EXPECT_TRUE(outcome.displayed);
+}
+
+
+TEST_F(WindAppTest, SetupRejectsFetchFailureEvenWithAnExistingForecast)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544060, &outcome), ESP_ERR_TIMEOUT);
+    EXPECT_TRUE(outcome.used_cache);
+}
+
+
+TEST_F(WindAppTest, SetupStillRequiresAConfirmedPanelAndAcceptsAnUnchangedForecast)
+{
+    wind_app_outcome_t outcome;
+    fake.display_result = ESP_FAIL;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_FAIL);
+    fake.display_result = ESP_OK;
+    ASSERT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    ASSERT_TRUE(outcome.displayed);
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.published_forecast);
+    EXPECT_TRUE(outcome.display_unchanged);
+}
+
+TEST_F(WindAppTest, SetupDueScheduleWriteFailureDoesNotClaimAForecastRequest)
+{
+    int64_t boundary = 0;
+    ASSERT_TRUE(wind_schedule_is_due(&app.schedule, 1787544000, &boundary));
+    std::filesystem::remove_all(root);
+    wind_app_outcome_t outcome{};
+    EXPECT_NE(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 0);
+    EXPECT_FALSE(outcome.attempted_fetch);
+    EXPECT_EQ(fake.displays, 0);
+}
+
+TEST_F(WindAppTest, SetupCacheWriteFailureAfterSatisfiedBoundaryRetainsFetchEvidence)
+{
+    const int64_t now = 1787544000;
+    const int64_t boundary = wind_schedule_latest_boundary(fake.identity.timezone, now);
+    wind_schedule_mark_attempted(&app.schedule, boundary);
+    wind_schedule_mark_satisfied(&app.schedule, boundary);
+    ASSERT_FALSE(wind_schedule_is_due(&app.schedule, now, nullptr));
+    std::filesystem::remove_all(root);
+    wind_app_outcome_t outcome{};
+    EXPECT_NE(wind_app_run_setup(&app, now, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 1);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_FALSE(outcome.published_forecast);
+    EXPECT_EQ(fake.displays, 0);
 }

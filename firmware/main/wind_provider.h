@@ -9,6 +9,15 @@
 extern "C" {
 #endif
 
+typedef struct {
+    int perform_result;
+    int http_status;
+    int parse_result;
+    size_t response_length;
+    bool too_large;
+    bool allocation_failed;
+} wind_provider_diagnostics_t;
+
 typedef esp_err_t (*wind_provider_fetch_fn)(void *context, int64_t retrieved_at,
                                             wind_forecast_t *out_forecast);
 

@@ -18,9 +18,9 @@
 
 static const char *PROVIDER_NAME = "open-meteo";
 static const uint8_t REQUIRED_HOURS[WIND_FORECAST_SAMPLES_PER_DAY] = {8, 11, 14, 17, 20};
-static open_meteo_knmi_diagnostics_t s_diagnostics;
+static wind_provider_diagnostics_t s_diagnostics;
 
-void open_meteo_knmi_get_diagnostics(open_meteo_knmi_diagnostics_t *out_diagnostics)
+void open_meteo_knmi_get_diagnostics(wind_provider_diagnostics_t *out_diagnostics)
 {
     if (out_diagnostics) {
         *out_diagnostics = s_diagnostics;

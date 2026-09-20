@@ -447,6 +447,27 @@ void app_main(void)
     ESP_ERROR_CHECK(wind_installer_service_start());
 
     power_manager_work_begin();
+    if (!installed_configuration_has_setup()) {
+        ESP_LOGI(TAG, "Waiting for USB setup before starting the forecast");
+        power_manager_work_end();
+        bool setup_drawn = false;
+        int64_t next_hint_attempt = 0;
+        while (!installed_configuration_has_setup() || power_manager_is_installer_active()) {
+            if (power_manager_is_installer_active()) {
+                setup_drawn = false;
+            } else if (!setup_drawn && esp_timer_get_time() >= next_hint_attempt) {
+                power_manager_work_begin();
+                result = wind_app_show_setup();
+                power_manager_work_end();
+                setup_drawn = result == ESP_OK;
+                if (!setup_drawn)
+                    ESP_LOGW(TAG, "Setup screen failed: %s", esp_err_to_name(result));
+                next_hint_attempt = esp_timer_get_time() + INT64_C(30000000);
+            }
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        power_manager_work_begin();
+    }
     const wakeup_source_t wake = power_manager_get_wakeup_source();
     bool touch_wake=false;
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
@@ -458,7 +479,8 @@ void app_main(void)
         power_manager_work_begin(); // USB may have arrived during boot.
     }
 #endif
-    const bool connected = !touch_wake && connect_installed_wifi();
+    const bool connected = !touch_wake &&
+                           (wifi_manager_is_connected() || connect_installed_wifi());
     if (connected && synchronize_clock() != ESP_OK) {
         ESP_LOGW(TAG, "Clock sync timed out; using the retained RTC clock");
     }

@@ -342,6 +342,9 @@ int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *i
                                                uint8_t *rgba_out, size_t rgba_size,
                                                wind_renderer_stats_t *stats);
 
+/* Setup instructions using the selected display's dimensions and palette. */
+int wind_renderer_render_setup(wind_renderer_display_t display,
+                               uint8_t *palette_out, size_t palette_size);
 /* Standalone 800 x 480 empty-battery UI; does not change battery policy. */
 int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size);
 /* E1001/E1002 require WIND_RENDERER_PALETTE_BYTES (800 x 480).

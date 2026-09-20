@@ -1227,3 +1227,23 @@ TEST(WindRenderer, RetainsEveryVisibleFalmouthTideTimeInBothClockFormats) {
         EXPECT_EQ(visible_window, 16);
     }
 }
+
+TEST(SetupRenderer, ProducesTextInEachPanelsPaletteWithoutOverrunningTheBuffer) {
+    for (auto display : {WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                         WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
+                         WIND_RENDERER_DISPLAY_E1003_GC16}) {
+        const size_t size = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_COMPOSITION_BYTES : WIND_RENDERER_PALETTE_BYTES;
+        const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+            display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
+        std::vector<uint8_t> pixels(size + 1, 0xA5);
+        ASSERT_NE(wind_renderer_render_setup(display, pixels.data(), size - 1), 0);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
+        ASSERT_EQ(wind_renderer_render_setup(display, pixels.data(), size), 0);
+        EXPECT_EQ(pixels.back(), 0xA5);
+        EXPECT_EQ(pixels.front(), white);
+        EXPECT_GT(std::count(pixels.begin(), pixels.end() - 1, 0), 100);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
+            [white](uint8_t p) { return p == 0 || p == white; }));
+    }
+}
