@@ -41,9 +41,9 @@ fixes. Unrelated work in the older local checkout is excluded.
 
 ## Validation
 
-- Web unit suite: 681 tests passed, including five-hour Wi-Fi delays for each model
+- Web unit suite: 682 tests passed, including five-hour Wi-Fi delays for each model
   and adapter-to-Sentry privacy filtering of forecast errors.
-- Firmware host suite: 338 tests passed, covering failed/late setup, retry, panel confirmation, all
+- Firmware host suite: 339 tests passed, covering failed/late setup, retry, panel confirmation, all
   panel palettes, open-network readiness, ten-spot E1003 setup and existing
   navigation/cache behavior.
 - E1001/E1002 and E1003 ESP-IDF builds passed. Installer stack estimates remain
@@ -56,3 +56,17 @@ fixes. Unrelated work in the older local checkout is excluded.
   greater-than-two-minute Wi-Fi pause. Five-hour delays use simulated time.
 - E1001/E1003 physical devices were unavailable. Historical Sentry incidents are
   not all attributed to one cause and are not marked resolved by these checks.
+
+## PR review follow-up
+
+Thirteen additional comments were addressed: wait for installer completion on
+first boot, retry a failed setup hint without overwriting an active preview,
+preserve legacy APSTA retry behavior, clear unstarted apply buffers, retain the
+idle-timeout checkpoint, bound signed error codes, and tighten tests and API
+comments. The storage-failure tests now explicitly distinguish a failed schedule
+write before fetching from a failed cache write after fetching.
+
+The proposed schedule-boundary fallback was not added: `wind_schedule_is_due`
+always supplies the current boundary for an initialized schedule, including when
+it returns false. `FailedOutOfWindowRecoveryRetriesOnceAfterFiveMinutes` already
+covers the reported scenario and passes.

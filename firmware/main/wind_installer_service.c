@@ -401,8 +401,8 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
             health.stage, health.heap, health.minimum_heap, health.stack,
             health.reset_reason, health.uptime_ms,
             health.forecast.perform_result, health.forecast.http_status, health.forecast.parse_result,
-            (unsigned)health.forecast.response_length, health.forecast.too_large,
-            health.forecast.allocation_failed, health.device_time, (unsigned)health.internal_largest_bytes);
+            (unsigned)health.forecast.response_length, (unsigned)health.forecast.too_large,
+            (unsigned)health.forecast.allocation_failed, health.device_time, (unsigned)health.internal_largest_bytes);
         return written >= 0 && (size_t) written < response_size - offset
             ? ESP_OK : ESP_ERR_INVALID_SIZE;
     }
@@ -589,16 +589,18 @@ void wind_installer_service_disconnect(wind_installer_service_t *service)
     wind_installer_service_timeout(service);
 }
 
-void wind_installer_service_check_idle(wind_installer_service_t *service,
+bool wind_installer_service_check_idle(wind_installer_service_t *service,
                                         bool usb_connected, int64_t idle_us)
 {
     // USB setup has no human-input deadline. Releasing its wake lock while
     // waiting for a password lets light sleep silence the E1002 UART bridge.
     // Retain the battery timeout after the cable is removed.
     if (service && service->wake_lock_held && !usb_connected &&
-        idle_us > INT64_C(120000000)) {
+        idle_us > INT64_C(120000000) && !apply_in_progress(service)) {
         wind_installer_service_timeout(service);
+        return true;
     }
+    return false;
 }
 
 

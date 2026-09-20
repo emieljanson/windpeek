@@ -19,15 +19,19 @@ describe('serial port adapter', () => {
             deviceTime: 1787932800, resetReason: 1, latitude: 52.5,
             transportError: 'private-password', arbitrary: 42 } }))
     }, releaseLock: vi.fn() }
-    const port = { open: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
     const protocol = createSerialProtocol(port, { diagnostics })
     await protocol.open()
     await protocol.request('get_state')
     releaseCredentials()
     const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
       extra: { timeline: diagnostics.snapshot().entries } })
-    expect(filtered.extra.timeline.at(-1)).toMatchObject({ deviceState: { applyError: -1, httpStatus: 429, responseBytes: 200, wifi: 'connected', render: 'pending', apply: 'render_failed' } })
+    expect(filtered.extra.timeline.at(-1).deviceState).toEqual({
+      applyError: -1, httpStatus: 429, responseBytes: 200, deviceTime: 1787932800,
+      resetReason: 1, wifi: 'connected', render: 'pending', apply: 'render_failed',
+    })
     expect(JSON.stringify(filtered)).not.toMatch(/private-|latitude|arbitrary|transportError/)
+    await protocol.close()
   })
 
   it('preserves a fragmented device panic through timeout, credential locking and timeline eviction', async () => {

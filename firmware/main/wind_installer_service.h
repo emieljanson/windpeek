@@ -87,7 +87,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                              const char *payload, size_t payload_length,
                                              char *response, size_t response_size);
 void wind_installer_service_timeout(wind_installer_service_t *service);
-void wind_installer_service_check_idle(wind_installer_service_t *service,
+bool wind_installer_service_check_idle(wind_installer_service_t *service,
                                        bool usb_connected, int64_t idle_us);
 void wind_installer_service_disconnect(wind_installer_service_t *service);
 void wind_installer_service_complete_apply(wind_installer_service_t *service, bool succeeded);

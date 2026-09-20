@@ -13,6 +13,7 @@
 #include "config.h"
 #include "config_manager.h"
 #include "display_manager.h"
+#include "power_manager.h"
 #include "epaper.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
@@ -611,6 +612,10 @@ esp_err_t wind_app_show_setup(void) {
     if (installed_configuration_has_setup()) {
         xSemaphoreGive(s_runtime_lock);
         return ESP_OK;
+    }
+    if (power_manager_is_installer_active()) {
+        xSemaphoreGive(s_runtime_lock);
+        return ESP_ERR_INVALID_STATE;
     }
     const size_t size = active_renderer_bitmap_size();
     uint8_t *bitmap = malloc(size);

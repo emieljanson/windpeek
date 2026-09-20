@@ -31,7 +31,7 @@ export function sanitizeDeviceState(input) {
   }
   if (typeof input.wifiConfigured === 'boolean') state.wifiConfigured = input.wifiConfigured
   for (const field of ['applyError', 'transportError', 'parseError']) {
-    if (Number.isSafeInteger(input[field])) state[field] = input[field]
+    if (Number.isSafeInteger(input[field]) && input[field] >= -0x80000000 && input[field] <= 0x7fffffff) state[field] = input[field]
   }
   for (const field of ['deviceStage', 'freeHeap', 'minimumHeap', 'taskStackFree', 'resetReason', 'uptimeMs',
     'httpStatus', 'responseBytes', 'responseTooLarge', 'allocationFailed',

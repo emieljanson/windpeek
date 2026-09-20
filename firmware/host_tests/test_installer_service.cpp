@@ -550,7 +550,7 @@ TEST(InstallerServiceTest, UsbSetupCanWaitFiveHoursBeforeProvidingWifi)
     FakeDevice fake;
     auto service = make_service(&fake);
     request(&service, R"({"command":"hello"})");
-    wind_installer_service_check_idle(&service, true, INT64_C(5) * 3600 * 1000000);
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(5) * 3600 * 1000000));
     EXPECT_TRUE(service.wake_lock_held);
     EXPECT_EQ(fake.wake_releases, 0);
     EXPECT_NE(request(&service, R"({"command":"begin","unixTime":1787950800})").find("ready"), std::string::npos);
@@ -566,9 +566,10 @@ TEST(InstallerServiceTest, IdleBatterySessionStillExpiresAndClearsCredentials)
     auto service = make_service(&fake);
     request(&service, R"({"command":"hello"})");
     request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-password"})");
-    wind_installer_service_check_idle(&service, false, INT64_C(119000000));
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, false, INT64_C(119000000)));
     EXPECT_TRUE(service.wake_lock_held);
-    wind_installer_service_check_idle(&service, false, INT64_C(121000000));
+    EXPECT_TRUE(wind_installer_service_check_idle(&service, false, INT64_C(121000000)));
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, false, INT64_C(122000000)));
     EXPECT_FALSE(service.wake_lock_held);
     EXPECT_TRUE(service.credentials_cleared);
     EXPECT_EQ(service.password[0], '\0');

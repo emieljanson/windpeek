@@ -404,6 +404,7 @@ static void physical_frame(const wind_usb_frame_t *frame, void *context)
             if (!response_transmitted)
                 atomic_store(&installer->apply_error,
                              transmit_result != ESP_OK ? transmit_result : ESP_FAIL);
+            physical_clear_apply(installer);
             atomic_store(&installer->apply_state, PHYSICAL_APPLY_COMMIT_FAILED);
         }
     }
@@ -424,8 +425,9 @@ static void installer_usb_task(void *argument)
                 wind_installer_service_disconnect(&installer->service);
             }
         }
-        wind_installer_service_check_idle(&installer->service,
-            board_hal_is_usb_connected(), esp_timer_get_time() - installer->last_activity_us);
+        if (wind_installer_service_check_idle(&installer->service,
+                board_hal_is_usb_connected(), esp_timer_get_time() - installer->last_activity_us))
+            physical_checkpoint(installer, DIAG_IDLE_TIMEOUT);
     }
 }
 

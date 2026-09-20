@@ -53,7 +53,13 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         // before falling back to the A record.
         esp_netif_create_ip6_linklocal(s_sta_netif);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_connect_on_start && s_retry_num < s_max_retries) {
+        bool retry_enabled = s_retry_num < s_max_retries;
+#ifdef CONFIG_BOARD_CAP_WINDPEEK
+        // USB rollback explicitly disables reconnect. Legacy APSTA provisioning
+        // starts its station directly and retains its existing retry policy.
+        retry_enabled = retry_enabled && s_connect_on_start;
+#endif
+        if (retry_enabled) {
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");

@@ -69,6 +69,7 @@ class BuildStepsTest(unittest.TestCase):
 
     def test_missing_idf_reports_the_build_error(self):
         with patch.object(build, "run_idf", side_effect=FileNotFoundError("missing SDK")), \
+             patch.object(build, "validate_board_config"), \
              patch("builtins.print") as output, self.assertRaises(SystemExit) as stopped:
             build.build_firmware("seeedstudio_reterminal_e100x", [])
         self.assertEqual(stopped.exception.code, 1)

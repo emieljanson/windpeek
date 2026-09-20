@@ -515,12 +515,30 @@ TEST_F(WindAppTest, SetupStillRequiresAConfirmedPanelAndAcceptsAnUnchangedForeca
     EXPECT_TRUE(outcome.display_unchanged);
 }
 
-TEST_F(WindAppTest, SetupPreparationFailureDoesNotClaimAForecastRequest)
+TEST_F(WindAppTest, SetupDueScheduleWriteFailureDoesNotClaimAForecastRequest)
 {
+    int64_t boundary = 0;
+    ASSERT_TRUE(wind_schedule_is_due(&app.schedule, 1787544000, &boundary));
     std::filesystem::remove_all(root);
     wind_app_outcome_t outcome{};
     EXPECT_NE(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
     EXPECT_EQ(fake.fetches, 0);
     EXPECT_FALSE(outcome.attempted_fetch);
+    EXPECT_EQ(fake.displays, 0);
+}
+
+TEST_F(WindAppTest, SetupCacheWriteFailureAfterSatisfiedBoundaryRetainsFetchEvidence)
+{
+    const int64_t now = 1787544000;
+    const int64_t boundary = wind_schedule_latest_boundary(fake.identity.timezone, now);
+    wind_schedule_mark_attempted(&app.schedule, boundary);
+    wind_schedule_mark_satisfied(&app.schedule, boundary);
+    ASSERT_FALSE(wind_schedule_is_due(&app.schedule, now, nullptr));
+    std::filesystem::remove_all(root);
+    wind_app_outcome_t outcome{};
+    EXPECT_NE(wind_app_run_setup(&app, now, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 1);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_FALSE(outcome.published_forecast);
     EXPECT_EQ(fake.displays, 0);
 }

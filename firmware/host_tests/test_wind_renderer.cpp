@@ -1232,7 +1232,8 @@ TEST(SetupRenderer, ProducesTextInEachPanelsPaletteWithoutOverrunningTheBuffer) 
     for (auto display : {WIND_RENDERER_DISPLAY_E1001_GRAY4,
                          WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
                          WIND_RENDERER_DISPLAY_E1003_GC16}) {
-        const size_t size = display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 800 * 600 : 800 * 480;
+        const size_t size = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_COMPOSITION_BYTES : WIND_RENDERER_PALETTE_BYTES;
         const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
             display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
         std::vector<uint8_t> pixels(size + 1, 0xA5);
