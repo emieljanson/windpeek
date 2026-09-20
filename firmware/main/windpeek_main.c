@@ -453,8 +453,9 @@ void app_main(void)
         bool setup_drawn = false;
         int64_t next_hint_attempt = 0;
         while (!installed_configuration_has_setup() || power_manager_is_installer_active()) {
-            if (!setup_drawn && !power_manager_is_installer_active() &&
-                esp_timer_get_time() >= next_hint_attempt) {
+            if (power_manager_is_installer_active()) {
+                setup_drawn = false;
+            } else if (!setup_drawn && esp_timer_get_time() >= next_hint_attempt) {
                 power_manager_work_begin();
                 result = wind_app_show_setup();
                 power_manager_work_end();
