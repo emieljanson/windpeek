@@ -5,6 +5,31 @@ import { createInstallerDiagnostics } from '../../src/installer/installerDiagnos
 import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it('carries numeric device failure details to Sentry without private response fields', async () => {
+    const chunks = []
+    const diagnostics = createInstallerDiagnostics()
+    const releaseCredentials = diagnostics.acquireCredentialLock(['private-network', 'private-password'])
+    const reader = { read: async () => ({ done: false, value: chunks.shift() }), cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: async (bytes) => {
+      const request = decodeProtocolFrame(bytes)
+      chunks.push(encodeProtocolFrame({ requestId: request.requestId, messageType: 2,
+        payload: { status: 'ok', apply: 'render_failed', wifi: 'connected', render: 'pending',
+          ssid: 'private-network', password: 'private-password',
+          applyError: -1, httpStatus: 429, responseBytes: 200,
+            deviceTime: 1787932800, resetReason: 1, latitude: 52.5,
+            transportError: 'private-password', arbitrary: 42 } }))
+    }, releaseLock: vi.fn() }
+    const port = { open: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await protocol.request('get_state')
+    releaseCredentials()
+    const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
+      extra: { timeline: diagnostics.snapshot().entries } })
+    expect(filtered.extra.timeline.at(-1)).toMatchObject({ deviceState: { applyError: -1, httpStatus: 429, responseBytes: 200, wifi: 'connected', render: 'pending', apply: 'render_failed' } })
+    expect(JSON.stringify(filtered)).not.toMatch(/private-|latitude|arbitrary|transportError/)
+  })
+
   it('preserves a fragmented device panic through timeout, credential locking and timeline eviction', async () => {
     vi.useFakeTimers()
     try {

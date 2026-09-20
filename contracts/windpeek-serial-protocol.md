@@ -54,3 +54,24 @@ Single-spot configurations retain version 5. Version 6 keeps the first spot in t
 The v6 digest uses the existing root canonical fields with version 6, then appends `|` and each additional entry’s 16-character v5 digest in order before FNV-1a hashing. The shared ten-spot fixture is verified by both web and firmware tests. Firmware migrates the old v5 storage record without changing its configuration or Wi-Fi credentials.
 
 The physical left and right buttons select the previous and next spot, wrapping at either end. Selection is persisted against the configuration digest, so a new installation starts at its first spot. Button wake-ups navigate from the persisted selection; the two-button recovery chord is unchanged.
+
+## Setup readiness and forecast diagnostics
+
+USB setup has no human-input deadline. A connected device retains its session
+while the user chooses Wi-Fi; a disconnected, idle battery session still expires
+after two minutes. `begin` must carry the computer's current time at submission.
+
+Default settings alone do not complete first setup. Until Wi-Fi credentials have
+been committed, the device shows “Finish setup” and waits for the installer.
+An apply preview must fetch and validate a forecast before updating the panel.
+Cached data remains available for ordinary offline refreshes, but cannot turn a
+failed setup fetch into a successful installation. Browser success continues to
+require the expected configuration digest, connected Wi-Fi and `render:valid`.
+
+`get_state` extends the existing flat numeric health fields with `transportError`,
+`httpStatus`, `parseError`, `responseBytes`, `responseTooLarge`, `allocationFailed`,
+`deviceTime` and `internalLargestBytes`. Forecast values describe the last terminal
+apply attempt; they remain zero while idle or applying. A failure before any
+forecast request leaves them zero instead of borrowing evidence from an earlier
+refresh. These optional fields contain no credentials, location or response body.
+Older browsers can ignore them; newer browsers still accept older firmware.

@@ -200,9 +200,8 @@ static void power_manager_enable_auto_light_sleep(void)
         // corrupts SD reads. Keep CPU frequency scaling, but no light sleep.
         .light_sleep_enable = false,
 #else
-        // The installer clears credentials after two idle minutes. USB must
-        // still accept the next command: E1002 UART cannot reliably wake the
-        // chip from automatic light sleep. Battery operation keeps sleeping.
+        // USB setup may wait indefinitely for human input. E1002 UART cannot
+        // reliably wake automatic light sleep. Battery operation keeps sleeping.
         .light_sleep_enable = !board_hal_is_usb_connected(),
 #endif
     };

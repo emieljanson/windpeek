@@ -343,6 +343,8 @@ int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *i
                                                wind_renderer_stats_t *stats);
 
 /* Standalone 800 x 480 empty-battery UI; does not change battery policy. */
+int wind_renderer_render_setup(wind_renderer_display_t display,
+                               uint8_t *palette_out, size_t palette_size);
 int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size);
 /* E1001/E1002 require WIND_RENDERER_PALETTE_BYTES (800 x 480).
  * E1003 requires WIND_RENDERER_E1003_COMPOSITION_BYTES (800 x 600). */

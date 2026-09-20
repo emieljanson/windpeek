@@ -544,3 +544,50 @@ TEST(InstallerServiceTest, StagesIndependentSwellModelAndModuleOrder) {
     EXPECT_EQ(service.candidate.display.module_order[1], 4);
     EXPECT_STREQ(service.candidate.display.swell_model, "meteofrance_wave");
 }
+
+TEST(InstallerServiceTest, UsbSetupCanWaitFiveHoursBeforeProvidingWifi)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    request(&service, R"({"command":"hello"})");
+    wind_installer_service_check_idle(&service, true, INT64_C(5) * 3600 * 1000000);
+    EXPECT_TRUE(service.wake_lock_held);
+    EXPECT_EQ(fake.wake_releases, 0);
+    EXPECT_NE(request(&service, R"({"command":"begin","unixTime":1787950800})").find("ready"), std::string::npos);
+    EXPECT_EQ(fake.clock, 1787950800);
+    EXPECT_NE(request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-password"})").find("wifi_ready"), std::string::npos);
+    EXPECT_EQ(fake.wifi_tests, 1);
+}
+
+
+TEST(InstallerServiceTest, IdleBatterySessionStillExpiresAndClearsCredentials)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    request(&service, R"({"command":"hello"})");
+    request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-password"})");
+    wind_installer_service_check_idle(&service, false, INT64_C(119000000));
+    EXPECT_TRUE(service.wake_lock_held);
+    wind_installer_service_check_idle(&service, false, INT64_C(121000000));
+    EXPECT_FALSE(service.wake_lock_held);
+    EXPECT_TRUE(service.credentials_cleared);
+    EXPECT_EQ(service.password[0], '\0');
+}
+
+
+TEST(InstallerServiceTest, StateIncludesNumericForecastFailureEvidence)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.health = [](void *, wind_installer_health_t *out) {
+        out->forecast.http_status = 429;
+        out->forecast.perform_result = ESP_FAIL;
+        out->forecast.response_length = 128;
+        out->device_time = 1787932800;
+    };
+    const auto state = request(&service, R"({"command":"get_state"})");
+    EXPECT_NE(state.find("\"transportError\":-1"), std::string::npos);
+    EXPECT_NE(state.find("\"httpStatus\":429"), std::string::npos);
+    EXPECT_NE(state.find("\"responseBytes\":128"), std::string::npos);
+    EXPECT_NE(state.find("\"deviceTime\":1787932800"), std::string::npos);
+}

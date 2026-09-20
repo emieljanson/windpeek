@@ -2333,3 +2333,30 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
     free(c.pixels);
     return 0;
 }
+
+int wind_renderer_render_setup(wind_renderer_display_t display,
+                               uint8_t *palette_out, size_t palette_size) {
+    if (display != WIND_RENDERER_DISPLAY_E1001_GRAY4 &&
+        display != WIND_RENDERER_DISPLAY_E1002_SPECTRA6 &&
+        display != WIND_RENDERER_DISPLAY_E1003_GC16) return -1;
+    const int height = display == WIND_RENDERER_DISPLAY_E1003_GC16
+        ? WIND_RENDERER_E1003_COMPOSITION_HEIGHT : WIND_RENDERER_HEIGHT;
+    const size_t size = (size_t)WIND_RENDERER_WIDTH * height;
+    if (!palette_out || palette_size < size) return -1;
+    memset(palette_out, CANVAS_WHITE, size);
+    canvas_t canvas = {.pixels = palette_out, .height = height, .size = size};
+    const char *lines[] = {"Finish setup", "Continue in your browser"};
+    const int sizes[] = {34, 15};
+    for (size_t i = 0; i < 2; ++i) {
+        const wind_text_metrics_t metrics =
+            wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, sizes[i], lines[i]);
+        draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
+                        height / 2 + (i ? 32 : -8), WIND_FONT_BERKELEY_MONO_BOLD,
+                        sizes[i], CANVAS_BLACK, lines[i]);
+    }
+    const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+        display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : PALETTE_WHITE;
+    for (size_t i = 0; i < size; ++i)
+        palette_out[i] = palette_out[i] == CANVAS_BLACK ? PALETTE_BLACK : white;
+    return 0;
+}

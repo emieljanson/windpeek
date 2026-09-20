@@ -53,7 +53,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         // before falling back to the A record.
         esp_netif_create_ip6_linklocal(s_sta_netif);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < s_max_retries) {
+        if (s_connect_on_start && s_retry_num < s_max_retries) {
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
@@ -318,6 +318,8 @@ esp_err_t wifi_manager_connect_for_refresh(const char *ssid, const char *passwor
 
 esp_err_t wifi_manager_disconnect(void)
 {
+    s_connect_on_start = false;
+    s_retry_num = s_max_retries;
     s_is_connected = false;
     return esp_wifi_disconnect();
 }

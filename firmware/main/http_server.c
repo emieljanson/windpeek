@@ -1339,7 +1339,7 @@ static esp_err_t wind_preview_handler(httpd_req_t *req)
 
 static esp_err_t wind_status_handler(httpd_req_t *req)
 {
-    open_meteo_knmi_diagnostics_t diagnostics;
+    wind_provider_diagnostics_t diagnostics;
     open_meteo_knmi_get_diagnostics(&diagnostics);
     cJSON *response = cJSON_CreateObject();
     if (!response) {
