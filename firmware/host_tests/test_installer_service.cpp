@@ -585,10 +585,69 @@ TEST(InstallerServiceTest, StateIncludesNumericForecastFailureEvidence)
         out->forecast.perform_result = ESP_FAIL;
         out->forecast.response_length = 128;
         out->device_time = 1787932800;
+        out->refresh.stage = WIND_REFRESH_FAILED;
+        out->refresh.fetch_result = ESP_FAIL;
+        out->refresh.attempted_fetch = true;
+        out->refresh.forecast.http_status = 503;
     };
     const auto state = request(&service, R"({"command":"get_state"})");
     EXPECT_NE(state.find("\"transportError\":-1"), std::string::npos);
     EXPECT_NE(state.find("\"httpStatus\":429"), std::string::npos);
     EXPECT_NE(state.find("\"responseBytes\":128"), std::string::npos);
     EXPECT_NE(state.find("\"deviceTime\":1787932800"), std::string::npos);
+    EXPECT_NE(state.find("\"refreshStage\":6"), std::string::npos);
+    EXPECT_NE(state.find("\"refreshFetchError\":-1"), std::string::npos);
+    EXPECT_NE(state.find("\"refreshHttpStatus\":503"), std::string::npos);
+}
+
+
+TEST(InstallerServiceTest, KeepsUsbAwakeUntilBrowserAcknowledgesVerifiedSetup)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    const auto hello = request(&service, R"({"command":"hello"})");
+    EXPECT_NE(hello.find("completion-ack"), std::string::npos);
+    request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-secret"})");
+    ASSERT_FALSE(service.credentials_cleared);
+    wind_installer_service_complete_apply(&service, true);
+    EXPECT_TRUE(service.credentials_cleared);
+    EXPECT_TRUE(service.wake_lock_held);
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(5) * 3600 * 1000000));
+    const auto finished = request(&service, R"({"command":"finish_setup"})");
+    EXPECT_NE(finished.find("finished"), std::string::npos);
+    EXPECT_FALSE(service.wake_lock_held);
+    // An older browser does not opt into the completion handshake.
+    request(&service, R"({"command":"begin","unixTime":1787932800})");
+    wind_installer_service_complete_apply(&service, true);
+    EXPECT_FALSE(service.wake_lock_held);
+}
+
+
+TEST(InstallerServiceTest, LostCompletionAcknowledgementDoesNotSuspendRefreshesForever)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.apply_state = [](void *) { return "complete"; };
+    request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-secret"})");
+    ASSERT_FALSE(service.credentials_cleared);
+    wind_installer_service_complete_apply(&service, true);
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(119000000)));
+    EXPECT_TRUE(service.wake_lock_held);
+    EXPECT_TRUE(wind_installer_service_check_idle(&service, true, INT64_C(121000000)));
+    EXPECT_FALSE(service.wake_lock_held);
+    EXPECT_TRUE(service.credentials_cleared);
+}
+
+TEST(InstallerServiceTest, MissingApplyStateKeepsUnconfirmedUsbSetupAwake)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.apply_state = [](void *) -> const char * { return nullptr; };
+    request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(121000000)));
+    EXPECT_TRUE(service.wake_lock_held);
+    EXPECT_TRUE(wind_installer_service_check_idle(&service, false, INT64_C(121000000)));
+    EXPECT_FALSE(service.wake_lock_held);
 }

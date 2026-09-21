@@ -75,8 +75,8 @@ def emit_asset(output_dir, family, pixel_size, variation, source, source_name):
     ascent, descent = font.getmetrics()
     glyphs = []
     bitmap = bytearray()
-    # This size is reserved for the shutdown message; don't ship unused glyphs.
-    characters = "? Battery empty" if family == "berkeley_mono_bold" and pixel_size == 34 else GLYPHS
+    # The large face serves the shutdown and setup messages.
+    characters = "? Battery emptyFinish setup" if family == "berkeley_mono_bold" and pixel_size == 34 else GLYPHS
     for character in sorted(set(characters), key=ord):
         mask, offset = font.getmask2(character, mode="L", anchor="ls")
         glyphs.append(

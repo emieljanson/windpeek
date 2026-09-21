@@ -4,6 +4,7 @@ const DEFAULT_MAX_ENTRIES = 100
 const DEFAULT_MAX_TEXT_BYTES = 50 * 1024
 const DEFAULT_MAX_TEXT_ENTRY_CHARS = 512
 const REDACTED = '[redacted]'
+const REFRESH_FAILED = 6 // WIND_REFRESH_FAILED in the firmware status contract.
 
 const CONTEXT_FIELDS = new Set([
   'phase', 'errorCode', 'action', 'route', 'release', 'boardId', 'chipFamily',
@@ -30,12 +31,12 @@ export function sanitizeDeviceState(input) {
     if (allowed.includes(input[field])) state[field] = input[field]
   }
   if (typeof input.wifiConfigured === 'boolean') state.wifiConfigured = input.wifiConfigured
-  for (const field of ['applyError', 'transportError', 'parseError']) {
+  for (const field of ['applyError', 'transportError', 'parseError', 'refreshError', 'refreshFetchError', 'refreshTransportError', 'refreshParseError']) {
     if (Number.isSafeInteger(input[field]) && input[field] >= -0x80000000 && input[field] <= 0x7fffffff) state[field] = input[field]
   }
   for (const field of ['deviceStage', 'freeHeap', 'minimumHeap', 'taskStackFree', 'resetReason', 'uptimeMs',
     'httpStatus', 'responseBytes', 'responseTooLarge', 'allocationFailed',
-    'deviceTime', 'internalLargestBytes']) {
+    'deviceTime', 'internalLargestBytes', 'refreshStage', 'refreshAttemptedFetch', 'refreshHttpStatus']) {
     if (Number.isSafeInteger(input[field]) && input[field] >= 0 && input[field] <= 0xffffffff) state[field] = input[field]
   }
   return Object.keys(state).length ? state : undefined
@@ -115,6 +116,7 @@ export function createInstallerDiagnostics({
   let textBytes = 0
   let credentialLocks = 0
   let destroyed = false
+  let firstDeviceFailure
 
   function evictToBounds() {
     while (entries.length > maxEntries || textBytes > maxTextBytes) {
@@ -173,7 +175,11 @@ export function createInstallerDiagnostics({
     } catch {}
     if (status !== undefined) entry.status = sanitizeKey(status, sensitiveValues)
     const deviceState = sanitizeDeviceState(candidate.deviceState)
-    if (deviceState) entry.deviceState = deviceState
+    if (deviceState) {
+      entry.deviceState = deviceState
+      if (!firstDeviceFailure && (['render_failed', 'commit_failed'].includes(deviceState.apply) ||
+          deviceState.refreshStage === REFRESH_FAILED)) firstDeviceFailure = { ...deviceState }
+    }
     // Credentials may be split across multiple serial messages, which makes
     // exact-value redaction insufficient. Keep the structured event, but no
     // free-form text, for the short period credentials are in memory.
@@ -227,13 +233,14 @@ export function createInstallerDiagnostics({
       if (safeEntry.message) safeEntry.message = sanitizeDiagnosticText(safeEntry.message, sensitiveValues)
       return safeEntry
     })
-    return { context: safeContext, entries: safeEntries, textBytes, ...(deviceEvidence.length ? { deviceEvidence: deviceEvidence.map((item) => ({ ...item })) } : {}) }
+    return { context: safeContext, entries: safeEntries, textBytes, ...(firstDeviceFailure ? { firstDeviceFailure: { ...firstDeviceFailure } } : {}), ...(deviceEvidence.length ? { deviceEvidence: deviceEvidence.map((item) => ({ ...item })) } : {}) }
   }
 
   function destroy() {
     destroyed = true
     entries.splice(0)
     deviceEvidence.splice(0)
+    firstDeviceFailure = undefined
     for (const key of Object.keys(context)) delete context[key]
     sensitiveValues.clear()
     textBytes = 0

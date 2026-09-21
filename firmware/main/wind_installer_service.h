@@ -8,6 +8,7 @@
 #include "hardware_profile.h"
 #include "installed_configuration.h"
 #include "wind_provider.h"
+#include "wind_app_status.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +23,7 @@ typedef struct {
     uint32_t internal_largest_bytes;
     int64_t device_time;
     wind_provider_diagnostics_t forecast;
+    wind_app_status_t refresh;
 } wind_installer_health_t;
 
 typedef esp_err_t (*wind_installer_test_wifi_fn)(void *context, const char *ssid,
@@ -77,6 +79,7 @@ typedef struct {
     bool wake_lock_held;
     bool credentials_cleared;
     bool apply_start_pending;
+    bool completion_ack_required;
     char ssid[WIND_INSTALLER_SSID_MAX + 1];
     char password[WIND_INSTALLER_PASSWORD_MAX + 1];
 } wind_installer_service_t;

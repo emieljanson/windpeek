@@ -28,9 +28,16 @@ Success is shown only after the device confirms the configuration digest, Wi-Fi 
 
 The installer chooses the safest route automatically:
 
-- Matching firmware and setup: no write.
-- Different spot or display options: configuration-only update.
-- Older firmware: preserving update that does not erase Wi-Fi or user storage.
-- Missing or damaged firmware: clean install or repair, with an explicit warning.
+- Current firmware: apply the selected setup and verify a fresh forecast, even
+  when the settings already match. Saved Wi-Fi can be reused.
+- Different spot or display options: configuration-only update with fresh forecast
+  verification.
+- Older, missing or damaged firmware: clean installation that erases stored
+  settings and Wi-Fi. Enter Wi-Fi again after the device restarts.
+
+There is no time limit for entering Wi-Fi while the device stays connected over
+USB. Temporary forecast network failures receive one automatic retry. If setup
+still fails, the installer shows an error and lets you try again; it reports
+success only after the forecast is rendered and the settings are saved.
 
 The owner never needs to choose a technical flash mode.

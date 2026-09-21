@@ -42,6 +42,23 @@ TEST(WindFont, ProvidesASmallerCondensedFaceForTheFooter) {
     EXPECT_LT(footer.ascent, status.ascent);
 }
 
+TEST(WindFont, SetupAndShutdownLettersDoNotUseTheQuestionMarkFallback) {
+    constexpr int side = 64;
+    std::vector<uint8_t> fallback(side * side, 255);
+    wind_font_draw(fallback.data(), side, side, side, 0, 40,
+                   WIND_FONT_BERKELEY_MONO_BOLD, 34, 0, "?");
+    for (const char letter : std::string("Finish setupBattery empty")) {
+        if (letter == ' ') continue;
+        SCOPED_TRACE(letter);
+        std::vector<uint8_t> glyph(side * side, 255);
+        const char text[] = {letter, '\0'};
+        wind_font_draw(glyph.data(), side, side, side, 0, 40,
+                       WIND_FONT_BERKELEY_MONO_BOLD, 34, 0, text);
+        EXPECT_NE(glyph, fallback);
+        EXPECT_NE(std::find(glyph.begin(), glyph.end(), 0), glyph.end());
+    }
+}
+
 TEST(WindFont, DrawsAccentsAndFallbackInsideClippedBuffer) {
     constexpr int width = 64;
     constexpr int height = 24;

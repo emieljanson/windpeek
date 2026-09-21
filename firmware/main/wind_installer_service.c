@@ -35,6 +35,7 @@ static void set_wake_lock(wind_installer_service_t *service, bool held)
 static void finish_session(wind_installer_service_t *service)
 {
     clear_credentials(service);
+    service->completion_ack_required = false;
     set_wake_lock(service, false);
 }
 
@@ -278,7 +279,7 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\","
               "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
               "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
-              "\"configuration\",\"render-verification\",\"clock-sync\","
+              "\"configuration\",\"render-verification\",\"clock-sync\",\"completion-ack\","
               "\"hardware-profile\"],\"hardwareModel\":\"%s\","
               "\"storedHardwareModel\":\"%s\",\"hardwareProfileRevision\":%" PRIu32 ","
               "\"safeBootOverride\":%s,\"driverFailureLatched\":%s}",
@@ -291,7 +292,7 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\","
               "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
               "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
-              "\"configuration\",\"render-verification\",\"clock-sync\"]}",
+              "\"configuration\",\"render-verification\",\"clock-sync\",\"completion-ack\"]}",
               WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
@@ -397,12 +398,18 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
             ",\"resetReason\":%" PRIu32 ",\"uptimeMs\":%" PRIu32
             ",\"transportError\":%d,\"httpStatus\":%d,\"parseError\":%d"
             ",\"responseBytes\":%u,\"responseTooLarge\":%u,\"allocationFailed\":%u"
-            ",\"deviceTime\":%" PRId64 ",\"internalLargestBytes\":%u}",
+            ",\"deviceTime\":%" PRId64 ",\"internalLargestBytes\":%u"
+            ",\"refreshStage\":%u,\"refreshError\":%d,\"refreshFetchError\":%d"
+            ",\"refreshAttemptedFetch\":%u,\"refreshHttpStatus\":%d"
+            ",\"refreshTransportError\":%d,\"refreshParseError\":%d}",
             health.stage, health.heap, health.minimum_heap, health.stack,
             health.reset_reason, health.uptime_ms,
             health.forecast.perform_result, health.forecast.http_status, health.forecast.parse_result,
             (unsigned)health.forecast.response_length, (unsigned)health.forecast.too_large,
-            (unsigned)health.forecast.allocation_failed, health.device_time, (unsigned)health.internal_largest_bytes);
+            (unsigned)health.forecast.allocation_failed, health.device_time, (unsigned)health.internal_largest_bytes,
+            (unsigned)health.refresh.stage, health.refresh.result, health.refresh.fetch_result,
+            (unsigned)health.refresh.attempted_fetch, health.refresh.forecast.http_status,
+            health.refresh.forecast.perform_result, health.refresh.forecast.parse_result);
         return written >= 0 && (size_t) written < response_size - offset
             ? ESP_OK : ESP_ERR_INVALID_SIZE;
     }
@@ -509,6 +516,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
         if (set_clock_from_request(service, request) != ESP_OK) {
             result = write_response(response, response_size, "clock_rejected", NULL);
         } else {
+            service->completion_ack_required = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(request, "completionAck"));
             set_wake_lock(service, true);
             result = write_response(response, response_size, "ready", NULL);
         }
@@ -561,9 +569,15 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
             result = write_response(response, response_size, "commit_failed", NULL);
             rollback_candidate(service);
         } else {
-            service->candidate_staged = false;
             result = write_response(response, response_size, "complete", NULL);
+            wind_installer_service_complete_apply(service, true);
+        }
+    } else if (strcmp(command->valuestring, "finish_setup") == 0) {
+        if (service->candidate_staged) {
+            result = write_response(response, response_size, "setup_incomplete", NULL);
+        } else {
             finish_session(service);
+            result = write_response(response, response_size, "finished", NULL);
         }
     } else if (strcmp(command->valuestring, "cancel") == 0) {
         service->candidate_staged = false;
@@ -592,11 +606,18 @@ void wind_installer_service_disconnect(wind_installer_service_t *service)
 bool wind_installer_service_check_idle(wind_installer_service_t *service,
                                         bool usb_connected, int64_t idle_us)
 {
-    // USB setup has no human-input deadline. Releasing its wake lock while
-    // waiting for a password lets light sleep silence the E1002 UART bridge.
-    // Retain the battery timeout after the cable is removed.
-    if (service && service->wake_lock_held && !usb_connected &&
-        idle_us > INT64_C(120000000) && !apply_in_progress(service)) {
+    if (!service || !service->wake_lock_held || idle_us <= INT64_C(120000000) ||
+        apply_in_progress(service)) return false;
+    // Human input has no USB deadline. Once the setup is committed, however,
+    // a vanished browser must not suppress scheduled refreshes forever.
+    const char *state = service->dependencies.apply_state
+        ? service->dependencies.apply_state(service->dependencies.context) : NULL;
+    if (service->completion_ack_required && !service->candidate_staged && state &&
+        strcmp(state, "complete") == 0) {
+        finish_session(service);
+        return true;
+    }
+    if (!usb_connected) {
         wind_installer_service_timeout(service);
         return true;
     }
@@ -610,7 +631,10 @@ void wind_installer_service_complete_apply(wind_installer_service_t *service, bo
     service->apply_start_pending = false;
     if (succeeded) {
         service->candidate_staged = false;
-        finish_session(service);
+        // A capable browser acknowledges only after reading the completed
+        // digest/Wi-Fi/panel state. Keep UART and the boot wait alive until then.
+        if (service->completion_ack_required) clear_credentials(service);
+        else finish_session(service);
     } else {
         rollback_candidate(service);
     }

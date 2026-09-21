@@ -326,7 +326,7 @@ describe('installer inspector panel', () => {
       description: 'Diagnostic reference: WS-TEST123456',
       duration: 8000,
     })
-    expect(wrapper.get('.installer-primary').text()).toBe('Close')
+    expect(wrapper.get('.installer-primary').text()).toBe('Try again')
   })
 
   it('does not invent a reference when diagnostic delivery fails', () => {
@@ -371,4 +371,14 @@ describe('installer inspector panel', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(wrapper.emitted('close')).toBeUndefined()
   })
+})
+
+
+it('lets an interrupted installation restart from the error screen', async () => {
+  const session = fakeSession({ phase: 'error', safeToDisconnect: true, error: { message: 'Setup could not finish.' } })
+  session.isDemo = true
+  mountPanel(session)
+  await wrapper.get('.installer-primary').trigger('click')
+  expect(session.connect).toHaveBeenCalledOnce()
+  expect(wrapper.emitted('close')).toBeUndefined()
 })

@@ -8,8 +8,7 @@ import { createInstallerSession } from '../../src/installer/createInstallerSessi
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
 import { InstallerError, INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 
-const configuration = { digest: 'wanted' }
-const release = { manifest: { version: '2.0.0', boardId: 'seeedstudio_reterminal_e1002', chipFamily: 'ESP32-S3', firmwareLayoutVersion: 1 }, manifestUrl: new URL('https://example.test/manifest.json') }
+import { configuration, release, appProtocol } from './sessionFixtures'
 
 function e1001Configuration() {
   return createInstalledConfiguration({
@@ -27,35 +26,6 @@ function e1001Configuration() {
   })
 }
 
-function appProtocol(state = {}) {
-  let activeDigest = state.digest ?? 'wanted'
-  let stagedDigest = 'wanted'
-  return {
-    open: vi.fn(), close: vi.fn(), request: vi.fn(async (command, values) => {
-      if (command === 'hello') return {
-        status: 'ok', boardId: state.boardId ?? release.manifest.boardId, chipFamily: 'ESP32-S3',
-        firmwareVersion: state.firmwareVersion ?? '2.0.0', protocolVersion: 1,
-        configurationVersion: state.configurationVersion ?? CONFIGURATION_VERSION,
-        firmwareLayoutVersion: state.firmwareLayoutVersion,
-        capabilities: [
-          'state', 'wifi', 'configuration', 'render-verification', 'clock-sync',
-          ...(state.hardwareModel ? ['hardware-profile'] : []),
-        ],
-        ...(state.hardwareModel ? {
-          hardwareModel: state.hardwareModel,
-          hardwareProfileRevision: state.hardwareProfileRevision ?? 0,
-        } : {}),
-      }
-      if (command === 'get_state') return { configurationDigest: activeDigest, wifi: state.wifiHealthy === false ? 'disconnected' : 'connected', render: 'valid' }
-      if (command === 'stage_configuration') {
-        stagedDigest = values?.configuration?.digest ?? 'wanted'
-        return { status: 'configuration_staged' }
-      }
-      if (command === 'apply_configuration') { activeDigest = stagedDigest; return { status: 'complete' } }
-      return { ok: true }
-    }),
-  }
-}
 
 describe('installer session', () => {
   it.each([BOARD_IDS.E1001, BOARD_IDS.E1002, BOARD_IDS.E1003])(
@@ -95,7 +65,8 @@ describe('installer session', () => {
     const diagnostics = createInstallerDiagnostics()
     diagnostics.recordDeviceEvidence({ kind: 'backtrace', addresses: [0x42001234, 0x3fca0000], password: 'private-password' })
     const session = createInstallerSession({ configuration, requestPort: async () => ({}),
-      releaseLoader: async () => release, protocolFactory: () => protocol, reporter, diagnostics })
+      releaseLoader: async () => release, protocolFactory: () => protocol, reporter, diagnostics,
+      partsLoader: async () => { throw new Error('recovery download unavailable') } })
     await session.connect()
     expect(reporter.report).toHaveBeenCalledWith(expect.objectContaining({
       snapshot: expect.objectContaining({ context: expect.objectContaining({ detectedFirmwareVersion: 'actual-device-version' }) }),
@@ -151,6 +122,7 @@ describe('installer session', () => {
     expect(session.getState().phase).toBe('error')
     expect(diagnostics.record).toHaveBeenCalledWith({
       category: 'verification', operation: 'device-state', status: 'commit_failed',
+      deviceState: expect.objectContaining({ apply: 'commit_failed' }),
       message: applyError === 257 ? 'Device apply error: 257' : undefined,
     })
   })
@@ -242,13 +214,14 @@ describe('installer session', () => {
     expect(session.getState().phase).toBe('error')
   })
 
-  it('completes immediately when an installed Windpeek is current', async () => {
+  it('verifies a freshly applied forecast even when the installed setup is current', async () => {
     const protocol = appProtocol()
     const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release, protocolFactory: () => protocol })
     await session.connect()
     expect(session.getState().action.action).toBe('up-to-date')
     expect(session.getState().phase).toBe('complete')
-    expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(protocol.request).toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(protocol.request).toHaveBeenCalledWith('apply_configuration', undefined, 120000)
   })
 
   it('selects the E1003 release and accepts a matching installed device', async () => {
@@ -405,7 +378,7 @@ describe('installer session', () => {
 
     expect(waitFor).toHaveBeenCalledTimes(2)
     expect(session.getState()).toMatchObject({ phase: 'complete', progress: 1 })
-    expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(protocol.request).toHaveBeenCalledWith('stage_configuration', expect.anything())
   })
 
   it('updates a changed configuration without loading firmware', async () => {
@@ -569,7 +542,7 @@ describe('installer session', () => {
     expect(secondSession.getState().phase).toBe('ready')
   })
 
-  it('starts a preserving firmware update without a second confirmation', async () => {
+  it('starts a clean firmware update without a second confirmation', async () => {
     const protocol = appProtocol({ configurationVersion: 2 })
     const partsLoader = vi.fn(async () => ({ eraseFlash: false, parts: [{ size: 1 }] }))
     const esptool = {
@@ -590,7 +563,7 @@ describe('installer session', () => {
     expect(session.getState().action).toEqual({
       action: 'update-firmware', reason: 'configuration-version-outdated',
     })
-    expect(partsLoader).toHaveBeenCalledWith(expect.objectContaining({ mode: 'preservingUpdate' }))
+    expect(partsLoader).toHaveBeenCalledWith(expect.objectContaining({ mode: 'cleanInstall' }))
     expect(esptool.flash).toHaveBeenCalledOnce()
     expect(session.getState().phase).toBe('reconnect')
   })
@@ -701,6 +674,7 @@ describe('installer session', () => {
       }
       if (command === 'stage_configuration') return { status: 'configuration_staged' }
       if (command === 'apply_configuration') return { status: 'applying' }
+      if (command === 'begin') return { status: 'ready' }
       return { status: 'ok' }
     })
     const waitFor = vi.fn().mockResolvedValue(undefined)
@@ -939,7 +913,7 @@ describe('installer session', () => {
     expect(session.getState().phase).toBe('complete')
   })
 
-  it('resumes verification after reconnect without reapplying an already committed setup', async () => {
+  it('actively verifies a fresh forecast after reconnecting to an idle setup', async () => {
     const disconnectedProtocol = appProtocol({ wifiHealthy: false })
     const originalDisconnectedRequest = disconnectedProtocol.request.getMockImplementation()
     disconnectedProtocol.request.mockImplementation(async (command, values, timeout) => {
@@ -986,9 +960,9 @@ describe('installer session', () => {
     await session.reconnect()
 
     expect(session.getState().phase).toBe('complete')
-    expect(recoveredProtocol.request).not.toHaveBeenCalledWith('begin', expect.anything())
-    expect(recoveredProtocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
-    expect(recoveredProtocol.request).not.toHaveBeenCalledWith('apply_configuration', expect.anything())
+    expect(recoveredProtocol.request).toHaveBeenCalledWith('begin', expect.anything())
+    expect(recoveredProtocol.request).toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(recoveredProtocol.request).toHaveBeenCalledWith('apply_configuration', undefined, 120000)
   })
 
   it('requires explicit E1002 confirmation before a clean flash', async () => {
@@ -1085,7 +1059,7 @@ describe('installer session', () => {
     await session.reconnect()
 
     expect(session.getState()).toMatchObject({
-      phase: 'reconnect',
+      phase: 'error',
       safeToDisconnect: true,
       error: {
         code: INSTALLER_ERROR_CODES.INVALID_RESPONSE,
@@ -1437,14 +1411,13 @@ describe('installer session', () => {
     expect(session.getState().error?.message).toMatch(/still restarting/i)
   })
 
-  it('asks for reconnect when state probing or configuration loses USB', async () => {
+  it('asks for reconnect when configuration loses USB', async () => {
     const protocol = appProtocol({ digest: 'old' })
-    protocol.request.mockImplementationOnce(async () => ({
-      status: 'ok', boardId: release.manifest.boardId, chipFamily: 'ESP32-S3',
-        firmwareVersion: '2.0.0', protocolVersion: 1, configurationVersion: CONFIGURATION_VERSION,
-      capabilities: ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync'],
-    }))
-      .mockRejectedValueOnce(new Error('disconnected'))
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, ...args) => {
+      if (command === 'begin') throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'disconnected')
+      return original(command, ...args)
+    })
     const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release, protocolFactory: () => protocol })
     await session.connect()
     expect(session.getState().phase).toBe('reconnect')

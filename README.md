@@ -18,8 +18,9 @@ firmware version. Cache misses rebuild both targets for the current commit.
 Tagged releases (`v*`) additionally publish the application and browser-installer
 files as a GitHub Release. The bundle is generated from ESP-IDF's
 `flasher_args.json`, contains separate checksummed flash parts, and exposes
-clean-install and preserving-update write sets. Generate and validate it
-locally with one command. When no version is supplied, this creates a fresh
+clean-install and preserving-update write sets for client compatibility. The
+current browser installer always uses the clean-install set when flashing.
+Generate and validate the bundle locally with one command. When no version is supplied, this creates a fresh
 `dev-local-…` version and embeds that same value in the device firmware:
 
 ```sh
@@ -126,8 +127,11 @@ font. Check that licence before distributing firmware binaries.
 ## Firmware updates
 
 Reconnect the device over USB-C and open the browser installer. It chooses a
-configuration-only update, a preserving firmware update, or repair based on the
-connected device and release. Preserving updates retain Wi-Fi and user storage.
+configuration-only update or a clean firmware installation based on the connected
+device and release. Firmware updates erase stored settings and Wi-Fi; enter Wi-Fi
+again to finish setup. With current firmware, setup keeps Wi-Fi and actively
+fetches, renders and saves a forecast before reporting success, even when the
+settings already match.
 
 The Windpeek runtime excludes the upstream photo-frame HTTP and OTA services;
 the retained OTA upload script applies to legacy photo-frame builds.
