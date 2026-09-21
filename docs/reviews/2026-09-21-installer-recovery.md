@@ -48,6 +48,11 @@ can be observed after reconnect without restarting them.
   cleanup tolerates an absent apply state, and credential-clear tests stage real
   test credentials before checking cleanup. Shared protocol mocks reject unknown
   commands. Setup and release documentation describe clean updates consistently.
+- The owner's subsequent E1002 installation exposed question marks in the setup
+  title: the 34px font subset only contained shutdown-message letters. Added the
+  setup letters, regenerated the firmware/browser font assets, and reproduced
+  the missing glyphs with a failing-then-passing regression test. A rendered
+  setup image confirms the complete message is readable.
 - Extracted the transaction from the session and shared test fixtures; dedicated
   recovery tests avoid growing the existing session test file. No new generic
   framework or per-model installation implementation was introduced.
@@ -66,7 +71,7 @@ expanded into new responsibilities; the transaction and status store are separat
 - Root-cause regression, unreadable state recovery, wrong model/version/chip,
   lost acknowledgement, running apply reconnect, reboot loop, browser suspension,
   cancellation, diagnostic retention and privacy.
-- 343 firmware host tests, including capability negotiation and runtime failure
+- 344 firmware host tests, including capability negotiation and runtime failure
   reporting. Existing forecast-cycle tests require fetched data and valid output
   before setup commits.
 - E1001/E1002 and E1003 ESP-IDF builds passed. UART get-state/migration estimate:
@@ -74,7 +79,8 @@ expanded into new responsibilities; the transaction and status store are separat
 - Production web build and diff whitespace checks passed. This project has no
   separate lint/typecheck scripts in its web package.
 
-Physical devices and Windows USB behavior were not retested in this change.
-The stateful browser-session tests simulate hardware/network faults; they do not
-prove every cable, driver or provider failure is eliminated. No physical device
-was flashed, and no Mac wake inhibition was started.
+The owner is driving an E1002 installation in Dia and asked the agent to observe
+only; its end-to-end result has not yet been confirmed. Windows USB behavior was
+not retested. The stateful browser-session tests simulate hardware/network
+faults; they do not prove every cable, driver or provider failure is eliminated.
+Mac wake inhibition was enabled at the owner's request for this physical test.
