@@ -36,7 +36,7 @@ export function appProtocol(state = {}) {
       if (command === 'test_wifi') { wifiConnected = true; return { status: 'wifi_ready' } }
       if (command === 'finish_setup') return { status: 'finished' }
       if (command === 'cancel') return { status: 'cancelled' }
-      if (command === 'scan_wifi') return { networks: [] }
+      if (command === 'scan_networks') return { networks: [] }
       throw new Error(`Unexpected command ${command}`)
     }),
   }
