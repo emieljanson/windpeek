@@ -798,18 +798,31 @@ static void apply_spot_display(size_t index) {
 
 /* All overview work runs under s_runtime_lock. No intermediate row is shown. */
 static esp_err_t show_overview_unlocked(size_t page, bool force) {
-    if (active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16)
+    if (active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16) {
+        wind_app_status_finish(ESP_ERR_NOT_SUPPORTED, ESP_OK, false, false, NULL);
         return ESP_ERR_NOT_SUPPORTED;
+    }
     esp_err_t result = ensure_ready();
-    if (result != ESP_OK) return result;
+    if (result != ESP_OK) {
+        wind_app_status_finish(result, ESP_OK, false, false, NULL);
+        return result;
+    }
     size_t total = wind_spots_count();
-    if (page > wind_overview_last_page(total)) return ESP_ERR_INVALID_ARG;
+    if (page > wind_overview_last_page(total)) {
+        wind_app_status_finish(ESP_ERR_INVALID_ARG, ESP_OK, false, false, NULL);
+        return ESP_ERR_INVALID_ARG;
+    }
     size_t first = page * WIND_OVERVIEW_PAGE_SIZE;
     size_t count = total-first < WIND_OVERVIEW_PAGE_SIZE ? total-first : WIND_OVERVIEW_PAGE_SIZE;
     wind_renderer_dashboard_t *rows = calloc(count, sizeof(*rows));
     wind_forecast_t *cached = malloc(sizeof(*cached));
     uint8_t *bitmap = malloc(WIND_RENDERER_E1003_COMPOSITION_BYTES);
-    if (!rows || !cached || !bitmap) { free(rows); free(cached); free(bitmap); return ESP_ERR_NO_MEM; }
+    if (!rows || !cached || !bitmap) {
+        free(rows); free(cached); free(bitmap);
+        wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, NULL);
+        return ESP_ERR_NO_MEM;
+    }
+    bool reported_failure = false;
     time_t now; time(&now);
     for (size_t row = 0; row < count; ++row) {
         size_t index = first+row;
@@ -826,8 +839,16 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
         /* Advance attempts even when offline or displaying swell. Otherwise an
            overdue wind retry can keep waking the overview every second. This
            also prepares the wind cache for opening the full spot dashboard. */
-        wind_app_outcome_t outcome;
-        (void)wind_app_prefetch(&runtime->app, force, now, &outcome);
+        wind_app_outcome_t outcome = {0};
+        const esp_err_t prefetch_result = wind_app_prefetch(&runtime->app, force, now, &outcome);
+        if (!reported_failure && (prefetch_result != ESP_OK || outcome.fetch_result != ESP_OK ||
+                                  outcome.freshness == WIND_FRESHNESS_UNAVAILABLE)) {
+            wind_provider_diagnostics_t forecast = {0};
+            if (outcome.attempted_fetch) open_meteo_knmi_get_diagnostics(&forecast);
+            wind_app_status_finish(prefetch_result, outcome.fetch_result,
+                                   outcome.attempted_fetch, false, &forecast);
+            reported_failure = true;
+        }
         if (wifi_manager_is_connected()) {
             if (swell) load_or_refresh_swell(runtime, force, now);
         } else if (swell) {
@@ -887,6 +908,10 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
         if (result == ESP_OK) { s_overview_open=true; s_overview_page=page; s_focused_date[0]=0; }
     }
     free(rows); free(cached); free(bitmap);
+    if (result != ESP_OK && !reported_failure)
+        wind_app_status_finish(result, ESP_OK, false, false, NULL);
+    // Overview rows do not save a dashboard panel confirmation. Drawing them
+    // cannot clear an earlier forecast failure, even when cached rows look valid.
     return result;
 }
 
@@ -974,7 +999,6 @@ wind_app_activate_configuration(const installed_configuration_t *configuration) 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_t *outcome) {
     memset(outcome, 0, sizeof(*outcome));
     const bool report_status = s_preview_configuration == NULL;
-    if (report_status) wind_app_status_begin();
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
         s_last_render_succeeded = false;
@@ -982,10 +1006,9 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_
         return result;
     }
     if (s_overview_open && !s_preview_configuration) {
-        result = show_overview_unlocked(s_overview_page, force_refresh);
-        wind_app_status_finish(result, ESP_OK, false, result == ESP_OK, NULL);
-        return result;
+        return show_overview_unlocked(s_overview_page, force_refresh);
     }
+    if (report_status) wind_app_status_begin();
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
     time_t now;
     time(&now);

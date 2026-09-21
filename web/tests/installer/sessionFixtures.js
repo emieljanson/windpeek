@@ -8,6 +8,7 @@ export const release = { manifest: { version: '2.0.0', boardId: 'seeedstudio_ret
 export function appProtocol(state = {}) {
   let activeDigest = state.digest ?? 'wanted'
   let stagedDigest = 'wanted'
+  let wifiConnected = state.wifiHealthy !== false
   return {
     open: vi.fn(), close: vi.fn(), request: vi.fn(async (command, values) => {
       if (command === 'hello') return {
@@ -25,14 +26,18 @@ export function appProtocol(state = {}) {
           hardwareProfileRevision: state.hardwareProfileRevision ?? 0,
         } : {}),
       }
-      if (command === 'get_state') return { configurationDigest: activeDigest, wifi: state.wifiHealthy === false ? 'disconnected' : 'connected', render: 'valid' }
+      if (command === 'get_state') return { configurationDigest: activeDigest, wifi: wifiConnected ? 'connected' : 'disconnected', render: 'valid' }
       if (command === 'begin') return { status: 'ready' }
       if (command === 'stage_configuration') {
         stagedDigest = values?.configuration?.digest ?? 'wanted'
         return { status: 'configuration_staged' }
       }
       if (command === 'apply_configuration') { activeDigest = stagedDigest; return { status: 'complete' } }
-      return { ok: true }
+      if (command === 'test_wifi') { wifiConnected = true; return { status: 'wifi_ready' } }
+      if (command === 'finish_setup') return { status: 'finished' }
+      if (command === 'cancel') return { status: 'cancelled' }
+      if (command === 'scan_wifi') return { networks: [] }
+      throw new Error(`Unexpected command ${command}`)
     }),
   }
 }

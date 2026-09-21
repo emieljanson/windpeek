@@ -132,6 +132,36 @@ describe('setup transaction recovery', () => {
     expect(polls).toBe(3)
   })
 
+  it.each([
+    ['storage failure', { apply: 'commit_failed' }, 0, false],
+    ['rate limit', { apply: 'render_failed', httpStatus: 429 }, 0, false],
+    ['invalid data', { apply: 'render_failed', parseError: 258 }, 0, false],
+    ['temporary network failure', { apply: 'render_failed', transportError: -1 }, 1, true],
+    ['persistent network failure', { apply: 'render_failed', transportError: -1 }, 1, false],
+  ])('preserves the retry policy when reconnecting to %s', async (_name, failure, expectedRetries, recovers) => {
+    let polls = 0
+    let retries = 0
+    const protocol = appProtocol()
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, ...args) => {
+      if (command === 'apply_configuration') { retries++; return { status: 'applying' } }
+      if (command === 'get_state') return {
+        configurationDigest: 'wanted', wifi: 'connected', render: 'valid',
+        ...(++polls === 1 ? { apply: 'applying' }
+          : retries && recovers ? { apply: 'complete' } : failure),
+      }
+      return original(command, ...args)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol, waitFor: async () => {} })
+    await session.reconnect()
+    expect(session.getState().phase).toBe(recovers ? 'complete' : 'error')
+    expect(retries).toBe(expectedRetries)
+    for (const command of ['begin', 'stage_configuration']) {
+      expect(protocol.request.mock.calls.filter(([name]) => name === command)).toHaveLength(expectedRetries)
+    }
+  })
+
   it('does not stage anything after begin reports a busy transaction', async () => {
     const protocol = appProtocol()
     const original = protocol.request.getMockImplementation()
@@ -287,6 +317,40 @@ it('stops a screen-profile reboot loop before staging configuration', async () =
   expect(session.getState()).toMatchObject({ phase: 'error', error: { code: 'verification-failed' } })
   expect(newProtocol.request.mock.calls.filter(([command]) => command === 'set_hardware_profile')).toHaveLength(1)
   expect(newProtocol.request.mock.calls.map(([command]) => command)).not.toContain('stage_configuration')
+})
+
+it.each([false, true])('recovers a lost screen selection reply (saved before disconnect: %s)', async saved => {
+  let flashed = false
+  let modelKnown = false
+  let selections = 0
+  const port = {}
+  const oldProtocol = appProtocol({ firmwareVersion: 'old' })
+  const newProtocol = appProtocol({ hardwareModel: 'unknown' })
+  const original = newProtocol.request.getMockImplementation()
+  newProtocol.request.mockImplementation(async (command, ...args) => {
+    if (command === 'hello') return { ...await original(command, ...args),
+      hardwareModel: modelKnown ? 'e1002' : 'unknown', hardwareProfileRevision: modelKnown ? 1 : 0 }
+    if (command === 'set_hardware_profile') {
+      selections++
+      modelKnown = selections > 1 || saved
+      if (selections === 1) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'USB disconnected')
+      return { status: 'reboot_required' }
+    }
+    return original(command, ...args)
+  })
+  const flash = vi.fn(async () => { flashed = true })
+  const session = createInstallerSession({ configuration, requestPort: async () => port,
+    navigatorApi: { serial: { getPorts: async () => [port] } },
+    releaseLoader: async () => release, partsLoader: async () => ({ eraseFlash: true, parts: [] }),
+    protocolFactory: () => flashed ? newProtocol : oldProtocol, waitFor: async () => {},
+    esptool: { identify: async () => ({ chipFamily: 'ESP32-S3' }), flash },
+  })
+  await session.connect()
+  expect(session.getState().phase).toBe('reconnect')
+  await session.reconnect()
+  expect(session.getState().phase).toBe('complete')
+  expect(selections).toBe(saved ? 1 : 2)
+  expect(flash).toHaveBeenCalledOnce()
 })
 
 it('stops before erasing when bootloader identity differs from the supported chip', async () => {

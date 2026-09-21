@@ -196,9 +196,9 @@ for each run.
 - Clean E1001 and E1003 installs on a supported desktop browser
 - E1003: install ten spots; verify both buttons, wraparound, per-spot settings,
   remembered selection after sleep, and navigation while USB-powered
-- Preserving E1003 update from a v5 single-spot configuration with Wi-Fi retained
+- Clean E1003 update from a v5 single-spot configuration with Wi-Fi entered again
 - Configuration-only update with no firmware write
-- Preserving firmware update with Wi-Fi and configuration retained
+- Clean firmware update with stored settings erased and the selected setup verified again
 - Damaged application repair
 - Cancelled device chooser
 - Wrong Wi-Fi followed by retry

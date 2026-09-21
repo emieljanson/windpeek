@@ -610,9 +610,10 @@ bool wind_installer_service_check_idle(wind_installer_service_t *service,
         apply_in_progress(service)) return false;
     // Human input has no USB deadline. Once the setup is committed, however,
     // a vanished browser must not suppress scheduled refreshes forever.
-    if (service->completion_ack_required && !service->candidate_staged &&
-        service->dependencies.apply_state &&
-        strcmp(service->dependencies.apply_state(service->dependencies.context), "complete") == 0) {
+    const char *state = service->dependencies.apply_state
+        ? service->dependencies.apply_state(service->dependencies.context) : NULL;
+    if (service->completion_ack_required && !service->candidate_staged && state &&
+        strcmp(state, "complete") == 0) {
         finish_session(service);
         return true;
     }

@@ -40,6 +40,14 @@ can be observed after reconnect without restarting them.
   The first failure survives timeline eviction and is filtered again at Sentry.
 - Deadline expiry after browser suspension still permits one final state read.
   Cancellation during retry cannot issue another apply. Errors offer a retry.
+- PR review tightened reconnect recovery: non-retryable apply failures stay
+  visible, transient failures consume the existing retry budget, and a lost
+  hardware-profile reply can be retried only while the model is still unknown.
+- Overview rendering retains forecast failures, including prefetch failures on
+  cached rows. Numeric diagnostic stages have explicit wire values. Completion
+  cleanup tolerates an absent apply state, and credential-clear tests stage real
+  test credentials before checking cleanup. Shared protocol mocks reject unknown
+  commands. Setup and release documentation describe clean updates consistently.
 - Extracted the transaction from the session and shared test fixtures; dedicated
   recovery tests avoid growing the existing session test file. No new generic
   framework or per-model installation implementation was introduced.
@@ -52,13 +60,13 @@ expanded into new responsibilities; the transaction and status store are separat
 
 ## Validation
 
-- 722 web tests; 220 installer tests including 37 recovery tests.
+- 729 web tests; 227 installer tests including 44 recovery tests.
 - Stateful clean-install scenarios for E1001/E1002/E1003: five-hour Wi-Fi delay,
   wrong password, transient and persistent forecast failure, failed commit.
 - Root-cause regression, unreadable state recovery, wrong model/version/chip,
   lost acknowledgement, running apply reconnect, reboot loop, browser suspension,
   cancellation, diagnostic retention and privacy.
-- 342 firmware host tests, including capability negotiation and runtime failure
+- 343 firmware host tests, including capability negotiation and runtime failure
   reporting. Existing forecast-cycle tests require fetched data and valid output
   before setup commits.
 - E1001/E1002 and E1003 ESP-IDF builds passed. UART get-state/migration estimate:

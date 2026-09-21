@@ -54,15 +54,22 @@ export async function applyConfiguration({
     throw verificationError('Windpeek is taking too long to finish setup. Reconnect to check its progress.')
   }
 
+  let firstAttempt = 0
   if (applying) {
     update({ phase: 'verifying', progress: 0.92, safeToDisconnect: true })
     const status = await waitForApply('applying')
     if (!status) return false
     if (!credentials && status.apply === 'complete' && verified(status, configuration.digest)) return finish()
-    if (['render_failed', 'commit_failed'].includes(status.apply)) recordFailure(status)
+    if (['render_failed', 'commit_failed'].includes(status.apply)) {
+      recordFailure(status)
+      if (!retryableForecastFailure(status)) throw verificationError()
+      firstAttempt = 1
+      recordRetry(firstAttempt)
+      await waitFor(3000)
+    }
   }
 
-  for (let attempt = 0; attempt < MAX_APPLY_ATTEMPTS; attempt += 1) {
+  for (let attempt = firstAttempt; attempt < MAX_APPLY_ATTEMPTS; attempt += 1) {
     if (!isCurrent()) return false
     update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true })
     const unixTime = Math.floor(now() / 1000)

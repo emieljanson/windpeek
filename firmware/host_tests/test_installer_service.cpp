@@ -608,6 +608,8 @@ TEST(InstallerServiceTest, KeepsUsbAwakeUntilBrowserAcknowledgesVerifiedSetup)
     const auto hello = request(&service, R"({"command":"hello"})");
     EXPECT_NE(hello.find("completion-ack"), std::string::npos);
     request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-secret"})");
+    ASSERT_FALSE(service.credentials_cleared);
     wind_installer_service_complete_apply(&service, true);
     EXPECT_TRUE(service.credentials_cleared);
     EXPECT_TRUE(service.wake_lock_held);
@@ -628,10 +630,24 @@ TEST(InstallerServiceTest, LostCompletionAcknowledgementDoesNotSuspendRefreshesF
     auto service = make_service(&fake);
     service.dependencies.apply_state = [](void *) { return "complete"; };
     request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    request(&service, R"({"command":"test_wifi","ssid":"test-network","password":"test-secret"})");
+    ASSERT_FALSE(service.credentials_cleared);
     wind_installer_service_complete_apply(&service, true);
     EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(119000000)));
     EXPECT_TRUE(service.wake_lock_held);
     EXPECT_TRUE(wind_installer_service_check_idle(&service, true, INT64_C(121000000)));
     EXPECT_FALSE(service.wake_lock_held);
     EXPECT_TRUE(service.credentials_cleared);
+}
+
+TEST(InstallerServiceTest, MissingApplyStateKeepsUnconfirmedUsbSetupAwake)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.apply_state = [](void *) -> const char * { return nullptr; };
+    request(&service, R"({"command":"begin","unixTime":1787932800,"completionAck":true})");
+    EXPECT_FALSE(wind_installer_service_check_idle(&service, true, INT64_C(121000000)));
+    EXPECT_TRUE(service.wake_lock_held);
+    EXPECT_TRUE(wind_installer_service_check_idle(&service, false, INT64_C(121000000)));
+    EXPECT_FALSE(service.wake_lock_held);
 }

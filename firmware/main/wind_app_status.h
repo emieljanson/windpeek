@@ -8,8 +8,13 @@ extern "C" {
 
 // Stable numeric stages for diagnostics, independent of the USB apply worker.
 typedef enum {
-    WIND_REFRESH_IDLE, WIND_REFRESH_PREPARING, WIND_REFRESH_SWELL,
-    WIND_REFRESH_TIDE, WIND_REFRESH_FORECAST, WIND_REFRESH_COMPLETE, WIND_REFRESH_FAILED,
+    WIND_REFRESH_IDLE = 0,
+    WIND_REFRESH_PREPARING = 1,
+    WIND_REFRESH_SWELL = 2,
+    WIND_REFRESH_TIDE = 3,
+    WIND_REFRESH_FORECAST = 4,
+    WIND_REFRESH_COMPLETE = 5,
+    WIND_REFRESH_FAILED = 6,
 } wind_refresh_stage_t;
 
 typedef struct {

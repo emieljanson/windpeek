@@ -651,7 +651,6 @@ export function createInstallerSession({
         throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
           'Windpeek could not retain the selected screen model. Start the installation again.')
       }
-      hardwareProfileSelectionAttempted = true
       const selected = await protocol.request('set_hardware_profile', {
         hardwareModel: expectedHardwareModel === BOARD_IDS.E1001 ? 'e1001' : 'e1002',
         expectedRevision: device.hardwareProfileRevision ?? 0,
@@ -663,6 +662,7 @@ export function createInstallerSession({
         )
       }
       if (!isCurrent(expectedAttempt)) return state
+      hardwareProfileSelectionAttempted = true
       await protocol.close()
       protocol = null
       await waitFor(POST_FLASH_APP_BOOT_RETRY_MS)
