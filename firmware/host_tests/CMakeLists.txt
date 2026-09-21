@@ -336,6 +336,7 @@ add_wind_test(
   ../main/wind_cache.c
   ../main/wind_schedule.c
   ../main/wind_app.c
+  ../main/wind_app_status.c
   ../main/wind_app_cycle.c
 )
 target_compile_definitions(

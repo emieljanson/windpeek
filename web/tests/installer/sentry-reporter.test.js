@@ -265,3 +265,14 @@ describe('filterInstallerEvent', () => {
     })
   })
 })
+
+
+it('retains only allowed fields of the original refresh failure in Sentry', () => {
+  const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: {
+    firstDeviceFailure: { refreshStage: 6, refreshFetchError: -1, refreshHttpStatus: 503,
+      refreshTransportError: -1, refreshParseError: 'private', password: 'private', ssid: 'private' },
+  } })
+  expect(event.extra.firstDeviceFailure).toEqual({ refreshStage: 6, refreshFetchError: -1,
+    refreshHttpStatus: 503, refreshTransportError: -1 })
+  expect(JSON.stringify(event)).not.toContain('private')
+})

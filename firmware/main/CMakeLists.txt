@@ -45,6 +45,7 @@ set(LEGACY_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_app_status.c"
     "wind_app_cycle.c"
     "wind_analytics.c"
 )
@@ -84,6 +85,7 @@ set(WINDPEEK_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_app_status.c"
     "wind_app_cycle.c"
     "wind_analytics.c"
 )

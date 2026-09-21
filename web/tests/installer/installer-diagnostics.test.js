@@ -179,3 +179,21 @@ describe('sanitizeDiagnosticText', () => {
     expect(sanitizeDiagnosticText('finished at 12:30')).toContain('12:30')
   })
 })
+
+
+it('retains the original boot failure after status polling evicts its timeline entry', () => {
+  const diagnostics = createInstallerDiagnostics({ maxEntries: 2 })
+  diagnostics.record({ operation: 'get_state', deviceState: {
+    apply: 'idle', refreshStage: 6, refreshError: 0, refreshFetchError: -1,
+    refreshAttemptedFetch: 1, refreshHttpStatus: 503, refreshTransportError: -1,
+    password: 'secret', configurationDigest: 'private',
+  } })
+  for (let i = 0; i < 5; i++) diagnostics.record({ operation: 'get_state', deviceState: { apply: 'applying' } })
+  const snapshot = diagnostics.snapshot()
+  expect(snapshot.entries).toHaveLength(2)
+  expect(snapshot.firstDeviceFailure).toEqual({ apply: 'idle', refreshStage: 6, refreshError: 0,
+    refreshFetchError: -1, refreshAttemptedFetch: 1, refreshHttpStatus: 503, refreshTransportError: -1 })
+  expect(JSON.stringify(snapshot)).not.toMatch(/secret|private/)
+  diagnostics.destroy()
+  expect(diagnostics.snapshot()).not.toHaveProperty('firstDeviceFailure')
+})

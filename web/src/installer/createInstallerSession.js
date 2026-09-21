@@ -1,3 +1,4 @@
+import { applyConfiguration } from './applyConfiguration'
 import { resolveInstallAction, INSTALL_ACTIONS } from './actionResolver'
 import {
   CHIP_FAMILY,
@@ -22,14 +23,6 @@ const INITIAL_STATE = Object.freeze({
   diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null,
 })
 const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync']
-// A failed candidate may take 45 seconds, followed by up to 45 seconds to
-// restore the previously saved network. Keep enough serial margin for both.
-const WIFI_TEST_REQUEST_TIMEOUT_MS = 105000
-// Rendering the first full e-paper preview performs network parsing and image
-// composition on the device. The UART may be unable to answer a status poll
-// during that work even though the apply task is still healthy, so keep this
-// individual request alive for the same generous production window.
-const APPLY_STATUS_REQUEST_TIMEOUT_MS = 120000
 const PORT_DISCOVERY_TIMEOUT_MS = 2000
 const POST_FLASH_PORT_DISCOVERY_ATTEMPTS = 20
 const POST_FLASH_PORT_DISCOVERY_RETRY_MS = 500
@@ -76,6 +69,7 @@ export function createInstallerSession({
   let failureOccurrence = 0
   let latestDiagnosticOccurrence = null
   let awaitingWrittenFirmware = false
+  let hardwareProfileSelectionAttempted = false
   let cancellationPromise = null
   const diagnosticSession = ++diagnosticSessionSequence
   const pendingFailures = []
@@ -169,7 +163,7 @@ export function createInstallerSession({
     }
     const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
       contexts: { installer: { ...snapshot.context, ...browserContext() } },
-      extra: { timeline: snapshot.entries, deviceEvidence: snapshot.deviceEvidence, textBytes: snapshot.textBytes } })
+      extra: { timeline: snapshot.entries, firstDeviceFailure: snapshot.firstDeviceFailure, deviceEvidence: snapshot.deviceEvidence, textBytes: snapshot.textBytes } })
     update({ diagnosticStatus: 'sending', diagnosticReference: null,
       diagnosticReport: JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra }, null, 2) })
     let report
@@ -226,6 +220,7 @@ export function createInstallerSession({
       diagnostics.record?.({
         category: 'verification',
         operation: 'device-state',
+        deviceState: status,
         status: status?.apply ?? 'incomplete',
         message: Number.isSafeInteger(status?.applyError)
           ? `Device apply error: ${status.applyError}` : undefined,
@@ -318,11 +313,27 @@ export function createInstallerSession({
     try {
       diagnostics.setContext?.({ detectedBoardId: hello.boardId, detectedFirmwareVersion: hello.firmwareVersion })
     } catch {}
+    const usesHardwareProfile = hello.capabilities.includes('hardware-profile')
+    const reportedHardwareModel = usesHardwareProfile
+      ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
+      : undefined
+    const identity = {
+      kind: 'windpeek',
+      verifiedBoard: (usesHardwareProfile ? reportedHardwareModel : hello.boardId) === expectedHardwareModel,
+      hardwareModelMismatch: usesHardwareProfile && reportedHardwareModel !== undefined &&
+        reportedHardwareModel !== expectedHardwareModel,
+      boardId: hello.boardId,
+      hardwareModel: hello.hardwareModel,
+      hardwareProfileRevision: hello.hardwareProfileRevision,
+      capabilities: hello.capabilities,
+      chipFamily: hello.chipFamily ?? CHIP_FAMILY,
+      firmwareVersion: hello.firmwareVersion,
+      configurationVersion: hello.configurationVersion,
+      firmwareLayoutVersion: hello.firmwareLayoutVersion ?? 1,
+    }
     try {
       let current = await candidate.request('get_state')
-      // Opening Web Serial performs a normal device reset. A saved network
-      // commonly needs another second or two to obtain an IP address, so do
-      // not mistake that short boot window for missing Wi-Fi setup.
+      // Opening Web Serial resets the device. Give a saved network time to join.
       for (let wifiAttempt = 1;
         current.wifiConfigured === true && current.wifi !== 'connected' &&
         wifiAttempt < SAVED_WIFI_CONNECT_ATTEMPTS;
@@ -330,38 +341,29 @@ export function createInstallerSession({
         await waitFor(SAVED_WIFI_CONNECT_RETRY_MS)
         current = await candidate.request('get_state')
       }
-      const usesHardwareProfile = hello.capabilities.includes('hardware-profile')
-      const reportedHardwareModel = usesHardwareProfile
-        ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
-        : undefined
+      if (!['connected', 'disconnected'].includes(current.wifi) ||
+          !['valid', 'pending'].includes(current.render) ||
+          typeof current.configurationDigest !== 'string') {
+        throw new Error('Device settings are unreadable')
+      }
       return {
         protocol: candidate,
         device: {
-          kind: 'windpeek',
-          verifiedBoard: (usesHardwareProfile ? reportedHardwareModel : hello.boardId) === expectedHardwareModel,
-          hardwareModelMismatch: usesHardwareProfile && reportedHardwareModel !== undefined &&
-            reportedHardwareModel !== expectedHardwareModel,
-          boardId: hello.boardId,
-          hardwareModel: hello.hardwareModel,
-          hardwareProfileRevision: hello.hardwareProfileRevision,
-          capabilities: hello.capabilities,
-          chipFamily: hello.chipFamily ?? CHIP_FAMILY,
-          firmwareVersion: hello.firmwareVersion,
-          configurationVersion: hello.configurationVersion,
-          // Firmware released before this field was introduced uses the same
-          // original partition layout, so it is safely version 1.
-          firmwareLayoutVersion: hello.firmwareLayoutVersion ?? 1,
-          configurationDigest: current.configurationDigest ?? null,
-          wifiHealthy: current.wifiHealthy ?? current.wifi === 'connected',
+          ...identity,
+          configurationDigest: current.configurationDigest,
+          wifiHealthy: current.wifi === 'connected',
           wifiConfigured: current.wifiConfigured === true,
           renderValid: current.render === 'valid',
           applyState: current.apply ?? 'idle',
           damaged: false,
         },
       }
-    } catch (error) {
+    } catch {
+      // A valid identity is enough to recover broken settings/old firmware.
+      // Never require a crashing get_state handler to work before reflashing.
+      try { diagnostics.record?.({ category: 'recovery', operation: 'read-setup', status: 'failed' }) } catch {}
       try { await candidate.close() } catch {}
-      throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek disconnected while its setup was checked.', { cause: error })
+      return { protocol: null, device: { ...identity, damaged: true } }
     }
   }
 
@@ -414,7 +416,7 @@ export function createInstallerSession({
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
       if (releaseResult.status === 'rejected') {
-        try { await appProbe?.protocol.close() } catch {}
+        try { await appProbe?.protocol?.close() } catch {}
         throw releaseResult.reason
       }
       if (probeResult.status === 'rejected') {
@@ -423,7 +425,7 @@ export function createInstallerSession({
       }
       const loadedRelease = releaseResult.value
       if (currentAttempt !== attempt) {
-        try { await appProbe?.protocol.close() } catch {}
+        try { await appProbe?.protocol?.close() } catch {}
         return state
       }
       release = loadedRelease
@@ -498,79 +500,27 @@ export function createInstallerSession({
 
   async function configure(credentials, expectedAttempt = attempt) {
     if (!protocol) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Select your reTerminal again to finish setup.')
-    update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true, action })
-    const unixTime = Math.floor(now() / 1000)
-    if (!Number.isSafeInteger(unixTime)) {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not read this computer’s time.')
-    }
-    const begun = await protocol.request('begin', { unixTime })
-    if (begun.status === 'clock_rejected') {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not set its clock from this computer.')
-    }
-    if (!isCurrent(expectedAttempt)) return false
-    const staged = await protocol.request('stage_configuration', {
-      configuration: installationConfiguration,
+    update({ action })
+    return applyConfiguration({
+      protocol, configuration: installationConfiguration, credentials,
+      applying: device?.applyState === 'applying',
+      completionAck: device?.capabilities?.includes('completion-ack'),
+      isCurrent: () => isCurrent(expectedAttempt), update, waitFor, now,
+      recordFailure: recordVerificationFailure,
+      recordRetry: (retryCount) => {
+        try { diagnostics.record?.({ category: 'recovery', operation: 'forecast', status: 'retrying', measurements: { retryCount } }) } catch {}
+      },
     })
-    if (!isCurrent(expectedAttempt)) return false
-    if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek rejected this configuration.')
-    if (credentials) {
-      const wifi = await protocol.request('test_wifi', credentials, WIFI_TEST_REQUEST_TIMEOUT_MS)
-      if (!isCurrent(expectedAttempt)) return false
-      if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
-    }
-    update({ phase: 'verifying', progress: 0.92 })
-    const applied = await protocol.request('apply_configuration', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
-    if (!isCurrent(expectedAttempt)) return false
-    if (!['applying', 'complete'].includes(applied.status)) {
-      recordVerificationFailure({ apply: applied.status })
-      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
-    }
-    for (let poll = 0; poll < 180; poll += 1) {
-      if (poll > 0 || applied.status === 'applying') await waitFor(1000)
-      if (!isCurrent(expectedAttempt)) return false
-      const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
-      if (!isCurrent(expectedAttempt)) return false
-      if (['render_failed', 'commit_failed'].includes(status.apply)) {
-        recordVerificationFailure(status)
-        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
-      }
-      const applyComplete = status.apply === 'complete' ||
-        (applied.status === 'complete' && [undefined, 'idle'].includes(status.apply))
-      if (applyComplete && status.configurationDigest === installationConfiguration.digest &&
-          status.wifi === 'connected' && status.render === 'valid') return true
-    }
-    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not verify the new setup.')
-  }
-
-  async function verifyCurrentConfiguration(expectedAttempt, initialDevice) {
-    update({ phase: 'verifying', progress: 0.92, safeToDisconnect: true })
-    if (initialDevice.configurationDigest === installationConfiguration.digest &&
-        initialDevice.wifiHealthy && initialDevice.renderValid) return true
-    for (let poll = 0; poll < 60; poll += 1) {
-      await waitFor(1000)
-      if (!isCurrent(expectedAttempt)) return false
-      const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
-      if (!isCurrent(expectedAttempt)) return false
-      if (['render_failed', 'commit_failed'].includes(status.apply)) {
-        recordVerificationFailure(status)
-        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not apply the new setup.')
-      }
-      if (status.configurationDigest === installationConfiguration.digest &&
-          status.wifi === 'connected' && status.render === 'valid') return true
-    }
-    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not verify the current setup.')
   }
 
   async function executeAction() {
     const currentAttempt = attempt
     try {
-      if (action.action === INSTALL_ACTIONS.UP_TO_DATE) {
-        completeAttempt({ action })
-        return state
-      }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
         if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is the selected reTerminal model before installing.')
-        const mode = action.action === INSTALL_ACTIONS.UPDATE_FIRMWARE ? 'preservingUpdate' : 'cleanInstall'
+        // Every firmware change starts from a known storage state. The setup
+        // transaction below proves Wi-Fi, a fresh forecast and the actual panel.
+        const mode = 'cleanInstall'
         update({ phase: 'downloading', progress: 0.05, action })
         const bundle = await partsLoader({
           ...release,
@@ -585,6 +535,11 @@ export function createInstallerSession({
           protocol = null
         }
         const identity = device.bootloader ?? await esptool.identify(port)
+        if (identity.chipFamily !== CHIP_FAMILY) {
+          await identity.transport?.disconnect?.()
+          throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
+            'This USB device is not a compatible Windpeek.', { recoverable: false })
+        }
         const totalBytes = bundle.parts.reduce((sum, part) => sum + part.size, 0)
         await esptool.flash({
           ...identity,
@@ -597,6 +552,7 @@ export function createInstallerSession({
           },
         })
         awaitingWrittenFirmware = true
+        hardwareProfileSelectionAttempted = false
         protocol = null
         await reconnectGrantedPort(currentAttempt)
         return state
@@ -611,7 +567,7 @@ export function createInstallerSession({
       if (currentAttempt !== attempt) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek setup could not continue.')
       update({
-        phase: installerError.code === INSTALLER_ERROR_CODES.FLASH_FAILED ? 'reconnect' : 'error',
+        phase: [INSTALLER_ERROR_CODES.FLASH_FAILED, INSTALLER_ERROR_CODES.CONNECTION_LOST].includes(installerError.code) ? 'reconnect' : 'error',
         error: installerError,
         safeToDisconnect: installerError.safeToDisconnect,
       })
@@ -631,7 +587,7 @@ export function createInstallerSession({
       }
     }
     if (expectedAttempt !== attempt) {
-      try { await appProbe?.protocol.close() } catch {}
+      try { await appProbe?.protocol?.close() } catch {}
       return state
     }
     if (!appProbe) {
@@ -674,10 +630,28 @@ export function createInstallerSession({
     }
     protocol = appProbe.protocol
     device = appProbe.device
+    release ??= await releaseLoader({ boardId: expectedHardwareModel, signal: operationController?.signal })
+    if (!isCurrent(expectedAttempt)) return state
+    if (device.boardId !== release.manifest.boardId || device.chipFamily !== CHIP_FAMILY ||
+        device.hardwareModelMismatch) {
+      throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
+        'This is not the selected reTerminal model.', { recoverable: false })
+    }
+    if (device.damaged || device.firmwareVersion !== release.manifest.version ||
+        device.configurationVersion !== CONFIGURATION_VERSION ||
+        device.firmwareLayoutVersion !== (release.manifest.firmwareLayoutVersion ?? 1)) {
+      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+        'The expected firmware is not ready. Start the installation again to repair it.')
+    }
     if (awaitingWrittenFirmware &&
         [BOARD_IDS.E1001, BOARD_IDS.E1002].includes(expectedHardwareModel) &&
         device.capabilities?.includes('hardware-profile') &&
         device.hardwareModel === 'unknown') {
+      if (hardwareProfileSelectionAttempted) {
+        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+          'Windpeek could not retain the selected screen model. Start the installation again.')
+      }
+      hardwareProfileSelectionAttempted = true
       const selected = await protocol.request('set_hardware_profile', {
         hardwareModel: expectedHardwareModel === BOARD_IDS.E1001 ? 'e1001' : 'e1002',
         expectedRevision: device.hardwareProfileRevision ?? 0,
@@ -688,18 +662,18 @@ export function createInstallerSession({
           'Windpeek could not save the selected screen model.',
         )
       }
-      if (selected.status === 'reboot_required') {
-        await protocol.close()
-        protocol = null
-        await waitFor(POST_FLASH_APP_BOOT_RETRY_MS)
-        return reconnectGrantedPort(expectedAttempt)
-      }
+      if (!isCurrent(expectedAttempt)) return state
+      await protocol.close()
+      protocol = null
+      await waitFor(POST_FLASH_APP_BOOT_RETRY_MS)
+      return reconnectGrantedPort(expectedAttempt)
+    }
+    if (!device.verifiedBoard) {
+      throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
+        'Windpeek could not confirm the selected screen model.', { recoverable: false })
     }
     rememberVerifiedPort(reconnectedPort)
-    if (device.configurationDigest === installationConfiguration.digest && device.wifiHealthy) {
-      if (!await verifyCurrentConfiguration(expectedAttempt, device)) return state
-      completeAttempt()
-    } else if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
+    if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
     else {
       if (!await configure(undefined, expectedAttempt)) return state
       completeAttempt()
@@ -736,7 +710,7 @@ export function createInstallerSession({
     } catch (error) {
       if (!isCurrent(expectedAttempt)) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect automatically.')
-      update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
+      update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
     }
@@ -764,7 +738,7 @@ export function createInstallerSession({
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
-      update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
+      update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
     }

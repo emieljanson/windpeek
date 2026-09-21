@@ -89,6 +89,7 @@ static void physical_health(void *context, wind_installer_health_t *health)
         .device_time = (int64_t)time(NULL),
         .internal_largest_bytes = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
     };
+    wind_app_status_get(&health->refresh);
     // The worker owns this snapshot until it publishes a terminal state.
     const int state = atomic_load(&installer->apply_state);
     if (state != PHYSICAL_APPLY_IDLE && state != PHYSICAL_APPLY_RUNNING)

@@ -104,6 +104,7 @@ export function filterInstallerEvent(event) {
     contexts: { installer: pickScalars(event.contexts?.installer, CONTEXT_FIELDS, 240) },
     extra: {
       timeline: filterTimeline(event.extra?.timeline),
+      ...(sanitizeDeviceState(event.extra?.firstDeviceFailure) ? { firstDeviceFailure: sanitizeDeviceState(event.extra.firstDeviceFailure) } : {}),
       ...(event.extra?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(event.extra.deviceEvidence) } : {}),
       textBytes: Number.isFinite(event.extra?.textBytes) ? event.extra.textBytes : 0,
     },
@@ -325,6 +326,7 @@ export function createSentryReporter({
         extra: {
           timeline: filterTimeline(input.snapshot?.entries),
           ...(input.snapshot?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(input.snapshot.deviceEvidence) } : {}),
+          ...(input.snapshot?.firstDeviceFailure ? { firstDeviceFailure: sanitizeDeviceState(input.snapshot.firstDeviceFailure) } : {}),
           textBytes: Number.isFinite(input.snapshot?.textBytes) ? input.snapshot.textBytes : 0,
         },
       })

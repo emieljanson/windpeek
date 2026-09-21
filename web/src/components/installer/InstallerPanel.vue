@@ -218,7 +218,8 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
               <p class="installer-connection-state">{{ state.safeToDisconnect ? 'It is safe to disconnect the USB cable.' : 'Keep the cable connected while the writer stops.' }}</p>
             </div>
             <div v-if="state.safeToDisconnect" class="installer-actions">
-              <button data-autofocus class="installer-primary" type="button" @click="close">Close</button>
+              <button v-if="state.error?.recoverable !== false" data-autofocus class="installer-primary" type="button" @click="connect">Try again</button>
+              <button :class="state.error?.recoverable === false ? 'installer-primary' : 'installer-secondary'" type="button" @click="close">Close</button>
             </div>
           </div>
 

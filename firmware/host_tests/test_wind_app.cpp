@@ -8,6 +8,7 @@
 
 extern "C" {
 #include "wind_app.h"
+#include "wind_app_status.h"
 #include "wind_timezone.h"
 }
 
@@ -541,4 +542,35 @@ TEST_F(WindAppTest, SetupCacheWriteFailureAfterSatisfiedBoundaryRetainsFetchEvid
     EXPECT_TRUE(outcome.attempted_fetch);
     EXPECT_FALSE(outcome.published_forecast);
     EXPECT_EQ(fake.displays, 0);
+}
+
+
+TEST(WindAppDiagnostics, ExposesBootFailureIndependentlyOfInstallerApply)
+{
+    wind_app_status_begin();
+    wind_app_status_stage(WIND_REFRESH_FORECAST);
+    wind_app_status_t status;
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.stage, WIND_REFRESH_FORECAST);
+    wind_provider_diagnostics_t forecast = {};
+    forecast.perform_result = ESP_FAIL;
+    forecast.http_status = 503;
+    // Normal refresh can return OK after drawing an unavailable screen.
+    wind_app_status_finish(ESP_OK, ESP_FAIL, true, false, &forecast);
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.stage, WIND_REFRESH_FAILED);
+    EXPECT_EQ(status.result, ESP_OK);
+    EXPECT_EQ(status.fetch_result, ESP_FAIL);
+    EXPECT_EQ(status.forecast.http_status, 503);
+    EXPECT_TRUE(status.attempted_fetch);
+    // A later preparation failure must not inherit the previous HTTP result.
+    wind_app_status_begin();
+    wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, &forecast);
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.result, ESP_ERR_NO_MEM);
+    EXPECT_FALSE(status.attempted_fetch);
+    EXPECT_EQ(status.forecast.http_status, 0);
+    wind_app_status_finish(ESP_OK, ESP_OK, true, true, nullptr);
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.stage, WIND_REFRESH_COMPLETE);
 }
