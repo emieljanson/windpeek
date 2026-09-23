@@ -145,6 +145,9 @@ TEST(InstallerServiceTest, ReportsNumericHealthWithoutConfigurationContents)
     auto service = make_service(&device);
     service.dependencies.health = [](void *, wind_installer_health_t *health) {
         *health = {4, 30000, 20000, 5000, 3, 1234};
+        health->panel_phase = 5;
+        health->panel_wait_ms = 40000;
+        health->panel_busy_level = 0;
     };
     EXPECT_NE(request(&service, R"({"command":"test_wifi","ssid":"private-network","password":"private-secret"})")
                   .find("wifi_ready"), std::string::npos);
@@ -156,6 +159,9 @@ TEST(InstallerServiceTest, ReportsNumericHealthWithoutConfigurationContents)
     EXPECT_NE(state.find("\"taskStackFree\":5000"), std::string::npos);
     EXPECT_NE(state.find("\"resetReason\":3"), std::string::npos);
     EXPECT_NE(state.find("\"uptimeMs\":1234"), std::string::npos);
+    EXPECT_NE(state.find("\"panelPhase\":5"), std::string::npos);
+    EXPECT_NE(state.find("\"panelWaitMs\":40000"), std::string::npos);
+    EXPECT_NE(state.find("\"panelBusyLevel\":0"), std::string::npos);
     EXPECT_EQ(state.find("password"), std::string::npos);
     EXPECT_EQ(state.find("private-secret"), std::string::npos);
     EXPECT_EQ(state.find("private-network"), std::string::npos);

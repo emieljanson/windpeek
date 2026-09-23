@@ -187,11 +187,12 @@ static void busy_delay(void *context, uint32_t milliseconds)
     vTaskDelay(pdMS_TO_TICKS(milliseconds));
 }
 
-static esp_err_t wait_busy(const char *label)
+static esp_err_t wait_busy(epaper_panel_phase_t phase, const char *label)
 {
     busy_delay(NULL, 10);
     esp_err_t result = epaper_wait_busy_bounded(is_busy, busy_delay, NULL, 10, 40000);
     if (result == ESP_ERR_TIMEOUT) {
+        epaper_panel_diagnostics_timeout(phase, 40000, (uint32_t)gpio_get_level(g_cfg.pin_busy));
         ESP_LOGW(TAG, "[%s] BUSY timeout after 40s", label);
     }
     return result;
@@ -301,29 +302,29 @@ static esp_err_t display_update_cycle(uint8_t *image, bool native_transport)
 #endif
 
     hw_reset();
-    if ((result = wait_busy("reset")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_RESET, "reset")) != ESP_OK) goto done;
 
     send_init_sequence();
-    if ((result = wait_busy("init")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_INIT, "init")) != ESP_OK) goto done;
 
     send_command(0x04);  // POWER_ON
     vTaskDelay(pdMS_TO_TICKS(10));  // allow BUSY to assert before polling it
-    if ((result = wait_busy("power_on")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_POWER_ON, "power_on")) != ESP_OK) goto done;
     send_command(0x10);  // DATA_START_TRANSMISSION
     if (native_transport) {
         send_native_buffer(image, EPD_BUF_SIZE);
     } else {
         send_buffer(image, EPD_BUF_SIZE);
     }
-    if ((result = wait_busy("data")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_DATA, "data")) != ESP_OK) goto done;
 
     cmd_data(0x12, (uint8_t[]){0x00}, 1);  // DISPLAY_REFRESH
     vTaskDelay(pdMS_TO_TICKS(10));  // ED2208 asserts BUSY asynchronously
-    if ((result = wait_busy("refresh")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_REFRESH, "refresh")) != ESP_OK) goto done;
 
     cmd_data(0x02, (uint8_t[]){0x00}, 1);  // POWER_OFF
     vTaskDelay(pdMS_TO_TICKS(10));
-    if ((result = wait_busy("power_off")) != ESP_OK) goto done;
+    if ((result = wait_busy(EPAPER_PANEL_POWER_OFF, "power_off")) != ESP_OK) goto done;
 
     cmd_data(0x07, (uint8_t[]){0xA5}, 1);  // DEEP_SLEEP
 
@@ -416,7 +417,7 @@ esp_err_t epaper_enter_deepsleep(void)
     // display_update_cycle() already sends POF + DSLP after each update,
     // so the display should already be in deep sleep. Send again to be safe.
     cmd_data(0x02, (uint8_t[]){0x00}, 1);  // POWER_OFF
-    esp_err_t result = wait_busy("deepsleep_power_off");
+    esp_err_t result = wait_busy(EPAPER_PANEL_SLEEP_POWER_OFF, "deepsleep_power_off");
     if (result != ESP_OK) goto done;
     cmd_data(0x07, (uint8_t[]){0xA5}, 1);  // DEEP_SLEEP
 
