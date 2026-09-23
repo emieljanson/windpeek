@@ -856,7 +856,7 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
             reported_failure = true;
         }
         if (wifi_manager_is_connected()) {
-            if (swell) load_or_refresh_swell(runtime, force, now);
+            if (swell) load_or_refresh_swell(runtime, force, true, now);
         } else if (swell) {
             char path[128]; snprintf(path,sizeof(path),"%s.swell",runtime->forecast_path);
             const wind_swell_cache_identity_t identity = {runtime->spot->id,runtime->spot->timezone,runtime->marine_config.swell_model};
@@ -1019,10 +1019,10 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_
     time_t now;
     time(&now);
     if (report_status) wind_app_status_stage(WIND_REFRESH_SWELL);
-    load_or_refresh_swell(&s_spots[s_selected_index], force_refresh, now);
+    load_or_refresh_swell(&s_spots[s_selected_index], force_refresh, true, now);
     refresh_render_signatures();
     if (report_status) wind_app_status_stage(WIND_REFRESH_TIDE);
-    load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, now);
+    load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, true, now);
     // Fetch other spots when selected. A slow/offline location must not delay
     // installing or refreshing the spot currently shown on the panel.
     if (report_status) wind_app_status_stage(WIND_REFRESH_FORECAST);
@@ -1093,7 +1093,7 @@ static esp_err_t navigate(int direction, bool absolute) {
     time(&now);
     load_or_refresh_swell(runtime, false, fetch_before_display, now);
     refresh_render_signatures();
-    load_or_refresh_tide(runtime, false, now);
+    load_or_refresh_tide(runtime, false, fetch_before_display, now);
     wind_app_outcome_t outcome = {0};
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
     if (outcome.displayed) s_force_next_display = false;
