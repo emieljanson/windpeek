@@ -20,7 +20,7 @@ function fakeSession(initial = { phase: 'ready', progress: 0, safeToDisconnect: 
   let listener
   const session = {
     subscribe: vi.fn((next) => { listener = next; next(initial); return () => {} }),
-    connect: vi.fn(), confirmDevice: vi.fn(), reconnect: vi.fn(),
+    connect: vi.fn(), confirmDevice: vi.fn(), reconnect: vi.fn(), retrySetup: vi.fn(),
     scanNetworks: vi.fn().mockResolvedValue([]), submitWifi: vi.fn(), cancel: vi.fn(),
     emit(next) { listener(next) },
   }
@@ -188,10 +188,9 @@ describe('installer inspector panel', () => {
     const session = fakeSession({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true, error: null })
     mountPanel(session)
 
-    expect(wrapper.get('h2').text()).toBe('Select your reTerminal again')
-    expect(wrapper.text()).toContain('could not reconnect')
+    expect(wrapper.get('h2').text()).toBe('Reconnect your device')
     expect(wrapper.text()).not.toContain('could not reconnect automatically')
-    expect(wrapper.text()).toContain('Keep the cable connected')
+    expect(wrapper.text()).toContain('Keep USB connected')
     expect(wrapper.get('.installer-primary').text()).toBe('Choose USB device')
     expect(wrapper.text()).not.toContain('Reconnect device')
   })
@@ -326,7 +325,7 @@ describe('installer inspector panel', () => {
     ['error', 'USB access failed.'],
     ['reconnect', 'Windpeek disconnected.'],
     ['wifi', 'Windpeek could not connect.'],
-  ])('shows diagnostic delivery beside a %s recovery state', async (phase, message) => {
+  ])('keeps report delivery out of the %s recovery text', async (phase, message) => {
     const session = fakeSession({
       phase,
       progress: 0.8,
@@ -337,13 +336,16 @@ describe('installer inspector panel', () => {
     })
     mountPanel(session)
 
-    expect(sonner.loading).toHaveBeenCalledWith('Sending technical details…', { id: 'installer-diagnostics' })
-    expect(sonner.error).toHaveBeenCalledWith(message, { id: 'installer-error', duration: 5000 })
+    expect(sonner.loading).not.toHaveBeenCalled()
+    expect(sonner.error).not.toHaveBeenCalled()
+    expect(wrapper.find('details').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Sending report')
+    expect(wrapper.get('a[href^="mailto:"]').element.closest('p')).toBeTruthy()
     expect(wrapper.find('.installer-diagnostic-status').exists()).toBe(false)
     expect(wrapper.findAll('[role="alert"]')).toHaveLength(phase === 'error' ? 1 : 0)
   })
 
-  it('shows only a confirmed, selectable diagnostic reference', () => {
+  it('includes the confirmed reference in support email without showing it in the body', () => {
     const session = fakeSession({
       phase: 'error',
       progress: 0,
@@ -354,18 +356,12 @@ describe('installer inspector panel', () => {
     })
     mountPanel(session)
 
-    const status = wrapper.get('.installer-diagnostic-status')
-    expect(status.text()).toBe('Diagnostic reference: WS-TEST123456')
-    expect(status.get('code').text()).toBe('WS-TEST123456')
-    expect(status.element.parentElement).toBe(wrapper.get('.installer-step__copy').element)
-    expect(wrapper.get('.installer-connection-state').element.parentElement).toBe(wrapper.get('.installer-step__copy').element)
+    expect(wrapper.text()).not.toContain('WS-TEST123456')
+    expect(decodeURIComponent(wrapper.get('a[href^="mailto:"]').attributes('href'))).toContain('WS-TEST123456')
+    expect(wrapper.find('.installer-connection-state').exists()).toBe(false)
     expect(wrapper.get('[role="alert"]').classes()).not.toContain('is-error')
     expect(wrapper.get('[data-testid="installer-state-icon"]').attributes('data-phase')).toBe('error')
-    expect(sonner.success).toHaveBeenCalledWith('Technical details sent', {
-      id: 'installer-diagnostics',
-      description: 'Diagnostic reference: WS-TEST123456',
-      duration: 8000,
-    })
+    expect(sonner.success).not.toHaveBeenCalled()
     expect(wrapper.get('.installer-primary').text()).toBe('Try again')
   })
 
@@ -380,10 +376,7 @@ describe('installer inspector panel', () => {
     })
     mountPanel(session)
 
-    expect(sonner.error).toHaveBeenCalledWith('Technical details could not be sent.', {
-      id: 'installer-diagnostics',
-      duration: 5000,
-    })
+    expect(sonner.error).not.toHaveBeenCalled()
     expect(wrapper.find('.installer-diagnostic-status').exists()).toBe(false)
     expect(wrapper.text()).not.toMatch(/WS-[0-9A-Z]{10}/)
   })
@@ -393,12 +386,37 @@ describe('installer inspector panel', () => {
     mountPanel(fakeSession({ phase, safeToDisconnect: true, error: { message: 'USB connection lost' },
       diagnosticStatus: 'failed', diagnosticReport: report }))
     const link = wrapper.get('a[download="windpeek-diagnostic.json"]')
-    expect(link.text()).toBe('Download report')
+    expect(link.text()).toBe('Download the report')
     expect(decodeURIComponent(link.attributes('href').split(',')[1])).toBe(report)
-    expect(wrapper.text()).toContain('Technical details could not be sent.')
+    expect(wrapper.text()).not.toContain('Report not sent')
     const email = wrapper.get('a[href^="mailto:"]')
-    expect(email.text()).toBe('email support')
+    expect(email.text()).toBe('email it to support')
     expect(decodeURIComponent(email.attributes('href'))).toContain('attach it to this email')
+  })
+
+  it('does not claim a report was downloaded when no report is available', () => {
+    mountPanel(fakeSession({ phase: 'error', safeToDisconnect: true, error: { message: 'Stopped' } }))
+    const email = decodeURIComponent(wrapper.get('a[href^="mailto:"]').attributes('href'))
+    expect(email).toContain('Please help me finish setting up my Windpeek.')
+    expect(email).not.toContain('downloaded')
+  })
+
+  it.each(['sending', 'sent', 'failed'])('keeps the report downloadable while delivery is %s', (status) => {
+    mountPanel(fakeSession({ phase: 'error', safeToDisconnect: true, error: { message: 'Stopped' },
+      diagnosticStatus: status, diagnosticReport: '{"version":1}' }))
+    expect(wrapper.get('a[download]').attributes('href')).toContain('data:application/json')
+    expect(wrapper.find('details').exists()).toBe(false)
+    expect(wrapper.text()).not.toMatch(/Report (sent|pending|not sent)/)
+  })
+
+  it('retries setup directly when USB is still available', async () => {
+    const session = fakeSession({ phase: 'verification-issue', safeToDisconnect: true, canRetrySetup: true,
+      error: { message: 'Forecast unavailable' } })
+    mountPanel(session)
+    expect(wrapper.get('.installer-primary').text()).toBe('Try again')
+    await wrapper.get('.installer-primary').trigger('click')
+    expect(session.retrySetup).toHaveBeenCalledOnce()
+    expect(session.reconnect).not.toHaveBeenCalled()
   })
 
   it('checks the device from a verification issue without showing the Wi-Fi form', async () => {
@@ -406,7 +424,7 @@ describe('installer inspector panel', () => {
       error: { message: 'Wi-Fi connected, but setup could not be confirmed.' } })
     mountPanel(session)
 
-    expect(wrapper.get('h2').text()).toBe('Wi-Fi connected. Setup needs checking.')
+    expect(wrapper.get('h2').text()).toBe('Setup didn’t finish')
     expect(wrapper.find('.installer-wifi').exists()).toBe(false)
     await wrapper.get('.installer-primary').trigger('click')
     expect(session.reconnect).toHaveBeenCalledOnce()
@@ -416,11 +434,11 @@ describe('installer inspector panel', () => {
     const session = fakeSession({ phase: 'configuring', safeToDisconnect: true, error: null })
     mountPanel(session)
     session.emit({ phase: 'wifi', safeToDisconnect: true,
-      error: { message: 'Windpeek could not connect to that Wi-Fi network.' } })
+      error: { message: 'Could not connect. Check the network and password.' } })
     await wrapper.vm.$nextTick()
 
     expect(session.scanNetworks).not.toHaveBeenCalled()
-    expect(wrapper.get('#installer-wifi-error').text()).toContain('could not connect')
+    expect(wrapper.get('#installer-wifi-error').text()).toContain('Could not connect')
   })
 
   it('closes with Escape only when disconnecting is safe', async () => {

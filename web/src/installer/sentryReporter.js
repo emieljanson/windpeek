@@ -1,3 +1,4 @@
+import { createDiagnosticOutbox } from './diagnosticOutbox'
 import { filterDeviceEvidence } from './deviceEvidence'
 import { sanitizeDiagnosticText, sanitizeDeviceState } from './installerDiagnostics'
 
@@ -118,6 +119,17 @@ export function filterInstallerEvent(event) {
   return filtered
 }
 
+// Downloads and Sentry attachments use the same privacy-filtered report.
+export function createDiagnosticReport(snapshot) {
+  const filtered = filterInstallerEvent({
+    tags: { 'windpeek.diagnostic': INSTALLER_MARKER },
+    contexts: { installer: snapshot?.context },
+    extra: { timeline: snapshot?.entries, firstDeviceFailure: snapshot?.firstDeviceFailure,
+      deviceEvidence: snapshot?.deviceEvidence, textBytes: snapshot?.textBytes },
+  })
+  return JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra }, null, 2)
+}
+
 function createReference(randomBytes) {
   const bytes = randomBytes()
   if (!(bytes instanceof Uint8Array) || bytes.byteLength < 7) throw new Error('Secure random bytes unavailable')
@@ -220,6 +232,7 @@ function productionReportingEnabled() {
 export function createSentryReporter({
   enabled = productionReportingEnabled(),
   dsn = import.meta.env.VITE_SENTRY_DSN ?? '',
+  tunnel = import.meta.env.VITE_INSTALLER_REPORT_URL || undefined,
   release = import.meta.env.VITE_SENTRY_RELEASE ?? '',
   environment = 'production',
   timeoutMs = 5000,
@@ -235,6 +248,7 @@ export function createSentryReporter({
     if (!sdkPromise) sdkPromise = loadSentry().then((sdk) => {
       sdk.init({
         dsn,
+        tunnel,
         release: release || undefined,
         environment,
         defaultIntegrations: false,
@@ -279,7 +293,7 @@ export function createSentryReporter({
         },
       })
       return sdk
-    })
+    }).catch(error => { sdkPromise = undefined; throw error })
     return sdkPromise
   }
 
@@ -287,13 +301,22 @@ export function createSentryReporter({
     if (!enabled || !dsn) return { status: 'failed' }
     let reference
     let sdk
+    let initializationTimeout
     try {
       reference = createReference(randomBytes)
-      sdk = await initialize()
-    } catch { return { status: 'failed' } }
+      sdk = await Promise.race([
+        initialize(),
+        new Promise((_, reject) => {
+          initializationTimeout = setTimeout(() => reject(new Error('Diagnostic initialization timed out')), timeoutMs)
+        }),
+      ])
+    } catch {
+      return { status: 'failed' }
+    }
+    finally { clearTimeout(initializationTimeout) }
 
     const environmentContext = browserContext(navigatorApi)
-    const context = { ...pickScalars(input.snapshot?.context, CONTEXT_FIELDS, 240), ...environmentContext }
+    const context = { ...environmentContext, ...pickScalars(input.snapshot?.context, CONTEXT_FIELDS, 240) }
     const tags = {
       'windpeek.diagnostic': INSTALLER_MARKER,
       'windpeek.reference': reference,
@@ -321,13 +344,17 @@ export function createSentryReporter({
     let eventId
     try {
       eventId = sdk.captureException(safeError(input.error), {
-        tags,
-        contexts: { installer: context },
-        extra: {
-          timeline: filterTimeline(input.snapshot?.entries),
-          ...(input.snapshot?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(input.snapshot.deviceEvidence) } : {}),
-          ...(input.snapshot?.firstDeviceFailure ? { firstDeviceFailure: sanitizeDeviceState(input.snapshot.firstDeviceFailure) } : {}),
-          textBytes: Number.isFinite(input.snapshot?.textBytes) ? input.snapshot.textBytes : 0,
+        attachments: [{ filename: 'windpeek-diagnostic.json', contentType: 'application/json',
+          data: createDiagnosticReport({ ...input.snapshot, context }) }],
+        captureContext: {
+          tags,
+          contexts: { installer: context },
+          extra: {
+            timeline: filterTimeline(input.snapshot?.entries),
+            ...(input.snapshot?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(input.snapshot.deviceEvidence) } : {}),
+            ...(input.snapshot?.firstDeviceFailure ? { firstDeviceFailure: sanitizeDeviceState(input.snapshot.firstDeviceFailure) } : {}),
+            textBytes: Number.isFinite(input.snapshot?.textBytes) ? input.snapshot.textBytes : 0,
+          },
         },
       })
       const delivery = tracker.wait(eventId, timeoutMs)
@@ -344,7 +371,10 @@ export function createSentryReporter({
       const key = String(input?.occurrence ?? '')
       if (!key) return Promise.resolve({ status: 'failed' })
       if (reports.has(key)) return reports.get(key)
-      const result = send(input)
+      const result = send(input).then(outcome => {
+        if (outcome.status !== 'sent') reports.delete(key)
+        return outcome
+      })
       reports.set(key, result)
       if (reports.size > MAX_REPORTED_OCCURRENCES) reports.delete(reports.keys().next().value)
       return result
@@ -352,4 +382,28 @@ export function createSentryReporter({
   }
 }
 
-export const installerSentryReporter = createSentryReporter()
+export function sanitizeQueuedDiagnostic(input) {
+  if (!input || typeof input.occurrence !== 'string' || !input.occurrence.length || input.occurrence.length > 100) return null
+  const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': INSTALLER_MARKER },
+    contexts: { installer: input.snapshot?.context },
+    extra: { timeline: input.snapshot?.entries, firstDeviceFailure: input.snapshot?.firstDeviceFailure,
+      deviceEvidence: input.snapshot?.deviceEvidence, textBytes: input.snapshot?.textBytes } })
+  const error = safeError(input.error)
+  return {
+    occurrence: input.occurrence,
+    phase: safeString(input.phase, 120),
+    error: { code: safeString(input.error?.code, 120), name: error.name,
+      message: error.message,
+      ...(typeof input.error?.stack === 'string' ? { stack: error.stack } : {}) },
+    snapshot: { context: event.contexts.installer, entries: event.extra.timeline,
+      firstDeviceFailure: event.extra.firstDeviceFailure, deviceEvidence: event.extra.deviceEvidence,
+      textBytes: event.extra.textBytes },
+  }
+}
+
+export const installerSentryReporter = createDiagnosticOutbox({
+  reporter: createSentryReporter(),
+  sanitize: sanitizeQueuedDiagnostic,
+  isConfirmed: result => result?.status === 'sent' && isInstallerDiagnosticReference(result.reference),
+  enabled: productionReportingEnabled(),
+})

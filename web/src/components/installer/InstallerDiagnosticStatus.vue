@@ -6,6 +6,7 @@ const props = defineProps({
   status: { type: String, default: 'idle' },
   reference: { type: String, default: '' },
   report: { type: String, default: '' },
+  message: { type: String, default: '' },
 })
 
 const confirmedReference = computed(() => (
@@ -17,21 +18,16 @@ const emailHref = computed(() => {
   const subject = 'Windpeek installation help'
   const body = confirmedReference.value
     ? `My diagnostic reference is ${confirmedReference.value}. Please help me finish setup.`
-    : 'I downloaded the Windpeek diagnostic report and will attach it to this email.'
+    : props.report ? 'I downloaded the Windpeek diagnostic report and will attach it to this email.'
+      : 'Please help me finish setting up my Windpeek.'
   return `mailto:emiel@emieljanson.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 })
 </script>
 
 <template>
-  <p v-if="confirmedReference" class="installer-diagnostic-status">
-    Diagnostic reference: <code>{{ confirmedReference }}</code>
-  </p>
-  <p v-if="status === 'failed' && report" class="installer-diagnostic-download" role="status">
-    Technical details could not be sent.
-    <a :href="`data:application/json;charset=utf-8,${encodeURIComponent(report)}`" download="windpeek-diagnostic.json">Download report</a>
-    and <a :href="emailHref">email support</a>. Attach the downloaded file to the email.
-  </p>
-  <p v-else-if="confirmedReference" class="installer-diagnostic-download">
-    <a :href="emailHref">Email support</a> about this installation.
-  </p>
+  <span v-if="message || report || status !== 'idle'" class="installer-diagnostics">
+    <template v-if="message">{{ message.replace(/\s+/g, ' ').trim() }}{{ ' ' }}</template>
+    <template v-if="report"><a :href="`data:application/json;charset=utf-8,${encodeURIComponent(report)}`" download="windpeek-diagnostic.json">Download the report</a> and <a :href="emailHref">email it to support</a>.</template>
+    <a v-else :href="emailHref">Email support</a><template v-if="!report">.</template>
+  </span>
 </template>

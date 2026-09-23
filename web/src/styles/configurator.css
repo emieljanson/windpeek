@@ -112,19 +112,7 @@
 }
 
 .settings-panel:has(.installer-layer[data-phase='wifi'][data-has-error='true']) {
-  block-size: min(28.5rem, calc(100dvh - 2rem));
-}
-
-.settings-panel:has(.installer-layer[data-phase='wifi'][data-has-diagnostic-reference='true']) {
-  block-size: min(30rem, calc(100dvh - 2rem));
-}
-
-.settings-panel:has(.installer-layer[data-phase='wifi'][data-has-diagnostic-download='true']) {
-  block-size: min(31.5rem, calc(100dvh - 2rem));
-}
-
-.settings-panel:has(.installer-layer[data-phase='verification-issue']) {
-  block-size: min(30rem, calc(100dvh - 2rem));
+  block-size: min(26rem, calc(100dvh - 2rem));
 }
 
 .settings-shell {

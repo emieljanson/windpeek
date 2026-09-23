@@ -1,8 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { toast } from 'vue-sonner'
 import { createInstallerSession } from '../../installer/createInstallerSession'
-import { isInstallerDiagnosticReference } from '../../installer/sentryReporter'
 import { getSerialSupport, installerTransports } from '../../installer/serialPortAdapter'
 import { BOARD_IDS } from '../../config/configuration'
 import ReTerminalHelpDialog from '../ReTerminalHelpDialog.vue'
@@ -61,13 +59,17 @@ watch(
 const critical = computed(() => !state.value.safeToDisconnect)
 const progressCopy = computed(() => ({
   ready: ['Install Windpeek', `Ready to connect a ${deviceLabel.value}.`],
-  'checking-device': ['Checking device', 'Windpeek is identifying the device and the safest setup path.'],
-  downloading: ['Preparing firmware', 'The verified Windpeek release is being prepared before any write starts.'],
+  'checking-device': ['Checking device', 'Keep the USB cable connected.'],
+  downloading: ['Preparing firmware', 'Downloading the latest firmware.'],
   'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
   reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
   'wifi-scanning': ['Finding Wi-Fi networks', 'Windpeek is checking which networks are nearby.'],
   configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
-  verifying: ['Checking the forecast', 'Windpeek is confirming Wi-Fi, configuration and the first rendered forecast.'],
+  error: [unsupportedReason.value && state.value.phase === 'ready' ? 'Use a supported browser' : 'Setup interrupted', ''],
+  reconnect: ['Reconnect your device', ''],
+  'verification-issue': ['Setup didn’t finish', ''],
+  wifi: ['Connect to Wi-Fi', ''],
+  verifying: ['Checking the forecast', 'Keep the USB cable connected.'],
 }[displayPhase.value] ?? ['Working…', 'Windpeek is continuing setup.']))
 
 async function focusStep() {
@@ -97,29 +99,6 @@ watch(() => state.value.phase, async (phase, previous) => {
   await focusStep()
 })
 
-watch(
-  () => [state.value.phase, state.value.error?.message],
-  ([phase, message]) => {
-    if (['error', 'reconnect', 'wifi', 'verification-issue'].includes(phase) && message) {
-      toast.error(message, { id: 'installer-error', duration: 5000 })
-    } else toast.dismiss('installer-error')
-  },
-  { immediate: true },
-)
-
-watch(
-  () => [state.value.diagnosticStatus, state.value.diagnosticReference],
-  ([status, reference]) => {
-    const options = { id: 'installer-diagnostics' }
-    if (status === 'sending') toast.loading('Sending technical details…', options)
-    else if (status === 'sent' && isInstallerDiagnosticReference(reference)) {
-      toast.success('Technical details sent', { ...options, description: `Diagnostic reference: ${reference}`, duration: 8000 })
-    } else if (status === 'failed') {
-      toast.error('Technical details could not be sent.', { ...options, duration: 5000 })
-    } else toast.dismiss('installer-diagnostics')
-  },
-  { immediate: true },
-)
 
 async function connect(transport = activeTransport.value) {
   if (!support.supported && !isDemo) return
@@ -160,7 +139,7 @@ function handleKeydown(event) {
 }
 
 onMounted(() => { document.addEventListener('keydown', handleKeydown); void focusStep() })
-onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('installer-diagnostics'); unsubscribe(); document.removeEventListener('keydown', handleKeydown); void session.cancel() })
+onBeforeUnmount(() => { unsubscribe(); document.removeEventListener('keydown', handleKeydown); void session.cancel() })
 </script>
 
 <template>
@@ -170,8 +149,6 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
     class="installer-layer"
     :data-phase="displayPhase"
     :data-has-error="Boolean(state.error)"
-    :data-has-diagnostic-reference="state.diagnosticStatus === 'sent' && isInstallerDiagnosticReference(state.diagnosticReference)"
-    :data-has-diagnostic-download="state.diagnosticStatus === 'failed' && Boolean(state.diagnosticReport)"
     aria-labelledby="installer-title"
   >
     <button class="installer-back" type="button" aria-label="Back to configurator" :disabled="critical" @click="close">
@@ -221,12 +198,10 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
           <div v-else-if="state.phase === 'reconnect'" class="installer-step">
             <div class="installer-step__copy">
-              <h2 id="installer-title">Select your reTerminal again</h2>
-              <p>Windpeek could not reconnect. Keep the cable connected and select it again to finish setup.</p>
+              <h2 id="installer-title">Reconnect your device</h2>
+              <p><InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" :message="state.error?.message || 'Keep USB connected and select your device.'" /></p>
             </div>
             <div class="installer-actions">
-              <p v-if="state.error" class="installer-message is-error">{{ state.error.message }}</p>
-              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
               <button data-autofocus class="installer-primary" type="button" @click="session.reconnect()">Choose USB device</button>
             </div>
           </div>
@@ -236,26 +211,23 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
           <div v-else-if="state.phase === 'verification-issue'" class="installer-step installer-step--error">
             <div class="installer-step__copy">
-              <h2 id="installer-title">Wi-Fi connected. Setup needs checking.</h2>
-              <p role="alert">{{ state.error?.message }} Keep the USB cable connected.</p>
-              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
+              <h2 id="installer-title">Setup didn’t finish</h2>
+              <p role="alert">Wi-Fi is connected. <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" :message="state.error?.message" /></p>
             </div>
             <div class="installer-actions">
-              <button data-autofocus class="installer-primary" type="button" @click="session.reconnect()">Check device</button>
-              <button class="installer-secondary" type="button" @click="close">Close</button>
+              <button data-autofocus class="installer-primary" type="button" @click="state.canRetrySetup ? session.retrySetup() : session.reconnect()">{{ state.canRetrySetup ? 'Try again' : 'Reconnect device' }}</button>
             </div>
           </div>
 
           <div v-else-if="state.phase === 'error'" class="installer-step installer-step--error">
             <div class="installer-step__copy">
-              <h2 id="installer-title">Windpeek could not continue</h2>
-              <p role="alert">{{ state.error?.message }}</p>
-              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
-              <p class="installer-connection-state">{{ state.safeToDisconnect ? 'It is safe to disconnect the USB cable.' : 'Keep the cable connected while the writer stops.' }}</p>
+              <h2 id="installer-title">Setup interrupted</h2>
+              <p role="alert"><InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" :message="state.error?.message" /></p>
+              <p v-if="!state.safeToDisconnect" class="installer-connection-state">Keep USB connected while writing stops.</p>
             </div>
             <div v-if="state.safeToDisconnect" class="installer-actions">
               <button v-if="state.error?.recoverable !== false" data-autofocus class="installer-primary" type="button" @click="connect(activeTransport)">Try again</button>
-              <button :class="state.error?.recoverable === false ? 'installer-primary' : 'installer-secondary'" type="button" @click="close">Close</button>
+              <button v-if="state.error?.recoverable === false" class="installer-primary" type="button" @click="close">Close</button>
               <button v-if="fallbackTransport && state.error?.recoverable !== false" class="installer-secondary" type="button" @click="connect(fallbackTransport)">Try another connection</button>
             </div>
           </div>

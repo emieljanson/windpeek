@@ -239,7 +239,7 @@
 }
 
 .installer-wifi .installer-fields { margin-block-end: 0; }
-.installer-wifi .installer-actions { margin-block-start: 0.25rem; }
+.installer-wifi .installer-actions { margin-block-start: auto; padding-block-start: 0.25rem; }
 
 .installer-field {
   display: grid;
@@ -318,3 +318,13 @@
   .installer-back,
   .installer-field .setting-control { border: 1px solid ButtonText; }
 }
+
+/* Recovery actions stay reachable at short viewport heights. */
+.installer-layer:is([data-phase='error'], [data-phase='reconnect'], [data-phase='verification-issue'], [data-phase='wifi']) .installer-stage {
+  overflow-y: auto;
+}
+.installer-layer:is([data-phase='error'], [data-phase='reconnect'], [data-phase='verification-issue'], [data-phase='wifi']) .installer-stage__view {
+  position: relative;
+}
+.installer-diagnostics { font: inherit; }
+.installer-diagnostics a { color: inherit; text-decoration: underline; }
