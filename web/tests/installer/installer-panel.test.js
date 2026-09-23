@@ -57,6 +57,7 @@ describe('installer inspector panel', () => {
       await wrapper.get('.installer-primary').trigger('click')
       expect(session.connect).toHaveBeenCalledWith(preferred)
       await vi.waitFor(() => expect(wrapper.get('h2').text()).toBe('Device not listed?'))
+      expect(wrapper.get('.installer-step [role="status"]').text()).toContain('connected')
       expect(wrapper.get('.installer-primary').text()).toBe('Try another connection')
       expect(wrapper.text()).toContain(boardId === BOARD_IDS.E1003 ? 'E1003' : 'E1002')
       await wrapper.get('.installer-primary').trigger('click')

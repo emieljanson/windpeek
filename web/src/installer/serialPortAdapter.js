@@ -6,11 +6,11 @@ import { sanitizeDeviceState } from './installerDiagnostics'
 const MAGIC = new TextEncoder().encode('WINDSC01')
 const HEADER_SIZE = 24
 const MAX_PAYLOAD_SIZE = 16384
-const CH340K_FILTER = { vendorId: 0x1a86, productId: 0x7522 }
-const SERIAL_FILTERS = [
-  { usbVendorId: 0x1a86, usbProductId: 0x7522 },
-  { usbVendorId: 0x1a86, usbProductId: 0x7523 },
+const USB_FILTERS = [
+  { vendorId: 0x1a86, productId: 0x7522 },
+  { vendorId: 0x1a86, productId: 0x7523 },
 ]
+const SERIAL_FILTERS = USB_FILTERS.map(({ vendorId, productId }) => ({ usbVendorId: vendorId, usbProductId: productId }))
 const directUsbPorts = new WeakMap()
 
 async function directUsbPort(device) {
@@ -55,8 +55,8 @@ export async function requestInstallerPort(navigatorApi = globalThis.navigator, 
   }
   try {
     if (transport === 'webusb') {
-      const device = await navigatorApi.usb.requestDevice({ filters: [CH340K_FILTER] })
-      return directUsbPort(device)
+      const device = await navigatorApi.usb.requestDevice({ filters: USB_FILTERS })
+      return await directUsbPort(device)
     }
     return await navigatorApi.serial.requestPort({ filters: SERIAL_FILTERS })
   } catch (error) {
@@ -68,7 +68,7 @@ export async function requestInstallerPort(navigatorApi = globalThis.navigator, 
 export async function findGrantedInstallerPort({ navigatorApi = globalThis.navigator, classify, signal, transport = 'serial' } = {}) {
   const ports = transport === 'webusb'
     ? await Promise.all((await navigatorApi?.usb?.getDevices?.() ?? [])
-      .filter(device => device.vendorId === CH340K_FILTER.vendorId && device.productId === CH340K_FILTER.productId)
+      .filter(device => USB_FILTERS.some(filter => device.vendorId === filter.vendorId && device.productId === filter.productId))
       .map(directUsbPort))
     : await navigatorApi?.serial?.getPorts?.() ?? []
   for (const port of ports) {

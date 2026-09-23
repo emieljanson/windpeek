@@ -16,9 +16,10 @@ defineEmits(['buy', 'connect'])
         <h2 id="installer-title">Use Firefox, Chrome, or Edge</h2>
         <p role="status">{{ unsupportedReason }}</p>
       </template>
-      <template v-else-if="chooserCancelled && alternateTransport">
+      <template v-else-if="chooserCancelled">
         <h2 id="installer-title">Device not listed?</h2>
-        <p>Keep your {{ deviceLabel }} connected. Try another way to connect, without installing anything.</p>
+        <p v-if="alternateTransport" role="status">Keep your {{ deviceLabel }} connected. Try another way to connect, without installing anything.</p>
+        <p v-else role="status">No device was selected. Check your USB data cable and try again.</p>
       </template>
       <template v-else>
         <h2 id="installer-title">Connect your reTerminal</h2>
