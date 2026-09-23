@@ -245,6 +245,8 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
   await expect(scanAgain).toBeVisible()
   await expect(scanAgain).toBeEnabled()
 
+  // A failed scan keeps its error visible until the user explicitly retries.
+  await scanAgain.click()
   await page.getByRole('combobox', { name: 'Wi-Fi network' }).click()
   await page.getByRole('option', { name: 'Windpeek Studio' }).click()
   await page.getByLabel('Password').fill('layout-only')
