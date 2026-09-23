@@ -220,8 +220,8 @@ def main():
 
     installer_version = None
     if args.installer_output:
-        if args.board != "seeedstudio_reterminal_e100x" or args.debug:
-            parser.error("installer bundles are release-only and require the universal E1001/E1002 target")
+        if args.board not in {"seeedstudio_reterminal_e100x", "seeedstudio_reterminal_e1003"} or args.debug:
+            parser.error("installer bundles are release-only and require a Windpeek installer target")
         installer_version = local_installer_version(args.installer_version)
         try:
             extra_args = with_firmware_version(extra_args, installer_version)
@@ -260,6 +260,9 @@ def main():
                     str(args.installer_output),
                     "--version",
                     installer_version,
+                    "--board-id",
+                    "seeedstudio_reterminal_e1003" if args.board == "seeedstudio_reterminal_e1003"
+                    else "seeedstudio_reterminal_e1002",
                 ],
                 check=True,
             )

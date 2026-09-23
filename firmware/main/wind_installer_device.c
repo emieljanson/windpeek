@@ -53,6 +53,7 @@ typedef struct {
     bool candidate_wifi_active;
     atomic_int apply_state;
     atomic_int apply_error;
+    atomic_bool apply_render_verified;
     atomic_uint diagnostic_stage;
     wind_provider_diagnostics_t forecast_diagnostics;
     installed_configuration_t apply_candidate;
@@ -206,6 +207,7 @@ static void physical_apply_task(void *argument)
         ESP_LOGI("wind_installer", "Applying configuration (stack free: %u bytes)",
                  (unsigned) uxTaskGetStackHighWaterMark(NULL));
         esp_err_t result = physical_render(installer, &installer->apply_candidate);
+        atomic_store(&installer->apply_render_verified, result == ESP_OK);
         physical_apply_state_t final_state = PHYSICAL_APPLY_RENDER_FAILED;
         if (result != ESP_OK) {
             wind_installer_service_complete_apply(&installer->service, false);
@@ -219,6 +221,10 @@ static void physical_apply_task(void *argument)
             final_state = result == ESP_OK ? PHYSICAL_APPLY_COMPLETE
                                           : PHYSICAL_APPLY_COMMIT_FAILED;
         }
+        if (result != ESP_OK && wind_app_show_failed_setup() != ESP_OK) {
+            ESP_LOGW("wind_installer", "Could not replace failed setup preview");
+        }
+        if (result != ESP_OK) atomic_store(&installer->apply_render_verified, false);
         physical_clear_apply(installer);
         atomic_store(&installer->apply_error, result);
         if (result == ESP_OK) physical_checkpoint(installer, DIAG_COMPLETE);
@@ -240,6 +246,7 @@ static esp_err_t physical_begin_apply(void *context,
     memset(&installer->forecast_diagnostics, 0, sizeof(installer->forecast_diagnostics));
     epaper_panel_diagnostics_reset();
     atomic_store(&installer->apply_error, ESP_OK);
+    atomic_store(&installer->apply_render_verified, false);
     installer->apply_candidate = *candidate;
     if (ssid && password) {
         snprintf(installer->apply_ssid, sizeof(installer->apply_ssid), "%s", ssid);
@@ -288,7 +295,9 @@ static bool physical_wifi_connected(void *context)
 
 static bool physical_render_succeeded(void *context)
 {
-    (void) context;
+    physical_installer_t *installer = context;
+    if (atomic_load(&installer->apply_state) == PHYSICAL_APPLY_COMPLETE)
+        return atomic_load(&installer->apply_render_verified);
     return wind_app_last_render_succeeded();
 }
 

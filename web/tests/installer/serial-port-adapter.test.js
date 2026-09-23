@@ -6,6 +6,22 @@ import { createInstallerDiagnostics } from '../../src/installer/installerDiagnos
 import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it('retries one corrupt status response without interrupting installation', async () => {
+    const chunks = []
+    const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })), cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: vi.fn(async (bytes) => {
+      const request = decodeProtocolFrame(bytes)
+      const response = encodeProtocolFrame({ requestId: request.requestId, messageType: 2, payload: { status: 'ok' } })
+      if (request.requestId === 1) response[response.length - 1] ^= 1
+      chunks.push(response)
+    }), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const protocol = createSerialProtocol(port, { timeoutMs: 10 })
+    await protocol.open()
+    await expect(protocol.request('get_state')).resolves.toEqual({ status: 'ok' })
+    expect(writer.write).toHaveBeenCalledTimes(2)
+    await protocol.close()
+  })
   it('normalizes a failed USB adapter import as a device access error', async () => {
     vi.doMock('esptool-js', () => { throw new Error('Unable to load adapter') })
     try {

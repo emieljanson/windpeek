@@ -107,6 +107,9 @@ export async function applyConfiguration({
     const failed = ['render_failed', 'commit_failed'].includes(status.apply)
     if (!failed && verified(status, configuration.digest)) return finish()
     recordFailure(status)
+    if (status.apply === 'complete' && status.render !== 'valid') {
+      throw verificationError('Windpeek saved the setup, but could not confirm the forecast screen. Reconnect to check it.')
+    }
     if (!retryableForecastFailure(status) || attempt + 1 === MAX_APPLY_ATTEMPTS) throw verificationError()
     recordRetry(attempt + 1)
     await waitFor(3000)

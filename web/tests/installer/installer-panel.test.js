@@ -388,7 +388,7 @@ describe('installer inspector panel', () => {
     expect(wrapper.text()).not.toMatch(/WS-[0-9A-Z]{10}/)
   })
 
-  it.each(['error', 'reconnect', 'wifi'])('offers the saved report when Sentry delivery fails during %s', (phase) => {
+  it.each(['error', 'reconnect', 'wifi', 'verification-issue'])('offers the saved report when Sentry delivery fails during %s', (phase) => {
     const report = JSON.stringify({ version: 1, deviceEvidence: [{ kind: 'abort', addresses: [0x42001234] }] })
     mountPanel(fakeSession({ phase, safeToDisconnect: true, error: { message: 'USB connection lost' },
       diagnosticStatus: 'failed', diagnosticReport: report }))
@@ -396,6 +396,31 @@ describe('installer inspector panel', () => {
     expect(link.text()).toBe('Download report')
     expect(decodeURIComponent(link.attributes('href').split(',')[1])).toBe(report)
     expect(wrapper.text()).toContain('Technical details could not be sent.')
+    const email = wrapper.get('a[href^="mailto:"]')
+    expect(email.text()).toBe('email support')
+    expect(decodeURIComponent(email.attributes('href'))).toContain('attach it to this email')
+  })
+
+  it('checks the device from a verification issue without showing the Wi-Fi form', async () => {
+    const session = fakeSession({ phase: 'verification-issue', safeToDisconnect: true,
+      error: { message: 'Wi-Fi connected, but setup could not be confirmed.' } })
+    mountPanel(session)
+
+    expect(wrapper.get('h2').text()).toBe('Wi-Fi connected. Setup needs checking.')
+    expect(wrapper.find('.installer-wifi').exists()).toBe(false)
+    await wrapper.get('.installer-primary').trigger('click')
+    expect(session.reconnect).toHaveBeenCalledOnce()
+  })
+
+  it('keeps a rejected Wi-Fi test visible without replacing it with a fresh scan', async () => {
+    const session = fakeSession({ phase: 'configuring', safeToDisconnect: true, error: null })
+    mountPanel(session)
+    session.emit({ phase: 'wifi', safeToDisconnect: true,
+      error: { message: 'Windpeek could not connect to that Wi-Fi network.' } })
+    await wrapper.vm.$nextTick()
+
+    expect(session.scanNetworks).not.toHaveBeenCalled()
+    expect(wrapper.get('#installer-wifi-error').text()).toContain('could not connect')
   })
 
   it('closes with Escape only when disconnecting is safe', async () => {

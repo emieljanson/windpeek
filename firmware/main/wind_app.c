@@ -613,6 +613,20 @@ esp_err_t wind_app_show_battery_empty(void) {
     return result;
 }
 
+static esp_err_t show_setup_unlocked(void) {
+    const size_t size = active_renderer_bitmap_size();
+    uint8_t *bitmap = malloc(size);
+    esp_err_t result = bitmap ? ESP_OK : ESP_ERR_NO_MEM;
+    (void)clear_panel_confirmation_unlocked();
+    if (result == ESP_OK) {
+        result = wind_renderer_render_setup(active_renderer_display(), bitmap, size)
+            == 0 ? ESP_OK : ESP_FAIL;
+        if (result == ESP_OK) result = display_dashboard(NULL, bitmap, size);
+    }
+    free(bitmap);
+    return result;
+}
+
 esp_err_t wind_app_show_setup(void) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
@@ -625,16 +639,17 @@ esp_err_t wind_app_show_setup(void) {
         xSemaphoreGive(s_runtime_lock);
         return ESP_ERR_INVALID_STATE;
     }
-    const size_t size = active_renderer_bitmap_size();
-    uint8_t *bitmap = malloc(size);
-    esp_err_t result = bitmap ? ESP_OK : ESP_ERR_NO_MEM;
-    (void)clear_panel_confirmation_unlocked();
-    if (result == ESP_OK) {
-        result = wind_renderer_render_setup(active_renderer_display(), bitmap, size)
-            == 0 ? ESP_OK : ESP_FAIL;
-        if (result == ESP_OK) result = display_dashboard(NULL, bitmap, size);
-    }
-    free(bitmap);
+    esp_err_t result = show_setup_unlocked();
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+}
+
+esp_err_t wind_app_show_failed_setup(void) {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    // A failed candidate can already be visible on e-paper. Replace it even
+    // while the USB session is active or an older setup is saved.
+    esp_err_t result = show_setup_unlocked();
     xSemaphoreGive(s_runtime_lock);
     return result;
 }
@@ -1340,6 +1355,7 @@ bool wind_app_last_render_succeeded(void) {
 }
 #else
 esp_err_t wind_app_show_setup(void) { return ESP_ERR_NOT_SUPPORTED; }
+esp_err_t wind_app_show_failed_setup(void) { return ESP_ERR_NOT_SUPPORTED; }
 bool wind_app_spot_requires_network(size_t index) { (void)index; return false; }
 bool wind_app_overview_requires_network(int direction) { (void)direction; return false; }
 esp_err_t wind_app_toggle_day(size_t day_index) { (void)day_index; return ESP_ERR_NOT_SUPPORTED; }

@@ -120,7 +120,7 @@ describe('installer session', () => {
     await session.connect()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
 
-    expect(session.getState().phase).toBe('error')
+    expect(session.getState().phase).toBe('verification-issue')
     expect(diagnostics.record).toHaveBeenCalledWith({
       category: 'verification', operation: 'device-state', status: 'commit_failed',
       deviceState: expect.objectContaining({ apply: 'commit_failed' }),
@@ -770,6 +770,83 @@ describe('installer session', () => {
       .toEqual(expect.arrayContaining([
         expect.objectContaining({ category: 'state', operation: 'wifi', status: 'entered' }),
       ]))
+  })
+
+  it('keeps a failed verification out of the Wi-Fi form after Wi-Fi connected', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    let wifiReady = false
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'get_state' && wifiReady) throw new Error('Invalid protocol frame')
+      return originalRequest(command, values, timeout)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol,
+      reporter: { report: vi.fn(async () => ({ status: 'failed' })) } })
+
+    await session.connect()
+    await session.submitWifi({ ssid: 'Home', password: 'secret' })
+
+    expect(session.getState()).toMatchObject({ phase: 'verification-issue', error: {
+      code: INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+    } })
+    expect(protocol.request.mock.calls.filter(([command]) => command === 'scan_networks')).toHaveLength(0)
+  })
+
+  it('checks the saved setup after a broken verification response without asking for Wi-Fi again', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    let wifiReady = false
+    let reconnected = false
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'get_state' && wifiReady) {
+        if (!reconnected) throw new Error('Invalid protocol frame')
+        return { configurationDigest: configuration.digest, wifi: 'connected',
+          wifiConfigured: true, render: 'valid', apply: 'idle' }
+      }
+      return originalRequest(command, values, timeout)
+    })
+    const requestPort = vi.fn(async () => ({}))
+    const session = createInstallerSession({ configuration, requestPort,
+      releaseLoader: async () => release, protocolFactory: () => protocol,
+      reporter: { report: vi.fn(async () => ({ status: 'failed' })) } })
+
+    await session.connect()
+    await session.submitWifi({ ssid: 'Home', password: 'secret' })
+    expect(session.getState().phase).toBe('verification-issue')
+    reconnected = true
+    await session.reconnect()
+
+    expect(session.getState().phase).toBe('complete')
+    expect(protocol.request.mock.calls.filter(([command]) => command === 'test_wifi')).toHaveLength(1)
+  })
+
+  it('does not accept an old valid screen after the current apply failed', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    let wifiReady = false
+    let reconnected = false
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'get_state' && wifiReady) {
+        if (!reconnected) throw new Error('Invalid protocol frame')
+        return { configurationDigest: configuration.digest, wifi: 'connected',
+          wifiConfigured: true, render: 'valid', apply: 'commit_failed' }
+      }
+      return originalRequest(command, values, timeout)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+
+    await session.connect()
+    await session.submitWifi({ ssid: 'Home', password: 'secret' })
+    reconnected = true
+    await session.reconnect()
+
+    expect(session.getState().phase).toBe('verification-issue')
+    expect(protocol.request.mock.calls.filter(([command]) => command === 'begin')).toHaveLength(2)
   })
 
   it('keeps diagnostic cleanup failures outside Wi-Fi recovery', async () => {

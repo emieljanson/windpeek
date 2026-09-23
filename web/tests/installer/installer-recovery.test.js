@@ -88,9 +88,9 @@ describe('setup transaction recovery', () => {
   it.each([
     ['temporary transport failure', { apply: 'render_failed', transportError: -1 }, 2, 'complete'],
     ['temporary provider failure', { apply: 'render_failed', httpStatus: 503 }, 2, 'complete'],
-    ['rate limit', { apply: 'render_failed', httpStatus: 429 }, 1, 'error'],
-    ['invalid forecast', { apply: 'render_failed', parseError: 258 }, 1, 'error'],
-    ['storage failure', { apply: 'commit_failed', httpStatus: 200 }, 1, 'error'],
+    ['rate limit', { apply: 'render_failed', httpStatus: 429 }, 1, 'verification-issue'],
+    ['invalid forecast', { apply: 'render_failed', parseError: 258 }, 1, 'verification-issue'],
+    ['storage failure', { apply: 'commit_failed', httpStatus: 200 }, 1, 'verification-issue'],
   ])('handles %s without treating a cached screen as success', async (_name, failure, expectedApplies, phase) => {
     let applies = 0
     let wifiChecks = 0
@@ -112,6 +112,28 @@ describe('setup transaction recovery', () => {
     expect(session.getState().phase).toBe(phase)
     expect(applies).toBe(expectedApplies)
     expect(wifiChecks).toBe(expectedApplies)
+  })
+
+  it('explains a saved setup whose screen is still unconfirmed', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const original = protocol.request.getMockImplementation()
+    let wifiReady = false
+    protocol.request.mockImplementation(async (command, ...args) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'apply_configuration') return { status: 'applying' }
+      if (command === 'get_state' && wifiReady) return {
+        configurationDigest: configuration.digest, wifi: 'connected', render: 'pending', apply: 'complete',
+      }
+      return original(command, ...args)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+
+    await session.connect()
+    await session.submitWifi({ ssid: 'Test network', password: 'test-value' })
+
+    expect(session.getState()).toMatchObject({ phase: 'verification-issue',
+      error: { message: expect.stringContaining('screen') } })
   })
 
   it('waits for an interrupted apply to finish without mutating its candidate', async () => {
@@ -288,7 +310,7 @@ describe.each([BOARD_IDS.E1001, BOARD_IDS.E1002, BOARD_IDS.E1003])('clean instal
     }
     expect(protocol.request).toHaveBeenCalledWith('begin', { unixTime: Math.floor(submittedAt / 1000), completionAck: true })
     const failed = ['persistent forecast failure', 'commit failure'].includes(fault)
-    expect(session.getState().phase).toBe(failed ? 'error' : 'complete')
+    expect(session.getState().phase).toBe(failed ? 'verification-issue' : 'complete')
     expect(finishCalls).toBe(failed ? 0 : 1)
     expect(attempts).toBe(fault.includes('forecast failure') ? 2 : 1)
     if (failed) {
