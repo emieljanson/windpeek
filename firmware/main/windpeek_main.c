@@ -33,6 +33,7 @@
 #include "esp_timer.h"
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
 #include "board_touch.h"
+#include "driver/ledc.h"
 #include "wind_overview.h"
 #endif
 
@@ -198,6 +199,51 @@ static bool connect_installed_wifi(void)
 static wind_touch_gesture_t s_boot_gesture;
 static bool s_have_boot_gesture;
 static uint32_t s_boot_release_ms;
+static esp_timer_handle_t s_navigation_click_timer;
+
+static void stop_navigation_click(void *argument) {
+    (void)argument;
+    ledc_stop(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
+}
+
+static void init_navigation_click(void) {
+    const ledc_timer_config_t timer = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = LEDC_TIMER_0,
+        .freq_hz = 1800,
+        .clk_cfg = LEDC_AUTO_CLK,
+    };
+    const ledc_channel_config_t channel = {
+        .gpio_num = GPIO_NUM_45,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_0,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = LEDC_TIMER_0,
+        .duty = 128,
+        .hpoint = 0,
+    };
+    const esp_timer_create_args_t click_timer = {
+        .callback = stop_navigation_click,
+        .name = "navigation_click",
+    };
+    if (ledc_timer_config(&timer) != ESP_OK ||
+        ledc_channel_config(&channel) != ESP_OK ||
+        esp_timer_create(&click_timer, &s_navigation_click_timer) != ESP_OK) {
+        ESP_LOGW(TAG, "Navigation click unavailable");
+        s_navigation_click_timer = NULL;
+        return;
+    }
+    ledc_stop(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
+}
+
+static void play_navigation_click(void) {
+    if (!s_navigation_click_timer) return;
+    (void)esp_timer_stop(s_navigation_click_timer);
+    if (ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 128) != ESP_OK ||
+        ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0) != ESP_OK) return;
+    (void)esp_timer_start_once(s_navigation_click_timer, 45000);
+}
 
 static void capture_boot_touch(void) {
     if (board_hal_touch_gesture_wake()) return;
@@ -221,6 +267,7 @@ static void capture_boot_touch(void) {
 static void run_touch_action(wind_touch_action_t action) {
     if (action.kind==WIND_TOUCH_NONE || power_manager_is_installer_active()) return;
     if (!battery_allows_work()) return;
+    play_navigation_click();
     power_manager_work_begin();
     power_manager_reset_sleep_timer();
     /* Fetching is lazy, and overview rendering reads only its visible three spots. */
@@ -255,6 +302,7 @@ static void e1003_input_task(void *argument) {
     uint32_t last_frame=(uint32_t)(esp_timer_get_time()/1000);
     while (true) {
         uint32_t now=(uint32_t)(esp_timer_get_time()/1000);
+        bool navigation_ran=false;
         bool held[3];
         for (int i=0;i<3;++i) held[i]=gpio_get_level(pins[i])==0;
         bool blocked=power_manager_is_installer_active() || power_manager_work_active() || (held[0]&&held[1]);
@@ -265,8 +313,10 @@ static void e1003_input_task(void *argument) {
             if (!held[i]&&down[i]&&armed[i]&&!blocked) {
                 TickType_t duration=xTaskGetTickCount()-pressed_at[i];
                 if (duration>=pdMS_TO_TICKS(50)&&duration<pdMS_TO_TICKS(3000)) {
+                    navigation_ran=true;
                     if (i==2) run_touch_action((wind_touch_action_t){WIND_TOUCH_OPEN,0});
-                    else if (battery_allows_work()) {
+                    else if (wind_spots_count()>1 && battery_allows_work()) {
+                        play_navigation_click();
                         power_manager_work_begin();
                         int direction=i==0?-1:1;
                         if (wind_app_navigation_requires_network(direction)&&!wifi_manager_is_connected())
@@ -283,6 +333,13 @@ static void e1003_input_task(void *argument) {
             if (!held[i]&&!blocked) armed[i]=true;
             down[i]=held[i];
         }
+        if (navigation_ran) {
+            /* Ignore presses made while the e-ink refresh was blocking this task. */
+            for (int i=0;i<3;++i) {
+                down[i]=gpio_get_level(pins[i])==0;
+                armed[i]=!down[i];
+            }
+        }
         board_touch_sample_t sample;
         esp_err_t result=board_hal_touch_read(&sample);
         now=(uint32_t)(esp_timer_get_time()/1000);
@@ -294,7 +351,14 @@ static void e1003_input_task(void *argument) {
                 bool open; size_t page; wind_app_overview_state(&open,&page);
                 wind_touch_action_t action=wind_touch_update(&gesture,sample.contacts,
                     (uint32_t)sample.x*800/1872,(uint32_t)sample.y*600/1404,now,open,page,wind_spots_count());
-                if (action.kind!=WIND_TOUCH_NONE) { run_touch_action(action); discard_until_release=true; }
+                if (action.kind!=WIND_TOUCH_NONE) {
+                    run_touch_action(action);
+                    discard_until_release=true;
+                    for (int i=0;i<3;++i) {
+                        down[i]=gpio_get_level(pins[i])==0;
+                        armed[i]=!down[i];
+                    }
+                }
             }
         } else if (result!=ESP_ERR_NOT_FINISHED && result!=ESP_ERR_NOT_SUPPORTED) {
             /* Lost I2C frames must never turn a drag into an accidental selection. */
@@ -428,6 +492,7 @@ void app_main(void)
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    init_navigation_click();
     /* Capture the latched wake coordinate before Wi-Fi or a screen refresh. */
     capture_boot_touch();
 #endif
@@ -472,6 +537,9 @@ void app_main(void)
     bool touch_wake=false;
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     touch_wake=wake==WAKEUP_SOURCE_TOUCH;
+    if (wake==WAKEUP_SOURCE_BOOT_BUTTON ||
+        ((wake==WAKEUP_SOURCE_ROTATE_BUTTON || wake==WAKEUP_SOURCE_CLEAR_BUTTON) &&
+         wind_spots_count()>1)) play_navigation_click();
     /* Reject a stray gesture interrupt without starting Wi-Fi or refreshing. */
     if (touch_wake && board_hal_touch_gesture_wake() && !board_hal_touch_double_tap()) {
         power_manager_work_end();
