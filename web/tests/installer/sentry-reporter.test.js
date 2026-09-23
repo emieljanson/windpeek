@@ -181,6 +181,7 @@ describe('Sentry installer reporter', () => {
   })
 
   it('keeps the real SDK envelope inside the final allowlist', async () => {
+    vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' })
     const sdk = await import('@sentry/browser')
     let envelope
     const reporter = createSentryReporter({
@@ -211,7 +212,7 @@ describe('Sentry installer reporter', () => {
     expect(attachment[0]).toMatchObject({ filename: 'windpeek-diagnostic.json', content_type: 'application/json' })
     const report = new TextDecoder().decode(attachment[1])
     expect(report).toBe(createDiagnosticReport({ ...input.snapshot,
-      context: { ...input.snapshot.context, browser: 'Other', os: 'Other' } }))
+      context: { ...input.snapshot.context, browser: 'Other', os: 'Linux' } }))
     expect(report).not.toMatch(/private-network|private-digest|private-crash-secret/)
     const serialized = JSON.stringify(envelope)
     expect(serialized).toContain('windpeek.reference')
