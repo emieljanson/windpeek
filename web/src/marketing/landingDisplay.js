@@ -5,6 +5,7 @@ export function landingDisplayConfiguration(tide, variant = siteVariant(), swell
   return {
     ...DEFAULT_DISPLAY_CONFIGURATION,
     ...siteDisplayDefaults(variant),
+    showDedicatedFooter: false,
     swell, swellStatus,
     showTide: tide?.capability === 'available',
     tide,
