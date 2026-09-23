@@ -40,7 +40,11 @@ function readCandidate(buildDir) {
   const flasherArgs = JSON.parse(readFileSync(flasherArgsPath, 'utf8'))
   const projectDescription = JSON.parse(readFileSync(projectDescriptionPath, 'utf8'))
   const sdkconfig = JSON.parse(readFileSync(sdkconfigPath, 'utf8'))
-  if (sdkconfig.BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X !== true) return null
+  const boardId = sdkconfig.BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X === true
+    ? 'seeedstudio_reterminal_e1002'
+    : sdkconfig.BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003 === true
+      ? 'seeedstudio_reterminal_e1003' : null
+  if (!boardId) return null
   const flashFiles = Object.entries(flasherArgs.flash_files ?? {})
     .sort(([left], [right]) => Number.parseInt(left, 16) - Number.parseInt(right, 16))
   const files = flashFiles.map(([, relativeFile]) => path.join(buildDir, relativeFile))
@@ -53,6 +57,7 @@ function readCandidate(buildDir) {
 
   return {
     buildDir,
+    boardId,
     flasherArgsPath,
     flashFiles,
     files,
@@ -65,15 +70,15 @@ function readCandidate(buildDir) {
   }
 }
 
-export function selectLocalFirmwareBuild(repositoryDir) {
+export function selectLocalFirmwareBuild(repositoryDir, boardId = 'seeedstudio_reterminal_e1002') {
   const firmwareDir = path.join(repositoryDir, 'firmware')
   const candidates = ['build-local', 'build']
     .map((directory) => readCandidate(path.join(firmwareDir, directory)))
-    .filter(Boolean)
+    .filter(candidate => candidate?.boardId === boardId)
     .sort((left, right) => right.builtAt - left.builtAt)
 
   if (!candidates.length) {
-    throw new Error('No complete local E1001/E1002 firmware build was found.')
+    throw new Error(`No complete local ${boardId === 'seeedstudio_reterminal_e1003' ? 'E1003' : 'E1001/E1002'} firmware build was found.`)
   }
 
   const selected = candidates[0]

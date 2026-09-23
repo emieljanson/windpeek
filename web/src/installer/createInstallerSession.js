@@ -581,7 +581,7 @@ export function createInstallerSession({
     return state
   }
 
-  async function attachReconnectedPort(reconnectedPort, expectedAttempt = attempt) {
+  async function attachReconnectedPort(reconnectedPort, expectedAttempt = attempt, checkingVerification = false) {
     port = reconnectedPort
     let appProbe = await probeApp(port)
     if (!appProbe && awaitingWrittenFirmware) {
@@ -678,6 +678,16 @@ export function createInstallerSession({
         'Windpeek could not confirm the selected screen model.', { recoverable: false })
     }
     rememberVerifiedPort(reconnectedPort)
+    if (checkingVerification && device.configurationDigest === installationConfiguration.digest &&
+        device.wifiHealthy && device.renderValid &&
+        !['applying', 'render_failed', 'commit_failed'].includes(device.applyState)) {
+      if (device.capabilities?.includes('completion-ack')) {
+        try { await protocol.request('finish_setup') } catch {}
+      }
+      if (!isCurrent(expectedAttempt)) return state
+      completeAttempt()
+      return state
+    }
     if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
     else {
       if (!await configure(undefined, expectedAttempt)) return state
@@ -723,6 +733,7 @@ export function createInstallerSession({
   }
 
   async function reconnect() {
+    const checkingVerification = state.phase === 'verification-issue'
     const currentAttempt = ++attempt
     resetDiagnosticDelivery()
     operationController?.abort()
@@ -739,12 +750,16 @@ export function createInstallerSession({
         update({ phase: 'reconnect', safeToDisconnect: true })
         return state
       }
-      return await attachReconnectedPort(selectedPort, currentAttempt)
+      return await attachReconnectedPort(selectedPort, currentAttempt, checkingVerification)
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
-      update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: true })
+      const installerError = checkingVerification && error?.code !== INSTALLER_ERROR_CODES.CONNECTION_LOST
+        ? asInstallerError(error, INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not confirm the setup. Check the device again.')
+        : asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
+      const phase = checkingVerification && installerError.code !== INSTALLER_ERROR_CODES.CONNECTION_LOST
+        ? 'verification-issue' : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
+      update({ phase, error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
     }
@@ -762,10 +777,15 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
-      const phase = installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED
-        ? 'wifi'
-        : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
+      const checkingVerification = state.phase === 'verifying'
+      const installerError = checkingVerification && error?.code !== INSTALLER_ERROR_CODES.WIFI_FAILED
+        ? error?.code === INSTALLER_ERROR_CODES.VERIFICATION_FAILED ? error
+          : new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+            'Wi-Fi connected, but Windpeek could not confirm the setup. Reconnect to check its status.', { cause: error })
+        : asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
+      const phase = checkingVerification ? 'verification-issue'
+        : installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED ? 'wifi'
+          : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
       update({ phase, error: installerError, safeToDisconnect: true })
       reportFailure(installerError, phase)
     } finally {

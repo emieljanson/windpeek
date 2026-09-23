@@ -17,6 +17,7 @@ extern "C" {
 
 esp_err_t wind_app_show_battery_empty(void);
 esp_err_t wind_app_show_setup(void);
+esp_err_t wind_app_show_failed_setup(void);
 
 typedef enum {
     WIND_FRESHNESS_UNAVAILABLE = 0,

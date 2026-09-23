@@ -123,6 +123,10 @@
   block-size: min(31.5rem, calc(100dvh - 2rem));
 }
 
+.settings-panel:has(.installer-layer[data-phase='verification-issue']) {
+  block-size: min(30rem, calc(100dvh - 2rem));
+}
+
 .settings-shell {
   position: relative;
   z-index: 2;

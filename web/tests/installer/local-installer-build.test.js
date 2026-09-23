@@ -19,6 +19,7 @@ function fixture() {
 function build(firmware, directory, version, timestamp, {
   auxiliaryTimestamp = timestamp,
   universal = true,
+  e1003 = false,
 } = {}) {
   const buildDirectory = path.join(firmware, directory)
   mkdirSync(path.join(buildDirectory, 'bootloader'), { recursive: true })
@@ -42,6 +43,7 @@ function build(firmware, directory, version, timestamp, {
   }))
   writeFileSync(path.join(buildDirectory, 'config', 'sdkconfig.json'), JSON.stringify({
     BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X: universal,
+    BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003: e1003,
   }))
   for (const file of [
     'windpeek.bin', 'partition_table/partition-table.bin', 'ota_data_initial.bin',
@@ -109,6 +111,21 @@ describe('local installer firmware build', () => {
     })
 
     expect(selectLocalFirmwareBuild(root)).toMatchObject({ buildDir: universal })
+  })
+
+  it('selects an E1003 build for the local E1003 installer', () => {
+    const { root, firmware } = fixture()
+    const sourceTime = new Date('2026-08-30T10:00:00Z')
+    utimesSync(path.join(firmware, 'main', 'windpeek_main.c'), sourceTime, sourceTime)
+    const e1003 = build(firmware, 'build', 'e1003-dev', new Date('2026-08-30T12:00:00Z'), {
+      universal: false, e1003: true,
+    })
+
+    expect(selectLocalFirmwareBuild(root, 'seeedstudio_reterminal_e1003')).toMatchObject({
+      buildDir: e1003,
+      boardId: 'seeedstudio_reterminal_e1003',
+    })
+    expect(() => selectLocalFirmwareBuild(root)).toThrow(/E1001\/E1002/)
   })
 
   it('refuses a different build with the same embedded firmware version', () => {

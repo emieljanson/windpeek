@@ -170,12 +170,24 @@ export function createSerialProtocol(port, {
       if (buffered.length < HEADER_SIZE) return null
       const declared = new DataView(buffered.buffer, buffered.byteOffset).getUint32(16, true)
       if (declared > MAX_PAYLOAD_SIZE) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device returned an invalid response.')
+        buffered = buffered.slice(MAGIC.length)
+        const error = new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device returned an invalid response.')
+        error.corruptFrame = true
+        throw error
       }
       const frameSize = HEADER_SIZE + declared
       measurements.expectedFrameBytes = frameSize
       if (buffered.length < frameSize) return null
-      const response = decodeProtocolFrame(buffered.slice(0, frameSize))
+      let response
+      try {
+        response = decodeProtocolFrame(buffered.slice(0, frameSize))
+      } catch {
+        // A damaged frame must not poison every later request on this port.
+        buffered = buffered.slice(frameSize)
+        const error = new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device returned an invalid response.')
+        error.corruptFrame = true
+        throw error
+      }
       buffered = buffered.slice(frameSize)
       measurements.expectedFrameBytes = 0
       // A delayed response from an older request must not poison the next
@@ -279,7 +291,16 @@ export function createSerialProtocol(port, {
       buffered = new Uint8Array(0)
     },
     async request(command, values = {}, requestedTimeout = timeoutMs) {
-      const result = requestQueue.then(() => performRequest(command, values, requestedTimeout))
+      const result = requestQueue.then(async () => {
+        try {
+          return await performRequest(command, values, requestedTimeout)
+        } catch (error) {
+          // Reading status is safe to repeat. A single damaged USB frame should
+          // not interrupt an otherwise successful installation.
+          if (command !== 'get_state' || !error?.corruptFrame) throw error
+          return performRequest(command, values, requestedTimeout)
+        }
+      })
       requestQueue = result.catch(() => {})
       return result
     },

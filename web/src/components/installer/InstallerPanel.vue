@@ -88,7 +88,9 @@ function hideLeavingStep(element) {
 watch(() => state.value.phase, async (phase, previous) => {
   if (phase === 'wifi' && previous !== 'wifi') {
     wifiReady.value = false
-    await scanNetworks()
+    // Keep the actual Wi-Fi rejection visible when returning from a test.
+    // The previous network choices are still available for another attempt.
+    if (!state.value.error) await scanNetworks()
     if (state.value.phase !== 'wifi') return
     wifiReady.value = true
   }
@@ -98,7 +100,7 @@ watch(() => state.value.phase, async (phase, previous) => {
 watch(
   () => [state.value.phase, state.value.error?.message],
   ([phase, message]) => {
-    if (['error', 'reconnect', 'wifi'].includes(phase) && message) {
+    if (['error', 'reconnect', 'wifi', 'verification-issue'].includes(phase) && message) {
       toast.error(message, { id: 'installer-error', duration: 5000 })
     } else toast.dismiss('installer-error')
   },
@@ -177,7 +179,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
     </button>
     <div class="installer-live-region" role="status" aria-live="polite">{{ progressCopy[0] }}</div>
 
-    <InstallerStateIcon :phase="displayPhase" />
+    <InstallerStateIcon :phase="displayPhase === 'verification-issue' ? 'error' : displayPhase" />
 
     <div class="installer-stage">
       <Transition name="installer-step-slide" @before-leave="hideLeavingStep">
@@ -231,6 +233,18 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
           <InstallerWifi v-else-if="state.phase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" :diagnostic-report="state.diagnosticReport" @submit="submitWifi" @rescan="scanNetworks" />
           <InstallerComplete v-else-if="state.phase === 'complete'" @done="close" />
+
+          <div v-else-if="state.phase === 'verification-issue'" class="installer-step installer-step--error">
+            <div class="installer-step__copy">
+              <h2 id="installer-title">Wi-Fi connected. Setup needs checking.</h2>
+              <p role="alert">{{ state.error?.message }} Keep the USB cable connected.</p>
+              <InstallerDiagnosticStatus :status="state.diagnosticStatus" :reference="state.diagnosticReference" :report="state.diagnosticReport" />
+            </div>
+            <div class="installer-actions">
+              <button data-autofocus class="installer-primary" type="button" @click="session.reconnect()">Check device</button>
+              <button class="installer-secondary" type="button" @click="close">Close</button>
+            </div>
+          </div>
 
           <div v-else-if="state.phase === 'error'" class="installer-step installer-step--error">
             <div class="installer-step__copy">
