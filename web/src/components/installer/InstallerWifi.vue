@@ -15,7 +15,8 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'rescan'])
 const ssid = ref('')
 const password = ref('')
-const describedBy = computed(() => props.error ? 'installer-wifi-help installer-wifi-error' : 'installer-wifi-help')
+const hasDiagnostic = computed(() => Boolean(props.error || props.diagnosticReport || props.diagnosticStatus !== 'idle'))
+const describedBy = computed(() => hasDiagnostic.value ? 'installer-wifi-help installer-wifi-error' : 'installer-wifi-help')
 const networkOptions = computed(() => props.networks.map((network) => ({
   label: network.ssid,
   value: network.ssid,
@@ -82,7 +83,7 @@ function submit() {
           :required="passwordRequired"
         />
       </label>
-      <p v-if="error || diagnosticReport || diagnosticStatus !== 'idle'" id="installer-wifi-error" class="installer-message is-error"><InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" :report="diagnosticReport" :message="error" /></p>
+      <p v-if="hasDiagnostic" id="installer-wifi-error" class="installer-message is-error"><InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" :report="diagnosticReport" :message="error" /></p>
     </div>
     <div class="installer-actions">
       <button class="installer-secondary" type="button" :disabled="busy || scanning" @click="$emit('rescan')">{{ scanning ? 'Scanning…' : 'Scan again' }}</button>

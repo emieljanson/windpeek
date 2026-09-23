@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
-import worker, { DSN as dsn } from '../../workers/installer-reports/src/index.js'
+import worker, { DSN as dsn, MAX_BYTES } from '../../workers/installer-reports/src/index.js'
 
 const body = JSON.stringify({ dsn, event_id: 'a'.repeat(32) }) + '\n{"type":"event"}\n{}'
 const request = (options = {}) => new Request('https://reports.example/report', {
@@ -35,11 +35,18 @@ describe('installer report relay', () => {
     [{ headers: { origin: 'https://unrelated.example' } }, 403],
     [{ body: body.replace(dsn, 'https://attacker.example/1') }, 400],
     [{ body: 'not-an-envelope' }, 400],
-    [{ body: 'x'.repeat(256 * 1024 + 1) }, 413],
+    [{ body: 'x'.repeat(MAX_BYTES + 1) }, 413],
   ])('rejects invalid or oversized requests without forwarding', async (options, status) => {
     const upstream = vi.fn()
     expect((await worker.fetch(request(options), {}, {}, upstream)).status).toBe(status)
     expect(upstream).not.toHaveBeenCalled()
+  })
+
+  it('delivers a full report larger than the previous 256 KiB limit unchanged', async () => {
+    const largeEnvelope = body + '\n{"type":"attachment"}\n' + 'diagnostic data\n'.repeat(40000)
+    const upstream = vi.fn(async () => new Response(null, { status: 200 }))
+    expect((await worker.fetch(request({ body: largeEnvelope }), {}, {}, upstream)).status).toBe(200)
+    expect(new TextDecoder().decode(upstream.mock.calls[0][1].body)).toBe(largeEnvelope)
   })
 
   it('preserves rate limits and never confirms an upstream failure', async () => {

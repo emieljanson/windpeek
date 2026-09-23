@@ -15,7 +15,7 @@ required. The relay validates that DSN against the fixed Windpeek project.
 Current endpoint:
 `https://windpeek-installer-reports.windscout-nearby-location.workers.dev/report`
 
-Requests are limited to 256 KiB. Only the Windpeek website and local browser QA
+Requests are limited to 2 MiB to fit the full diagnostic attachment and event. Only the Windpeek website and local browser QA
 origins are accepted. This is a public ingestion endpoint; origin checks are
 not authentication. Cookies, authorization and client IP headers are not
 forwarded. The upstream timeout is four seconds, and upstream failure or rate

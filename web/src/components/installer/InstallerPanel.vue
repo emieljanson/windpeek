@@ -65,7 +65,7 @@ const progressCopy = computed(() => ({
   reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
   'wifi-scanning': ['Finding Wi-Fi networks', 'Windpeek is checking which networks are nearby.'],
   configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
-  error: ['Setup interrupted', ''],
+  error: [unsupportedReason.value && state.value.phase === 'ready' ? 'Use a supported browser' : 'Setup interrupted', ''],
   reconnect: ['Reconnect your device', ''],
   'verification-issue': ['Setup didn’t finish', ''],
   wifi: ['Connect to Wi-Fi', ''],

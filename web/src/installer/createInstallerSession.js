@@ -113,7 +113,7 @@ export function createInstallerSession({
   function completeAttempt(patch = {}) {
     latestDiagnosticOccurrence = null
     update({
-      phase: 'complete', progress: 1, safeToDisconnect: true,
+      phase: 'complete', progress: 1, safeToDisconnect: true, canRetrySetup: false,
       diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null, ...patch,
     })
     try { diagnostics.destroy?.() } catch {}

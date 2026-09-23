@@ -524,7 +524,7 @@ it('retries a terminal forecast failure on the existing connection', async () =>
   await session.connect()
   expect(session.getState()).toMatchObject({ phase: 'verification-issue', canRetrySetup: true })
   await session.retrySetup()
-  expect(session.getState().phase).toBe('complete')
+  expect(session.getState()).toMatchObject({ phase: 'complete', canRetrySetup: false })
   expect(requestPort).toHaveBeenCalledOnce()
   expect(applies).toBe(2)
 })
