@@ -1,3 +1,4 @@
+import { watch } from 'vue'
 import { MIN_THRESHOLD, MAX_THRESHOLD } from '../renderer/contract'
 import { SWELL_MODELS } from '../forecast/openMeteoSwell'
 import { availableStorage } from '../storage'
@@ -6,6 +7,7 @@ import { BOARD_IDS, SUPPORTED_BOARD_IDS, TIME_FORMATS, TEMPERATURE_UNITS } from 
 import { forecastModelsForSpot } from '../forecast/models'
 
 const KEY = 'windpeek-configurator-v1'
+const OLD_SWELL_DEFAULT_ORDER = 'swell,wind,weather,temperature,tide'
 const booleans = ['showThreshold', 'showWeather', 'showTemperature', 'showTide', 'showDedicatedFooter']
 const fields = ['configuredSpotIds', 'spotSettings', ...booleans, 'threshold', 'windSize', 'swellSize', 'moduleOrder', 'selectedBoardId', 'selectedSpotId', 'selectedModelId', 'selectedSwellModelId', 'timeFormat', 'temperatureUnit', 'temperatureUnitInitialized']
 
@@ -34,17 +36,25 @@ export function persistConfigurator({ store }, storage = availableStorage(), { s
     }
   } catch { /* Storage may be blocked or contain an obsolete draft. */ }
   if (!subscribe) return
-  store.$subscribe((_mutation, state) => {
-    try { storage.setItem(KEY, JSON.stringify({ schemaVersion: 2, ...Object.fromEntries(fields.map(key => [key, state[key]])) })) }
-    catch { /* A full/blocked store must not prevent configuration. */ }
-  }, { detached: true, flush: 'sync' })
+  return watch(
+    () => Object.fromEntries(fields.map(key => [key, store[key]])),
+    preferences => {
+      try { storage.setItem(KEY, JSON.stringify({ schemaVersion: 2, ...preferences })) }
+      catch { /* A full/blocked store must not prevent configuration. */ }
+    },
+    { deep: true, flush: 'sync' },
+  )
 }
 
 function readPreferencePatch(saved, store) {
   const patch = {}
   for (const key of booleans) if (typeof saved[key] === 'boolean') patch[key] = saved[key]
   for (const key of ['windSize', 'swellSize']) if (MODULE_SIZES.includes(saved[key])) patch[key] = saved[key]
-  if (validModuleOrder(saved.moduleOrder)) patch.moduleOrder = [...saved.moduleOrder]
+  if (validModuleOrder(saved.moduleOrder)) {
+    patch.moduleOrder = saved.moduleOrder.join(',') === OLD_SWELL_DEFAULT_ORDER
+      ? ['wind', 'swell', 'weather', 'temperature', 'tide']
+      : [...saved.moduleOrder]
+  }
   if (Number.isInteger(saved.threshold) && saved.threshold >= MIN_THRESHOLD && saved.threshold <= MAX_THRESHOLD) patch.threshold = saved.threshold
   if (SUPPORTED_BOARD_IDS.includes(saved.selectedBoardId)) patch.selectedBoardId = saved.selectedBoardId
   if (TIME_FORMATS.includes(saved.timeFormat)) patch.timeFormat = saved.timeFormat

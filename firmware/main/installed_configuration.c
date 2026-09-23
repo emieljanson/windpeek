@@ -232,7 +232,7 @@ void installed_configuration_default(installed_configuration_t *config)
     config->display.show_weather = true;
     config->display.show_temperature = false;
     config->display.show_tide = false;
-    config->display.show_dedicated_footer = false;
+    config->display.show_dedicated_footer = true;
     config->display.use_24_hour = true;
     config->display.temperature_fahrenheit = false;
     config->display.wind_size = 2;

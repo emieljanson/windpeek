@@ -114,7 +114,7 @@ static void refresh_render_signatures(void) {
 #define WIND_TIDE_REFRESH_INTERVAL_SECONDS (6 * 60 * 60)
 
 static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool force_refresh,
-                                 int64_t now) {
+                                 bool allow_fetch, int64_t now) {
     const wind_display_config_t display = config_manager_get_wind_display_config();
     runtime->have_tide = false;
     wind_tide_clear(&runtime->tide);
@@ -133,7 +133,11 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool force_refres
     const bool tide_is_fresh =
         runtime->have_tide && runtime->tide.retrieved_at <= now &&
         now - runtime->tide.retrieved_at < WIND_TIDE_REFRESH_INTERVAL_SECONDS;
-    if (tide_is_fresh && !force_refresh) {
+    // A new spot may already have wind cached but no tide yet. Fetch that
+    // missing row on first visit; otherwise cached-first navigation leaves an
+    // unexplained empty strip until a later scheduled refresh.
+    if ((!allow_fetch && (runtime->have_tide || !wifi_manager_is_connected())) ||
+        (tide_is_fresh && !force_refresh)) {
         return;
     }
     if (!runtime->tide_provider.fetch) {
@@ -250,7 +254,8 @@ static esp_err_t write_dashboard_preview(const uint8_t *bitmap, size_t bitmap_si
     return result;
 }
 
-static void load_or_refresh_swell(wind_spot_runtime_t *runtime, bool force, int64_t now) {
+static void load_or_refresh_swell(wind_spot_runtime_t *runtime, bool force,
+                                  bool allow_fetch, int64_t now) {
     const wind_display_config_t display = config_manager_get_wind_display_config();
     runtime->have_swell = false;
     runtime->swell_failed = false;
@@ -259,6 +264,7 @@ static void load_or_refresh_swell(wind_spot_runtime_t *runtime, bool force, int6
     snprintf(path, sizeof(path), "%s.swell", runtime->forecast_path);
     const wind_swell_cache_identity_t identity = { runtime->spot->id, runtime->spot->timezone, runtime->marine_config.swell_model };
     runtime->have_swell = wind_swell_cache_load(path, &identity, &runtime->swell) == ESP_OK;
+    if (!allow_fetch) return;
     if (runtime->have_swell && runtime->swell.retrieved_at <= now &&
         now - runtime->swell.retrieved_at < 6 * 3600 && !force) return;
     wind_swell_t *fresh = malloc(sizeof(*fresh));
@@ -1079,9 +1085,13 @@ static esp_err_t navigate(int direction, bool absolute) {
     const bool have_cache =
         wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
                         &cached) == ESP_OK;
+    bool fetch_before_display = true;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    fetch_before_display = !have_cache;
+#endif
     time_t now;
     time(&now);
-    load_or_refresh_swell(runtime, false, now);
+    load_or_refresh_swell(runtime, false, fetch_before_display, now);
     refresh_render_signatures();
     load_or_refresh_tide(runtime, false, now);
     wind_app_outcome_t outcome = {0};
@@ -1225,6 +1235,12 @@ static bool navigation_requires_network(int direction, bool absolute) {
     bool requires_network =
         wind_cache_load(s_spots[target].forecast_path,
                         &s_spots[target].app.config.identity, &cached) != ESP_OK;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Interactive navigation shows cached data first; the scheduled refresh
+    // fetches due data after the user can see the selected screen.
+    xSemaphoreGive(s_runtime_lock);
+    return requires_network;
+#endif
     time_t now;
     time(&now);
     const wind_display_config_t display = display_from_installed(target == 0

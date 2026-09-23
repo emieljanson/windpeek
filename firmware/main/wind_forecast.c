@@ -165,10 +165,9 @@ wind_weather_state_t wind_forecast_weather_state(const wind_forecast_sample_t *s
     if (sample->precipitation_hundredths_mm >= 100) return WIND_WEATHER_RAIN;
     if (sample->precipitation_hundredths_mm >= 10) return WIND_WEATHER_LIGHT_RAIN;
     if (sample->cloud_cover_percent <= 20)
-        return sample->is_day ? WIND_WEATHER_CLEAR_DAY : WIND_WEATHER_CLEAR_NIGHT;
+        return WIND_WEATHER_CLEAR_DAY;
     if (sample->cloud_cover_percent <= 60)
-        return sample->is_day ? WIND_WEATHER_PARTLY_CLOUDY_DAY
-                              : WIND_WEATHER_PARTLY_CLOUDY_NIGHT;
+        return WIND_WEATHER_PARTLY_CLOUDY_DAY;
     return WIND_WEATHER_CLOUDY;
 }
 

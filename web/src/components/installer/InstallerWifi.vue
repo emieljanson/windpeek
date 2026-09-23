@@ -48,7 +48,7 @@ function submit() {
   <form class="installer-step installer-wifi" @submit.prevent="submit">
     <div class="installer-step__copy">
       <h2 id="installer-title">Select a network for Windpeek</h2>
-      <p id="installer-wifi-help">The device uses this connection to update its forecast.</p>
+      <p id="installer-wifi-help">{{ networks.length ? 'The device uses this connection to update its forecast.' : 'No networks found. Enter a network name or scan again.' }}</p>
     </div>
     <div class="installer-fields">
       <div class="installer-field">

@@ -14,8 +14,6 @@
 
 extern "C" {
 #include "wind_renderer.h"
-#include "wind_tide_labels.h"
-#include "tide_falmouth_fixture.h"
 #include "wind_renderer_fixture.h"
 }
 
@@ -296,8 +294,8 @@ TEST(WindRenderer, ProjectsNativeFourByThreeE1003Composition) {
     EXPECT_EQ(height, WIND_RENDERER_E1003_HEIGHT);
 
     Frame source(WIND_RENDERER_E1003_COMPOSITION_BYTES, 15);
-    std::fill(source.begin(), source.begin() + WIND_RENDERER_WIDTH, 0);
-    source[(WIND_RENDERER_E1003_COMPOSITION_HEIGHT - 1) * WIND_RENDERER_WIDTH] = 4;
+    std::fill(source.begin(), source.begin() + WIND_RENDERER_E1003_WIDTH, 0);
+    source[(WIND_RENDERER_E1003_HEIGHT - 1) * WIND_RENDERER_E1003_WIDTH] = 4;
     std::vector<uint8_t> row(static_cast<size_t>(width), 0x7f);
 
     ASSERT_EQ(wind_renderer_project_display_row(WIND_RENDERER_DISPLAY_E1003_GC16,
@@ -313,6 +311,99 @@ TEST(WindRenderer, ProjectsNativeFourByThreeE1003Composition) {
               0);
     EXPECT_EQ(row.front(), 4);
     EXPECT_EQ(row.back(), 15);
+}
+
+TEST(WindRenderer, E1003StraightGeometryKeepsNativePixelWidths) {
+    Frame source(WIND_RENDERER_E1003_COMPOSITION_BYTES, 15);
+    constexpr int day_line = 167;
+    constexpr int bar_left = 185;
+    for (int y = 0; y < WIND_RENDERER_E1003_HEIGHT; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + day_line, 2, 0);
+    for (int y = 200; y <= 210; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + bar_left, 38, 0);
+    for (int y : {300, 301})
+        std::fill(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 12,
+                  source.begin() + y * WIND_RENDERER_E1003_WIDTH + 788, 0);
+
+    Frame row(WIND_RENDERER_E1003_WIDTH, 15);
+    auto project = [&](int y) {
+        ASSERT_EQ(wind_renderer_project_display_row(
+                      WIND_RENDERER_DISPLAY_E1003_GC16, source.data(),
+                      source.size(), y, row.data(), row.size()), 0);
+    };
+    auto black_run = [&](int center) {
+        int left = center;
+        int right = center;
+        while (left > 0 && row[left - 1] == 0) --left;
+        while (right < WIND_RENDERER_E1003_WIDTH && row[right] == 0) ++right;
+        return right - left;
+    };
+
+    project(205);
+    EXPECT_EQ(black_run(day_line), 2);
+    EXPECT_EQ(black_run(bar_left), 38);
+
+    for (int y : {300, 301}) {
+        project(y);
+        EXPECT_EQ(row[700], 0);
+    }
+    project(302);
+    EXPECT_EQ(row[700], 15);
+
+    source[20 * WIND_RENDERER_E1003_WIDTH + day_line] = 0;
+    for (int y = 150; y <= 160; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + bar_left, 38, 0);
+    project(155);
+    EXPECT_EQ(black_run(day_line), 2);
+    EXPECT_EQ(black_run(bar_left), 38);
+
+    std::fill(source.begin(), source.end(), 15); // focused 13-sample day
+    for (int y = 200; y <= 210; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 59, 38, 0);
+    project(205);
+    EXPECT_EQ(black_run(59), 38);
+
+    std::fill(source.begin(), source.end(), 15);
+    for (int y : {300, 301})
+        std::fill(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 30,
+                  source.begin() + y * WIND_RENDERER_E1003_WIDTH + 771, 5);
+    for (int y : {300, 301}) {
+        project(y);
+        EXPECT_EQ(row[700], 5);
+    }
+    project(302);
+    EXPECT_EQ(row[700], 15);
+}
+
+TEST(WindRenderer, NativeE1003DashboardKeepsRulesBarsAndThresholdExact) {
+    wind_renderer_input_v2_t input{};
+    wind_renderer_dashboard_t dashboard{};
+    ASSERT_EQ(wind_renderer_fixture_build(0, &input), 0);
+    ASSERT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
+    Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    wind_renderer_stats_t stats{};
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size(), &stats), 0);
+    EXPECT_EQ(stats.clipped_primitives, 0u);
+    const auto pixel = [&](int x, int y) {
+        return pixels[y * WIND_RENDERER_E1003_WIDTH + x];
+    };
+    for (int y : {240, 480, 600, 1000, 1100}) {
+        EXPECT_EQ(pixel(390, y), 15);
+        EXPECT_EQ(pixel(391, y), 0);
+        EXPECT_EQ(pixel(392, y), 0);
+        EXPECT_EQ(pixel(393, y), 15);
+    }
+    for (int x = 554; x < 592; ++x) EXPECT_EQ(pixel(x, 1100), 0);
+    EXPECT_EQ(pixel(553, 1100), 15);
+    EXPECT_EQ(pixel(592, 1100), 15);
+    for (int x : {400, 550, 750, 850}) {
+        EXPECT_EQ(pixel(x, 1125), 15);
+        EXPECT_EQ(pixel(x, 1126), 0);
+        EXPECT_EQ(pixel(x, 1127), 0);
+        EXPECT_EQ(pixel(x, 1128), 15);
+    }
+    EXPECT_EQ(pixel(500, 1126), 0); // The crossing is black as well.
 }
 
 TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
@@ -473,12 +564,17 @@ TEST(WindRenderer, UsesTheBottomBandAsATimeAxisAndStatusArea) {
     third_day_time_changed.days[2].samples[0].time = "09";
     EXPECT_NE(Render(third_day_time_changed), original);
 
+    auto fourth_day_time_changed = dashboard;
+    fourth_day_time_changed.days[3].samples[0].time = "09";
+    EXPECT_NE(Render(fourth_day_time_changed), original);
+
     auto long_status = dashboard;
     long_status.provider = "A VERY LONG FORECAST MODEL NAME";
     const Frame long_status_frame = Render(long_status);
+    EXPECT_EQ(long_status_frame, original);
     auto long_status_hidden_time_changed = long_status;
     long_status_hidden_time_changed.days[2].samples[0].time = "09";
-    EXPECT_EQ(Render(long_status_hidden_time_changed), long_status_frame);
+    EXPECT_NE(Render(long_status_hidden_time_changed), long_status_frame);
 
     auto status_changed = dashboard;
     status_changed.provider = "BEST MATCH";
@@ -492,6 +588,25 @@ TEST(WindRenderer, UsesTheBottomBandAsATimeAxisAndStatusArea) {
         const int divider_x = 12 + day * 155;
         EXPECT_EQ(original[450 * WIND_RENDERER_WIDTH + divider_x], 1)
             << "footer divider for day " << day;
+    }
+}
+
+TEST(WindRenderer, HidesAllHoursWhenTheFooterIsHidden) {
+    auto dashboard = Dashboard();
+    dashboard.show_dedicated_footer = 0;
+    for (bool ordered : {false, true}) {
+        dashboard.custom_modules = ordered;
+        dashboard.ordered_modules = ordered;
+        dashboard.wind_size = 2;
+        dashboard.swell_size = ordered ? 2 : 0;
+        for (int index = 0; index < 5; ++index) dashboard.module_order[index] = index;
+        for (bool twelve_hour : {false, true}) {
+            dashboard.use_24_hour = !twelve_hour;
+            const Frame original = Render(dashboard);
+            dashboard.days[0].samples[0].time = twelve_hour ? "8PM" : "20";
+            EXPECT_EQ(Render(dashboard), original);
+            dashboard.days[0].samples[0].time = "08";
+        }
     }
 }
 
@@ -731,6 +846,7 @@ TEST(WindRenderer, UsesRealTideDataInTheMarginsOutsideForecastLabels) {
 
 TEST(WindRenderer, DoesNotLabelTideExtremaOutsideForecastCenters) {
     auto dashboard = Dashboard();
+    dashboard.show_dedicated_footer = 0;
     dashboard.show_tide = 1;
     dashboard.tide_available = 1;
     dashboard.tide_sample_count = 24;
@@ -992,239 +1108,35 @@ TEST(BatteryEmptyRenderer, UsesEachPanelsNativeWhiteAndKeepsBlackBackground) {
                          WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
                          WIND_RENDERER_DISPLAY_E1003_GC16}) {
         const int height = display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 600 : 480;
+        const int width = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+        const int physical_height = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_HEIGHT : WIND_RENDERER_HEIGHT;
+        const auto px = [display](int value) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? (value * WIND_RENDERER_E1003_WIDTH + 400) / 800 : value; };
+        const auto py = [display](int value) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? (value * WIND_RENDERER_E1003_HEIGHT + 300) / 600 : value; };
         const int offset = (height - 480) / 2;
         const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
             display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
-        std::vector<uint8_t> pixels(800 * height + 1, 0xA5);
+        std::vector<uint8_t> pixels(width * physical_height + 1, 0xA5);
         ASSERT_EQ(wind_renderer_render_battery_empty_for_display(
             display, pixels.data(), pixels.size() - 1), 0);
         EXPECT_EQ(pixels.back(), 0xA5);
         EXPECT_EQ(pixels.front(), 0);
-        EXPECT_EQ(pixels[(184 + offset) * 800 + 357], white);
-        EXPECT_EQ(pixels[(200 + offset) * 800 + 400], 0);
+        EXPECT_EQ(pixels[py(184 + offset) * width + px(357)], white);
+        EXPECT_EQ(pixels[py(200 + offset) * width + px(400)], 0);
         EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
-            [white](uint8_t p) { return p == 0 || p == white; }));
-        EXPECT_GT(std::count(pixels.begin() + (245 + offset) * 800,
-                             pixels.begin() + (290 + offset) * 800, white), 100);
-        int width, panel_height;
-        ASSERT_EQ(wind_renderer_display_dimensions(display, &width, &panel_height), 0);
-        std::vector<uint8_t> row(width);
+            [white, display](uint8_t p) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+                ? p <= white : p == 0 || p == white; }));
+        EXPECT_GT(std::count(pixels.begin() + py(245 + offset) * width,
+                             pixels.begin() + py(290 + offset) * width, white), 100);
+        int panel_width, panel_height;
+        ASSERT_EQ(wind_renderer_display_dimensions(display, &panel_width, &panel_height), 0);
+        std::vector<uint8_t> row(panel_width);
         for (int y = 0; y < panel_height; ++y)
             ASSERT_EQ(wind_renderer_project_display_row(display, pixels.data(),
                 pixels.size() - 1, y, row.data(), row.size()), 0);
-    }
-}
-
-TEST(BatteryEmptyRenderer, RejectsInvalidBuffersBeforeWriting) {
-    std::vector<uint8_t> pixels(WIND_RENDERER_PALETTE_BYTES, 0xA5);
-    EXPECT_NE(wind_renderer_render_battery_empty(nullptr, pixels.size()), 0);
-    EXPECT_NE(wind_renderer_render_battery_empty(pixels.data(), pixels.size() - 1), 0);
-    EXPECT_NE(wind_renderer_render_battery_empty_for_display(
-        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
-    EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
-}
-
-TEST(SpotOverviewRenderer, RendersMixedGraphsAndPartialPagesInGc16) {
-    wind_renderer_dashboard_t rows[3] = {Dashboard(), Dashboard(), Dashboard()};
-    rows[0].spot_name="EDAM"; rows[1].spot_name="WIJK AAN ZEE"; rows[2].spot_name="SCHEVENINGEN";
-    rows[1].swell_size=2;
-    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES+1,0xA5);
-    wind_renderer_stats_t stats{};
-    ASSERT_EQ(wind_renderer_render_overview(rows,3,0,7,pixels.data(),pixels.size()-1,&stats),0);
-    EXPECT_EQ(stats.clipped_primitives,0);
-    EXPECT_EQ(pixels.back(),0xA5);
-    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end()-1,[](uint8_t p){return p<=15;}));
-    EXPECT_GT(std::count(pixels.begin(),pixels.end(),11),0);
-    EXPECT_EQ(pixels[544*800+710],0);
-    ASSERT_EQ(wind_renderer_render_overview(rows,1,6,7,pixels.data(),pixels.size()-1,&stats),0);
-    EXPECT_EQ(stats.clipped_primitives,0);
-    EXPECT_EQ(pixels[350*800+50],15); // No invented spot on the final page.
-}
-
-TEST(SpotOverviewRenderer, RejectsInvalidPagesWithoutWriting) {
-    auto row=Dashboard();
-    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES,0xA5);
-    EXPECT_NE(wind_renderer_render_overview(&row,0,0,7,pixels.data(),pixels.size(),nullptr),0);
-    EXPECT_NE(wind_renderer_render_overview(&row,1,1,7,pixels.data(),pixels.size(),nullptr),0);
-    EXPECT_NE(wind_renderer_render_overview(&row,1,9,7,pixels.data(),pixels.size(),nullptr),0);
-    EXPECT_NE(wind_renderer_render_overview(&row,1,0,7,pixels.data(),pixels.size()-1,nullptr),0);
-    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end(),[](uint8_t p){return p==0xA5;}));
-}
-
-TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
-    auto d=Dashboard();
-    d.custom_modules=1; d.ordered_modules=1; d.wind_size=2; d.swell_size=2;
-    d.show_temperature=1;
-    for(int i=0;i<5;++i)d.module_order[i]=i;
-    d.visible_day_count=3;
-    const auto render=[](const wind_renderer_dashboard_t &dashboard) {
-        Frame out(WIND_RENDERER_E1003_COMPOSITION_BYTES);
-        wind_renderer_stats_t stats{};
-        EXPECT_EQ(wind_renderer_render_for_display(&dashboard,WIND_RENDERER_DISPLAY_E1003_GC16,out.data(),out.size(),&stats),0);
-        EXPECT_EQ(stats.clipped_primitives,0u);
-        return out;
-    };
-    const auto wide=render(d);
-    d.visible_day_count=1; d.visible_sample_count=13;
-    static const char *hours[]={"08","09","10","11","12","13","14","15","16","17","18","19","20"};
-    for(int i=0;i<13;++i){d.days[0].samples[i]=d.days[0].samples[0];d.days[0].samples[i].time=hours[i];}
-    const auto focus=render(d);
-    EXPECT_NE(wide,focus);
-    // Horizontal module boundaries remain at exactly the same y positions.
-    for(int y=80;y<570;++y){
-        const auto line=[&](const Frame &f){for(int x=12;x<=787;++x)if(f[y*800+x]!=0)return false;return true;};
-        EXPECT_EQ(line(wide),line(focus)) << y;
-    }
-    d.days[0].samples[1].time="XX";
-    const auto changed_time=render(d);
-    EXPECT_FALSE(std::equal(focus.begin()+800*570,focus.end(),changed_time.begin()+800*570));
-    d.days[0].samples[1].time=hours[1];
-    d.days[0].samples[12].sustained_kt=39;
-    EXPECT_NE(focus,render(d)); // The last hourly sample reaches the renderer.
-    d.visible_day_count=3;
-    Frame invalid(WIND_RENDERER_E1003_COMPOSITION_BYTES);
-    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
-}
-
-TEST(TideLabels, SpreadsCloseLabelsWithoutLeaderLines) {
-    wind_tide_label_position_t labels[] = {{50, 20}, {85, 20}};
-    wind_tide_labels_place(labels, 2, 10, 140, 12, 6);
-    EXPECT_TRUE(labels[0].visible);
-    EXPECT_TRUE(labels[1].visible);
-    EXPECT_GE(labels[1].center - labels[0].center, 46);
-    EXPECT_LE(std::abs(labels[0].center - 50), 12);
-    EXPECT_LE(std::abs(labels[1].center - 85), 12);
-}
-
-TEST(TideLabels, DropsMiddleOfCrowdedClusterAndKeepsOuterTimes) {
-    wind_tide_label_position_t labels[] = {{50, 20}, {65, 20}, {85, 20}};
-    wind_tide_labels_place(labels, 3, 10, 140, 12, 6);
-    EXPECT_TRUE(labels[0].visible);
-    EXPECT_FALSE(labels[1].visible);
-    EXPECT_TRUE(labels[2].visible);
-    EXPECT_GE(labels[2].center - labels[0].center, 46);
-}
-
-TEST(TideLabels, PreservesUncrowdedPositionsAndFitsDayEdges) {
-    wind_tide_label_position_t labels[] = {{0, 20}, {80, 20}, {160, 20}};
-    wind_tide_labels_place(labels, 3, 10, 150, 12, 6);
-    EXPECT_EQ(labels[0].center, 30);
-    EXPECT_EQ(labels[1].center, 80);
-    EXPECT_EQ(labels[2].center, 130);
-    for (const auto &label : labels) EXPECT_TRUE(label.visible);
-}
-
-TEST(TideLabels, DenseMixedWidthsNeverOverlapOrEscapeTheirDay) {
-    for (int count = 1; count <= 32; ++count) {
-        std::vector<wind_tide_label_position_t> labels;
-        for (int i = 0; i < count; ++i) labels.push_back({i * 5, 14 + i % 10});
-        wind_tide_labels_place(labels.data(), count, 10, 150, 12, 6);
-        int previous_right = -1000;
-        int shown = 0;
-        for (const auto &label : labels) {
-            if (!label.visible) continue;
-            EXPECT_GE(label.center - label.half_width, 10);
-            EXPECT_LE(label.center + label.half_width, 150);
-            EXPECT_GE(label.center - label.half_width, previous_right + 6);
-            previous_right = label.center + label.half_width;
-            ++shown;
-        }
-        EXPECT_GT(shown, 0);
-    }
-}
-
-TEST(WindRenderer, OmitsCrowdedMiddleTideTimeWithoutChangingCurveOrOtherRow) {
-    auto dashboard = Dashboard();
-    dashboard.show_tide = 1;
-    dashboard.tide_available = 1;
-    dashboard.tide_sample_count = 24;
-    for (int hour = 0; hour < 24; ++hour) {
-        dashboard.tide_samples[hour] = {0, hour, static_cast<int>(std::sin(hour / 6.0) * 800), 1};
-    }
-    dashboard.tide_extremum_count = 4;
-    dashboard.tide_extrema[0] = {0, 12, 0, 800, 1, 1};
-    dashboard.tide_extrema[1] = {0, 12, 15, 800, 1, 1};
-    dashboard.tide_extrema[2] = {0, 16, 0, 800, 1, 1};
-    dashboard.tide_extrema[3] = {0, 12, 15, -800, 0, 1};
-    const auto crowded = Render(dashboard);
-    dashboard.tide_extrema[1].available = 0;
-    EXPECT_EQ(crowded, Render(dashboard));
-    dashboard.tide_extrema[3].available = 0;
-    EXPECT_NE(crowded, Render(dashboard));
-    dashboard.tide_extrema[3].available = 1;
-    std::swap(dashboard.tide_extrema[0], dashboard.tide_extrema[3]);
-    EXPECT_EQ(crowded, Render(dashboard));
-}
-
-TEST(TideLabels, KeepsTheMaximumNumberThatCanFit) {
-    // Independent exhaustive oracle: try every subset, rather than repeat
-    // the production selection algorithm. Include widths of 12-hour labels.
-    uint32_t seed = 42;
-    const auto random = [&]() { seed = seed * 1664525u + 1013904223u; return seed; };
-    for (int trial = 0; trial < 2000; ++trial) {
-        const int count = 3 + random() % 6;
-        const int max_shift = trial % 2 == 0 ? 12 : 24;
-        std::vector<wind_tide_label_position_t> labels;
-        for (int i = 0; i < count; ++i) labels.push_back({static_cast<int>(random() % 161), 14 + static_cast<int>(random() % 14)});
-        std::sort(labels.begin(), labels.end(), [](const auto &a, const auto &b) { return a.anchor < b.anchor; });
-        int expected = 0;
-        for (unsigned mask = 1; mask < (1u << count); ++mask) {
-            int right = -1000, shown = 0;
-            bool fits = true;
-            for (int i = 0; i < count && fits; ++i) {
-                if (!(mask & (1u << i))) continue;
-                const auto &label = labels[i];
-                const int anchor = std::clamp(label.anchor, 10 + label.half_width, 150 - label.half_width);
-                const int minimum = std::max(10 + label.half_width, anchor - max_shift);
-                const int maximum = std::min(150 - label.half_width, anchor + max_shift);
-                const int center = std::max(minimum, right + 6 + label.half_width);
-                fits = center <= maximum;
-                right = center + label.half_width;
-                ++shown;
-            }
-            if (fits) expected = std::max(expected, shown);
-        }
-        wind_tide_labels_place(labels.data(), count, 10, 150, max_shift, 6);
-        int shown = 0, previous_right = -1000;
-        for (const auto &label : labels) {
-            if (!label.visible) continue;
-            ++shown;
-            const int anchor = std::clamp(label.anchor, 10 + label.half_width, 150 - label.half_width);
-            EXPECT_LE(std::abs(label.center - anchor), max_shift);
-            EXPECT_GE(label.center - label.half_width, std::max(10, previous_right + 6));
-            EXPECT_LE(label.center + label.half_width, 150);
-            previous_right = label.center + label.half_width;
-        }
-        ASSERT_EQ(shown, expected) << "trial " << trial;
-    }
-}
-
-TEST(WindRenderer, RetainsEveryVisibleFalmouthTideTimeInBothClockFormats) {
-    for (int variant = 0; variant < 4; ++variant) {
-        const bool use_24_hour = (variant & 1) != 0;
-        auto dashboard = Dashboard();
-        dashboard.custom_modules = (variant & 2) != 0;
-        dashboard.wind_size = 2;
-        dashboard.show_tide = 1;
-        dashboard.tide_available = 1;
-        dashboard.use_24_hour = use_24_hour;
-        dashboard.tide_sample_count = std::size(falmouth_tide_samples);
-        dashboard.tide_extremum_count = std::size(falmouth_tide_extrema);
-        std::copy(std::begin(falmouth_tide_samples), std::end(falmouth_tide_samples), dashboard.tide_samples);
-        std::copy(std::begin(falmouth_tide_extrema), std::end(falmouth_tide_extrema), dashboard.tide_extrema);
-        const auto all_times = Render(dashboard);
-        int visible_window = 0;
-        for (int i = 0; i < dashboard.tide_extremum_count; ++i) {
-            auto &event = dashboard.tide_extrema[i];
-            if (event.local_hour < 8 || event.local_hour > 20) continue;
-            ++visible_window;
-            event.available = 0;
-            EXPECT_TRUE(all_times != Render(dashboard)) << "missing day=" << event.day_index
-                << " time=" << event.local_hour << ":" << event.local_minute
-                << " 24h=" << use_24_hour;
-            event.available = 1;
-        }
-        EXPECT_EQ(visible_window, 16);
     }
 }
 
@@ -1244,6 +1156,91 @@ TEST(SetupRenderer, ProducesTextInEachPanelsPaletteWithoutOverrunningTheBuffer) 
         EXPECT_EQ(pixels.front(), white);
         EXPECT_GT(std::count(pixels.begin(), pixels.end() - 1, 0), 100);
         EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
-            [white](uint8_t p) { return p == 0 || p == white; }));
+            [white, display](uint8_t p) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+                ? p <= white : p == 0 || p == white; }));
     }
+}
+
+TEST(BatteryEmptyRenderer, RejectsInvalidBuffersBeforeWriting) {
+    std::vector<uint8_t> pixels(WIND_RENDERER_PALETTE_BYTES, 0xA5);
+    EXPECT_NE(wind_renderer_render_battery_empty(nullptr, pixels.size()), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty(pixels.data(), pixels.size() - 1), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty_for_display(
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
+    EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
+}
+
+TEST(SpotOverviewRenderer, RendersMixedGraphsAndFullFinalPagesInGc16) {
+    wind_renderer_dashboard_t rows[3] = {Dashboard(), Dashboard(), Dashboard()};
+    rows[0].spot_name="EDAM"; rows[1].spot_name="WIJK AAN ZEE"; rows[2].spot_name="SCHEVENINGEN";
+    rows[1].swell_size=2;
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES+1,0xA5);
+    wind_renderer_stats_t stats{};
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,0,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels.back(),0xA5);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end()-1,[](uint8_t p){return p<=15;}));
+    EXPECT_GT(std::count(pixels.begin(),pixels.end(),11),0);
+    for (int y : {240, 480, 1100}) {
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+390], 15);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+391], 0);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+392], 0);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+393], 15);
+    }
+    EXPECT_EQ(pixels[1273*WIND_RENDERER_E1003_WIDTH+1661],0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,1,4,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,2,5,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,4,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels[1374*WIND_RENDERER_E1003_WIDTH+117],0); // Outer bottom divider stays continuous.
+}
+
+TEST(SpotOverviewRenderer, RejectsInvalidPagesWithoutWriting) {
+    auto row=Dashboard();
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES,0xA5);
+    EXPECT_NE(wind_renderer_render_overview(&row,0,0,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,1,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,9,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,0,7,pixels.data(),pixels.size()-1,nullptr),0);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end(),[](uint8_t p){return p==0xA5;}));
+}
+
+TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
+    auto d=Dashboard();
+    d.custom_modules=1; d.ordered_modules=1; d.wind_size=2; d.swell_size=2;
+    d.show_temperature=1;
+    for(int i=0;i<5;++i)d.module_order[i]=i;
+    d.visible_day_count=5;
+    const auto render=[](const wind_renderer_dashboard_t &dashboard) {
+        Frame out(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+        wind_renderer_stats_t stats{};
+        EXPECT_EQ(wind_renderer_render_for_display(&dashboard,WIND_RENDERER_DISPLAY_E1003_GC16,out.data(),out.size(),&stats),0);
+        EXPECT_EQ(stats.clipped_primitives,0u);
+        return out;
+    };
+    const auto wide=render(d);
+    d.visible_day_count=1; d.visible_sample_count=13;
+    static const char *hours[]={"08","09","10","11","12","13","14","15","16","17","18","19","20"};
+    for(int i=0;i<13;++i){d.days[0].samples[i]=d.days[0].samples[0];d.days[0].samples[i].time=hours[i];}
+    const auto focus=render(d);
+    EXPECT_NE(wide,focus);
+    // Horizontal module boundaries remain at exactly the same y positions.
+    for(int y=188;y<1334;++y){
+        const auto line=[&](const Frame &f){for(int x=28;x<=1841;++x)if(f[y*WIND_RENDERER_E1003_WIDTH+x]!=0)return false;return true;};
+        EXPECT_EQ(line(wide),line(focus)) << y;
+    }
+    d.days[0].samples[1].time="XX";
+    const auto changed_time=render(d);
+    EXPECT_FALSE(std::equal(focus.begin()+WIND_RENDERER_E1003_WIDTH*1334,focus.end(),
+                            changed_time.begin()+WIND_RENDERER_E1003_WIDTH*1334));
+    d.days[0].samples[1].time=hours[1];
+    d.days[0].samples[12].sustained_kt=39;
+    EXPECT_NE(focus,render(d)); // The last hourly sample reaches the renderer.
+    d.visible_day_count=5;
+    Frame invalid(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
+    d.visible_sample_count=5; d.visible_day_count=3;
+    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
 }

@@ -13,7 +13,7 @@ TEST(InstalledConfigurationTest, DefaultIsValidAndStable)
     EXPECT_STREQ(config.board_id, WINDPEEK_BOARD_ID);
     EXPECT_STREQ(config.device_timezone, "Europe/Amsterdam");
     EXPECT_STREQ(config.spot.id, "brouwersdam");
-    EXPECT_EQ(installed_configuration_digest(&config), UINT64_C(0xf0d2b5b76c69406e));
+    EXPECT_EQ(installed_configuration_digest(&config), UINT64_C(0xded280fa98425a17));
 }
 
 TEST(InstalledConfigurationTest, RejectsUnsupportedAndOutOfBoundsValues)
@@ -72,7 +72,7 @@ TEST(InstalledConfigurationTest, MigratesV2SettingsAndWifiCredentialsToCurrentVe
     EXPECT_TRUE(loaded.display.show_threshold);
     EXPECT_EQ(loaded.display.threshold_kt, 23);
     EXPECT_TRUE(loaded.display.show_temperature);
-    EXPECT_FALSE(loaded.display.show_dedicated_footer);
+    EXPECT_TRUE(loaded.display.show_dedicated_footer);
     EXPECT_FALSE(loaded.display.use_24_hour);
     EXPECT_TRUE(loaded.display.temperature_fahrenheit);
 

@@ -81,17 +81,20 @@ export function readPersonalSpots(storage) {
 }
 
 export function writePersonalSpot(spot, storage) {
-  if (!validPersonalSpot(spot)) return false
+  return writePersonalSpots([spot], storage)
+}
+
+export function writePersonalSpots(incoming, storage) {
+  if (!Array.isArray(incoming) || !incoming.every(validPersonalSpot)) return false
+  if (!incoming.length) return true
   const target = availableStorage(storage)
   if (!target) return false
-  const spots = readPersonalSpots(target)
-  const index = spots.findIndex((candidate) => candidate.id === spot.id)
-  if (index >= 0) spots[index] = spot
-  else spots.push(spot)
+  const spots = new Map(readPersonalSpots(target).map(spot => [spot.id, spot]))
+  for (const spot of incoming) spots.set(spot.id, spot)
   try {
     target.setItem(PERSONAL_SPOTS_STORAGE_KEY, JSON.stringify({
       version: PERSONAL_SPOTS_VERSION,
-      spots,
+      spots: [...spots.values()],
     }))
     return true
   } catch {

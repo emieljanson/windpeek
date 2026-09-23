@@ -279,8 +279,8 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(int display) {
     preview_output_valid = 0;
     if (!input_ready || input_error) return -1;
     if (display == WIND_RENDERER_DISPLAY_E1003_GC16) {
-        preview_width = WIND_RENDERER_WIDTH;
-        preview_height = WIND_RENDERER_E1003_COMPOSITION_HEIGHT;
+        preview_width = WIND_RENDERER_E1003_WIDTH;
+        preview_height = WIND_RENDERER_E1003_HEIGHT;
     } else if (display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ||
                display == WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
         preview_width = WIND_RENDERER_WIDTH;

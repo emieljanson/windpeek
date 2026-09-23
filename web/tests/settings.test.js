@@ -196,7 +196,7 @@ describe('Windpeek settings panel', () => {
       'Wave model',
       'Wind threshold',
       'Temperature',
-      'Footer',
+      'Hours',
     ])
     expect(wrapper.text()).not.toContain('Treatment')
     expect(wrapper.text()).not.toContain('Time format')

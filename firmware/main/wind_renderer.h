@@ -19,7 +19,7 @@ enum {
     WIND_RENDERER_MAX_SAMPLES_PER_DAY = 13,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_E1003_COMPOSITION_BYTES =
-        WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
+        WIND_RENDERER_E1003_WIDTH * WIND_RENDERER_E1003_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
     WIND_RENDERER_E1003_RGBA_BYTES = WIND_RENDERER_E1003_COMPOSITION_BYTES * 4,
     WIND_RENDERER_CONTRACT_VERSION = 10,
@@ -250,8 +250,8 @@ int wind_renderer_display_dimensions(wind_renderer_display_t display, int *width
                                      int *height);
 
 /*
- * Projects one logical composition row onto its physical panel. E1003 scales
- * the 800 x 600 composition exactly to the native 1872 x 1404 pixels.
+ * Projects one composition row onto its physical panel. E1003 compositions
+ * are already native 1872 x 1404 pixels, so its rows are copied directly.
  */
 int wind_renderer_project_display_row(wind_renderer_display_t display,
                                       const uint8_t *logical, size_t logical_size,
@@ -342,13 +342,12 @@ int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *i
                                                uint8_t *rgba_out, size_t rgba_size,
                                                wind_renderer_stats_t *stats);
 
-/* Setup instructions using the selected display's dimensions and palette. */
-int wind_renderer_render_setup(wind_renderer_display_t display,
-                               uint8_t *palette_out, size_t palette_size);
 /* Standalone 800 x 480 empty-battery UI; does not change battery policy. */
 int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size);
+int wind_renderer_render_setup(wind_renderer_display_t display,
+                               uint8_t *palette_out, size_t palette_size);
 /* E1001/E1002 require WIND_RENDERER_PALETTE_BYTES (800 x 480).
- * E1003 requires WIND_RENDERER_E1003_COMPOSITION_BYTES (800 x 600). */
+ * E1003 requires WIND_RENDERER_E1003_COMPOSITION_BYTES (1872 x 1404). */
 int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t display,
                                                    uint8_t *output, size_t size);
 

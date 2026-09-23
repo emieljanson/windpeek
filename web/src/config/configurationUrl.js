@@ -1,9 +1,11 @@
+import { watch } from 'vue'
 import { MIN_THRESHOLD, MAX_THRESHOLD } from '../renderer/contract'
 import { BOARD_IDS, TIME_FORMATS, TEMPERATURE_UNITS } from './configuration'
 import { validModuleOrder } from './modules'
 import { forecastModelsForSpot } from '../forecast/models'
 import { SWELL_MODELS } from '../forecast/openMeteoSwell'
-import { createPersonalSpot, writePersonalSpot } from '../spots/personalSpots'
+import { createPersonalSpot, writePersonalSpot, writePersonalSpots } from '../spots/personalSpots'
+import { settingsForSpot } from './spotSettings'
 
 const sizes = { hide: 'off', numbers: 'small', graph: 'large' }
 const flags = { weather: 'showWeather', temperature: 'showTemperature', tide: 'showTide', footer: 'showDedicatedFooter', threshold: 'showThreshold' }
@@ -111,10 +113,11 @@ export function applyConfigurationUrl(store, search, storage) {
 }
 
 export function syncConfigurationUrl(store, browser = window) {
-  const update = () => {
-    const url = configurationUrl(store, browser.location.href)
-    if (url && url.href !== browser.location.href) browser.history.replaceState(browser.history.state, '', url.href)
-  }
-  update()
-  return store.$subscribe(update, { detached: true, flush: 'post' })
+  return watch(
+    () => configurationUrl(store, browser.location.href)?.href,
+    href => {
+      if (href && href !== browser.location.href) browser.history.replaceState(browser.history.state, '', href)
+    },
+    { immediate: true, flush: 'post' },
+  )
 }

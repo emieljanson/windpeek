@@ -15,7 +15,7 @@ TEST(WindDisplayConfig, UsesSettledDefaults)
     EXPECT_TRUE(config.show_weather);
     EXPECT_FALSE(config.show_temperature);
     EXPECT_FALSE(config.show_tide);
-    EXPECT_FALSE(config.show_dedicated_footer);
+    EXPECT_TRUE(config.show_dedicated_footer);
     EXPECT_TRUE(config.use_24_hour);
     EXPECT_FALSE(config.temperature_fahrenheit);
 }

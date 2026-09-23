@@ -11,13 +11,15 @@ function formatSampleTime(time, timeFormat) {
 }
 
 function rendererSample(sample, timeFormat) {
+  // Cached forecasts may still contain the retired night icon states.
+  const weather = sample.weather === 2 ? 1 : sample.weather === 4 ? 3 : sample.weather
   return {
     time: formatSampleTime(sample.time, timeFormat),
     sustainedKt: sample.sustainedKt,
     gustKt: sample.gustKt,
     destinationDegrees: sample.destinationDegrees,
     available: sample.available,
-    weather: sample.weather,
+    weather,
     temperatureTenthsC: sample.temperatureTenthsC ?? 0,
     temperatureAvailable: sample.temperatureAvailable ?? false,
   }
@@ -110,7 +112,7 @@ export function createRendererInput(forecast, config) {
     showWeather: config.showWeather ?? true,
     showTemperature: config.showTemperature ?? false,
     showTide: config.showTide ?? false,
-    showDedicatedFooter: config.showDedicatedFooter ?? false,
+    showDedicatedFooter: config.showDedicatedFooter ?? true,
     use24Hour: config.timeFormat !== '12-hour',
     temperatureFahrenheit: config.temperatureUnit === 'fahrenheit',
     tideAvailable: tide?.capability === 'available' && tideSamples.length >= 2,

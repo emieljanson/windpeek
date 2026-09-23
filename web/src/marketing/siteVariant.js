@@ -27,8 +27,8 @@ export function siteDisplayDefaults(variant = siteVariant()) {
   const swell = variant.id === 'swell'
   return {
     windSize: swell ? 'small' : 'large', swellSize: swell ? 'large' : 'off',
-    moduleOrder: swell ? ['swell', 'wind', 'weather', 'temperature', 'tide'] : ['wind', 'swell', 'weather', 'temperature', 'tide'],
-    showWeather: true, showTemperature: false, showTide: true, showThreshold: !swell,
+    moduleOrder: ['wind', 'swell', 'weather', 'temperature', 'tide'],
+    showWeather: true, showTemperature: true, showTide: true, showThreshold: !swell,
   }
 }
 

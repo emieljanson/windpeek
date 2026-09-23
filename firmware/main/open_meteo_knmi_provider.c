@@ -413,6 +413,8 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
     s_diagnostics.too_large = response.too_large;
     esp_http_client_cleanup(client);
     if (result != ESP_OK || status != 200 || response.too_large || response.length == 0) {
+        ESP_LOGW("wind_provider", "Forecast download failed: transport=%d http=%d bytes=%u too_large=%d",
+                 (int)result, status, (unsigned)response.length, response.too_large);
         free(response.body);
         return response.too_large ? ESP_ERR_INVALID_SIZE : ESP_FAIL;
     }
@@ -426,6 +428,10 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
     result = open_meteo_knmi_parse_json(config, response.body, response.length, retrieved_at,
                                         first_date, out_forecast);
     s_diagnostics.parse_result = result;
+    if (result != ESP_OK) {
+        ESP_LOGW("wind_provider", "Forecast parse failed: result=%d bytes=%u date=%s model=%s",
+                 (int)result, (unsigned)response.length, first_date, config->model);
+    }
     free(response.body);
     return result;
 }

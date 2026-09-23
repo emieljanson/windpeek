@@ -1,0 +1,176 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
+import { useConfiguratorStore } from '../src/stores/configurator'
+import { loadSharedRenderer } from '../src/renderer/sharedRenderer'
+import { brouwersdamForecast } from '../src/fixtures/brouwersdam'
+import { brouwersdamSwell } from '../src/fixtures/brouwersdamSwell'
+
+const { frame, projectiveScreen } = vi.hoisted(() => ({
+  frame: { data: new Uint8Array(16), width: 2, height: 2 },
+  projectiveScreen: {
+    setFrame: vi.fn(),
+    draw: vi.fn(),
+    dispose: vi.fn(),
+  },
+}))
+
+vi.mock('../src/renderer/sharedRenderer', () => ({
+  loadSharedRenderer: vi.fn().mockResolvedValue({
+    renderPreviewForDisplay: vi.fn(() => frame),
+    dispose: vi.fn(),
+  }),
+}))
+
+vi.mock('../src/marketing/projectiveScreen', () => ({
+  createProjectiveScreen: vi.fn(() => projectiveScreen),
+}))
+
+import LandingForecast from '../src/components/LandingForecast.vue'
+
+describe('landing hero nearby default', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/')
+    projectiveScreen.setFrame.mockClear()
+    projectiveScreen.draw.mockClear()
+    projectiveScreen.dispose.mockClear()
+  })
+
+  it('uses a complete example for missing swell and switches back when live data returns', async () => {
+    window.history.replaceState({}, '', '/?site=swell')
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    for (const action of ['initializeForecast', 'initializeTide', 'initializeNearbyDefault', 'refreshSwell']) {
+      vi.spyOn(store, action).mockResolvedValue(false)
+    }
+    store.forecastSource = 'current'
+    store.selectedSpotId = 'live-spot'
+    store.forecast = { ...brouwersdamForecast, spotId: 'live-spot', spotName: 'Live spot' }
+    const liveSwell = { ...brouwersdamSwell, spotId: 'live-spot', spotName: 'Live spot' }
+    store.swell = { ...liveSwell, samples: liveSwell.samples.slice(0, 10) }
+    store.swellStatus = 'ready'
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    const renderer = await loadSharedRenderer()
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ spotName: 'Brouwersdam' }), expect.anything(),
+    ))
+    expect(renderer.renderPreviewForDisplay.mock.lastCall[0].days.every(day =>
+      day.samples.length === 5 && day.samples.every(sample => sample.swellHeightCm > 0))).toBe(true)
+    expect(store.swell.samples).toHaveLength(10)
+    expect(store.forecast.spotName).toBe('Live spot')
+    store.swell = liveSwell
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ spotName: 'Live spot' }), expect.anything(),
+    ))
+    expect(wrapper.find('figcaption').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('renders the swell landing with wind first, compact wind and its own data request', async () => {
+    window.history.replaceState({}, '', '/?site=swell')
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+    const swellRequest = vi.spyOn(store, 'refreshSwell').mockResolvedValue(false)
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(swellRequest).toHaveBeenCalledOnce())
+    const renderer = await loadSharedRenderer()
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenCalledWith(
+      expect.objectContaining({ windSize: 1, swellSize: 2, moduleOrder: [0, 1, 2, 3, 4], showTemperature: true }),
+      expect.anything(),
+    ))
+    store.swellStatus = 'failed'
+    await vi.waitFor(() => expect(renderer.renderPreviewForDisplay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ refreshFailed: false }), expect.anything(),
+    ))
+    expect(store.swell).toBeNull()
+    wrapper.unmount()
+    window.history.replaceState({}, '', '/')
+  })
+
+  it('starts forecast and tide before the fire-and-forget nearby lookup', async () => {
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    const initializeForecast = vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    const initializeTide = vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    const initializeNearbyDefault = vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(initializeNearbyDefault).toHaveBeenCalledOnce())
+
+    expect(initializeForecast).toHaveBeenCalledOnce()
+    expect(initializeTide).toHaveBeenCalledOnce()
+    expect(initializeForecast.mock.invocationCallOrder[0]).toBeLessThan(
+      initializeNearbyDefault.mock.invocationCallOrder[0],
+    )
+    expect(initializeTide.mock.invocationCallOrder[0]).toBeLessThan(
+      initializeNearbyDefault.mock.invocationCallOrder[0],
+    )
+    await vi.waitFor(() => expect(projectiveScreen.setFrame).toHaveBeenCalledWith(frame))
+    expect(projectiveScreen.draw).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ brightness: 1.18 }),
+    )
+    wrapper.unmount()
+  })
+
+  it('starts the nearby lookup and releases WebGL when the renderer cannot load', async () => {
+    loadSharedRenderer.mockRejectedValueOnce(new Error('renderer unavailable'))
+
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    const initializeNearbyDefault = vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(initializeNearbyDefault).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(projectiveScreen.dispose).toHaveBeenCalledOnce())
+
+    wrapper.unmount()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+  })
+
+  it('releases the renderer and WebGL when drawing the loaded frame fails', async () => {
+    const failedRenderer = {
+      renderPreviewForDisplay: vi.fn(() => { throw new Error('draw failed') }),
+      dispose: vi.fn(),
+    }
+    loadSharedRenderer.mockResolvedValueOnce(failedRenderer)
+
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    vi.spyOn(store, 'initializeForecast').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeTide').mockResolvedValue(false)
+    vi.spyOn(store, 'initializeNearbyDefault').mockResolvedValue(false)
+
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(failedRenderer.dispose).toHaveBeenCalledOnce())
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+
+    wrapper.unmount()
+    expect(failedRenderer.dispose).toHaveBeenCalledOnce()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+  })
+  it('falls back to the photo when a later forecast redraw fails', async () => {
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    for (const action of ['initializeForecast', 'initializeTide', 'initializeNearbyDefault']) {
+      vi.spyOn(store, action).mockResolvedValue(false)
+    }
+    const renderer = { renderPreviewForDisplay: vi.fn(() => frame), dispose: vi.fn() }
+    loadSharedRenderer.mockResolvedValueOnce(renderer)
+    const wrapper = mount(LandingForecast, { global: { plugins: [pinia] } })
+    await vi.waitFor(() => expect(wrapper.classes()).toContain('is-ready'))
+    renderer.renderPreviewForDisplay.mockImplementation(() => { throw new Error('redraw failed') })
+    store.forecastRevision++
+    await vi.waitFor(() => expect(wrapper.classes()).not.toContain('is-ready'))
+    expect(renderer.dispose).toHaveBeenCalledOnce()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+    wrapper.unmount()
+    expect(renderer.dispose).toHaveBeenCalledOnce()
+    expect(projectiveScreen.dispose).toHaveBeenCalledOnce()
+  })
+})
