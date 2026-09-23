@@ -3,6 +3,9 @@
 On battery, the E1003 returns to deep sleep after 2 minutes without interaction.
 The GT911 enters gesture mode with double-tap recognition only. USB retains the
 existing always-awake behavior. Normal taps and swipes work while awake.
+The double-tap interval is set to the controller's 1.5-second maximum while
+preserving its factory gain setting. The green and white buttons remain the
+visible wake controls when the e-ink image is unchanged during sleep.
 
 A double tap wakes the device and applies the action at its last reported
 position once, using the same hit testing as normal touch. Invalid or unavailable

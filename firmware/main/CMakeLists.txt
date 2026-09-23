@@ -128,6 +128,7 @@ set(WINDPEEK_PRIV_REQUIRES
     epaper_src
     esp_app_format
     esp_driver_gpio
+    esp_driver_ledc
     esp_driver_uart
     esp_event
     esp_http_client

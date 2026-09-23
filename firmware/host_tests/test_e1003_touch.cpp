@@ -120,7 +120,9 @@ TEST_F(E1003Touch, DozeEnablesOnlyDoubleTapAndPreservesPanelCalibration) {
     touch_init();
     registers[0x8067]=0x53;
     registers[0x8056]=0x25;
+    registers[0x8074]=0x23;
     ASSERT_EQ(board_hal_touch_prepare_sleep(),ESP_OK);
+    EXPECT_EQ(registers[0x8074],0xf3); // Longest interval; preserve gesture gain.
     EXPECT_EQ(registers[0x8075],0);
     EXPECT_EQ(registers[0x8076],2);
     EXPECT_EQ(registers[0x8067],0x53);

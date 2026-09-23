@@ -122,8 +122,11 @@ static esp_err_t touch_enter_doze(void) {
     uint8_t config[2+186] = {0x80,0x47};
     esp_err_t result=touch_read_register(0x8047,config+2,186);
     if (result!=ESP_OK) return result;
-    if (config[2+0x8075-0x8047]!=0 || config[2+0x8076-0x8047]!=2 ||
+    if ((config[2+0x8074-0x8047]&0xf0)!=0xf0 ||
+        config[2+0x8075-0x8047]!=0 || config[2+0x8076-0x8047]!=2 ||
         (config[2+0x8056-0x8047]&0xf0)!=0xf0) {
+        /* Maximum GT911 double-tap interval: 15 x 100 ms. Preserve gain. */
+        config[2+0x8074-0x8047]|=0xf0;
         config[2+0x8075-0x8047]=0;    // No swipe/letter wake-ups.
         config[2+0x8076-0x8047]=2;    // Double-tap only (bit 1).
         /* Latch INT high until the gesture is read, including during sleep entry. */
@@ -140,6 +143,10 @@ static esp_err_t touch_enter_doze(void) {
     result=touch_read_register(0x8075,masks,2);
     if (result!=ESP_OK) return result;
     if (masks[0]!=0 || masks[1]!=2) return ESP_ERR_INVALID_RESPONSE;
+    uint8_t interval;
+    result=touch_read_register(0x8074,&interval,1);
+    if (result!=ESP_OK) return result;
+    if ((interval&0xf0)!=0xf0) return ESP_ERR_INVALID_RESPONSE;
     uint8_t pulse;
     result=touch_read_register(0x8056,&pulse,1);
     if (result!=ESP_OK) return result;
