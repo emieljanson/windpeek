@@ -21,6 +21,7 @@ extern "C" {
 typedef struct {
     uint32_t stage, heap, minimum_heap, stack, reset_reason, uptime_ms;
     uint32_t internal_largest_bytes;
+    uint32_t panel_phase, panel_wait_ms, panel_busy_level;
     int64_t device_time;
     wind_provider_diagnostics_t forecast;
     wind_app_status_t refresh;

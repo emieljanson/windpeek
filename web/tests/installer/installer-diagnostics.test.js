@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { createInstallerDiagnostics, sanitizeDiagnosticText, sanitizeDeviceState } from '../../src/installer/installerDiagnostics'
 
 describe('installer diagnostics', () => {
+  it('preserves bounded panel failure evidence for Sentry without accepting private text', () => {
+    expect(sanitizeDeviceState({ panelPhase: 5, panelWaitMs: 40000, panelBusyLevel: 0,
+      panelLabel: 'secret', panelPin: 17 })).toEqual({ panelPhase: 5, panelWaitMs: 40000, panelBusyLevel: 0 })
+    expect(sanitizeDeviceState({ panelPhase: -1, panelWaitMs: -1, panelBusyLevel: 2 })).toBeUndefined()
+  })
   it('retains only signed 32-bit device error codes', () => {
     for (const field of ['applyError', 'transportError', 'parseError']) {
       for (const value of [-0x80000000, -1, 0, 0x7fffffff]) {
@@ -186,13 +191,15 @@ it('retains the original boot failure after status polling evicts its timeline e
   diagnostics.record({ operation: 'get_state', deviceState: {
     apply: 'idle', refreshStage: 6, refreshError: 0, refreshFetchError: -1,
     refreshAttemptedFetch: 1, refreshHttpStatus: 503, refreshTransportError: -1,
+    panelPhase: 5, panelWaitMs: 40000, panelBusyLevel: 0,
     password: 'secret', configurationDigest: 'private',
   } })
   for (let i = 0; i < 5; i++) diagnostics.record({ operation: 'get_state', deviceState: { apply: 'applying' } })
   const snapshot = diagnostics.snapshot()
   expect(snapshot.entries).toHaveLength(2)
   expect(snapshot.firstDeviceFailure).toEqual({ apply: 'idle', refreshStage: 6, refreshError: 0,
-    refreshFetchError: -1, refreshAttemptedFetch: 1, refreshHttpStatus: 503, refreshTransportError: -1 })
+    refreshFetchError: -1, refreshAttemptedFetch: 1, refreshHttpStatus: 503, refreshTransportError: -1,
+    panelPhase: 5, panelWaitMs: 40000, panelBusyLevel: 0 })
   expect(JSON.stringify(snapshot)).not.toMatch(/secret|private/)
   diagnostics.destroy()
   expect(diagnostics.snapshot()).not.toHaveProperty('firstDeviceFailure')
