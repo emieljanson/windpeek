@@ -3,6 +3,8 @@ import { MODULE_IDS, MODULE_SIZES, validModuleOrder } from './modules'
 import { resolveTimeFormat } from './localeTimeFormat'
 import { DEFAULT_THRESHOLD } from '../renderer/contract'
 import { validTimezone } from '../timezone'
+import { settingsForSpot } from './spotSettings'
+import { readCachedTide } from '../forecast/tideCache'
 
 export const CONFIGURATION_VERSION = 5
 export const MULTI_CONFIGURATION_VERSION = 6
@@ -37,7 +39,7 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showWeather: true,
   showTemperature: true,
   showTide: false,
-  showDedicatedFooter: false,
+  showDedicatedFooter: true,
   timeFormat: '24-hour',
   temperatureUnit: 'celsius',
 })
@@ -61,7 +63,7 @@ export function displayConfigurationFromStore(store) {
     threshold: store.threshold,
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,
-    showTide: Boolean(store.showTide && store.tideAvailable !== false),
+    showTide: Boolean(store.showTide && store.tideAvailable === true),
     showDedicatedFooter: store.showDedicatedFooter,
     timeFormat: store.timeFormat,
     temperatureUnit: store.temperatureUnit,

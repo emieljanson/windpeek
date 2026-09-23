@@ -88,8 +88,8 @@ const weatherModels = computed(() => {
         <SettingSegments :model-value="store.temperatureUnit" :options="temperatureUnits" name="temperature-unit"
           @update:model-value="store.setTemperatureUnit" />
       </SettingRow>
-      <SettingRow label="Footer">
-        <SettingSwitch :model-value="store.showDedicatedFooter" name="show-dedicated-footer"
+      <SettingRow label="Hours">
+        <SettingSwitch :model-value="store.showDedicatedFooter" name="show-hours"
           @update:model-value="store.setShowDedicatedFooter" />
       </SettingRow>
     </div>

@@ -110,7 +110,7 @@ describe('display configuration', () => {
     expect(createDefaultDisplayConfiguration('en-US')).toMatchObject({
       showThreshold: false,
       threshold: 17,
-      showDedicatedFooter: false,
+      showDedicatedFooter: true,
       timeFormat: '12-hour',
     })
   })

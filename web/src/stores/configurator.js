@@ -1,4 +1,5 @@
 import { MODULE_IDS, validModuleOrder } from '../config/modules'
+import { captureSpotSettings } from '../config/spotSettings'
 import { defineStore } from 'pinia'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import { readCachedForecast, writeCachedForecasts } from '../forecast/forecastCache'
@@ -62,10 +63,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       forecast: brouwersdamForecast,
       publishedForecast: brouwersdamForecast,
       forecastRevision: 0,
-      pendingForecastRevision: null,
-      pendingForecastSpotId: null,
-      pendingForecastModelId: null,
-      pendingForecastSource: null,
+      pendingForecast: null,
       forecastStatus: 'idle',
       forecastSource: 'demo',
       forecastMessage: 'Demo forecast. Loading current Brouwersdam weather…',
@@ -89,6 +87,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     }
   },
   getters: {
+    pendingForecastRevision: (state) => state.pendingForecast?.revision ?? null,
     supportsMultipleSpots: (state) => state.selectedBoardId === BOARD_IDS.E1003,
     configuredSpots() { return this.configuredSpotIds.map(id => this.spotById(id)).filter(Boolean) },
     spots: (state) => [...SPOTS, ...state.personalSpots],
@@ -396,10 +395,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       if (!spot) return false
       const requestId = ++this.forecastRequestId
       this.forecastRequestInFlight = true
-      this.pendingForecastRevision = null
-      this.pendingForecastSpotId = null
-      this.pendingForecastModelId = null
-      this.pendingForecastSource = null
+      this.pendingForecast = null
       this.forecastsByModel = {}
       const cached = readCachedForecast(spot.id, this.selectedModelId, storage)
       if (cached) {
@@ -428,21 +424,18 @@ export const useConfiguratorStore = defineStore('configurator', {
         this.forecastsByModel = forecasts
         this.forecast = nextForecast
         this.forecastRevision += 1
-        this.pendingForecastRevision = this.forecastRevision
-        this.pendingForecastSpotId = spot.id
-        this.pendingForecastModelId = this.selectedModelId
-        this.pendingForecastSource = 'current'
+        this.pendingForecast = {
+          revision: this.forecastRevision, spotId: spot.id,
+          modelId: this.selectedModelId, source: 'current',
+        }
         this.forecastSource = 'current'
         this.forecastStatus = 'rendering'
         this.forecastMessage = `Updating the ${spot.name} preview…`
         return true
       } catch {
         if (requestId !== this.forecastRequestId || this.selectedSpotId !== spot.id) return false
-        if (this.pendingForecastSource !== 'cache') {
-          this.pendingForecastRevision = null
-          this.pendingForecastSpotId = null
-          this.pendingForecastModelId = null
-          this.pendingForecastSource = null
+        if (this.pendingForecast?.source !== 'cache') {
+          this.pendingForecast = null
         }
         this.forecastStatus = 'warning'
         if (this.forecastSource === 'demo') {
@@ -500,10 +493,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       if (modelId === this.selectedModelId) return true
       const requestInFlight = this.forecastRequestInFlight
       this.selectedModelId = modelId
-      this.pendingForecastRevision = null
-      this.pendingForecastSpotId = null
-      this.pendingForecastModelId = null
-      this.pendingForecastSource = null
+      this.pendingForecast = null
 
       const current = this.forecastsByModel[modelId]
       const cached = current ? null : readCachedForecast(this.selectedSpotId, modelId, storage)
@@ -530,29 +520,27 @@ export const useConfiguratorStore = defineStore('configurator', {
       this.forecastsByModel[modelId] = available
       this.forecast = available
       this.forecastRevision += 1
-      this.pendingForecastRevision = this.forecastRevision
-      this.pendingForecastSpotId = this.selectedSpotId
-      this.pendingForecastModelId = modelId
-      this.pendingForecastSource = cached ? 'cache' : 'current'
-      this.forecastSource = this.pendingForecastSource
+      this.pendingForecast = {
+        revision: this.forecastRevision, spotId: this.selectedSpotId,
+        modelId, source: cached ? 'cache' : 'current',
+      }
+      this.forecastSource = this.pendingForecast.source
       this.forecastLabel = cached ? 'Cached' : this.forecastLabel
       this.forecastStatus = 'rendering'
       this.forecastMessage = `Updating the ${cached ? 'cached ' : ''}${model.label} preview…`
       return true
     },
     publishForecast(revision) {
-      if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision ||
-          this.pendingForecastSpotId !== this.selectedSpotId ||
-          this.pendingForecastModelId !== this.selectedModelId ||
+      const pending = this.pendingForecast
+      if (!pending || revision !== pending.revision || revision !== this.forecastRevision ||
+          pending.spotId !== this.selectedSpotId ||
+          pending.modelId !== this.selectedModelId ||
           this.forecast.spotId !== this.selectedSpotId ||
           this.forecast.modelId !== this.selectedModelId) return false
       const spot = this.spotById(this.selectedSpotId)
       const model = getForecastModel(this.selectedModelId)
-      const publicationSource = this.pendingForecastSource
-      this.pendingForecastRevision = null
-      this.pendingForecastSpotId = null
-      this.pendingForecastModelId = null
-      this.pendingForecastSource = null
+      const publicationSource = pending.source
+      this.pendingForecast = null
       this.publishedForecast = this.forecast
       if (publicationSource === 'cache') {
         this.forecastSource = 'cache'
@@ -572,13 +560,11 @@ export const useConfiguratorStore = defineStore('configurator', {
       return true
     },
     rejectForecastPublication(revision) {
-      if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision) return false
-      const failedSpot = this.spotById(this.pendingForecastSpotId)
-      const failedModel = getForecastModel(this.pendingForecastModelId)
-      this.pendingForecastRevision = null
-      this.pendingForecastSpotId = null
-      this.pendingForecastModelId = null
-      this.pendingForecastSource = null
+      const pending = this.pendingForecast
+      if (!pending || revision !== pending.revision || revision !== this.forecastRevision) return false
+      const failedSpot = this.spotById(pending.spotId)
+      const failedModel = getForecastModel(pending.modelId)
+      this.pendingForecast = null
       this.forecast = this.publishedForecast
       this.forecastRevision += 1
       this.forecastStatus = 'warning'

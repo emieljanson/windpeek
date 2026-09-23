@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import { useConfiguratorStore } from '../src/stores/configurator'
-import { configurationUrl, readConfigurationUrl, applyConfigurationUrl } from '../src/config/configurationUrl'
+import { configurationUrl, readConfigurationUrl, applyConfigurationUrl, syncConfigurationUrl } from '../src/config/configurationUrl'
 import { initializeConfigurator } from '../src/config/initializeConfigurator'
 import { siteVariant, siteDisplayDefaults, configuratorLink } from '../src/marketing/siteVariant'
 import { createPersonalSpot } from '../src/spots/personalSpots'
@@ -57,6 +57,19 @@ describe('site entry and share URLs', () => {
       expect(store.swellFocus).toBe(site === 'swell')
       expect(browser.location.searchParams.get('cfg')).toBe('1')
     }
+  })
+  it('updates the former surf default order in saved settings', () => {
+    const storage = storageWith({
+      schemaVersion: 2,
+      moduleOrder: ['swell', 'wind', 'weather', 'temperature', 'tide'],
+      configuredSpotIds: ['brouwersdam'],
+      spotSettings: {
+        brouwersdam: { moduleOrder: ['swell', 'wind', 'weather', 'temperature', 'tide'] },
+      },
+    })
+    const store = storeWith(browserAt('https://swellpeek.com/?configure'), storage)
+    expect(store.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
+    expect(store.spotSettings.brouwersdam.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
   })
   it('allows either variant on every host and keeps shared settings intact', () => {
     for (const host of ['windpeek.com', 'www.windpeek.com', 'swellpeek.com', 'preview.example.org', 'localhost']) {

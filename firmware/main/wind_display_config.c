@@ -10,7 +10,7 @@ void wind_display_config_default(wind_display_config_t *config)
         .show_weather = true,
         .show_temperature = false,
         .show_tide = false,
-        .show_dedicated_footer = false,
+        .show_dedicated_footer = true,
         .use_24_hour = true,
         .temperature_fahrenheit = false,
         .wind_size = 2,

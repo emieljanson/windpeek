@@ -1,4 +1,5 @@
 #pragma once
+#include "open_meteo_knmi_provider.h"
 
 #include <stdbool.h>
 #include <stddef.h>

@@ -59,6 +59,15 @@ E1002, universal E1001/E1002 and E1003 builds run only the firmware step by
 default. Other boards still build the photo-frame webapp and setup screens.
 Use `--step` to request individual build steps explicitly.
 
+### Local E1003 USB update
+
+From `web/`, run `npm run device:e1003`, then open
+`http://127.0.0.1:4186/dev/e1003-flash.html` in Dia and press
+**Connect and flash E1003**. The command builds the current E1003 firmware,
+serves it only on localhost, and the page flashes only the application. Saved
+Wi-Fi and spot configuration stay on the device. Keep the command running until
+the page says the device is restarting.
+
 The E1002 build contains only the Windpeek dashboard, USB installer, Wi-Fi
 client, forecast cache and battery/deep-sleep runtime. The upstream photo-frame
 UI, albums, captive portal, Home Assistant and photo OTA runtime are excluded.

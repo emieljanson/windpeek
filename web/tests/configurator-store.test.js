@@ -102,7 +102,7 @@ describe('configurator store', () => {
     expect(store.showWeather).toBe(true)
     expect(store.showTemperature).toBe(true)
     expect(store.showTide).toBe(false)
-    expect(store.showDedicatedFooter).toBe(false)
+    expect(store.showDedicatedFooter).toBe(true)
     expect(['12-hour', '24-hour']).toContain(store.timeFormat)
     expect(store.temperatureUnit).toBe('celsius')
     expect(store.selectedSpotId).toBe('brouwersdam')

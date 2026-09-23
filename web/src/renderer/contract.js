@@ -11,7 +11,7 @@ export const RENDERER_DISPLAYS = Object.freeze({
 export const RENDERER_PREVIEW_DIMENSIONS = Object.freeze({
   [RENDERER_DISPLAYS.E1001_GRAY4]: Object.freeze({ width: 800, height: 480 }),
   [RENDERER_DISPLAYS.E1002_SPECTRA6]: Object.freeze({ width: 800, height: 480 }),
-  [RENDERER_DISPLAYS.E1003_GC16]: Object.freeze({ width: 800, height: 600 }),
+  [RENDERER_DISPLAYS.E1003_GC16]: Object.freeze({ width: 1872, height: 1404 }),
 })
 
 export const DISPLAY_MODES = Object.freeze({

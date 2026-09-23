@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   createPersonalSpot,
   readPersonalSpots,
   writePersonalSpot,
+  writePersonalSpots,
 } from '../src/spots/personalSpots'
 
 function memoryStorage() {
@@ -15,6 +16,28 @@ function memoryStorage() {
 }
 
 describe('personal spots', () => {
+  it('keeps existing spots and updates duplicates in a single batch write', () => {
+    const storage = memoryStorage()
+    const first = createPersonalSpot({ name: 'First', latitude: 52, longitude: 5, timezone: 'Europe/Amsterdam' })
+    const second = createPersonalSpot({ name: 'Second', latitude: 53, longitude: 5, timezone: 'Europe/Amsterdam' })
+    writePersonalSpot(first, storage)
+    const read = vi.spyOn(storage, 'getItem')
+    const write = vi.spyOn(storage, 'setItem')
+    const renamed = { ...first, name: 'Updated first' }
+    expect(writePersonalSpots([second, renamed], storage)).toBe(true)
+    expect(read).toHaveBeenCalledOnce()
+    expect(write).toHaveBeenCalledOnce()
+    expect(readPersonalSpots(storage)).toEqual([renamed, second])
+  })
+  it('rejects an invalid batch before modifying storage and tolerates blocked storage', () => {
+    const storage = memoryStorage()
+    const spot = createPersonalSpot({ name: 'Beach', latitude: 52, longitude: 5, timezone: 'Europe/Amsterdam' })
+    const write = vi.spyOn(storage, 'setItem')
+    expect(writePersonalSpots([spot, null], storage)).toBe(false)
+    expect(write).not.toHaveBeenCalled()
+    write.mockImplementation(() => { throw new Error('Storage is full') })
+    expect(writePersonalSpots([spot], storage)).toBe(false)
+  })
   it('creates a stable, renderer-safe spot from a confirmed map pin', () => {
     expect(createPersonalSpot({
       name: 'Edam harbour',

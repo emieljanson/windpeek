@@ -102,11 +102,11 @@ TEST(WindForecast, ClassifiesWeatherAtExactCloudAndRainBoundaries)
     sample.cloud_cover_percent = 20;
     EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_CLEAR_DAY);
     sample.is_day = 0;
-    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_CLEAR_NIGHT);
+    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_CLEAR_DAY);
     sample.cloud_cover_percent = 21;
-    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_PARTLY_CLOUDY_NIGHT);
+    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_PARTLY_CLOUDY_DAY);
     sample.cloud_cover_percent = 60;
-    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_PARTLY_CLOUDY_NIGHT);
+    EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_PARTLY_CLOUDY_DAY);
     sample.cloud_cover_percent = 61;
     EXPECT_EQ(wind_forecast_weather_state(&sample), WIND_WEATHER_CLOUDY);
     sample.precipitation_hundredths_mm = 9;

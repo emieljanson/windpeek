@@ -162,7 +162,7 @@ describe('canonical screen texture', () => {
       showWeather: false,
       showTemperature: true,
       showTide: true,
-      showDedicatedFooter: false,
+      showDedicatedFooter: true,
       tideAvailable: true,
       use24Hour: false,
       temperatureFahrenheit: true,

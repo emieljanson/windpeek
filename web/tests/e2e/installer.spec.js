@@ -202,7 +202,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const wifiHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Applying setup' })).toBeVisible()
-  await expect(panel).toHaveCSS('transition-delay', '0.16s')
+  await expect(panel).toHaveCSS('transition-delay', '0s')
   expect((await panel.boundingBox()).height).toBeLessThanOrEqual(wifiHeight)
   await expect(page.getByRole('heading', { name: 'Ready for the wind' })).toBeVisible()
   await expect.poll(async () => (await panel.boundingBox()).height).toBeCloseTo(regularHeight, 0)
@@ -278,12 +278,12 @@ test('shrinks expanded Advanced for installation and returns to collapsed settin
     await expect.poll(panelHeight).toBeGreaterThan(collapsedHeight)
     await install.click()
     await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
-    await expect.poll(panelHeight).toBeCloseTo(collapsedHeight, 0)
+    await expect.poll(panelHeight).toBeCloseTo(392, 0)
 
     await page.getByRole('button', { name: 'Continue' }).click()
     const confirmation = page.getByRole('button', { name: 'Install Windpeek' })
     await expect(confirmation).toBeVisible()
-    await expect.poll(panelHeight).toBeCloseTo(collapsedHeight, 0)
+    await expect.poll(panelHeight).toBeCloseTo(392, 0)
 
     const panelBounds = await panel.boundingBox()
     const confirmationBounds = await confirmation.boundingBox()

@@ -108,7 +108,7 @@
   pointer-events: none;
   transition: opacity 220ms ease-out;
 }
-.landing-hero.is-ready canvas { opacity: 1; }
+.hero-media canvas.is-ready { opacity: 1; }
 
 .landing-page .story { margin-top: 32px; }
 

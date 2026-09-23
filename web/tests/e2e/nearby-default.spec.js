@@ -76,10 +76,11 @@ test('homepage shows Brouwersdam immediately, then requests the nearest recommen
   await expect.poll(() => forecastRequests.length).toBe(1)
   expect(forecastRequests[0].searchParams.get('latitude')).toBe(BROUWERSDAM.latitude)
   expect(forecastRequests[0].searchParams.get('longitude')).toBe(BROUWERSDAM.longitude)
-  const hero = page.locator('.landing-hero')
+  const hero = page.locator('.landing-hero canvas')
   await expect(hero).toHaveAttribute('data-forecast-spot', 'brouwersdam')
   await expect.poll(async () => Number(await hero.getAttribute('data-forecast-revision'))).toBeGreaterThan(0)
-  const initialFrame = await hero.locator('canvas').screenshot()
+  await expect(hero).toHaveClass('is-ready')
+  const initialFrame = await hero.screenshot()
 
   location.release()
   await expect.poll(() => forecastRequests.length).toBe(2)
@@ -91,9 +92,24 @@ test('homepage shows Brouwersdam immediately, then requests the nearest recommen
     { timeout: CONFIGURATOR_READY_TIMEOUT_MS },
   )
   await expect.poll(async () => {
-    const currentFrame = await hero.locator('canvas').screenshot()
+    const currentFrame = await hero.screenshot()
     return currentFrame.equals(initialFrame)
   }).toBe(false)
+})
+
+test('homepage stays usable before the photo and live forecast finish loading', async ({ page }) => {
+  const requests = []
+  page.on('request', request => requests.push(request.url()))
+  let releasePhoto
+  await page.route('**/marketing/windpeek-hero-yellow-v21-*', async route => {
+    await new Promise(resolve => { releasePhoto = resolve })
+    await route.continue()
+  })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open the forecast configurator' })).toBeVisible()
+  expect(requests.some(url => /LandingForecast|\/stores\/configurator|catalog\.generated|wind-renderer\.wasm|api\.open-meteo/.test(url))).toBe(false)
+  releasePhoto?.()
 })
 
 test('nearby configurator spot does not fill the search field', async ({ page }) => {

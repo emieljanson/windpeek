@@ -8,6 +8,9 @@
 #include "debug_log.h"
 #include "display_manager.h"
 #include "driver/gpio.h"
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+#include "driver/ledc.h"
+#endif
 #include "esp_log.h"
 #include "esp_sntp.h"
 #include "esp_attr.h"
