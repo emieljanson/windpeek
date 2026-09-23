@@ -202,7 +202,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const wifiHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Applying setup' })).toBeVisible()
-  await expect(panel).toHaveCSS('transition-delay', '0.16s')
+  await expect(panel).toHaveCSS('transition-delay', '0s')
   expect((await panel.boundingBox()).height).toBeLessThanOrEqual(wifiHeight)
   await expect(page.getByRole('heading', { name: 'Ready for the wind' })).toBeVisible()
   await expect.poll(async () => (await panel.boundingBox()).height).toBeCloseTo(regularHeight, 0)
