@@ -401,7 +401,8 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
             ",\"deviceTime\":%" PRId64 ",\"internalLargestBytes\":%u"
             ",\"refreshStage\":%u,\"refreshError\":%d,\"refreshFetchError\":%d"
             ",\"refreshAttemptedFetch\":%u,\"refreshHttpStatus\":%d"
-            ",\"refreshTransportError\":%d,\"refreshParseError\":%d}",
+            ",\"refreshTransportError\":%d,\"refreshParseError\":%d"
+            ",\"panelPhase\":%u,\"panelWaitMs\":%u,\"panelBusyLevel\":%u}",
             health.stage, health.heap, health.minimum_heap, health.stack,
             health.reset_reason, health.uptime_ms,
             health.forecast.perform_result, health.forecast.http_status, health.forecast.parse_result,
@@ -409,7 +410,9 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
             (unsigned)health.forecast.allocation_failed, health.device_time, (unsigned)health.internal_largest_bytes,
             (unsigned)health.refresh.stage, health.refresh.result, health.refresh.fetch_result,
             (unsigned)health.refresh.attempted_fetch, health.refresh.forecast.http_status,
-            health.refresh.forecast.perform_result, health.refresh.forecast.parse_result);
+            health.refresh.forecast.perform_result, health.refresh.forecast.parse_result,
+            (unsigned)health.panel_phase, (unsigned)health.panel_wait_ms,
+            (unsigned)health.panel_busy_level);
         return written >= 0 && (size_t) written < response_size - offset
             ? ESP_OK : ESP_ERR_INVALID_SIZE;
     }

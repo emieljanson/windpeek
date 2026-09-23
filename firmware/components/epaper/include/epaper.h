@@ -37,6 +37,29 @@ typedef struct epaper_config {
     int pin_enable;  // Optional power enable
 } epaper_config_t;
 
+/* Stable E1002 panel step IDs, reported after a BUSY timeout. */
+typedef enum {
+    EPAPER_PANEL_NONE = 0,
+    EPAPER_PANEL_RESET = 1,
+    EPAPER_PANEL_INIT = 2,
+    EPAPER_PANEL_POWER_ON = 3,
+    EPAPER_PANEL_DATA = 4,
+    EPAPER_PANEL_REFRESH = 5,
+    EPAPER_PANEL_POWER_OFF = 6,
+    EPAPER_PANEL_SLEEP_POWER_OFF = 7,
+} epaper_panel_phase_t;
+
+typedef struct {
+    uint32_t phase;
+    uint32_t wait_ms;
+    uint32_t busy_level;
+} epaper_panel_diagnostics_t;
+
+void epaper_panel_diagnostics_reset(void);
+void epaper_panel_diagnostics_timeout(epaper_panel_phase_t phase, uint32_t wait_ms,
+                                      uint32_t busy_level);
+epaper_panel_diagnostics_t epaper_panel_diagnostics_get(void);
+
 /**
  * @brief Initialize the E-Paper display
  * @param cfg Configuration structure

@@ -36,9 +36,11 @@ export function sanitizeDeviceState(input) {
   }
   for (const field of ['deviceStage', 'freeHeap', 'minimumHeap', 'taskStackFree', 'resetReason', 'uptimeMs',
     'httpStatus', 'responseBytes', 'responseTooLarge', 'allocationFailed',
-    'deviceTime', 'internalLargestBytes', 'refreshStage', 'refreshAttemptedFetch', 'refreshHttpStatus']) {
+    'deviceTime', 'internalLargestBytes', 'refreshStage', 'refreshAttemptedFetch', 'refreshHttpStatus',
+    'panelPhase', 'panelWaitMs']) {
     if (Number.isSafeInteger(input[field]) && input[field] >= 0 && input[field] <= 0xffffffff) state[field] = input[field]
   }
+  if (input.panelBusyLevel === 0 || input.panelBusyLevel === 1) state.panelBusyLevel = input.panelBusyLevel
   return Object.keys(state).length ? state : undefined
 }
 

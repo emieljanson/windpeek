@@ -113,6 +113,21 @@ class EpaperDispatcherTest : public testing::Test {
     }
 };
 
+TEST(EpaperPanelDiagnosticsTest, KeepsTimeoutStepUntilNextAttempt)
+{
+    epaper_panel_diagnostics_reset();
+    EXPECT_EQ(epaper_panel_diagnostics_get().phase, EPAPER_PANEL_NONE);
+    epaper_panel_diagnostics_timeout(EPAPER_PANEL_REFRESH, 40000, 0);
+    const auto failure = epaper_panel_diagnostics_get();
+    EXPECT_EQ(failure.phase, EPAPER_PANEL_REFRESH);
+    EXPECT_EQ(failure.wait_ms, 40000u);
+    EXPECT_EQ(failure.busy_level, 0u);
+    epaper_panel_diagnostics_timeout(EPAPER_PANEL_SLEEP_POWER_OFF, 40000, 1);
+    EXPECT_EQ(epaper_panel_diagnostics_get().phase, EPAPER_PANEL_REFRESH);
+    epaper_panel_diagnostics_reset();
+    EXPECT_EQ(epaper_panel_diagnostics_get().phase, EPAPER_PANEL_NONE);
+}
+
 TEST_F(EpaperDispatcherTest, UnknownRefusesEveryPanelOperationWithoutBackendCalls)
 {
     uint8_t image[1] = {0};

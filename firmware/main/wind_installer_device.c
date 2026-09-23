@@ -11,6 +11,7 @@
 #include <sys/time.h>
 
 #include "board_hal.h"
+#include "epaper.h"
 #include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_log_level.h"
@@ -90,6 +91,10 @@ static void physical_health(void *context, wind_installer_health_t *health)
         .internal_largest_bytes = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
     };
     wind_app_status_get(&health->refresh);
+    const epaper_panel_diagnostics_t panel = epaper_panel_diagnostics_get();
+    health->panel_phase = panel.phase;
+    health->panel_wait_ms = panel.wait_ms;
+    health->panel_busy_level = panel.busy_level;
     // The worker owns this snapshot until it publishes a terminal state.
     const int state = atomic_load(&installer->apply_state);
     if (state != PHYSICAL_APPLY_IDLE && state != PHYSICAL_APPLY_RUNNING)
@@ -147,7 +152,7 @@ static esp_err_t physical_render(void *context, const installed_configuration_t 
     physical_installer_t *installer = context;
     physical_checkpoint(installer, DIAG_PREVIEW_BEGIN);
     esp_err_t result = wind_app_preview_configuration(candidate, &installer->forecast_diagnostics);
-    physical_checkpoint(context, DIAG_PREVIEW_DONE);
+    if (result == ESP_OK) physical_checkpoint(context, DIAG_PREVIEW_DONE);
     return result;
 }
 
@@ -233,6 +238,7 @@ static esp_err_t physical_begin_apply(void *context,
     }
     physical_clear_apply(installer);
     memset(&installer->forecast_diagnostics, 0, sizeof(installer->forecast_diagnostics));
+    epaper_panel_diagnostics_reset();
     atomic_store(&installer->apply_error, ESP_OK);
     installer->apply_candidate = *candidate;
     if (ssid && password) {
