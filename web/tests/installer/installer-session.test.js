@@ -7,6 +7,7 @@ import {
 import { createInstallerSession } from '../../src/installer/createInstallerSession'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
 import { InstallerError, INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
+import { requestInstallerPort } from '../../src/installer/serialPortAdapter'
 
 import { configuration, release, appProtocol } from './sessionFixtures'
 
@@ -127,6 +128,17 @@ describe('installer session', () => {
     })
   })
 
+  it('keeps direct USB selected through the device check', async () => {
+    const requestPort = vi.fn(async () => ({}))
+    const session = createInstallerSession({
+      configuration, requestPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+    await session.connect('webusb')
+    expect(requestPort).toHaveBeenCalledWith('webusb')
+    expect(session.getState().phase).toBe('complete')
+  })
   it('registers only private spot text for diagnostic redaction', () => {
     const diagnostics = { registerSensitiveValues: vi.fn(), setContext: vi.fn() }
     createInstallerSession({
@@ -1188,7 +1200,7 @@ describe('installer session', () => {
     expect(esptool.flash).not.toHaveBeenCalled()
   })
 
-  it('waits for Chrome to expose and automatically reuse the granted port after restart', async () => {
+  it.each(['serial', 'webusb'])('reuses the granted %s connection after a firmware restart', async (transport) => {
     const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
     const restartedProtocol = appProtocol()
     const protocolFactory = vi.fn()
@@ -1198,12 +1210,17 @@ describe('installer session', () => {
       identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
       flash: vi.fn(),
     }
-    const initialPort = { id: 'initial-port' }
-    const requestPort = vi.fn(async () => initialPort)
+    const device = { vendorId: 0x1a86, productId: 0x7522 }
     const getPorts = vi.fn()
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([initialPort])
-    const navigatorApi = { serial: { getPorts } }
+      .mockResolvedValueOnce([device])
+    const navigatorApi = transport === 'webusb'
+      ? { usb: { getDevices: getPorts, requestDevice: vi.fn(async () => device) } }
+      : { serial: { getPorts } }
+    const initialPort = transport === 'webusb'
+      ? await requestInstallerPort(navigatorApi, { transport })
+      : device
+    const requestPort = vi.fn(async () => initialPort)
     const waitFor = vi.fn().mockResolvedValue(undefined)
     const session = createInstallerSession({
       configuration,
@@ -1216,12 +1233,13 @@ describe('installer session', () => {
       waitFor,
     })
 
-    await session.connect()
+    await session.connect(transport)
     expect(session.getState().action.action).toBe('update-firmware')
     expect(oldProtocol.close).toHaveBeenCalledBefore(esptool.identify)
     expect(getPorts).toHaveBeenCalledTimes(2)
     expect(waitFor).toHaveBeenCalledWith(500)
     expect(requestPort).toHaveBeenCalledOnce()
+    expect(requestPort).toHaveBeenCalledWith(transport)
     expect(session.getState().phase).toBe('complete')
   })
 

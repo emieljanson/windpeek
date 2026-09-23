@@ -37,6 +37,37 @@ function mountPanel(session, configuration = { digest: 'wanted' }) {
 }
 
 describe('installer inspector panel', () => {
+  it.each([
+    [BOARD_IDS.E1003, 'webusb', 'serial'],
+    [BOARD_IDS.E1002, 'serial', 'webusb'],
+  ])('chooses the tested Mac connection for %s with a recovery option', async (boardId, preferred, fallback) => {
+    const originalUsb = Object.getOwnPropertyDescriptor(window.navigator, 'usb')
+    const originalSerial = Object.getOwnPropertyDescriptor(window.navigator, 'serial')
+    const originalUserAgent = Object.getOwnPropertyDescriptor(window.navigator, 'userAgent')
+    Object.defineProperties(window.navigator, {
+      usb: { configurable: true, value: { requestDevice: vi.fn() } },
+      serial: { configurable: true, value: { requestPort: vi.fn() } },
+      userAgent: { configurable: true, value: 'Macintosh' },
+    })
+    try {
+      const session = fakeSession()
+      session.connect.mockResolvedValue({ phase: 'ready' })
+      mountPanel(session, { digest: 'wanted', boardId })
+      expect(wrapper.text()).not.toContain('Try another connection')
+      await wrapper.get('.installer-primary').trigger('click')
+      expect(session.connect).toHaveBeenCalledWith(preferred)
+      await vi.waitFor(() => expect(wrapper.get('h2').text()).toBe('Device not listed?'))
+      expect(wrapper.get('.installer-primary').text()).toBe('Try another connection')
+      expect(wrapper.text()).toContain(boardId === BOARD_IDS.E1003 ? 'E1003' : 'E1002')
+      await wrapper.get('.installer-primary').trigger('click')
+      expect(session.connect).toHaveBeenLastCalledWith(fallback)
+    } finally {
+      for (const [key, descriptor] of Object.entries({ usb: originalUsb, serial: originalSerial, userAgent: originalUserAgent })) {
+        if (descriptor) Object.defineProperty(window.navigator, key, descriptor)
+        else delete window.navigator[key]
+      }
+    }
+  })
   it('opens the reTerminal chooser from the E1003 connection step', async () => {
     const session = fakeSession()
     session.isDemo = true

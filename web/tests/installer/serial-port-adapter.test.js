@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, requestInstallerPort } from '../../src/installer/serialPortAdapter'
+import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, preferredInstallerTransport, requestInstallerPort } from '../../src/installer/serialPortAdapter'
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
+import { BOARD_IDS } from '../../src/config/configuration'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
 import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
@@ -126,6 +127,57 @@ describe('serial port adapter', () => {
     await protocol.close()
   })
 
+  it('reports an unavailable connection method as unsupported before opening a chooser', async () => {
+    const requestPort = vi.fn()
+    const requestDevice = vi.fn()
+    await expect(requestInstallerPort({ serial: { requestPort } }, { transport: 'webusb' }))
+      .rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.UNSUPPORTED })
+    await expect(requestInstallerPort({ usb: { requestDevice } }, { transport: 'serial' }))
+      .rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.UNSUPPORTED })
+    expect(requestPort).not.toHaveBeenCalled()
+    expect(requestDevice).not.toHaveBeenCalled()
+  })
+  it('prefers direct USB on macOS when the E-series bridge has no serial driver', () => {
+    const navigatorApi = { usb: { requestDevice: vi.fn() }, serial: { requestPort: vi.fn() }, userAgent: 'Macintosh' }
+    expect(getSerialSupport({ navigatorApi, locationApi: { protocol: 'https:' } }).supported).toBe(true)
+    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1003)).toBe('webusb')
+    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1002)).toBe('serial')
+    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1001)).toBe('serial')
+  })
+
+  it('uses serial on Windows and when WebUSB is unavailable', () => {
+    const serial = { requestPort: vi.fn() }
+    expect(preferredInstallerTransport({ serial, usb: { requestDevice: vi.fn() }, userAgent: 'Windows' }, BOARD_IDS.E1003)).toBe('serial')
+    expect(preferredInstallerTransport({ serial, userAgent: 'Macintosh' }, BOARD_IDS.E1003)).toBe('serial')
+  })
+
+  it('filters the serial chooser to supported USB bridges, excluding Bluetooth ports', async () => {
+    const requestPort = vi.fn().mockResolvedValue({})
+    await requestInstallerPort({ serial: { requestPort } })
+    expect(requestPort).toHaveBeenCalledWith({ filters: [
+      { usbVendorId: 0x1a86, usbProductId: 0x7522 },
+      { usbVendorId: 0x1a86, usbProductId: 0x7523 },
+    ] })
+  })
+
+  it('requests the E-series CH340K USB bridge without a local serial port', async () => {
+    const device = { vendorId: 0x1a86, productId: 0x7522 }
+    const requestDevice = vi.fn().mockResolvedValue(device)
+    const navigatorApi = { usb: { requestDevice }, userAgent: 'Macintosh' }
+    const port = await requestInstallerPort(navigatorApi, { transport: 'webusb' })
+    expect(requestDevice).toHaveBeenCalledWith({ filters: [{ vendorId: 0x1a86, productId: 0x7522 }] })
+    expect(port.getInfo()).toEqual({ usbVendorId: 0x1a86, usbProductId: 0x7522 })
+  })
+
+  it('reuses a granted direct USB device during reconnect', async () => {
+    const device = { vendorId: 0x1a86, productId: 0x7522 }
+    const usb = { requestDevice: vi.fn().mockResolvedValue(device), getDevices: vi.fn().mockResolvedValue([device]) }
+    const selected = await requestInstallerPort({ usb, userAgent: 'Macintosh' }, { transport: 'webusb' })
+    const granted = await findGrantedInstallerPort({
+      navigatorApi: { usb }, transport: 'webusb', classify: port => port === selected,
+    })
+    expect(granted).toBe(selected)
+  })
   it('supports Firefox desktop when Web Serial is available', () => {
     const requestPort = vi.fn()
     expect(getSerialSupport({

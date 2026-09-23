@@ -1,10 +1,33 @@
 import { createDeviceConsoleDecoder } from './deviceEvidence'
 import { InstallerError, INSTALLER_ERROR_CODES, isChooserCancellation } from './installerErrors'
+import { BOARD_IDS } from '../config/configuration'
 import { sanitizeDeviceState } from './installerDiagnostics'
 
 const MAGIC = new TextEncoder().encode('WINDSC01')
 const HEADER_SIZE = 24
 const MAX_PAYLOAD_SIZE = 16384
+const CH340K_FILTER = { vendorId: 0x1a86, productId: 0x7522 }
+const SERIAL_FILTERS = [
+  { usbVendorId: 0x1a86, usbProductId: 0x7522 },
+  { usbVendorId: 0x1a86, usbProductId: 0x7523 },
+]
+const directUsbPorts = new WeakMap()
+
+async function directUsbPort(device) {
+  let port = directUsbPorts.get(device)
+  if (!port) {
+    const { WebUSBSerialPort } = await import('esptool-js')
+    port = new WebUSBSerialPort(device)
+    directUsbPorts.set(device, port)
+  }
+  return port
+}
+
+export function preferredInstallerTransport(navigatorApi = globalThis.navigator, boardId) {
+  if (boardId === BOARD_IDS.E1003 && /Macintosh|Mac OS X/i.test(navigatorApi?.userAgent ?? '') &&
+      navigatorApi?.usb?.requestDevice) return 'webusb'
+  return navigatorApi?.serial ? 'serial' : 'webusb'
+}
 
 export function getSerialSupport({
   navigatorApi = globalThis.navigator,
@@ -17,26 +40,38 @@ export function getSerialSupport({
     : locationApi?.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(locationApi?.hostname)
   if (mobile) return { supported: false, reason: 'desktop-required' }
   if (!secure) return { supported: false, reason: 'secure-context-required' }
-  if (!navigatorApi?.serial) return { supported: false, reason: 'browser-not-supported' }
+  if (!navigatorApi?.serial?.requestPort && !navigatorApi?.usb?.requestDevice) return { supported: false, reason: 'browser-not-supported' }
   return { supported: true, reason: null }
 }
 
-export async function requestInstallerPort(navigatorApi = globalThis.navigator) {
+export async function requestInstallerPort(navigatorApi = globalThis.navigator, { transport = 'serial' } = {}) {
   const support = getSerialSupport({ navigatorApi })
   if (!support.supported) {
     throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windpeek in a current desktop version of Firefox, Chrome, or Edge.', { recoverable: false })
   }
+  const available = transport === 'webusb' ? navigatorApi?.usb?.requestDevice : navigatorApi?.serial?.requestPort
+  if (!available) {
+    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'This USB connection method is unavailable in this browser.')
+  }
   try {
-    return await navigatorApi.serial.requestPort()
+    if (transport === 'webusb') {
+      const device = await navigatorApi.usb.requestDevice({ filters: [CH340K_FILTER] })
+      return directUsbPort(device)
+    }
+    return await navigatorApi.serial.requestPort({ filters: SERIAL_FILTERS })
   } catch (error) {
     if (isChooserCancellation(error)) return null
     throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.', { cause: error })
   }
 }
 
-export async function findGrantedInstallerPort({ navigatorApi = globalThis.navigator, classify, signal } = {}) {
-  if (!navigatorApi?.serial) return null
-  for (const port of await navigatorApi.serial.getPorts()) {
+export async function findGrantedInstallerPort({ navigatorApi = globalThis.navigator, classify, signal, transport = 'serial' } = {}) {
+  const ports = transport === 'webusb'
+    ? await Promise.all((await navigatorApi?.usb?.getDevices?.() ?? [])
+      .filter(device => device.vendorId === CH340K_FILTER.vendorId && device.productId === CH340K_FILTER.productId)
+      .map(directUsbPort))
+    : await navigatorApi?.serial?.getPorts?.() ?? []
+  for (const port of ports) {
     if (signal?.aborted) return null
     if (await classify(port)) return port
   }
