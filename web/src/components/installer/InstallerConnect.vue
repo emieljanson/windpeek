@@ -2,7 +2,7 @@
 defineProps({
   deviceLabel: { type: String, default: 'reTerminal E1001 or E1002' },
   unsupportedReason: { type: String, default: '' },
-  preferredTransport: { type: String, default: 'serial' },
+  activeTransport: { type: String, default: 'serial' },
   alternateTransport: { type: String, default: '' },
   chooserCancelled: { type: Boolean, default: false },
 })
@@ -37,10 +37,10 @@ defineEmits(['buy', 'connect'])
         Buy a reTerminal
       </button>
       <template v-if="chooserCancelled && alternateTransport">
-        <button class="installer-secondary" type="button" @click="$emit('connect', preferredTransport)">Try again</button>
+        <button class="installer-secondary" type="button" @click="$emit('connect', activeTransport)">Try again</button>
         <button data-autofocus class="installer-primary" type="button" @click="$emit('connect', alternateTransport)">Try another connection</button>
       </template>
-      <button v-else data-autofocus class="installer-primary" type="button" @click="$emit('connect', preferredTransport)">
+      <button v-else data-autofocus class="installer-primary" type="button" @click="$emit('connect', activeTransport)">
         Continue
       </button>
     </div>

@@ -62,6 +62,12 @@ describe('installer inspector panel', () => {
       expect(wrapper.text()).toContain(boardId === BOARD_IDS.E1003 ? 'E1003' : 'E1002')
       await wrapper.get('.installer-primary').trigger('click')
       expect(session.connect).toHaveBeenLastCalledWith(fallback)
+      await vi.waitFor(() => expect(wrapper.get('h2').text()).toBe('Device not listed?'))
+      await wrapper.get('.installer-secondary').trigger('click')
+      expect(session.connect).toHaveBeenLastCalledWith(fallback)
+      await vi.waitFor(() => expect(wrapper.get('h2').text()).toBe('Device not listed?'))
+      await wrapper.get('.installer-primary').trigger('click')
+      expect(session.connect).toHaveBeenLastCalledWith(preferred)
     } finally {
       for (const [key, descriptor] of Object.entries({ usb: originalUsb, serial: originalSerial, userAgent: originalUserAgent })) {
         if (descriptor) Object.defineProperty(window.navigator, key, descriptor)

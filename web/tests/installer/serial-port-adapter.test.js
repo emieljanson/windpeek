@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, preferredInstallerTransport, requestInstallerPort } from '../../src/installer/serialPortAdapter'
+import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, installerTransports, requestInstallerPort } from '../../src/installer/serialPortAdapter'
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 import { BOARD_IDS } from '../../src/config/configuration'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
@@ -149,15 +149,20 @@ describe('serial port adapter', () => {
   it('prefers direct USB on macOS when the E-series bridge has no serial driver', () => {
     const navigatorApi = { usb: { requestDevice: vi.fn() }, serial: { requestPort: vi.fn() }, userAgent: 'Macintosh' }
     expect(getSerialSupport({ navigatorApi, locationApi: { protocol: 'https:' } }).supported).toBe(true)
-    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1003)).toBe('webusb')
-    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1002)).toBe('serial')
-    expect(preferredInstallerTransport(navigatorApi, BOARD_IDS.E1001)).toBe('serial')
+    expect(installerTransports(navigatorApi, BOARD_IDS.E1003)).toEqual(['webusb', 'serial'])
+    expect(installerTransports(navigatorApi, BOARD_IDS.E1002)).toEqual(['serial', 'webusb'])
+    expect(installerTransports(navigatorApi, BOARD_IDS.E1001)).toEqual(['serial', 'webusb'])
   })
 
   it('uses serial on Windows and when WebUSB is unavailable', () => {
     const serial = { requestPort: vi.fn() }
-    expect(preferredInstallerTransport({ serial, usb: { requestDevice: vi.fn() }, userAgent: 'Windows' }, BOARD_IDS.E1003)).toBe('serial')
-    expect(preferredInstallerTransport({ serial, userAgent: 'Macintosh' }, BOARD_IDS.E1003)).toBe('serial')
+    expect(installerTransports({ serial, usb: { requestDevice: vi.fn() }, userAgent: 'Windows' }, BOARD_IDS.E1003)).toEqual(['serial', 'webusb'])
+    expect(installerTransports({ serial, userAgent: 'Macintosh' }, BOARD_IDS.E1003)).toEqual(['serial'])
+  })
+
+  it('offers only available connection methods', () => {
+    expect(installerTransports({ usb: { requestDevice: vi.fn() }, serial: {} })).toEqual(['webusb'])
+    expect(installerTransports({})).toEqual([])
   })
 
   it('filters the serial chooser to supported USB bridges, excluding Bluetooth ports', async () => {

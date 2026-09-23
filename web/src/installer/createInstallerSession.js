@@ -16,7 +16,7 @@ import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './insta
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { browserContext, filterInstallerEvent, installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
-import { createSerialProtocol, findGrantedInstallerPort, preferredInstallerTransport, requestInstallerPort } from './serialPortAdapter'
+import { createSerialProtocol, findGrantedInstallerPort, installerTransports, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
@@ -76,7 +76,7 @@ export function createInstallerSession({
   const listeners = new Set()
   const probingProtocols = new Set()
   const expectedHardwareModel = configuration?.boardId || BOARD_ID
-  let transport = preferredInstallerTransport(navigatorApi, expectedHardwareModel)
+  let transport = installerTransports(navigatorApi, expectedHardwareModel)[0]
   const releaseBoardId = installerReleaseBoardId(expectedHardwareModel)
   const installationConfiguration = expectedHardwareModel === BOARD_IDS.E1001 &&
       configuration?.version === CONFIGURATION_VERSION

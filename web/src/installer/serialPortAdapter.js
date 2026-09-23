@@ -23,10 +23,14 @@ async function directUsbPort(device) {
   return port
 }
 
-export function preferredInstallerTransport(navigatorApi = globalThis.navigator, boardId) {
-  if (boardId === BOARD_IDS.E1003 && /Macintosh|Mac OS X/i.test(navigatorApi?.userAgent ?? '') &&
-      navigatorApi?.usb?.requestDevice) return 'webusb'
-  return navigatorApi?.serial ? 'serial' : 'webusb'
+export function installerTransports(navigatorApi = globalThis.navigator, boardId) {
+  const available = {
+    serial: Boolean(navigatorApi?.serial?.requestPort),
+    webusb: Boolean(navigatorApi?.usb?.requestDevice),
+  }
+  const preferUsb = boardId === BOARD_IDS.E1003 && /Macintosh|Mac OS X/i.test(navigatorApi?.userAgent ?? '')
+  const order = preferUsb ? ['webusb', 'serial'] : ['serial', 'webusb']
+  return order.filter(transport => available[transport])
 }
 
 export function getSerialSupport({
@@ -40,7 +44,7 @@ export function getSerialSupport({
     : locationApi?.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(locationApi?.hostname)
   if (mobile) return { supported: false, reason: 'desktop-required' }
   if (!secure) return { supported: false, reason: 'secure-context-required' }
-  if (!navigatorApi?.serial?.requestPort && !navigatorApi?.usb?.requestDevice) return { supported: false, reason: 'browser-not-supported' }
+  if (!installerTransports(navigatorApi).length) return { supported: false, reason: 'browser-not-supported' }
   return { supported: true, reason: null }
 }
 
