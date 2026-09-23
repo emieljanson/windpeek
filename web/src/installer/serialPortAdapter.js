@@ -65,7 +65,7 @@ export async function requestInstallerPort(navigatorApi = globalThis.navigator, 
     return await navigatorApi.serial.requestPort({ filters: SERIAL_FILTERS })
   } catch (error) {
     if (isChooserCancellation(error)) return null
-    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.', { cause: error })
+    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'The browser could not access this device.', { cause: error })
   }
 }
 
@@ -258,7 +258,7 @@ export function createSerialProtocol(port, {
     } finally { clearTimeout(timeoutId) }
   }
   return {
-    async open() {
+    async open({ resetDevice = true } = {}) {
       record({ category: 'serial', operation: 'open', status: 'started', measurements: { baudRate } })
       try {
         await port.open({ baudRate, bufferSize: 16384 })
@@ -276,10 +276,12 @@ export function createSerialProtocol(port, {
         // the device an explicit normal reset before speaking our protocol.
         try {
           await port.setSignals({ dataTerminalReady: false, requestToSend: false })
-          await port.setSignals({ dataTerminalReady: false, requestToSend: true })
-          await waitFor(150)
-          await port.setSignals({ dataTerminalReady: false, requestToSend: false })
-          await waitFor(2_000)
+          if (resetDevice) {
+            await port.setSignals({ dataTerminalReady: false, requestToSend: true })
+            await waitFor(150)
+            await port.setSignals({ dataTerminalReady: false, requestToSend: false })
+            await waitFor(2_000)
+          }
         } catch {
           // Some USB bridges do not expose modem-control lines. The app may
           // already be running, so continue with the protocol connection.

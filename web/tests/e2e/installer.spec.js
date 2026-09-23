@@ -126,7 +126,7 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   // though the demo's configured firmware duration remains three seconds.
   await expect(page.getByRole('heading', { name: 'Finding Windpeek' })).toBeVisible({ timeout: 30_000 })
   await expectCopyAligned()
-  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Connect to Wi-Fi' })).toBeVisible()
   await expectCopyAligned()
   await expect(page.locator('.installer-field').first()).toHaveCSS('font-size', '13px')
   const network = page.getByRole('combobox', { name: 'Wi-Fi network' })
@@ -186,7 +186,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
 
   await page.getByRole('button', { name: 'Install Windpeek' }).click()
   await expect(page.getByRole('heading', { name: 'Finding Windpeek' })).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Connect to Wi-Fi' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()
   await expect(continueButton).toHaveCSS('cursor', 'default')
@@ -224,10 +224,11 @@ test('shows a confirmed diagnostic reference without blocking recovery', async (
   await page.getByRole('button', { name: 'Install', exact: true }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
 
-  await expect(page.getByRole('alert')).toContainText('could not access')
-  await expect(page.getByText('Technical details sent')).toBeVisible()
-  await expect(page.getByText('Diagnostic reference: WS-TEST123456').first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Close' })).toBeEnabled()
+  await expect(page.getByRole('alert')).toContainText('could not access this device')
+  await expect(page.getByRole('link', { name: 'Email support' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Email support' })).toHaveAttribute('href', /WS-TEST123456/)
+  await expect(page.getByText('Help & details', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Back to configurator' })).toBeEnabled()
 })
 
 test('grows a Wi-Fi error state so both recovery actions remain usable', async ({ page }) => {
@@ -240,8 +241,10 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
   const panel = page.getByRole('complementary', { name: 'Windpeek settings' })
   const scanAgain = page.getByRole('button', { name: 'Scan again' })
   const continueButton = page.getByRole('button', { name: 'Continue' })
-  await expect(page.getByRole('heading', { name: 'Select a network for Windpeek' })).toBeVisible()
-  await expect(page.getByText('Diagnostic reference: WS-TEST123456').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Connect to Wi-Fi' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Email support' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Email support' })).toHaveAttribute('href', /WS-TEST123456/)
+  await expect(page.getByText('Help & details', { exact: true })).toHaveCount(0)
   await expect(scanAgain).toBeVisible()
   await expect(scanAgain).toBeEnabled()
 

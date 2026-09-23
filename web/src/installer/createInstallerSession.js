@@ -15,12 +15,12 @@ import {
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
-import { browserContext, filterInstallerEvent, installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
+import { browserContext, createDiagnosticReport, installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
 import { createSerialProtocol, findGrantedInstallerPort, installerTransports, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
-  diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null,
+  diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null, canRetrySetup: false,
 })
 const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync']
 const PORT_DISCOVERY_TIMEOUT_MS = 2000
@@ -71,7 +71,7 @@ export function createInstallerSession({
   let awaitingWrittenFirmware = false
   let hardwareProfileSelectionAttempted = false
   let cancellationPromise = null
-  const diagnosticSession = ++diagnosticSessionSequence
+  const diagnosticSession = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${++diagnosticSessionSequence}`
   const pendingFailures = []
   const listeners = new Set()
   const probingProtocols = new Set()
@@ -162,31 +162,20 @@ export function createInstallerSession({
       pendingFailures.push(failure)
       return
     }
-    const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
-      contexts: { installer: { ...snapshot.context, ...browserContext() } },
-      extra: { timeline: snapshot.entries, firstDeviceFailure: snapshot.firstDeviceFailure, deviceEvidence: snapshot.deviceEvidence, textBytes: snapshot.textBytes } })
+    snapshot = { ...snapshot, context: { ...snapshot.context, phase: failure.phase, errorCode: failure.error?.code, attempt: failure.attempt } }
+    snapshot.context = { ...snapshot.context, ...browserContext() }
     update({ diagnosticStatus: 'sending', diagnosticReference: null,
-      diagnosticReport: JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra }, null, 2) })
-    let report
-    try {
-      report = reporter.report({ ...failure, snapshot })
-    } catch (error) {
-      report = Promise.reject(error)
+      diagnosticReport: createDiagnosticReport(snapshot) })
+    function delivered(result) {
+      if (failure.attempt !== attempt || latestDiagnosticOccurrence !== failure.occurrence) return
+      const sent = result?.status === 'sent' && isInstallerDiagnosticReference(result.reference)
+      update({ diagnosticStatus: sent ? 'sent' : result?.status === 'queued' ? 'queued' : 'failed',
+        diagnosticReference: sent ? result.reference : null })
     }
-    Promise.resolve(report)
-      .then((result) => {
-        if (failure.attempt !== attempt || latestDiagnosticOccurrence !== failure.occurrence) return
-        const sent = result?.status === 'sent' && isInstallerDiagnosticReference(result.reference)
-        update({
-          diagnosticStatus: sent ? 'sent' : 'failed',
-          diagnosticReference: sent ? result.reference : null,
-        })
-      })
-      .catch(() => {
-        if (failure.attempt === attempt && latestDiagnosticOccurrence === failure.occurrence) {
-          update({ diagnosticStatus: 'failed', diagnosticReference: null })
-        }
-      })
+    let report
+    try { report = reporter.report({ ...failure, snapshot }, delivered) }
+    catch (error) { report = Promise.reject(error) }
+    Promise.resolve(report).then(delivered).catch(() => delivered({ status: 'failed' }))
   }
 
   function flushPendingFailures() {
@@ -400,7 +389,7 @@ export function createInstallerSession({
         selectedPort = await requestPort(transport)
       } catch (error) {
         if (currentAttempt !== attempt) return state
-        const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.')
+        const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'The browser could not access this device.')
         update({ phase: 'error', error: installerError, safeToDisconnect: true })
         reportFailure(installerError, 'choosing-device')
         return state
@@ -469,7 +458,7 @@ export function createInstallerSession({
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek could not check this device.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device could not be identified.')
       update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: installerError.safeToDisconnect })
       reportFailure(installerError, 'checking-device')
     }
@@ -488,10 +477,14 @@ export function createInstallerSession({
     const scanAttempt = attempt
     resetDiagnosticDelivery()
     try {
+      const previousError = state.error
       const response = await protocol.request('scan_networks', {}, 45000)
+      if (scanAttempt === attempt && state.phase === 'wifi' && state.error === previousError &&
+          previousError?.operation === 'scan_networks') update({ error: null })
       return Array.isArray(response.networks) ? response.networks : []
     } catch (error) {
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not scan for Wi-Fi networks.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'The network scan failed.')
+      installerError.operation = 'scan_networks'
       // A network scan can finish after the user has already submitted the
       // chosen network. Its late failure must not pull a successfully applying
       // or completed installer back to the Wi-Fi form.
@@ -500,6 +493,35 @@ export function createInstallerSession({
         reportFailure(installerError, 'wifi')
       }
       throw installerError
+    }
+  }
+
+  function canRetryOnConnection(error) {
+    return Boolean(protocol) && ![INSTALLER_ERROR_CODES.CONNECTION_LOST, INSTALLER_ERROR_CODES.INVALID_RESPONSE].includes(error?.code)
+  }
+
+  async function recoverVerificationConnection(error, expectedAttempt) {
+    reportFailure(error, 'verifying')
+    update({ phase: 'verifying', error: null })
+    try { await protocol?.close() } catch {}
+    protocol = null
+    if (!isCurrent(expectedAttempt)) return null
+    const candidate = protocolFactory(port, { diagnostics })
+    probingProtocols.add(candidate)
+    try {
+      await candidate.open({ resetDevice: false })
+      if (!isCurrent(expectedAttempt)) return null
+      const hello = await candidate.request('hello')
+      if (!isCurrent(expectedAttempt)) return null
+      if (!validHello(hello) || hello.boardId !== device?.boardId ||
+          hello.firmwareVersion !== device?.firmwareVersion ||
+          hello.configurationVersion !== device?.configurationVersion ||
+          hello.hardwareModel !== device?.hardwareModel) throw error
+      protocol = candidate
+      return candidate
+    } finally {
+      probingProtocols.delete(candidate)
+      if (protocol !== candidate) { try { await candidate.close() } catch {} }
     }
   }
 
@@ -512,6 +534,7 @@ export function createInstallerSession({
       completionAck: device?.capabilities?.includes('completion-ack'),
       isCurrent: () => isCurrent(expectedAttempt), update, waitFor, now,
       recordFailure: recordVerificationFailure,
+      recoverConnection: (error) => recoverVerificationConnection(error, expectedAttempt),
       recordRetry: (retryCount) => {
         try { diagnostics.record?.({ category: 'recovery', operation: 'forecast', status: 'retrying', measurements: { retryCount } }) } catch {}
       },
@@ -543,7 +566,7 @@ export function createInstallerSession({
         if (identity.chipFamily !== CHIP_FAMILY) {
           await identity.transport?.disconnect?.()
           throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
-            'This USB device is not a compatible Windpeek.', { recoverable: false })
+            'This device is not supported.', { recoverable: false })
         }
         const totalBytes = bundle.parts.reduce((sum, part) => sum + part.size, 0)
         await esptool.flash({
@@ -570,10 +593,11 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windpeek setup could not continue.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device could not finish setup.')
       update({
-        phase: [INSTALLER_ERROR_CODES.FLASH_FAILED, INSTALLER_ERROR_CODES.CONNECTION_LOST].includes(installerError.code) ? 'reconnect' : 'error',
-        error: installerError,
+        phase: state.phase === 'verifying' ? 'verification-issue'
+          : [INSTALLER_ERROR_CODES.FLASH_FAILED, INSTALLER_ERROR_CODES.CONNECTION_LOST].includes(installerError.code) ? 'reconnect' : 'error',
+        error: installerError, canRetrySetup: canRetryOnConnection(error),
         safeToDisconnect: installerError.safeToDisconnect,
       })
       reportFailure(installerError, state.phase)
@@ -646,7 +670,7 @@ export function createInstallerSession({
         device.configurationVersion !== CONFIGURATION_VERSION ||
         device.firmwareLayoutVersion !== (release.manifest.firmwareLayoutVersion ?? 1)) {
       throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
-        'The expected firmware is not ready. Start the installation again to repair it.')
+        'Firmware not ready. Restart installation.')
     }
     if (awaitingWrittenFirmware &&
         [BOARD_IDS.E1001, BOARD_IDS.E1002].includes(expectedHardwareModel) &&
@@ -654,7 +678,7 @@ export function createInstallerSession({
         device.hardwareModel === 'unknown') {
       if (hardwareProfileSelectionAttempted) {
         throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
-          'Windpeek could not retain the selected screen model. Start the installation again.')
+          'Screen model not saved. Restart installation.')
       }
       const selected = await protocol.request('set_hardware_profile', {
         hardwareModel: expectedHardwareModel === BOARD_IDS.E1001 ? 'e1001' : 'e1002',
@@ -755,11 +779,11 @@ export function createInstallerSession({
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
       const installerError = checkingVerification && error?.code !== INSTALLER_ERROR_CODES.CONNECTION_LOST
-        ? asInstallerError(error, INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windpeek could not confirm the setup. Check the device again.')
+        ? asInstallerError(error, INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'The final setup check did not finish.')
         : asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
       const phase = checkingVerification && installerError.code !== INSTALLER_ERROR_CODES.CONNECTION_LOST
         ? 'verification-issue' : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
-      update({ phase, error: installerError, safeToDisconnect: true })
+      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(error) })
       reportFailure(installerError, 'reconnect')
       return state
     }
@@ -770,29 +794,60 @@ export function createInstallerSession({
     resetDiagnosticDelivery()
     const currentAttempt = attempt
     const credentials = { ssid: String(ssid), password: String(password) }
+    let completed = false
     let releaseCredentialLock = () => {}
     try { releaseCredentialLock = diagnostics.acquireCredentialLock?.(credentials) ?? releaseCredentialLock } catch {}
     try {
       if (!await configure(credentials, currentAttempt)) return state
-      completeAttempt()
+      completed = true
     } catch (error) {
       if (currentAttempt !== attempt) return state
       const checkingVerification = state.phase === 'verifying'
       const installerError = checkingVerification && error?.code !== INSTALLER_ERROR_CODES.WIFI_FAILED
         ? error?.code === INSTALLER_ERROR_CODES.VERIFICATION_FAILED ? error
           : new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
-            'Wi-Fi connected, but Windpeek could not confirm the setup. Reconnect to check its status.', { cause: error })
-        : asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
+            'The final setup check did not finish.', { cause: error })
+        : asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Could not connect. Check the network and password.')
       const phase = checkingVerification ? 'verification-issue'
         : installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED ? 'wifi'
           : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
-      update({ phase, error: installerError, safeToDisconnect: true })
+      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(error) })
       reportFailure(installerError, phase)
     } finally {
       credentials.ssid = ''
       credentials.password = ''
       try { releaseCredentialLock() } catch {}
       flushPendingFailures()
+    }
+    if (completed && isCurrent(currentAttempt)) completeAttempt()
+    return state
+  }
+
+  async function retrySetup() {
+    if (state.phase !== 'verification-issue' || !protocol) return state
+    const currentAttempt = attempt
+    update({ phase: 'verifying', error: null })
+    try {
+      const status = await protocol.request('get_state')
+      if (!isCurrent(currentAttempt)) return state
+      if (!['connected', 'disconnected'].includes(status?.wifi)) {
+        throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device did not return its status.')
+      }
+      device.applyState = status.apply
+      if (status.wifi === 'disconnected') {
+        update({ phase: 'wifi', canRetrySetup: false })
+      } else if (status.apply === 'complete' && status.render === 'valid' &&
+          status.configurationDigest === installationConfiguration.digest) {
+        if (device.capabilities?.includes('completion-ack')) {
+          try { await protocol.request('finish_setup') } catch {}
+        }
+        if (isCurrent(currentAttempt)) completeAttempt()
+      } else if (await configure(undefined, currentAttempt)) completeAttempt()
+    } catch (error) {
+      if (!isCurrent(currentAttempt)) return state
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Setup could not finish.')
+      update({ phase: 'verification-issue', error: installerError, canRetrySetup: canRetryOnConnection(installerError) })
+      reportFailure(installerError)
     }
     return state
   }
@@ -830,6 +885,7 @@ export function createInstallerSession({
     confirmDevice,
     scanNetworks,
     submitWifi,
+    retrySetup,
     attachReconnectedPort,
     reconnect,
     cancel,

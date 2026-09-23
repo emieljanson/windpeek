@@ -47,8 +47,8 @@ function submit() {
 <template>
   <form class="installer-step installer-wifi" @submit.prevent="submit">
     <div class="installer-step__copy">
-      <h2 id="installer-title">Select a network for Windpeek</h2>
-      <p id="installer-wifi-help">{{ networks.length ? 'The device uses this connection to update its forecast.' : 'No networks found. Enter a network name or scan again.' }}</p>
+      <h2 id="installer-title">Connect to Wi-Fi</h2>
+      <p id="installer-wifi-help">{{ networks.length ? 'Choose your network.' : 'Enter your network name.' }}</p>
     </div>
     <div class="installer-fields">
       <div class="installer-field">
@@ -82,8 +82,7 @@ function submit() {
           :required="passwordRequired"
         />
       </label>
-      <p v-if="error" id="installer-wifi-error" class="installer-message is-error">{{ error }}</p>
-      <InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" :report="diagnosticReport" />
+      <p v-if="error || diagnosticReport || diagnosticStatus !== 'idle'" id="installer-wifi-error" class="installer-message is-error"><InstallerDiagnosticStatus :status="diagnosticStatus" :reference="diagnosticReference" :report="diagnosticReport" :message="error" /></p>
     </div>
     <div class="installer-actions">
       <button class="installer-secondary" type="button" :disabled="busy || scanning" @click="$emit('rescan')">{{ scanning ? 'Scanning…' : 'Scan again' }}</button>

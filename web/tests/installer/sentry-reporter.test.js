@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSentryReporter, filterInstallerEvent } from '../../src/installer/sentryReporter'
+import { createSentryReporter, createDiagnosticReport, filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
   let options
@@ -16,7 +16,8 @@ function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
       },
       flush: vi.fn().mockResolvedValue(flushResult),
     })),
-    captureException: vi.fn((error, context) => {
+    captureException: vi.fn((error, hint) => {
+      const context = hint.captureContext
       const eventId = 'a'.repeat(32)
       const event = options.beforeSend({
         event_id: eventId,
@@ -70,6 +71,29 @@ describe('Sentry installer reporter', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+  })
+
+  it('finishes a hanging SDK load so the local report stays usable', async () => {
+    vi.useFakeTimers()
+    try {
+      const reporter = createSentryReporter({ enabled: true, dsn: 'https://public@example.test/1',
+        timeoutMs: 100, loadSentry: () => new Promise(() => {}) })
+      const settled = vi.fn()
+      void reporter.report(reportInput()).then(settled)
+      await vi.advanceTimersByTimeAsync(101)
+      expect(settled).toHaveBeenCalledWith({ status: 'failed' })
+    } finally { vi.useRealTimers() }
+  })
+
+  it('retries an SDK load failure and sends through the configured Windpeek endpoint', async () => {
+    const sdk = fakeSdk()
+    const loadSentry = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(sdk)
+    const reporter = createSentryReporter({ enabled: true, dsn: 'https://public@example.test/1',
+      tunnel: 'https://reports.windpeek.test/report', loadSentry })
+    await expect(reporter.report(reportInput())).resolves.toEqual({ status: 'failed' })
+    await expect(reporter.report(reportInput())).resolves.toMatchObject({ status: 'sent' })
+    expect(loadSentry).toHaveBeenCalledTimes(2)
+    expect(sdk.init).toHaveBeenCalledWith(expect.objectContaining({ tunnel: 'https://reports.windpeek.test/report' }))
   })
 
   it.each(['localhost', '127.0.0.1', '127.0.0.2', '[::1]'])('does not report production-build previews on %s', async (hostname) => {
@@ -146,13 +170,13 @@ describe('Sentry installer reporter', () => {
       },
     }))
     expect(sdk.captureException).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({
-      tags: expect.objectContaining({
+      captureContext: expect.objectContaining({ tags: expect.objectContaining({
         selected_board_id: 'seeedstudio_reterminal_e1003',
         detected_board_id: 'seeedstudio_reterminal_e1002',
         release_board_id: 'seeedstudio_reterminal_e1003',
         connection_kind: 'windpeek',
         decision_reason: 'different-windpeek-model',
-      }),
+      }) }),
     }))
   })
 
@@ -183,6 +207,12 @@ describe('Sentry installer reporter', () => {
     await expect(reporter.report(input))
       .resolves.toEqual({ status: 'sent', reference: expect.stringMatching(/^WS-/) })
 
+    const attachment = envelope[1].find(([header]) => header.type === 'attachment')
+    expect(attachment[0]).toMatchObject({ filename: 'windpeek-diagnostic.json', content_type: 'application/json' })
+    const report = new TextDecoder().decode(attachment[1])
+    expect(report).toBe(createDiagnosticReport({ ...input.snapshot,
+      context: { ...input.snapshot.context, browser: 'Other', os: 'Other' } }))
+    expect(report).not.toMatch(/private-network|private-digest|private-crash-secret/)
     const serialized = JSON.stringify(envelope)
     expect(serialized).toContain('windpeek.reference')
     expect(envelope[1][0][1].extra.timeline[0].measurements).toEqual({ writtenBytes: 10 })

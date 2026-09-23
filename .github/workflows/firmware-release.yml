@@ -57,6 +57,12 @@ jobs:
           npm ci
           npm run deploy -- --dry-run
 
+      - name: Verify installer report Worker bundle
+        working-directory: workers/installer-reports
+        run: |
+          npm ci
+          npm run deploy -- --dry-run
+
       - name: Install browser test runtime
         if: steps.previews.outputs.cache-hit != 'true'
         working-directory: web
@@ -351,12 +357,23 @@ jobs:
             exit 1
           }
 
+      - name: Verify installer reporting configuration
+        env:
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_INSTALLER_REPORT_URL: ${{ vars.VITE_INSTALLER_REPORT_URL }}
+        run: |
+          test -n "$VITE_SENTRY_DSN" && test -n "$VITE_INSTALLER_REPORT_URL" || {
+            echo "::error::Set VITE_SENTRY_DSN and VITE_INSTALLER_REPORT_URL before deploying the website."
+            exit 1
+          }
+
       - name: Build website with bundled firmware
         working-directory: web
         env:
           VITE_GEOAPIFY_API_KEY: ${{ vars.VITE_GEOAPIFY_API_KEY }}
           VITE_NEARBY_LOCATION_URL: ${{ vars.VITE_NEARBY_LOCATION_URL }}
           VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_INSTALLER_REPORT_URL: ${{ vars.VITE_INSTALLER_REPORT_URL }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}

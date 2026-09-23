@@ -17,15 +17,33 @@ function retryableForecastFailure(status) {
   return Number.isInteger(status.transportError) && status.transportError !== 0
 }
 
-function verificationError(message = 'Windpeek could not apply the new setup. Try again to finish installation.') {
+function verificationError(message = 'The device could not apply these settings.') {
   return new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, message)
 }
 
 // One setup transaction owns credentials through verification and any bounded
 // retry. A reconnected browser observes a running transaction before mutating it.
 export async function applyConfiguration({
-  protocol, configuration, credentials, applying = false, completionAck = false, isCurrent, update, waitFor, now, recordFailure, recordRetry,
+  protocol, configuration, credentials, applying = false, completionAck = false, isCurrent, update, waitFor, now, recordFailure, recordRetry, recoverConnection,
 }) {
+  let recoveredConnection = false
+  async function recover(error) {
+    if (recoveredConnection || !recoverConnection || !isCurrent() ||
+        ![INSTALLER_ERROR_CODES.CONNECTION_LOST, INSTALLER_ERROR_CODES.INVALID_RESPONSE].includes(error?.code)) throw error
+    recoveredConnection = true
+    protocol = await recoverConnection(error)
+    if (!protocol) throw error
+  }
+
+  async function readStatus(timeout) {
+    try { return await protocol.request('get_state', undefined, timeout) }
+    catch (error) {
+      await recover(error)
+      if (!isCurrent()) return null
+      return protocol.request('get_state', undefined, timeout)
+    }
+  }
+
   async function finish() {
     if (completionAck) {
       // Verification already proved the saved setup and panel. A lost cleanup
@@ -44,14 +62,14 @@ export async function applyConfiguration({
       // declaring a deadline failure: the device may have finished hours ago.
       const remaining = deadline - now()
       const timeout = remaining > 0 ? Math.min(APPLY_TIMEOUT_MS, remaining) : 15000
-      const status = await protocol.request('get_state', undefined, timeout)
+      const status = await readStatus(timeout)
       if (!isCurrent()) return null
       if (['render_failed', 'commit_failed'].includes(status.apply)) return status
       if (status.apply === 'complete' ||
           (acknowledgement === 'complete' && [undefined, 'idle'].includes(status.apply))) return status
       if (now() >= deadline) break
     }
-    throw verificationError('Windpeek is taking too long to finish setup. Reconnect to check its progress.')
+    throw verificationError('The device is taking longer than expected.')
   }
 
   let firstAttempt = 0
@@ -81,7 +99,7 @@ export async function applyConfiguration({
     if (begun.status !== 'ready') {
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE,
         begun.status === 'clock_rejected' ? 'Windpeek could not set its clock from this computer.'
-          : 'Windpeek is not ready for setup. Reconnect to check its progress.')
+          : 'Device not ready. Reconnect to check progress.')
     }
     const staged = await protocol.request('stage_configuration', { configuration })
     if (!isCurrent()) return false
@@ -92,11 +110,18 @@ export async function applyConfiguration({
       const wifi = await protocol.request('test_wifi', credentials, WIFI_TIMEOUT_MS)
       if (!isCurrent()) return false
       if (wifi.status !== 'wifi_ready') {
-        throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windpeek could not connect to that Wi-Fi network.')
+        throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Could not connect. Check the network and password.')
       }
     }
     update({ phase: 'verifying', progress: 0.92 })
-    const applied = await protocol.request('apply_configuration', undefined, APPLY_TIMEOUT_MS)
+    let applied
+    try { applied = await protocol.request('apply_configuration', undefined, APPLY_TIMEOUT_MS) }
+    catch (error) {
+      // A lost acknowledgement does not prove the write failed. Observe it;
+      // never repeat this mutation just because its response was lost.
+      await recover(error)
+      applied = { status: 'applying' }
+    }
     if (!isCurrent()) return false
     if (!['applying', 'complete'].includes(applied.status)) {
       recordFailure({ apply: applied.status })
@@ -108,7 +133,7 @@ export async function applyConfiguration({
     if (!failed && verified(status, configuration.digest)) return finish()
     recordFailure(status)
     if (status.apply === 'complete' && status.render !== 'valid') {
-      throw verificationError('Windpeek saved the setup, but could not confirm the forecast screen. Reconnect to check it.')
+      throw verificationError('Settings saved, but the forecast screen could not be verified.')
     }
     if (!retryableForecastFailure(status) || attempt + 1 === MAX_APPLY_ATTEMPTS) throw verificationError()
     recordRetry(attempt + 1)

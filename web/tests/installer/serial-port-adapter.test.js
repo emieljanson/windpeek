@@ -244,6 +244,13 @@ describe('serial port adapter', () => {
     expect(result).toBe(ports[1])
   })
 
+  it('reopens for status recovery without resetting the device', async () => {
+    const port = { open: vi.fn(), setSignals: vi.fn(),
+      readable: { getReader: () => ({}) }, writable: { getWriter: () => ({}) } }
+    await createSerialProtocol(port).open({ resetDevice: false })
+    expect(port.setSignals.mock.calls).toEqual([[{ dataTerminalReady: false, requestToSend: false }]])
+  })
+
   it('boots an E1002 into its app before opening the installer protocol', async () => {
     const waitFor = vi.fn().mockResolvedValue(undefined)
     const reader = { cancel: vi.fn(), releaseLock: vi.fn() }

@@ -403,7 +403,7 @@ it.each(['complete', 'applying'])('reads final status after the browser was susp
     now: () => clock, waitFor: async () => { clock += 5 * 3600 * 1000 },
   })
   await session.connect()
-  expect(session.getState().phase).toBe(apply === 'complete' ? 'complete' : 'error')
+  expect(session.getState().phase).toBe(apply === 'complete' ? 'complete' : 'verification-issue')
   expect(protocol.request.mock.calls.filter(([command]) => command === 'get_state')).toHaveLength(2)
 })
 
@@ -423,4 +423,109 @@ it('does not send a retry after cancellation during the recovery pause', async (
   await session.connect()
   expect(session.getState().phase).toBe('ready')
   expect(applies).toBe(1)
+})
+
+
+describe('automatic read-only verification recovery', () => {
+  it.each(['get_state', 'apply_configuration'])('recovers a lost %s response without another chooser or apply', async (failedCommand) => {
+    let applied = false
+    const first = appProtocol({ wifiHealthy: false })
+    const original = first.request.getMockImplementation()
+    first.request.mockImplementation(async (command, ...args) => {
+      if (command === 'apply_configuration') applied = true
+      if (applied && command === failedCommand) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'USB read failed')
+      return original(command, ...args)
+    })
+    const recovered = appProtocol()
+    const recoveredRequest = recovered.request.getMockImplementation()
+    recovered.request.mockImplementation(async (command, ...args) => command === 'get_state'
+      ? { configurationDigest: 'wanted', wifi: 'connected', render: 'valid', apply: 'complete' }
+      : recoveredRequest(command, ...args))
+    const protocolFactory = vi.fn().mockReturnValueOnce(first).mockReturnValue(recovered)
+    const requestPort = vi.fn(async () => ({}))
+    const reporter = { report: vi.fn(async () => ({ status: 'failed' })) }
+    const session = createInstallerSession({ configuration, requestPort, releaseLoader: async () => release,
+      protocolFactory, waitFor: async () => {}, reporter })
+    await session.connect()
+    await session.submitWifi({ ssid: 'Example', password: 'test-only' })
+    expect(session.getState().phase).toBe('complete')
+    expect(requestPort).toHaveBeenCalledOnce()
+    expect(recovered.open).toHaveBeenCalledWith({ resetDevice: false })
+    expect(reporter.report).toHaveBeenCalledOnce()
+    const snapshot = reporter.report.mock.calls[0][0].snapshot
+    expect(snapshot.entries.length).toBeGreaterThan(0)
+    expect(JSON.stringify(snapshot)).not.toMatch(/Example|test-only/)
+    expect(recovered.request.mock.calls.map(([command]) => command)).not.toContain('begin')
+    expect(recovered.request.mock.calls.map(([command]) => command)).not.toContain('apply_configuration')
+    expect(first.request.mock.calls.filter(([command]) => command === 'apply_configuration')).toHaveLength(1)
+  })
+})
+
+
+it('stops after one automatic connection recovery and never accepts a cached forecast', async () => {
+  let applied = false
+  const first = appProtocol({ wifiHealthy: false })
+  const original = first.request.getMockImplementation()
+  first.request.mockImplementation(async (command, ...args) => {
+    if (command === 'apply_configuration') applied = true
+    if (applied && command === 'get_state') throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Lost')
+    return original(command, ...args)
+  })
+  const recovered = appProtocol()
+  const next = recovered.request.getMockImplementation()
+  recovered.request.mockImplementation(async (command, ...args) => {
+    if (command === 'get_state') throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Still lost')
+    return next(command, ...args)
+  })
+  const factory = vi.fn().mockReturnValueOnce(first).mockReturnValue(recovered)
+  const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release,
+    protocolFactory: factory, waitFor: async () => {} })
+  await session.connect()
+  await session.submitWifi({ ssid: 'Example', password: 'test-only' })
+  expect(factory).toHaveBeenCalledTimes(2)
+  expect(session.getState().canRetrySetup).toBe(false)
+  expect(session.getState().phase).toBe('verification-issue')
+  expect(recovered.request.mock.calls.map(([command]) => command)).not.toContain('apply_configuration')
+})
+
+it('retries a terminal forecast failure on the existing connection', async () => {
+  const protocol = appProtocol({ digest: 'old' })
+  const original = protocol.request.getMockImplementation()
+  let applies = 0
+  protocol.request.mockImplementation(async (command, ...args) => {
+    if (command === 'apply_configuration') { applies++; return { status: 'applying' } }
+    if (command === 'get_state' && applies) return { configurationDigest: 'wanted', wifi: 'connected',
+      render: 'valid', apply: applies === 1 ? 'render_failed' : 'complete', httpStatus: 429 }
+    return original(command, ...args)
+  })
+  const requestPort = vi.fn(async () => ({}))
+  const session = createInstallerSession({ configuration, requestPort, releaseLoader: async () => release,
+    protocolFactory: () => protocol, waitFor: async () => {} })
+  await session.connect()
+  expect(session.getState()).toMatchObject({ phase: 'verification-issue', canRetrySetup: true })
+  await session.retrySetup()
+  expect(session.getState().phase).toBe('complete')
+  expect(requestPort).toHaveBeenCalledOnce()
+  expect(applies).toBe(2)
+})
+
+it('keeps an unreadable retry status out of the Wi-Fi form', async () => {
+  const protocol = appProtocol({ digest: 'old' })
+  const original = protocol.request.getMockImplementation()
+  let applied = false
+  let retrying = false
+  protocol.request.mockImplementation(async (command, ...args) => {
+    if (command === 'apply_configuration') { applied = true; return { status: 'applying' } }
+    if (command === 'get_state' && retrying) return {}
+    if (command === 'get_state' && applied) return { wifi: 'connected', apply: 'render_failed', httpStatus: 429 }
+    return original(command, ...args)
+  })
+  const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release,
+    protocolFactory: () => protocol, waitFor: async () => {} })
+  await session.connect()
+  retrying = true
+  await session.retrySetup()
+  expect(session.getState()).toMatchObject({ phase: 'verification-issue', canRetrySetup: false,
+    error: { code: INSTALLER_ERROR_CODES.INVALID_RESPONSE } })
+  expect(protocol.request.mock.calls.filter(([command]) => command === 'apply_configuration')).toHaveLength(1)
 })

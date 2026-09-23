@@ -93,10 +93,10 @@ async function fetchJson(fetchFn, url, signal) {
   try {
     response = await fetchFn(url, { cache: 'no-store', signal })
   } catch (error) {
-    throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware release could not be downloaded.', { cause: error })
+    throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'Firmware download failed. Check your internet connection.', { cause: error })
   }
   if (!response.ok) {
-    throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware release could not be downloaded.')
+    throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'Firmware download failed. Check your internet connection.')
   }
   return response.json()
 }
@@ -115,7 +115,7 @@ async function withDownloadTimeout(operation, callerSignal) {
     controller.abort()
     rejectTimeout(new InstallerError(
       INSTALLER_ERROR_CODES.DOWNLOAD_FAILED,
-      'The firmware download took too long. Please check your connection and try again.',
+      'Firmware download timed out. Check your connection and retry.',
     ))
   }, FIRMWARE_DOWNLOAD_TIMEOUT_MS)
 
@@ -125,7 +125,7 @@ async function withDownloadTimeout(operation, callerSignal) {
     if (timedOut) {
       throw new InstallerError(
         INSTALLER_ERROR_CODES.DOWNLOAD_FAILED,
-        'The firmware download took too long. Please check your connection and try again.',
+        'Firmware download timed out. Check your connection and retry.',
         { cause: error },
       )
     }
@@ -159,7 +159,7 @@ export async function loadFirmwareRelease({
     const pointerDirectory = new URL('.', pointerUrl)
     const manifestUrl = releaseUrl(pointer.manifest, pointerDirectory, 'The release pointer leaves the Windpeek firmware directory.')
     const response = await fetchFn(manifestUrl, { cache: 'no-store', signal: downloadSignal })
-    if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware manifest could not be downloaded.')
+    if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'Firmware details unavailable. Check your internet connection.')
     const manifestBytes = new Uint8Array(await response.arrayBuffer())
     const manifestDigest = toHex(await cryptoApi.subtle.digest('SHA-256', manifestBytes))
     if (manifestDigest !== pointer.sha256) fail('The firmware manifest failed verification.')
@@ -184,7 +184,7 @@ export async function loadFirmwareParts({ manifest, manifestUrl, mode, boardId =
       const base = new URL('.', manifestUrl)
       const partUrl = releaseUrl(part.file, base, 'A firmware file leaves its release directory.')
       const response = await fetchFn(partUrl, { cache: 'no-store', signal: downloadSignal })
-      if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'A firmware file could not be downloaded.')
+      if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'Firmware download failed. Check your internet connection.')
       return { ...part, data: await verifyFirmwareBytes(part, await response.arrayBuffer(), cryptoApi) }
     }))
     return { eraseFlash: writeSet.eraseFlash, parts }
