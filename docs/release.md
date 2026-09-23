@@ -5,7 +5,9 @@ installer, reTerminal firmware and shared renderer must never be released from
 `windscout-site` or assembled by hand from separate builds.
 
 The browser installer supports the Seeed Studio reTerminal E1001, E1002 and
-E1003 with one configured spot per device.
+E1003. E1001/E1002 use one spot; E1003 supports up to ten spots with independent
+forecast and display settings. The two white buttons select the previous or
+next spot, including after a sleep wake.
 
 ## What the release workflow guarantees
 
@@ -174,6 +176,9 @@ for each run.
 - Clean E1002 install on current Edge/Windows
 - Clean E1002 install on current Firefox/Linux
 - Clean E1001 and E1003 installs on a supported desktop browser
+- E1003: install ten spots; verify both buttons, wraparound, per-spot settings,
+  remembered selection after sleep, and navigation while USB-powered
+- Preserving E1003 update from a v5 single-spot configuration with Wi-Fi retained
 - Configuration-only update with no firmware write
 - Preserving firmware update with Wi-Fi and configuration retained
 - Damaged application repair

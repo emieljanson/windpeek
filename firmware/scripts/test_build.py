@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
+import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -11,6 +12,16 @@ from build import local_installer_version, with_firmware_version
 
 
 class BuildInstallerVersionTest(unittest.TestCase):
+    def test_rejects_a_different_board_retained_by_a_previous_build(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "sdkconfig"
+            build.validate_board_config("seeedstudio_reterminal_e100x", config)
+            config.write_text("CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=y\n")
+            with self.assertRaisesRegex(ValueError, "--fullclean"):
+                build.validate_board_config("seeedstudio_reterminal_e100x", config)
+            config.write_text("CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X=y\n")
+            build.validate_board_config("seeedstudio_reterminal_e100x", config)
+
     def test_generates_a_unique_local_version_and_embeds_it_in_the_firmware(self):
         version = local_installer_version(
             None, now=datetime(2026, 8, 30, 18, 55, 42, tzinfo=timezone.utc)

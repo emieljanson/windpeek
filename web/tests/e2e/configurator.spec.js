@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import { amsterdamDate, forecastResponseForLatitude, tideTimes } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
@@ -210,7 +211,7 @@ test('sizes the 3D canvas sharply while the CAD model is still loading', async (
 
   let releaseModel
   const modelBlocked = new Promise((resolve) => { releaseModel = resolve })
-  await page.route('**/devices/e1002/e1002.glb', async (route) => {
+  await page.route('**/devices/e1003/e1003.glb', async (route) => {
     await modelBlocked
     await route.continue()
   })
@@ -440,7 +441,7 @@ for (const viewport of [
     expect(panelMetrics.bottom).toBeLessThanOrEqual(viewport.height)
     expect(panelMetrics.documentWidth).toBeLessThanOrEqual(viewport.width)
     expect(splitShadows(panelMetrics.shadow)).toHaveLength(3)
-    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(420)
+    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(460)
 
     await expect(page.locator('.inspector-rows')).toHaveCSS('row-gap', '8px')
 
@@ -768,5 +769,48 @@ test('keeps installation continuation and omits retired controls', async ({ page
   await expect(page.getByText('Time format', { exact: true })).toHaveCount(0)
   await page.getByTestId('install-continuation').click()
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
-  await expect(page.getByText(/Connect your reTerminal E1002/)).toBeVisible()
+  await expect(page.getByText(/Connect your reTerminal E1003/)).toBeVisible()
+})
+
+test('adds E1003 spots and preserves their individual display choices', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.goto('/?configure')
+  await expect(page.getByRole('combobox', { name: 'reTerminal', exact: true })).toContainText('E1003')
+  await page.getByRole('button', { name: 'Add more spots', exact: true }).click()
+  const add = page.getByRole('combobox', { name: 'Add spot', exact: true })
+  const rows = page.locator('.spot-list__row')
+  await expect(rows).toHaveCount(1)
+  await expect(rows.first().locator('.spot-list__select')).toHaveAttribute('aria-pressed', 'true')
+  await add.fill('Edam')
+  await page.getByRole('option', { name: 'Edam', exact: true }).click()
+  await expect(rows).toHaveCount(2)
+  await expect(add).toHaveValue('')
+  const wind = page.getByRole('combobox', { name: 'Wind', exact: true })
+  await wind.click()
+  await page.getByRole('option', { name: 'Numbers', exact: true }).click()
+  await rows.first().locator('.spot-list__select').click()
+  await expect(wind).toContainText('Graph')
+  await rows.last().locator('.spot-list__select').click()
+  await expect(wind).toContainText('Numbers')
+  await rows.last().hover()
+  await rows.last().locator('.spot-list__remove').click()
+  await expect(rows).toHaveCount(1)
+  await expect(wind).toContainText('Graph')
+})
+
+test('shows the ten-spot toast when trying to add one more', async ({ page }) => {
+  const spots = JSON.parse(await readFile(new URL('../../src/spots/catalog.generated.json', import.meta.url), 'utf8'))
+  const ids = spots.slice(0, 10).map(spot => spot.id)
+  await page.addInitScript((configuredSpotIds) => {
+    localStorage.setItem('windpeek-configurator-v1', JSON.stringify({
+      schemaVersion: 2, selectedBoardId: 'seeedstudio_reterminal_e1003',
+      selectedSpotId: configuredSpotIds[0], configuredSpotIds,
+    }))
+  }, ids)
+  await mockForecastApi(page)
+  await page.goto('/?configure')
+  await expect(page.locator('.spot-list__row')).toHaveCount(10)
+  await page.getByRole('combobox', { name: 'Add spot', exact: true }).click()
+  await expect(page.getByText("Can't add more spots", { exact: true })).toBeVisible()
+  await expect(page.locator('.spot-list__row')).toHaveCount(10)
 })

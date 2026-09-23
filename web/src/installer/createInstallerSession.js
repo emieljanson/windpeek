@@ -15,7 +15,7 @@ import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './insta
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
-import { createSerialProtocol, findGrantedInstallerPort, requestInstallerPort } from './serialPortAdapter'
+import { createSerialProtocol, findGrantedInstallerPort, requestInstallerPort, sameInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
@@ -59,7 +59,7 @@ export function createInstallerSession({
   reporter = installerSentryReporter,
   protocolFactory = createSerialProtocol,
   esptool = createEsptoolAdapter({ diagnostics }),
-  requestPort = () => requestInstallerPort(navigatorApi),
+  requestPort = () => requestInstallerPort(navigatorApi, configuration?.boardId || BOARD_ID),
   waitFor = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   portDiscoveryTimeoutMs = PORT_DISCOVERY_TIMEOUT_MS,
   now = () => Date.now(),
@@ -82,6 +82,8 @@ export function createInstallerSession({
   const listeners = new Set()
   const probingProtocols = new Set()
   const expectedHardwareModel = configuration?.boardId || BOARD_ID
+  const portApi = expectedHardwareModel === BOARD_IDS.E1003 && navigatorApi?.usb
+    ? navigatorApi.usb : navigatorApi?.serial
   const releaseBoardId = installerReleaseBoardId(expectedHardwareModel)
   const installationConfiguration = expectedHardwareModel === BOARD_IDS.E1001 &&
       configuration?.version === CONFIGURATION_VERSION
@@ -94,10 +96,8 @@ export function createInstallerSession({
 
   try {
     diagnostics.registerSensitiveValues?.([
-      configuration?.spot?.id,
-      configuration?.spot?.name,
-      configuration?.spot?.timezone,
-    ])
+      configuration, ...(configuration?.additionalSpots ?? []),
+    ].flatMap(entry => [entry?.spot?.id, entry?.spot?.name, entry?.spot?.timezone]))
     diagnostics.setContext?.({
       boardId: releaseBoardId,
       selectedBoardId: expectedHardwareModel,
@@ -245,8 +245,8 @@ export function createInstallerSession({
   }
 
   function rememberVerifiedPort(selectedPort = port) {
-    if (device?.verifiedBoard && selectedPort && navigatorApi?.serial) {
-      rememberedInstallerPorts.set(navigatorApi.serial, selectedPort)
+    if (device?.verifiedBoard && selectedPort && portApi) {
+      rememberedInstallerPorts.set(portApi, selectedPort)
     }
   }
 
@@ -266,12 +266,13 @@ export function createInstallerSession({
   }
 
   async function findRememberedPort(rememberedPort) {
-    if (!navigatorApi?.serial?.getPorts) return null
+    if (!portApi) return null
     try {
       return await findGrantedPort({
         navigatorApi,
+        boardId: expectedHardwareModel,
         signal: operationController?.signal,
-        classify: (candidate) => candidate === rememberedPort,
+        classify: (candidate) => sameInstallerPort(candidate, rememberedPort),
       })
     } catch {
       return null
@@ -279,7 +280,7 @@ export function createInstallerSession({
   }
 
   async function retryChooserAfterStaleRememberedPort(expectedAttempt) {
-    rememberedInstallerPorts.delete(navigatorApi.serial)
+    if (portApi) rememberedInstallerPorts.delete(portApi)
     await releaseConnections({ clearDevice: true })
     if (!isCurrent(expectedAttempt)) return state
     return connect()
@@ -370,8 +371,8 @@ export function createInstallerSession({
     awaitingWrittenFirmware = false
     operationController?.abort()
     operationController = new AbortController()
-    const rememberedPort = navigatorApi?.serial
-      ? rememberedInstallerPorts.get(navigatorApi.serial)
+    const rememberedPort = portApi
+      ? rememberedInstallerPorts.get(portApi)
       : null
     let selectedPort = rememberedPort ? await findRememberedPort(rememberedPort) : null
     const usingRememberedPort = Boolean(rememberedPort && selectedPort === rememberedPort)
@@ -554,7 +555,9 @@ export function createInstallerSession({
     const currentAttempt = attempt
     try {
       if (action.action === INSTALL_ACTIONS.UP_TO_DATE) {
-        completeAttempt({ action })
+        if (await verifyCurrentConfiguration(currentAttempt, device) && isCurrent(currentAttempt)) {
+          completeAttempt({ action })
+        }
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
@@ -699,7 +702,7 @@ export function createInstallerSession({
   async function reconnectGrantedPort(expectedAttempt = attempt) {
     const previouslySelectedPort = port
     update({ phase: 'reconnecting', progress: 0.78, error: null, safeToDisconnect: true })
-    if (!navigatorApi?.serial?.getPorts) {
+    if (!portApi) {
       update({ phase: 'reconnect', safeToDisconnect: true })
       return state
     }
@@ -708,8 +711,9 @@ export function createInstallerSession({
       for (let searchAttempt = 0; searchAttempt < POST_FLASH_PORT_DISCOVERY_ATTEMPTS && !grantedPort; searchAttempt += 1) {
         grantedPort = await findGrantedPort({
           navigatorApi,
+          boardId: expectedHardwareModel,
           signal: operationController?.signal,
-          classify: (candidate) => candidate === previouslySelectedPort,
+          classify: (candidate) => sameInstallerPort(candidate, previouslySelectedPort),
         })
         if (!isCurrent(expectedAttempt)) return state
         if (!grantedPort && searchAttempt < POST_FLASH_PORT_DISCOVERY_ATTEMPTS - 1) {

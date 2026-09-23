@@ -24,9 +24,10 @@ const state = ref({ phase: 'ready', progress: 0, safeToDisconnect: true, error: 
 const networks = ref([])
 const wifiBusy = ref(false)
 const scanBusy = ref(false)
+const wifiReady = ref(false)
 const reTerminalHelpOpen = ref(false)
 let scanPromise = null
-const support = getSerialSupport()
+const support = getSerialSupport({ boardId: props.configuration.boardId || BOARD_IDS.E1002 })
 const session = props.sessionFactory({
   configuration: props.configuration,
 })
@@ -37,7 +38,11 @@ const deviceLabel = computed(() => ({
   [BOARD_IDS.E1003]: 'reTerminal E1003',
 })[props.configuration.boardId || BOARD_IDS.E1002] ?? 'supported reTerminal')
 const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windpeek over USB.')
-const displayPhase = computed(() => unsupportedReason.value && state.value.phase === 'ready' ? 'error' : state.value.phase)
+const displayPhase = computed(() => {
+  if (unsupportedReason.value && state.value.phase === 'ready') return 'error'
+  if (state.value.phase === 'wifi' && !wifiReady.value) return 'wifi-scanning'
+  return state.value.phase
+})
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
 
 watch(
@@ -56,9 +61,10 @@ const progressCopy = computed(() => ({
   downloading: ['Preparing firmware', 'The verified Windpeek release is being prepared before any write starts.'],
   'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
   reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
+  'wifi-scanning': ['Finding Wi-Fi networks', 'Windpeek is checking which networks are nearby.'],
   configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
   verifying: ['Checking the forecast', 'Windpeek is confirming Wi-Fi, configuration and the first rendered forecast.'],
-}[state.value.phase] ?? ['Working…', 'Windpeek is continuing setup.']))
+}[displayPhase.value] ?? ['Working…', 'Windpeek is continuing setup.']))
 
 async function focusStep() {
   await nextTick()
@@ -76,7 +82,12 @@ function hideLeavingStep(element) {
 }
 
 watch(() => state.value.phase, async (phase, previous) => {
-  if (phase === 'wifi' && previous !== 'wifi') await scanNetworks()
+  if (phase === 'wifi' && previous !== 'wifi') {
+    wifiReady.value = false
+    await scanNetworks()
+    if (state.value.phase !== 'wifi') return
+    wifiReady.value = true
+  }
   await focusStep()
 })
 
@@ -161,7 +172,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
     <div class="installer-stage">
       <Transition name="installer-step-slide" @before-leave="hideLeavingStep">
-        <div :key="state.phase" ref="activeView" class="installer-stage__view">
+        <div :key="displayPhase" ref="activeView" class="installer-stage__view">
           <InstallerConnect
             v-if="state.phase === 'ready'"
             :device-label="deviceLabel"
@@ -206,7 +217,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
             </div>
           </div>
 
-          <InstallerWifi v-else-if="state.phase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" @submit="submitWifi" @rescan="scanNetworks" />
+          <InstallerWifi v-else-if="displayPhase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" @submit="submitWifi" @rescan="scanNetworks" />
           <InstallerComplete v-else-if="state.phase === 'complete'" @done="close" />
 
           <div v-else-if="state.phase === 'error'" class="installer-step installer-step--error">

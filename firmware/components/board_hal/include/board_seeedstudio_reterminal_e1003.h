@@ -16,8 +16,8 @@
 //   Refresh (GPIO3) -> Wake, Left (GPIO5) -> Rotate, Right (GPIO4) -> Clear
 #define BOARD_HAL_WAKEUP_KEY GPIO_NUM_3  // Wake / Select
 #define BOARD_HAL_WAKEUP_KEY_NAME "Refresh Button"
-#define BOARD_HAL_ROTATE_KEY GPIO_NUM_5  // Rotate
-#define BOARD_HAL_CLEAR_KEY GPIO_NUM_4   // Prev / left button (Clear)
+#define BOARD_HAL_ROTATE_KEY GPIO_NUM_5  // Left white button (previous spot)
+#define BOARD_HAL_CLEAR_KEY GPIO_NUM_4   // Right white button (next spot)
 
 // SPI Pins (shared by the IT8951 controller and the microSD card)
 #define BOARD_HAL_SPI_SCLK_PIN GPIO_NUM_7
@@ -41,6 +41,10 @@
 // I2C Pins (I2C0: RTC 0x51 + SHT40 0x44 + SY6974B charger 0x6B)
 #define BOARD_HAL_I2C_SDA_PIN GPIO_NUM_19
 #define BOARD_HAL_I2C_SCL_PIN GPIO_NUM_20
+
+// GT911 capacitive touch (same I2C bus).
+#define BOARD_HAL_TOUCH_INT GPIO_NUM_2
+#define BOARD_HAL_TOUCH_RESET GPIO_NUM_48
 
 // Power Management
 #define BOARD_HAL_BAT_ADC_PIN ADC_CHANNEL_0  // GPIO 1

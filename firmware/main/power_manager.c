@@ -18,6 +18,9 @@
 #endif
 
 #include "board_hal.h"
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+#include "board_touch.h"
+#endif
 #include "config.h"
 #include "config_manager.h"
 #include "debug_log.h"
@@ -55,6 +58,12 @@ static int64_t next_rotation_time = 0;  // Use absolute time for rotation
 #endif
 static uint64_t ext1_wakeup_pin_mask = 0;
 static uint32_t requested_sleep_seconds;
+static volatile bool battery_empty;
+
+void power_manager_set_battery_empty(bool empty)
+{
+    battery_empty = empty;
+}
 
 static bool scheduled_wake_enabled(void)
 {
@@ -127,9 +136,11 @@ static void sleep_timer_task(void *arg)
         // external power is present. Automated wakes (timer/rotate/clear) and
         // automated battery operation keeps power save: nobody is browsing, and
         // full RX costs ~60-70mA extra.
+        // The final panel refresh owns its sleep transition; don't cut it short.
+        if (battery_empty) continue;
         bool usb_powered = board_hal_is_usb_connected() || installer_active;
         bool interactive_wake =
-            (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_NONE);
+            (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_TOUCH || wakeup_source == WAKEUP_SOURCE_NONE);
         wifi_manager_set_performance_mode(interactive_wake || usb_powered);
 
 #ifndef DEBUG_DEEP_SLEEP_WAKE
@@ -189,7 +200,9 @@ static void power_manager_enable_auto_light_sleep(void)
         // corrupts SD reads. Keep CPU frequency scaling, but no light sleep.
         .light_sleep_enable = false,
 #else
-        .light_sleep_enable = true,
+        // UART cannot reliably wake the E1002. USB must remain reachable even
+        // before hello and after apply releases its installer wake lock.
+        .light_sleep_enable = !board_hal_is_usb_connected() && !installer_active,
 #endif
     };
 
@@ -254,7 +267,13 @@ esp_err_t power_manager_init(void)
             }
             expected_wakeup_time = 0;  // Reset after checking
         }
-    } else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT1)) {
+    }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT0)) {
+        wakeup_source = WAKEUP_SOURCE_TOUCH;
+    }
+#endif
+    else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT1)) {
         // ESP32-S3 only supports EXT1, check which GPIO triggered it
         ext1_wakeup_pin_mask = esp_sleep_get_ext1_wakeup_status();
 
@@ -319,10 +338,13 @@ esp_err_t power_manager_init(void)
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
     // Skip auto-sleep timer if woken by ROTATE button or timer (image generation can take >120s)
+#ifndef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     if (wakeup_source == WAKEUP_SOURCE_ROTATE_BUTTON ||
         wakeup_source == WAKEUP_SOURCE_CLEAR_BUTTON || wakeup_source == WAKEUP_SOURCE_TIMER) {
         ESP_LOGI(TAG, "Woken by ROTATE button, KEY button or timer, disabling auto-sleep timer");
-    } else {
+    } else
+#endif
+    {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
 #ifndef CONFIG_BOARD_CAP_WINDPEEK
@@ -335,14 +357,43 @@ esp_err_t power_manager_init(void)
     return ESP_OK;
 }
 
+static unsigned active_work;
+/* Atomically exclude new work once the sleep transition owns the device. */
+#define SLEEP_PENDING (1U << 31)
+void power_manager_work_begin(void) {
+    for (;;) {
+        unsigned current=__atomic_load_n(&active_work,__ATOMIC_SEQ_CST);
+        if (!(current&SLEEP_PENDING) &&
+            __atomic_compare_exchange_n(&active_work,&current,current+1,false,
+                                        __ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)) return;
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
+void power_manager_work_end(void) { __atomic_sub_fetch(&active_work,1,__ATOMIC_SEQ_CST); }
+bool power_manager_work_active(void) { return __atomic_load_n(&active_work,__ATOMIC_SEQ_CST)!=0; }
+
 void power_manager_enter_sleep(void)
 {
+    if (power_manager_work_active() && !battery_empty) return;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    /* Let the input task consume a pending contact before arming touch wake. */
+    if (!battery_empty && board_hal_touch_available() &&
+        gpio_get_level(BOARD_HAL_TOUCH_INT) == board_hal_touch_wake_level()) return;
+#endif
     // External power means the device is available for the browser installer
     // and live dashboard updates. A timer wake must not put it back to sleep
     // when the user plugged in USB while it was waking.
     if (board_hal_is_usb_connected() || installer_active) {
         ESP_LOGI(TAG, "External power or installer active; staying awake");
         return;
+    }
+
+    unsigned idle=0;
+    if (!battery_empty) {
+        if (!__atomic_compare_exchange_n(&active_work,&idle,SLEEP_PENDING,false,
+                                         __ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)) return;
+    } else {
+        if (__atomic_fetch_or(&active_work,SLEEP_PENDING,__ATOMIC_SEQ_CST)&SLEEP_PENDING) return;
     }
 
     power_manager_disable_auto_light_sleep();
@@ -365,7 +416,11 @@ void power_manager_enter_sleep(void)
     board_hal_led_set(BOARD_HAL_LED_POWER, false);
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
-    if (scheduled_wake_enabled()) {
+    if (battery_empty) {
+        expected_wakeup_time = 0;
+        requested_sleep_seconds = 0;
+        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+    } else if (scheduled_wake_enabled()) {
         // Wake on the next forecast boundary, or on the single five-minute
         // retry scheduled after a failed forecast refresh.
         int wake_seconds = requested_sleep_seconds > 0
@@ -394,9 +449,24 @@ void power_manager_enter_sleep(void)
         wakeup_mask |= (1ULL << (BOARD_HAL_CLEAR_KEY < 0 ? 0 : BOARD_HAL_CLEAR_KEY));
     }
 
+    if (battery_empty) {
+        // A held button must not cause a battery-draining boot loop.
+        for (int pin = 0; pin < 64; ++pin)
+            if ((wakeup_mask & (1ULL << pin)) && gpio_get_level(pin) == 0)
+                wakeup_mask &= ~(1ULL << pin);
+    }
     if (wakeup_mask != 0) {
         esp_sleep_enable_ext1_wakeup(wakeup_mask, ESP_EXT1_WAKEUP_ANY_LOW);
     }
+
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!battery_empty && board_hal_touch_available()) {
+        (void)board_hal_touch_prepare_sleep();
+        /* Doze uses active HIGH; an unsupported controller retains normal polarity. */
+        if (board_hal_touch_available())
+            esp_sleep_enable_ext0_wakeup(BOARD_HAL_TOUCH_INT, board_hal_touch_wake_level());
+    }
+#endif
 
     // Stop WiFi cleanly before deep sleep so the MAC/PHY drains pending
     // state and the modem domain transitions through a normal teardown

@@ -1,0 +1,342 @@
+{
+  "version": 6,
+  "boardId": "seeedstudio_reterminal_e1003",
+  "deviceTimezone": "Europe/Amsterdam",
+  "spot": {
+    "id": "spot-1",
+    "name": "Spot 1",
+    "latitude": 51.0,
+    "longitude": 3.0,
+    "timezone": "Europe/Amsterdam"
+  },
+  "forecastModel": "best_match",
+  "display": {
+    "windSize": "small",
+    "swellSize": "off",
+    "moduleOrder": [
+      "wind",
+      "swell",
+      "weather",
+      "temperature",
+      "tide"
+    ],
+    "swellModel": "best_match",
+    "showThreshold": true,
+    "threshold": 17,
+    "showWeather": true,
+    "showTemperature": false,
+    "showTide": false,
+    "showDedicatedFooter": false,
+    "timeFormat": "24-hour",
+    "temperatureUnit": "celsius"
+  },
+  "digest": "cd97b8ddea64802a",
+  "additionalSpots": [
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-2",
+        "name": "Spot 2",
+        "latitude": 51.1,
+        "longitude": 3.1,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "large",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 18,
+        "showWeather": true,
+        "showTemperature": true,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "e552cbb339b0a84c"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-3",
+        "name": "Spot 3",
+        "latitude": 51.2,
+        "longitude": 3.2,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "small",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 19,
+        "showWeather": true,
+        "showTemperature": false,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "68a8f5d015504368"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-4",
+        "name": "Spot 4",
+        "latitude": 51.3,
+        "longitude": 3.3,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "large",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 20,
+        "showWeather": true,
+        "showTemperature": true,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "0b865a96a0ded69d"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-5",
+        "name": "Spot 5",
+        "latitude": 51.4,
+        "longitude": 3.4,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "small",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 21,
+        "showWeather": true,
+        "showTemperature": false,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "37a005af05297781"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-6",
+        "name": "Spot 6",
+        "latitude": 51.5,
+        "longitude": 3.5,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "large",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 22,
+        "showWeather": true,
+        "showTemperature": true,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "6499db18e0f5090b"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-7",
+        "name": "Spot 7",
+        "latitude": 51.6,
+        "longitude": 3.6,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "small",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 23,
+        "showWeather": true,
+        "showTemperature": false,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "ff67320f1a314ce3"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-8",
+        "name": "Spot 8",
+        "latitude": 51.7,
+        "longitude": 3.7,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "large",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 24,
+        "showWeather": true,
+        "showTemperature": true,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "4d2af5f553b56561"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-9",
+        "name": "Spot 9",
+        "latitude": 51.8,
+        "longitude": 3.8,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "small",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 25,
+        "showWeather": true,
+        "showTemperature": false,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "b5d4d8a1653a9015"
+    },
+    {
+      "version": 5,
+      "boardId": "seeedstudio_reterminal_e1003",
+      "deviceTimezone": "Europe/Amsterdam",
+      "spot": {
+        "id": "spot-10",
+        "name": "Spot 10",
+        "latitude": 51.9,
+        "longitude": 3.9,
+        "timezone": "Europe/Amsterdam"
+      },
+      "forecastModel": "best_match",
+      "display": {
+        "windSize": "large",
+        "swellSize": "off",
+        "moduleOrder": [
+          "wind",
+          "swell",
+          "weather",
+          "temperature",
+          "tide"
+        ],
+        "swellModel": "best_match",
+        "showThreshold": true,
+        "threshold": 26,
+        "showWeather": true,
+        "showTemperature": true,
+        "showTide": false,
+        "showDedicatedFooter": false,
+        "timeFormat": "24-hour",
+        "temperatureUnit": "celsius"
+      },
+      "digest": "81fbf103b5dd6c1b"
+    }
+  ]
+}

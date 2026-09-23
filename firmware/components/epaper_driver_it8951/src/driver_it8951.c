@@ -104,6 +104,7 @@ static int s_pin_busy = -1;   // HRDY: high = ready, low = busy
 static int s_pin_enable = -1; // EPD bias (TPS65185) enable
 static uint32_t s_img_addr = 0;
 static int8_t s_temp_c = IT8951_DEFAULT_TEMP_C; // panel temperature for waveform select
+static unsigned s_refresh_count = 0;
 // Default to the ED103TC2 geometry until GetSystemInfo reports the real values.
 static it8951_dev_info_t s_dev = {.panel_w = 1872, .panel_h = 1404};
 
@@ -471,13 +472,12 @@ esp_err_t epaper_display(uint8_t *image) {
 
     it8951_write_cmd(IT8951_TCON_LD_IMG_END);
 
-    // Anti-ghosting: a full INIT (white) clear resets every pixel before the
-    // image, so high-contrast content (e.g. a QR code) doesn't shadow through.
-    // GC16 alone leaves visible ghosting on this panel, so we accept the extra
-    // clear flash. The image is already loaded, so the prior frame stays up
-    // during the load and only the brief clear precedes the new image.
-    it8951_display_area(0, 0, w, h, IT8951_MODE_INIT);
-    it8951_wait_display_ready();
+    // Clear on the first frame and periodically to control ghosting. Repeating
+    // the full white INIT on every touch adds a long blank phase before GC16.
+    if (s_refresh_count++ % 4 == 0) {
+        it8951_display_area(0, 0, w, h, IT8951_MODE_INIT);
+        it8951_wait_display_ready();
+    }
 
     it8951_display_area(0, 0, w, h, IT8951_MODE_GC16);
     it8951_wait_display_ready();

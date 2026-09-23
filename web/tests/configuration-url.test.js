@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import { useConfiguratorStore } from '../src/stores/configurator'
-import { configurationUrl, readConfigurationUrl, applyConfigurationUrl } from '../src/config/configurationUrl'
+import { configurationUrl, readConfigurationUrl, applyConfigurationUrl, syncConfigurationUrl } from '../src/config/configurationUrl'
 import { initializeConfigurator } from '../src/config/initializeConfigurator'
 import { siteVariant, siteDisplayDefaults, configuratorLink } from '../src/marketing/siteVariant'
 import { createPersonalSpot } from '../src/spots/personalSpots'
@@ -24,12 +24,29 @@ function storeWith(browser, storage = null) {
 }
 
 describe('site entry and share URLs', () => {
-  it('starts the wind configurator with a wind graph, weather and tide', () => {
+  it('updates the shared link only for configuration changes, not forecast activity', async () => {
+    const store = storeWith()
+    const location = new URL('http://localhost/?configure')
+    const readLocation = vi.fn(() => location)
+    const browser = { get location() { return readLocation() }, history: { replaceState: vi.fn() } }
+    const stop = syncConfigurationUrl(store, browser)
+    readLocation.mockClear()
+    store.forecastRevision++
+    store.forecastMessage = 'New forecast'
+    await nextTick()
+    expect(readLocation).not.toHaveBeenCalled()
+    store.threshold++
+    await nextTick()
+    expect(readLocation).toHaveBeenCalled()
+    expect(browser.history.replaceState.mock.lastCall[2]).toContain('minimum=18')
+    stop()
+  })
+  it('starts the wind configurator with a wind graph, weather, temperature and tide', () => {
     for (const search of ['?configure', '?configure&site=wind']) {
       const store = storeWith(browserAt(`https://windpeek.com/${search}`))
       expect(store.$state).toMatchObject({
         windSize: 'large', swellSize: 'off', showWeather: true,
-        showTemperature: false, showTide: true,
+        showTemperature: true, showTide: true,
       })
     }
   })
@@ -50,9 +67,23 @@ describe('site entry and share URLs', () => {
       const browser = browserAt(`http://localhost/?configure&site=${site}`)
       const store = storeWith(browser)
       expect(store.$state).toMatchObject(siteDisplayDefaults(siteVariant(browser.location)))
+      expect(store.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
       expect(store.swellFocus).toBe(site === 'swell')
       expect(browser.location.searchParams.get('cfg')).toBe('1')
     }
+  })
+  it('updates the former surf default order in saved settings', () => {
+    const storage = storageWith({
+      schemaVersion: 2,
+      moduleOrder: ['swell', 'wind', 'weather', 'temperature', 'tide'],
+      configuredSpotIds: ['brouwersdam'],
+      spotSettings: {
+        brouwersdam: { moduleOrder: ['swell', 'wind', 'weather', 'temperature', 'tide'] },
+      },
+    })
+    const store = storeWith(browserAt('https://swellpeek.com/?configure'), storage)
+    expect(store.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
+    expect(store.spotSettings.brouwersdam.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
   })
   it('allows either variant on every host and keeps shared settings intact', () => {
     for (const host of ['windpeek.com', 'www.windpeek.com', 'swellpeek.com', 'preview.example.org', 'localhost']) {

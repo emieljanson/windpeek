@@ -123,6 +123,7 @@ const ICONS = {
   'installing-firmware': animated(firmwareFrames),
   reconnecting: animated(connectFrames),
   reconnect: animated(connectFrames),
+  'wifi-scanning': animated(wifiPulseFrames),
   wifi: still(wifi),
   configuring: animated(firmwareFrames),
   verifying: animated(wifiPulseFrames),

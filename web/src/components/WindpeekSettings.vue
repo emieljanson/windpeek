@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 import { useConfiguratorStore } from '../stores/configurator'
 import { FLOATING_INSPECTOR_VIEWPORT_QUERY } from '../composables/useCompactViewport'
 import { DEVICE_OPTIONS } from '../config/configuration'
@@ -23,11 +24,15 @@ const {
   forecastLabel,
   forecastMessage,
   forecastStatus,
+  configuredSpots,
+  supportsMultipleSpots,
   selectedBoardId,
   selectedSpotId,
   spots,
 } = storeToRefs(store)
 
+const addingSpot = computed(() => supportsMultipleSpots.value && configuredSpots.value.length > 0)
+const showSpotList = addingSpot
 const spotSearchTerm = ref('')
 const spotHasUserSelection = ref(false)
 const spotSearch = ref(null)
@@ -37,7 +42,7 @@ const customSpotQuery = ref('')
 const filteredSpots = computed(() => (
   spotSearchTerm.value.trim().length < 2
     ? []
-    : searchSpots(spots.value, spotSearchTerm.value)
+    : searchSpots(spots.value, spotSearchTerm.value).filter(spot => !supportsMultipleSpots.value || (!addingSpot.value && spot.id === selectedSpotId.value) || !store.configuredSpotIds.includes(spot.id))
 ))
 const createSpotActionLabel = computed(() => {
   if (props.compact) return ''
@@ -49,8 +54,8 @@ const createSpotActionLabel = computed(() => {
 })
 
 watch(selectedSpotId, (spotId) => {
-  if (spotHasUserSelection.value) {
-    spotSearchTerm.value = store.spotById(spotId)?.name ?? ''
+  if (spotHasUserSelection.value && !addingSpot.value) {
+    spotSearchTerm.value = addingSpot.value ? '' : store.spotById(spotId)?.name ?? ''
   }
 })
 
@@ -60,12 +65,45 @@ function restoreCompactSpotSearch() {
     : ''
 }
 
+watch(selectedBoardId, () => {
+  spotSearchTerm.value = ''
+})
+
+async function addMoreSpots() {
+  if (!store.supportsMultipleSpots || store.configuredSpotIds.length >= 10) return
+  store.markUserSpotIntent()
+  if (!store.configuredSpotIds.length) void store.addConfiguredSpot(selectedSpotId.value)
+  spotSearchTerm.value = ''
+  await nextTick()
+  spotSearch.value?.focus()
+}
+
+function activateSpot(spotId) {
+  spotHasUserSelection.value = true
+  store.markUserSpotIntent()
+  void store.selectSpot(spotId)
+  spotSearchTerm.value = addingSpot.value ? '' : store.spotById(spotId)?.name ?? ''
+}
+
+function notifySpotLimit() {
+  if (!addingSpot.value || configuredSpots.value.length < 10) return false
+  toast("Can't add more spots", { id: 'spot-limit' })
+  return true
+}
+
+function commitSpot(spotId) {
+  if (notifySpotLimit()) return
+  if (supportsMultipleSpots.value && addingSpot.value) {
+    void store.addConfiguredSpot(spotId)
+  } else if (spotId !== selectedSpotId.value) void store.selectSpot(spotId)
+  spotHasUserSelection.value = true
+  spotSearchTerm.value = addingSpot.value ? '' : store.spotById(spotId)?.name ?? ''
+}
+
 function selectSpot(spotId) {
   store.markUserSpotIntent()
-  const spot = store.spotById(spotId)
-  if (!spot) return
-  spotHasUserSelection.value = true
-  if (spotId !== selectedSpotId.value) void store.selectSpot(spotId)
+  if (!store.spotById(spotId)) return
+  commitSpot(spotId)
 }
 
 onMounted(() => {
@@ -75,26 +113,33 @@ onMounted(() => {
 })
 
 function handleSpotDismiss() {
+  if (addingSpot.value) {
+    spotSearchTerm.value = ''
+    return
+  }
   if (!props.compact) return
   restoreCompactSpotSearch()
 }
 
 function createSpot(query) {
+  if (notifySpotLimit()) return
   store.markUserSpotIntent()
   customSpotQuery.value = query.trim()
   spotDialogOpen.value = true
 }
 
 function saveSpot(input) {
+  if (notifySpotLimit()) return null
   store.markUserSpotIntent()
   const spot = store.addPersonalSpot(input)
   if (!spot) return null
   spotHasUserSelection.value = true
-  spotSearchTerm.value = spot.name
+  spotSearchTerm.value = addingSpot.value ? '' : spot.name
   // The spot is already persisted. Close the dialog immediately and let the
   // forecast update in the background instead of making confirmation depend
   // on network and rendering speed.
-  void store.selectSpot(spot.id)
+  commitSpot(spot.id)
+  spotSearchTerm.value = addingSpot.value ? '' : spot.name
   return spot
 }
 
@@ -121,41 +166,57 @@ function saveSpot(input) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
-    <ForecastModules v-if="compact" />
-    <ForecastAdvanced v-if="compact" :installer-open="props.installerOpen" />
-    <div v-if="!compact" class="inspector-search">
+
+    <div v-if="!compact || addingSpot" class="inspector-search" :class="{ 'inspector-search--adding': addingSpot }">
       <SettingCombobox
         ref="spotSearch"
-        :model-value="selectedSpotId"
+        :model-value="addingSpot ? undefined : selectedSpotId"
         v-model:search-term="spotSearchTerm"
         :options="filteredSpots"
         :get-option-value="(spot) => spot.id"
         :get-option-label="(spot) => spot.name"
         :create-action-label="createSpotActionLabel"
         :min-search-length="2"
-        keep-selection-label
-        :restore-search-on-close="spotHasUserSelection"
-        :display-value="spotHasUserSelection ? undefined : () => ''"
+        :keep-selection-label="!addingSpot"
+        :restore-search-on-close="!addingSpot && spotHasUserSelection"
+        :display-value="!addingSpot && spotHasUserSelection ? undefined : () => ''"
         :open-on-focus="false"
         select-all-on-focus
         suppress-initial-focus-ring
         show-search-icon
         :inline-results="false"
-        :blur-after-select="compact"
+        :blur-after-select="compact || addingSpot"
         :blur-after-dismiss="compact"
         :input-type="compact ? 'search' : 'text'"
         :input-mode="compact ? 'search' : undefined"
         :show-selection-indicator="false"
-        placeholder="Search spot…"
+        :placeholder="addingSpot ? 'Add spot…' : 'Search spot…'"
         :empty-text="compact ? 'New spots can be created on desktop.' : 'No existing spots found'"
         name="spot"
-        aria-label="Search spot"
+        :aria-label="addingSpot ? 'Add spot' : 'Search spot'"
         @update:model-value="selectSpot"
         @search-intent="store.markUserSpotIntent"
+        @focus="notifySpotLimit"
         @create="createSpot"
         @dismiss="handleSpotDismiss"
       />
     </div>
+
+    <div v-if="showSpotList" class="inspector-divider" aria-hidden="true" />
+    <section v-if="showSpotList" class="spot-list" aria-label="Spots">
+      <div v-for="spot in configuredSpots" :key="spot.id" class="spot-list__row" :class="{ 'is-selected': selectedSpotId === spot.id }">
+        <button type="button" class="spot-list__select" :aria-pressed="selectedSpotId === spot.id" @click="activateSpot(spot.id)">
+          <span class="spot-list__name">{{ spot.name }}</span>
+        </button>
+        <button type="button" class="spot-list__remove" :aria-label="`Remove ${spot.name}`" @click="store.removeConfiguredSpot(spot.id)">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+            <path d="m4.5 4.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </section>
+    <ForecastModules v-if="compact" />
+    <ForecastAdvanced v-if="compact" :installer-open="props.installerOpen" />
 
     <div v-if="!compact" class="inspector-divider" aria-hidden="true" />
 
@@ -187,6 +248,14 @@ function saveSpot(input) {
         <ForecastAdvanced :installer-open="props.installerOpen" />
       </div>
     </div>
+
+    <button
+      v-if="!compact && supportsMultipleSpots && !addingSpot && !props.installerOpen"
+      type="button"
+      class="setting-control add-more-spots"
+      :disabled="configuredSpots.length >= 10 || addingSpot"
+      @click="addMoreSpots"
+    >{{ configuredSpots.length >= 10 ? 'Maximum of 10 spots' : 'Add more spots' }}</button>
 
     <SpotCreationDialog
       v-if="!compact"

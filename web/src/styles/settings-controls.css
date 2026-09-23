@@ -671,3 +671,53 @@
   .setting-popup { border: 1px solid ButtonText; }
   .setting-switch { border: 1px solid ButtonText; }
 }
+
+/* E1003 spot rows follow the existing dropdown typography and icon alignment. */
+.spot-list {
+  display: grid;
+  gap: 1px;
+  min-inline-size: 0;
+}
+
+.spot-list__row { display: flex; border-radius: var(--settings-control-radius); min-inline-size: 0; }
+.spot-list__row:hover, .spot-list__row.is-selected { background: var(--settings-control-surface); }
+.spot-list button { background: none; border: 0; cursor: pointer; }
+.spot-list__select {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: var(--settings-control-height);
+  padding: 0 0.625rem;
+  text-align: start;
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--settings-control-ink);
+}
+.spot-list__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spot-list__remove {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  padding: 0 0.5rem;
+  flex-shrink: 0;
+  opacity: 0;
+  color: var(--settings-control-muted);
+  border-radius: var(--settings-control-radius);
+}
+.spot-list__remove svg { inline-size: 1rem; block-size: 1rem; }
+.spot-list__row:hover .spot-list__remove, .spot-list__row:focus-within .spot-list__remove { opacity: 1; }
+.spot-list__remove:hover { color: var(--settings-control-ink); }
+.spot-list__limit { margin: 0.5rem 0.625rem; font-size: 0.75rem; color: var(--settings-control-muted); }
+.spot-list button:focus-visible { outline: 2px solid var(--settings-focus); outline-offset: 2px; }
+@media (hover: none) {
+  .spot-list__remove { opacity: 1; }
+  .spot-list__select, .spot-list__remove { min-block-size: 2.75rem; }
+}
+@media (max-width: 896px) {
+  .settings-shell--compact .inspector-search--adding { display: block; }
+  .settings-shell--compact .spot-list { margin-inline: 0; padding-inline: 0; padding-block-end: 0.5rem; border-block-end: 1px solid var(--settings-divider); }
+}
+
+.add-more-spots { cursor: pointer; }

@@ -71,8 +71,8 @@ function weatherState(cloudCover, precipitation, isDay) {
   if (precipitationHundredths >= 250) return 8
   if (precipitationHundredths >= 100) return 7
   if (precipitationHundredths >= 10) return 6
-  if (cloudCoverPercent <= 20) return isDay ? 1 : 2
-  if (cloudCoverPercent <= 60) return isDay ? 3 : 4
+  if (cloudCoverPercent <= 20) return 1
+  if (cloudCoverPercent <= 60) return 3
   return 5
 }
 

@@ -1,8 +1,37 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, requestInstallerPort } from '../../src/installer/serialPortAdapter'
+import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGrantedInstallerPort, getSerialSupport, requestInstallerPort, sameInstallerPort } from '../../src/installer/serialPortAdapter'
+import { BOARD_IDS } from '../../src/config/configuration'
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
+import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
+import { filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it('carries numeric device failure details to Sentry without private response fields', async () => {
+    const chunks = []
+    const diagnostics = createInstallerDiagnostics()
+    const releaseCredentials = diagnostics.acquireCredentialLock(['private-network', 'private-password'])
+    const reader = { read: async () => ({ done: false, value: chunks.shift() }), cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: async (bytes) => {
+      const request = decodeProtocolFrame(bytes)
+      chunks.push(encodeProtocolFrame({ requestId: request.requestId, messageType: 2,
+        payload: { status: 'ok', apply: 'render_failed', wifi: 'connected', render: 'pending',
+          ssid: 'private-network', password: 'private-password',
+          diagnostics: { applyError: -1, httpStatus: 429, responseBytes: 200,
+            deviceTime: 1787932800, resetReason: 1, latitude: 52.5,
+            transportError: 'private-password', arbitrary: 42 } } }))
+    }, releaseLock: vi.fn() }
+    const port = { open: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await protocol.request('get_state')
+    releaseCredentials()
+    const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
+      extra: { timeline: diagnostics.snapshot().entries } })
+    expect(filtered.extra.timeline.at(-1)).toMatchObject({ status: 'render_failed',
+      measurements: { applyError: -1, httpStatus: 429, responseBytes: 200, wifiConnected: 1, renderValid: 0 } })
+    expect(JSON.stringify(filtered)).not.toMatch(/private-|latitude|arbitrary|transportError/)
+  })
+
   it('supports Firefox desktop when Web Serial is available', () => {
     const requestPort = vi.fn()
     expect(getSerialSupport({
@@ -10,6 +39,20 @@ describe('serial port adapter', () => {
       locationApi: { protocol: 'https:', hostname: 'windpeek.nl' },
     })).toEqual({ supported: true, reason: null })
     expect(requestPort).not.toHaveBeenCalled()
+  })
+
+  it('uses direct WebUSB for an E1003 without a system serial port', async () => {
+    const device = { vendorId: 0x1a86, productId: 0x7522 }
+    const requestDevice = vi.fn().mockResolvedValue(device)
+    const getDevices = vi.fn().mockResolvedValue([device])
+    const navigatorApi = { usb: { requestDevice, getDevices }, userAgent: 'Dia' }
+    expect(getSerialSupport({ navigatorApi, boardId: BOARD_IDS.E1003,
+      locationApi: { protocol: 'https:' } })).toEqual({ supported: true, reason: null })
+    const selected = await requestInstallerPort(navigatorApi, BOARD_IDS.E1003)
+    expect(requestDevice).toHaveBeenCalledWith({ filters: [{ vendorId: 0x1a86, productId: 0x7522 }] })
+    const granted = await findGrantedInstallerPort({ navigatorApi, boardId: BOARD_IDS.E1003,
+      classify: (candidate) => sameInstallerPort(candidate, selected) })
+    expect(sameInstallerPort(granted, selected)).toBe(true)
   })
 
   it('blocks mobile, insecure and unsupported browsers before permission', () => {

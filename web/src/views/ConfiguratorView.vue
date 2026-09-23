@@ -3,8 +3,7 @@ import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch 
 import {
   BOARD_IDS,
   SUPPORTED_BOARD_IDS,
-  createInstalledConfiguration,
-  displayConfigurationFromStore,
+  installedConfigurationFromStore,
 } from '../config/configuration'
 import { brouwersdamTide } from '../fixtures/brouwersdam'
 import { getSerialSupport } from '../installer/serialPortAdapter'
@@ -39,13 +38,7 @@ const showUsbConnection = ref(false)
 const showInstaller = computed(() => (
   !isCompact.value && getSerialSupport().reason !== 'desktop-required'
 ))
-const installationConfiguration = computed(() => createInstalledConfiguration({
-  deviceTimezone: currentDeviceTimezone,
-  spot: store.spotById(store.selectedSpotId),
-  modelId: store.selectedModelId,
-  boardId: store.selectedBoardId,
-  display: displayConfigurationFromStore(store),
-}))
+const installationConfiguration = computed(() => installedConfigurationFromStore(store, currentDeviceTimezone))
 let visualViewportFrame
 
 function updateVisualViewportInset() {

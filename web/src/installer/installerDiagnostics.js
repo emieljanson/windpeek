@@ -12,6 +12,9 @@ const CONTEXT_FIELDS = new Set([
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
+  'applyError', 'transportError', 'httpStatus', 'parseError', 'responseBytes',
+  'responseTooLarge', 'allocationFailed', 'resetReason', 'deviceTime', 'internalFreeBytes', 'internalLargestBytes',
+  'wifiConnected', 'wifiConfigured', 'renderValid',
 ])
 
 function byteLength(value) {

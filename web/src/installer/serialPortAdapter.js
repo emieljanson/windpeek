@@ -1,13 +1,33 @@
 import { InstallerError, INSTALLER_ERROR_CODES, isChooserCancellation } from './installerErrors'
+import { BOARD_IDS } from '../config/configuration'
 
 const MAGIC = new TextEncoder().encode('WINDSC01')
 const HEADER_SIZE = 24
-const MAX_PAYLOAD_SIZE = 4096
+const MAX_PAYLOAD_SIZE = 16384
+const E1003_USB_FILTER = { vendorId: 0x1a86, productId: 0x7522 }
+const DEVICE_DIAGNOSTIC_FIELDS = [
+  'applyError', 'transportError', 'httpStatus', 'parseError', 'responseBytes',
+  'responseTooLarge', 'allocationFailed', 'resetReason', 'deviceTime', 'internalFreeBytes', 'internalLargestBytes',
+]
+
+function deviceMeasurements(response) {
+  const measurements = {
+    wifiConnected: Number(response.wifi === 'connected'),
+    wifiConfigured: Number(response.wifiConfigured === true),
+    renderValid: Number(response.render === 'valid'),
+  }
+  for (const field of DEVICE_DIAGNOSTIC_FIELDS) {
+    const value = response.diagnostics?.[field]
+    if (typeof value === 'number' && Number.isFinite(value)) measurements[field] = value
+  }
+  return measurements
+}
 
 export function getSerialSupport({
   navigatorApi = globalThis.navigator,
   locationApi = globalThis.location,
   secureContext = globalThis.isSecureContext,
+  boardId,
 } = {}) {
   const mobile = navigatorApi?.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod/i.test(navigatorApi?.userAgent ?? '')
   const secure = typeof secureContext === 'boolean'
@@ -15,16 +35,22 @@ export function getSerialSupport({
     : locationApi?.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(locationApi?.hostname)
   if (mobile) return { supported: false, reason: 'desktop-required' }
   if (!secure) return { supported: false, reason: 'secure-context-required' }
+  if (boardId === BOARD_IDS.E1003 && navigatorApi?.usb) return { supported: true, reason: null }
   if (!navigatorApi?.serial) return { supported: false, reason: 'browser-not-supported' }
   return { supported: true, reason: null }
 }
 
-export async function requestInstallerPort(navigatorApi = globalThis.navigator) {
-  const support = getSerialSupport({ navigatorApi })
+export async function requestInstallerPort(navigatorApi = globalThis.navigator, boardId) {
+  const support = getSerialSupport({ navigatorApi, boardId })
   if (!support.supported) {
     throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windpeek in a current desktop version of Firefox, Chrome, or Edge.', { recoverable: false })
   }
   try {
+    if (boardId === BOARD_IDS.E1003 && navigatorApi?.usb) {
+      const { WebUSBSerialPort } = await import('esptool-js')
+      const device = await navigatorApi.usb.requestDevice({ filters: [E1003_USB_FILTER] })
+      return new WebUSBSerialPort(device)
+    }
     return await navigatorApi.serial.requestPort()
   } catch (error) {
     if (isChooserCancellation(error)) return null
@@ -32,9 +58,22 @@ export async function requestInstallerPort(navigatorApi = globalThis.navigator) 
   }
 }
 
-export async function findGrantedInstallerPort({ navigatorApi = globalThis.navigator, classify, signal } = {}) {
-  if (!navigatorApi?.serial) return null
-  for (const port of await navigatorApi.serial.getPorts()) {
+export function sameInstallerPort(first, second) {
+  return first === second || Boolean(first?.usbDevice && first.usbDevice === second?.usbDevice)
+}
+
+export async function findGrantedInstallerPort({ navigatorApi = globalThis.navigator, boardId, classify, signal } = {}) {
+  let ports
+  if (boardId === BOARD_IDS.E1003 && navigatorApi?.usb) {
+    const { WebUSBSerialPort } = await import('esptool-js')
+    ports = (await navigatorApi.usb.getDevices())
+      .filter((device) => device.vendorId === E1003_USB_FILTER.vendorId && device.productId === E1003_USB_FILTER.productId)
+      .map((device) => new WebUSBSerialPort(device))
+  } else {
+    if (!navigatorApi?.serial) return null
+    ports = await navigatorApi.serial.getPorts()
+  }
+  for (const port of ports) {
     if (signal?.aborted) return null
     if (await classify(port)) return port
   }
@@ -164,6 +203,10 @@ export function createSerialProtocol(port, {
         category: 'protocol', operation: command, status: response?.status ?? 'ok',
         measurements: { durationMs: Date.now() - startedAt },
       })
+      if (command === 'get_state') {
+        record({ category: 'verification', operation: 'device-state',
+          status: response.apply ?? 'idle', measurements: deviceMeasurements(response) })
+      }
       return response
     } catch (error) {
       record({

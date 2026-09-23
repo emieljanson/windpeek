@@ -109,3 +109,51 @@ TEST_F(WindCacheTest, KeepsPanelConfirmationSeparateAndInvalidatable)
     EXPECT_EQ(wind_cache_panel_invalidate(path.c_str()), ESP_OK);
     EXPECT_EQ(wind_cache_panel_load(path.c_str(), 1, &loaded), ESP_ERR_NOT_FOUND);
 }
+
+TEST_F(WindCacheTest, RetainsHourlyDataAcrossReload) {
+    auto forecast = cache_forecast();
+    forecast.hourly[1][1] = forecast.days[1].samples[0];
+    forecast.hourly[1][1].local_hour = 9;
+    forecast.hourly[1][1].timestamp += 3600;
+    forecast.hourly[1][1].wind_knots = 27;
+    const auto path = (root / "hourly.cache").string();
+    ASSERT_EQ(wind_cache_store(path.c_str(), &forecast), ESP_OK);
+    wind_cache_identity_t identity = {"edam", "Europe/Amsterdam", "knmi_seamless"};
+    wind_forecast_t loaded{};
+    ASSERT_EQ(wind_cache_load(path.c_str(), &identity, &loaded), ESP_OK);
+    EXPECT_EQ(loaded.hourly[1][1].wind_knots, 27);
+    EXPECT_EQ(loaded.hourly[1][1].timestamp, forecast.hourly[1][1].timestamp);
+    EXPECT_EQ(loaded.hourly[1][2].timestamp, 0);
+}
+
+TEST_F(WindCacheTest, MigratesPreviousCacheWithoutDiscardingOfflineForecast) {
+    struct OldRecord {
+        uint32_t magic, schema, render, payload;
+        uint64_t generation;
+        uint32_t checksum;
+        alignas(wind_forecast_t) uint8_t forecast[offsetof(wind_forecast_t, hourly)];
+    } old{};
+    auto forecast = cache_forecast();
+    forecast.schema_version = 3;
+    old.magic=0x574E4446u; old.schema=4; old.render=WIND_RENDER_COMPAT_VERSION;
+    old.payload=sizeof(old.forecast); old.generation=3;
+    std::memcpy(old.forecast, &forecast, sizeof(old.forecast));
+    uint32_t crc=0xffffffffu;
+    const auto *bytes = reinterpret_cast<const uint8_t *>(&old);
+    for (size_t i=0;i<sizeof(old);++i) {
+        crc ^= bytes[i];
+        for (int bit=0;bit<8;++bit) crc=(crc>>1)^(0xedb88320u & (uint32_t)-(int32_t)(crc&1));
+    }
+    old.checksum=~crc;
+    const auto path=(root/"old.cache").string();
+    std::ofstream file(path+".a",std::ios::binary);
+    file.write(reinterpret_cast<const char *>(&old),sizeof(old)); file.close();
+    wind_cache_identity_t identity={"edam","Europe/Amsterdam","knmi_seamless"};
+    wind_forecast_t loaded{};
+    ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
+    EXPECT_EQ(loaded.schema_version,WIND_FORECAST_SCHEMA_VERSION);
+    EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
+    EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
+    ASSERT_EQ(wind_cache_store(path.c_str(),&loaded),ESP_OK);
+    ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
+}

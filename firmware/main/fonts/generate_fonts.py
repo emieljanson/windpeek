@@ -18,6 +18,7 @@ GLYPHS = "".join(chr(value) for value in range(32, 127)) + (
 
 SPECS = (
     ("berkeley_mono_bold", 15, "Bold"),
+    ("berkeley_mono_bold", 34, "Bold"),
     ("berkeley_mono_bold_condensed", 12, "Bold Condensed"),
     ("berkeley_mono_bold_condensed", 15, "Bold Condensed"),
     ("inter", 43, "Black"),
@@ -74,7 +75,9 @@ def emit_asset(output_dir, family, pixel_size, variation, source, source_name):
     ascent, descent = font.getmetrics()
     glyphs = []
     bitmap = bytearray()
-    for character in sorted(set(GLYPHS), key=ord):
+    # This size is reserved for the shutdown message; don't ship unused glyphs.
+    characters = "? Battery empty" if family == "berkeley_mono_bold" and pixel_size == 34 else GLYPHS
+    for character in sorted(set(characters), key=ord):
         mask, offset = font.getmask2(character, mode="L", anchor="ls")
         glyphs.append(
             (ord(character), len(bitmap), mask.size[0], mask.size[1],
@@ -98,17 +101,18 @@ def emit_asset(output_dir, family, pixel_size, variation, source, source_name):
     for start in range(0, len(bitmap), 16):
         chunk = bitmap[start:start + 16]
         lines.append("    " + ", ".join(f"0x{value:02x}" for value in chunk) + ",")
+    inline_asset = pixel_size == 58 or (family == "berkeley_mono_bold" and pixel_size == 34)
     lines.extend((
         "};",
         "",
-        f"{'static ' if pixel_size == 58 else ''}const wind_font_asset_t {symbol} = {{",
+        f"{'static ' if inline_asset else ''}const wind_font_asset_t {symbol} = {{",
         f"    {pixel_size}, {ascent}, {descent}, {symbol}_glyphs,",
         f"    sizeof({symbol}_glyphs) / sizeof({symbol}_glyphs[0]),",
         f"    {fallback_index}, {symbol}_bitmap,",
         "};",
         "",
     ))
-    suffix = ".inc" if pixel_size == 58 else ".c"
+    suffix = ".inc" if inline_asset else ".c"
     (output_dir / f"{family}_{pixel_size}{suffix}").write_text("\n".join(lines), encoding="ascii")
     if render_source != source:
         render_source.unlink()

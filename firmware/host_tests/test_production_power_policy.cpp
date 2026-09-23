@@ -5,6 +5,29 @@
 #include <string>
 
 #include "config.h"
+#include "wind_battery_policy.h"
+
+TEST(BatteryReserve, ThresholdAndRecoveryHaveHysteresis)
+{
+    EXPECT_EQ(wind_battery_action(false, 3451, false), WIND_BATTERY_RUN);
+    EXPECT_EQ(wind_battery_action(false, 3450, false), WIND_BATTERY_RENDER_EMPTY);
+    EXPECT_EQ(wind_battery_action(false, 3300, false), WIND_BATTERY_RENDER_EMPTY);
+    // A button wake or unloaded voltage rebound cannot refresh the panel again.
+    EXPECT_EQ(wind_battery_action(false, 3450, true), WIND_BATTERY_STAY_ASLEEP);
+    EXPECT_EQ(wind_battery_action(false, 3550, true), WIND_BATTERY_STAY_ASLEEP);
+    EXPECT_EQ(wind_battery_action(false, 3649, true), WIND_BATTERY_STAY_ASLEEP);
+    EXPECT_EQ(wind_battery_action(false, 3650, true), WIND_BATTERY_RUN);
+}
+
+TEST(BatteryReserve, UsbAllowsRecoveryAndInvalidReadingsDoNotDeclareEmpty)
+{
+    for (int voltage : {-1, 0, 500, 4501}) {
+        EXPECT_EQ(wind_battery_action(false, voltage, false), WIND_BATTERY_RUN);
+        EXPECT_EQ(wind_battery_action(false, voltage, true), WIND_BATTERY_STAY_ASLEEP);
+        EXPECT_EQ(wind_battery_action(true, voltage, true), WIND_BATTERY_RUN);
+    }
+    EXPECT_EQ(wind_battery_action(true, 3300, true), WIND_BATTERY_RUN);
+}
 
 #ifdef WINDPEEK_DEVELOPMENT_MODE
 #error "Windpeek production firmware must not expose an always-on development mode"
@@ -96,4 +119,46 @@ TEST(ProductionPowerPolicy, OpenWifiUsesAnOpenAuthenticationThreshold)
     EXPECT_NE(wifi_source.find(
                   "password && password[0] != '\\0' ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN"),
               std::string::npos);
+}
+
+namespace {
+bool battery_test_latched;
+int battery_persist_result;
+int battery_render_result;
+std::string battery_effects;
+int PersistBatteryAttempt(bool empty)
+{
+    EXPECT_TRUE(empty);
+    EXPECT_TRUE(battery_test_latched);
+    battery_effects += 'P';
+    return battery_persist_result;
+}
+int RenderBatteryAttempt()
+{
+    EXPECT_TRUE(battery_test_latched);
+    EXPECT_EQ(battery_effects, "P");
+    battery_effects += 'R';
+    return battery_render_result;
+}
+}
+
+TEST(BatteryReserve, PersistsBeforeRenderingAndNeverRetriesAnAttempt)
+{
+    for (int persist_result : {0, -1}) {
+        for (int render_result : {0, -1}) {
+            battery_test_latched = false;
+            battery_effects.clear();
+            battery_persist_result = persist_result;
+            battery_render_result = render_result;
+            EXPECT_EQ(wind_battery_render_once(&battery_test_latched,
+                PersistBatteryAttempt, RenderBatteryAttempt), render_result);
+            EXPECT_EQ(battery_effects, "PR");
+            EXPECT_TRUE(battery_test_latched);
+            EXPECT_EQ(wind_battery_action(false, 3500, battery_test_latched),
+                      WIND_BATTERY_STAY_ASLEEP);
+            EXPECT_EQ(wind_battery_render_once(&battery_test_latched,
+                PersistBatteryAttempt, RenderBatteryAttempt), 0);
+            EXPECT_EQ(battery_effects, "PR");
+        }
+    }
 }

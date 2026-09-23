@@ -224,6 +224,55 @@ TEST_F(WindAppTest, FirstBootFailureRendersUnavailableWithoutFabricatedForecast)
     EXPECT_FALSE(outcome.published_forecast);
 }
 
+TEST_F(WindAppTest, SetupRejectsUnavailableEvenWhenThePanelRefreshSucceeds)
+{
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_ERR_TIMEOUT);
+    EXPECT_FALSE(outcome.displayed);
+    EXPECT_EQ(fake.renders, 0);
+    EXPECT_EQ(fake.displays, 0);
+    EXPECT_EQ(outcome.freshness, WIND_FRESHNESS_UNAVAILABLE);
+}
+
+TEST_F(WindAppTest, SetupAfterFiveOfflineHoursFetchesImmediatelyAndCanRetry)
+{
+    const int64_t boot = 1787544000;
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, false, boot, &outcome), ESP_OK);
+    ASSERT_EQ(wind_app_run(&app, false, boot + 300, &outcome), ESP_OK);
+    EXPECT_EQ(wind_app_run_setup(&app, boot + 5 * 3600, &outcome), ESP_ERR_TIMEOUT);
+    fake.fetch_result = ESP_OK;
+    EXPECT_EQ(wind_app_run_setup(&app, boot + 5 * 3600 + 60, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_TRUE(outcome.published_forecast);
+    EXPECT_EQ(outcome.freshness, WIND_FRESHNESS_FRESH);
+    EXPECT_TRUE(outcome.displayed);
+}
+
+TEST_F(WindAppTest, SetupRejectsFetchFailureEvenWithAnExistingForecast)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544060, &outcome), ESP_ERR_TIMEOUT);
+    EXPECT_TRUE(outcome.used_cache);
+}
+
+TEST_F(WindAppTest, SetupStillRequiresAConfirmedPanelAndAcceptsAnUnchangedForecast)
+{
+    wind_app_outcome_t outcome;
+    fake.display_result = ESP_FAIL;
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_FAIL);
+    fake.display_result = ESP_OK;
+    ASSERT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    ASSERT_TRUE(outcome.displayed);
+    EXPECT_EQ(wind_app_run_setup(&app, 1787544000, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.published_forecast);
+    EXPECT_TRUE(outcome.display_unchanged);
+}
+
 TEST_F(WindAppTest, FirstBootFailureRetriesOnceAfterFiveMinutes)
 {
     const int64_t now = 1787544000;
@@ -392,4 +441,47 @@ TEST(WindAppProductionContractTest, SendsHeartbeatOnlyAfterRefreshLocksAreReleas
     EXPECT_LT(refresh_call, unlock);
     EXPECT_LT(unlock, heartbeat);
     EXPECT_NE(source.find("if (published_forecast)", unlock), std::string::npos);
+}
+
+TEST_F(WindAppTest, ForcedDisplayIgnoresStaleDiskConfirmationAndThenResumesDeduplication)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, true, 1787544000, &outcome), ESP_OK);
+    uint64_t hash = 0;
+    ASSERT_EQ(wind_cache_panel_load(panel_storage.c_str(), 1, &hash), ESP_OK);
+    // Simulate an out-of-band screen whose disk confirmation could not be removed.
+    app.force_display = true;
+    ASSERT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.displayed);
+    EXPECT_FALSE(outcome.display_unchanged);
+    EXPECT_FALSE(app.force_display);
+    ASSERT_EQ(wind_app_run(&app, false, 1787544120, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.display_unchanged);
+    EXPECT_EQ(fake.displays, 2);
+}
+
+TEST_F(WindAppTest, FailedForcedDisplayKeepsTheOverride)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, true, 1787544000, &outcome), ESP_OK);
+    app.force_display = true;
+    fake.display_result = ESP_FAIL;
+    EXPECT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_FAIL);
+    EXPECT_TRUE(app.force_display);
+}
+
+TEST_F(WindAppTest, OverviewPrefetchConsumesFailedRetryWithoutWritingIndividualScreen)
+{
+    const int64_t now=1787544000;
+    fake.fetch_result=ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_prefetch(&app,false,now,&outcome),ESP_OK);
+    ASSERT_GT(app.schedule.retry_at,now);
+    const int64_t retry=app.schedule.retry_at;
+    ASSERT_EQ(wind_app_prefetch(&app,false,retry,&outcome),ESP_OK);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_EQ(outcome.fetch_result,ESP_ERR_TIMEOUT);
+    EXPECT_EQ(app.schedule.retry_at,0);
+    EXPECT_GT(wind_schedule_next_attempt(&app.schedule,retry),retry);
+    EXPECT_EQ(fake.displays,0);EXPECT_EQ(fake.renders,0);
 }

@@ -3,8 +3,11 @@ import { MODULE_IDS, MODULE_SIZES, validModuleOrder } from './modules'
 import { resolveTimeFormat } from './localeTimeFormat'
 import { DEFAULT_THRESHOLD } from '../renderer/contract'
 import { validTimezone } from '../timezone'
+import { settingsForSpot } from './spotSettings'
+import { readCachedTide } from '../forecast/tideCache'
 
 export const CONFIGURATION_VERSION = 5
+export const MULTI_CONFIGURATION_VERSION = 6
 export const BOARD_ID = 'seeedstudio_reterminal_e1002'
 export const BOARD_IDS = Object.freeze({
   E1001: 'seeedstudio_reterminal_e1001',
@@ -36,7 +39,7 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showWeather: true,
   showTemperature: false,
   showTide: false,
-  showDedicatedFooter: false,
+  showDedicatedFooter: true,
   timeFormat: '24-hour',
   temperatureUnit: 'celsius',
 })
@@ -60,7 +63,7 @@ export function displayConfigurationFromStore(store) {
     threshold: store.threshold,
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,
-    showTide: Boolean(store.showTide && store.tideAvailable !== false),
+    showTide: Boolean(store.showTide && store.tideAvailable === true),
     showDedicatedFooter: store.showDedicatedFooter,
     timeFormat: store.timeFormat,
     temperatureUnit: store.temperatureUnit,
@@ -91,7 +94,8 @@ function canonicalInstalledConfiguration(configuration) {
     display.swellSize,
     display.moduleOrder.join(','),
     display.swellModel,
-  ].join('|')
+  ].concat(configuration.version === MULTI_CONFIGURATION_VERSION
+    ? configuration.additionalSpots.map(installedConfigurationDigest) : []).join('|')
 }
 
 export function installedConfigurationDigest(configuration) {
@@ -104,7 +108,7 @@ export function installedConfigurationDigest(configuration) {
 }
 
 export function validateInstalledConfiguration(configuration) {
-  if (!configuration || configuration.version !== CONFIGURATION_VERSION ||
+  if (!configuration || ![CONFIGURATION_VERSION, MULTI_CONFIGURATION_VERSION].includes(configuration.version) ||
       !SUPPORTED_BOARD_IDS.includes(configuration.boardId) ||
       !validTimezone(configuration.deviceTimezone) || configuration.deviceTimezone.length > 63) return false
   const { spot, display } = configuration
@@ -124,6 +128,14 @@ export function validateInstalledConfiguration(configuration) {
       typeof display.showDedicatedFooter !== 'boolean' ||
       !TIME_FORMATS.includes(display.timeFormat) ||
       !TEMPERATURE_UNITS.includes(display.temperatureUnit)) return false
+  if (configuration.version === MULTI_CONFIGURATION_VERSION) {
+    const entries = configuration.additionalSpots
+    if (configuration.boardId !== BOARD_IDS.E1003 || !Array.isArray(entries) ||
+        entries.length < 1 || entries.length > 9 || entries.some(entry =>
+          entry?.version !== CONFIGURATION_VERSION || entry.boardId !== configuration.boardId ||
+          entry.deviceTimezone !== configuration.deviceTimezone || !validateInstalledConfiguration(entry)) ||
+        new Set([spot.id, ...entries.map(entry => entry.spot.id)]).size !== entries.length + 1) return false
+  } else if (configuration.additionalSpots !== undefined) return false
   return typeof configuration.digest !== 'string' ||
     configuration.digest === installedConfigurationDigest(configuration)
 }
@@ -162,5 +174,30 @@ export function createInstalledConfiguration({
   if (!allowInvalid && !validateInstalledConfiguration(configuration)) {
     throw new TypeError('Invalid Windpeek installation configuration')
   }
+  return configuration
+}
+
+// Keep v5 for single-spot devices; v6 adds ordered, independently configured spots.
+export function installedConfigurationFromStore(store, deviceTimezone, storage) {
+  const ids = store.supportsMultipleSpots && store.configuredSpotIds.length
+    ? store.configuredSpotIds : [store.selectedSpotId]
+  const configurations = ids.map(id => {
+    const settings = settingsForSpot(store, id)
+    const spot = store.spotById(id)
+    settings.tideAvailable = id === store.selectedSpotId
+      ? store.tideAvailable
+      : readCachedTide(id, spot.timezone, storage)?.capability === 'available'
+    return createInstalledConfiguration({
+      spot, modelId: settings.selectedModelId,
+      display: displayConfigurationFromStore(settings), boardId: store.selectedBoardId, deviceTimezone,
+    })
+  })
+  const [configuration, ...additionalSpots] = configurations
+  if (additionalSpots.length) {
+    configuration.version = MULTI_CONFIGURATION_VERSION
+    configuration.additionalSpots = additionalSpots
+    configuration.digest = installedConfigurationDigest(configuration)
+  }
+  if (!validateInstalledConfiguration(configuration)) throw new TypeError('Invalid Windpeek installation configuration')
   return configuration
 }

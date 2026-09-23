@@ -32,6 +32,22 @@ typedef void (*wind_installer_abort_fn)(void *context);
 typedef esp_err_t (*wind_installer_scan_wifi_fn)(void *context, char *response,
                                                  size_t response_size);
 typedef bool (*wind_installer_state_fn)(void *context);
+// Numeric only: no network names, credentials, URLs or forecast location.
+typedef struct {
+    int apply_error;
+    int transport_error;
+    int http_status;
+    int parse_error;
+    size_t response_bytes;
+    bool response_too_large;
+    bool allocation_failed;
+    int reset_reason;
+    int64_t device_time;
+    size_t internal_free_bytes;
+    size_t internal_largest_bytes;
+} wind_installer_diagnostics_t;
+typedef void (*wind_installer_diagnostics_fn)(void *context,
+                                              wind_installer_diagnostics_t *out);
 typedef esp_err_t (*wind_installer_set_clock_fn)(void *context, int64_t unix_seconds);
 typedef esp_err_t (*wind_installer_get_hardware_profile_fn)(
     void *context, hardware_profile_state_t *state);
@@ -55,6 +71,7 @@ typedef struct {
     wind_installer_set_clock_fn set_clock;
     wind_installer_get_hardware_profile_fn get_hardware_profile;
     wind_installer_select_hardware_profile_fn select_hardware_profile;
+    wind_installer_diagnostics_fn diagnostics;
 } wind_installer_dependencies_t;
 
 typedef struct {
@@ -75,6 +92,8 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                              const char *payload, size_t payload_length,
                                              char *response, size_t response_size);
 void wind_installer_service_timeout(wind_installer_service_t *service);
+void wind_installer_service_check_idle(wind_installer_service_t *service,
+                                        bool usb_connected, int64_t idle_us);
 void wind_installer_service_disconnect(wind_installer_service_t *service);
 void wind_installer_service_complete_apply(wind_installer_service_t *service, bool succeeded);
 esp_err_t wind_installer_service_start_pending_apply(wind_installer_service_t *service);

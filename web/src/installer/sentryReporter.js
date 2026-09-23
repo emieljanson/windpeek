@@ -21,6 +21,9 @@ const ENTRY_FIELDS = new Set(['offsetMs', 'category', 'operation', 'status', 'me
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
+  'applyError', 'transportError', 'httpStatus', 'parseError', 'responseBytes',
+  'responseTooLarge', 'allocationFailed', 'resetReason', 'deviceTime', 'internalFreeBytes', 'internalLargestBytes',
+  'wifiConnected', 'wifiConfigured', 'renderValid',
 ])
 
 function safeString(value, maxLength = 240) {
@@ -202,8 +205,16 @@ function createDeliveryTracker() {
   return { settle, wait }
 }
 
+function productionReportingEnabled() {
+  // A production build also runs in local previews and browser QA.
+  const hostname = globalThis.location?.hostname ?? ''
+  const local = hostname === 'localhost' || hostname.endsWith('.localhost') ||
+    /^127\./.test(hostname) || hostname === '[::1]' || hostname === '::1'
+  return Boolean(import.meta.env.PROD) && !local && globalThis.navigator?.webdriver !== true
+}
+
 export function createSentryReporter({
-  enabled = Boolean(import.meta.env.PROD),
+  enabled = productionReportingEnabled(),
   dsn = import.meta.env.VITE_SENTRY_DSN ?? '',
   release = import.meta.env.VITE_SENTRY_RELEASE ?? '',
   environment = 'production',

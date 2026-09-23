@@ -1,4 +1,5 @@
 #pragma once
+#include "open_meteo_knmi_provider.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -13,6 +14,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+esp_err_t wind_app_show_battery_empty(void);
+esp_err_t wind_app_show_setup(void);
 
 typedef enum {
     WIND_FRESHNESS_UNAVAILABLE = 0,
@@ -45,6 +49,7 @@ typedef struct {
     int64_t coverage_refresh_cache_retrieved_at;
     bool coverage_refresh_attempted;
     bool initialized;
+    bool force_display;
 } wind_app_t;
 
 typedef struct {
@@ -60,19 +65,29 @@ typedef struct {
 esp_err_t wind_app_init(wind_app_t *app, const wind_app_config_t *config);
 esp_err_t wind_app_run(wind_app_t *app, bool force_refresh, int64_t now,
                        wind_app_outcome_t *outcome);
+// Setup requires a fetched forecast as well as a confirmed panel update.
+esp_err_t wind_app_run_setup(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
 esp_err_t wind_app_prefetch(wind_app_t *app, bool force_refresh, int64_t now,
                             wind_app_outcome_t *outcome);
 esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
 esp_err_t wind_app_configure_runtime(void);
 esp_err_t wind_app_start(void);
 esp_err_t wind_app_refresh(bool force_refresh);
+esp_err_t wind_app_show_overview(void);
+esp_err_t wind_app_toggle_day(size_t day_index);
+esp_err_t wind_app_overview_page(int direction);
+esp_err_t wind_app_select_spot(size_t index);
+void wind_app_overview_state(bool *open, size_t *page);
 esp_err_t wind_app_select_previous(void);
 esp_err_t wind_app_select_next(void);
 esp_err_t wind_app_select_next_display_mode(void);
 bool wind_app_navigation_requires_network(int direction);
+bool wind_app_spot_requires_network(size_t index);
+bool wind_app_overview_requires_network(int page_direction);
 esp_err_t wind_app_clear_panel_confirmation(void);
 int wind_app_seconds_until_next_wake(void);
-esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate);
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
+                                         open_meteo_knmi_diagnostics_t *diagnostics);
 esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration);
 bool wind_app_last_render_succeeded(void);
 

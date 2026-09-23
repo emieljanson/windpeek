@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: './',
+    optimizeDeps: {
+      entries: ['index.html', 'src/**/*.vue', 'src/**/*.js'],
+    },
     plugins: [
       vue(),
       swellPagePlugin(),

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSentryReporter, filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
@@ -67,6 +67,44 @@ function reportInput(overrides = {}) {
 }
 
 describe('Sentry installer reporter', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it.each(['localhost', '127.0.0.1', '127.0.0.2', '[::1]'])('does not report production-build previews on %s', async (hostname) => {
+    vi.stubEnv('PROD', true)
+    vi.stubGlobal('location', { hostname })
+    const sdk = fakeSdk()
+    const loadSentry = vi.fn(async () => sdk)
+    const reporter = createSentryReporter({ dsn: 'https://public@example.test/1', loadSentry })
+
+    await expect(reporter.report(reportInput())).resolves.toEqual({ status: 'failed' })
+    expect(loadSentry).not.toHaveBeenCalled()
+  })
+
+  it('does not report automated browser failures on a deployed production build', async () => {
+    vi.stubEnv('PROD', true)
+    vi.stubGlobal('location', { hostname: 'windpeek.com' })
+    vi.stubGlobal('navigator', { webdriver: true })
+    const loadSentry = vi.fn(async () => fakeSdk())
+    const reporter = createSentryReporter({ dsn: 'https://public@example.test/1', loadSentry })
+
+    await expect(reporter.report(reportInput())).resolves.toEqual({ status: 'failed' })
+    expect(loadSentry).not.toHaveBeenCalled()
+  })
+
+  it('still reports real production browser failures by default', async () => {
+    vi.stubEnv('PROD', true)
+    vi.stubGlobal('location', { hostname: 'windpeek.com' })
+    vi.stubGlobal('navigator', { webdriver: false })
+    const sdk = fakeSdk()
+    const reporter = createSentryReporter({ dsn: 'https://public@example.test/1', loadSentry: async () => sdk })
+
+    await expect(reporter.report(reportInput())).resolves.toMatchObject({ status: 'sent' })
+    expect(sdk.captureException).toHaveBeenCalledOnce()
+  })
+
   it('does not load Sentry when reporting is disabled or the DSN is absent', async () => {
     const loadSentry = vi.fn()
     const disabled = createSentryReporter({ enabled: false, dsn: 'https://public@example.test/1', loadSentry })

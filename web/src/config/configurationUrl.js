@@ -1,16 +1,18 @@
+import { watch } from 'vue'
 import { MIN_THRESHOLD, MAX_THRESHOLD } from '../renderer/contract'
 import { BOARD_IDS, TIME_FORMATS, TEMPERATURE_UNITS } from './configuration'
 import { validModuleOrder } from './modules'
 import { forecastModelsForSpot } from '../forecast/models'
 import { SWELL_MODELS } from '../forecast/openMeteoSwell'
-import { createPersonalSpot, writePersonalSpot } from '../spots/personalSpots'
+import { createPersonalSpot, writePersonalSpots } from '../spots/personalSpots'
+import { settingsForSpot } from './spotSettings'
 
 const sizes = { hide: 'off', numbers: 'small', graph: 'large' }
 const flags = { weather: 'showWeather', temperature: 'showTemperature', tide: 'showTide', footer: 'showDedicatedFooter', threshold: 'showThreshold' }
-const keys = ['swell', 'cfg', 'spot', 'custom', 'board', 'wind', 'waves', 'wind-model', 'wave-model', 'order', 'minimum', 'time', 'unit', ...Object.keys(flags)]
+const keys = ['spots', 'swell', 'cfg', 'spot', 'custom', 'board', 'wind', 'waves', 'wind-model', 'wave-model', 'order', 'minimum', 'time', 'unit', ...Object.keys(flags)]
 
 // Versioned, explicit fields only. No installer credentials or runtime state enter the URL.
-export function configurationUrl(store, href) {
+export function configurationUrl(store, href, { includeSpots = true } = {}) {
   const url = new URL(href)
   for (const key of keys) url.searchParams.delete(key)
   url.searchParams.set('configure', '')
@@ -31,13 +33,25 @@ export function configurationUrl(store, href) {
   url.searchParams.set('time', store.timeFormat)
   url.searchParams.set('unit', store.temperatureUnit)
   for (const [param, field] of Object.entries(flags)) url.searchParams.set(param, store[field] ? '1' : '0')
+  if (includeSpots && Array.isArray(store.configuredSpotIds)) {
+    const entries = store.configuredSpotIds.map(id => {
+      const draft = {
+        ...settingsForSpot(store, id), selectedSpotId: id,
+        selectedBoardId: store.selectedBoardId, spotById: store.spotById,
+      }
+      return configurationUrl(draft, href, { includeSpots: false })?.search
+    })
+    if (entries.some(entry => !entry)) return null
+    url.searchParams.set('spots', JSON.stringify(entries))
+  }
   return url
 }
 
-export function readConfigurationUrl(search, spots) {
+export function readConfigurationUrl(search, spots, { allowSpots = true } = {}) {
   try {
     const params = new URLSearchParams(search)
-    if (params.get('cfg') !== '1' || search.length > 5000 || keys.some(key => params.getAll(key).length > 1)) return null
+    if (params.get('cfg') !== '1' || search.length > (allowSpots ? 50000 : 5000) || keys.some(key => params.getAll(key).length > 1)) return null
+    if (!allowSpots && params.has('spots')) return null
     const custom = params.get('custom')
     if (custom && params.has('spot')) return null
     let spot
@@ -66,27 +80,55 @@ export function readConfigurationUrl(search, spots) {
       if (!['0', '1'].includes(params.get(param))) return null
       patch[field] = params.get(param) === '1'
     }
-    return { patch, spot }
+    const personalSpots = []
+    if (allowSpots) {
+      patch.configuredSpotIds = [spot.id]
+      patch.spotSettings = {}
+      if (params.has('spots')) {
+        const entries = JSON.parse(params.get('spots'))
+        if (!Array.isArray(entries) || entries.length > 10) return null
+        patch.configuredSpotIds = []
+        for (const entry of entries) {
+          if (typeof entry !== 'string') return null
+          const result = readConfigurationUrl(entry, spots, { allowSpots: false })
+          if (!result || patch.configuredSpotIds.includes(result.spot.id)) return null
+          patch.configuredSpotIds.push(result.spot.id)
+          const { selectedSpotId, selectedBoardId, hasUserSpotIntent, ...settings } = result.patch
+          patch.spotSettings[result.spot.id] = settings
+          if (result.spot.personal) personalSpots.push(result.spot)
+        }
+        if (patch.selectedBoardId === BOARD_IDS.E1003 && entries.length && !patch.configuredSpotIds.includes(spot.id)) return null
+      }
+    }
+    return { patch, spot, personalSpots }
   } catch { return null }
 }
 
 export function applyConfigurationUrl(store, search, storage) {
   const result = readConfigurationUrl(search, store.spots)
   if (!result) return false
-  if (result.spot.personal) {
-    const remaining = store.personalSpots.filter(spot => spot.id !== result.spot.id)
-    store.personalSpots = [...remaining, result.spot]
-    writePersonalSpot(result.spot, storage)
-  }
-  store.$patch({ ...result.patch, swellFocus: result.patch.swellSize !== 'off' })
+  // The active personal spot also occurs in the multi-spot list. Import it once,
+  // using the top-level definition, which owns the active preview.
+  const imported = result.personalSpots.filter(spot => spot.id !== result.spot.id)
+  if (result.spot.personal) imported.push(result.spot)
+  writePersonalSpots(imported, storage)
+  store.$patch(state => {
+    if (imported.length) {
+      const ids = new Set(imported.map(spot => spot.id))
+      state.personalSpots = [...state.personalSpots.filter(spot => !ids.has(spot.id)), ...imported]
+    }
+    // Replace the dictionary: an object patch would deep-merge the previous draft.
+    Object.assign(state, result.patch, { swellFocus: result.patch.swellSize !== 'off' })
+  })
   return true
 }
 
 export function syncConfigurationUrl(store, browser = window) {
-  const update = () => {
-    const url = configurationUrl(store, browser.location.href)
-    if (url && url.href !== browser.location.href) browser.history.replaceState(browser.history.state, '', url.href)
-  }
-  update()
-  return store.$subscribe(update, { detached: true, flush: 'post' })
+  return watch(
+    () => configurationUrl(store, browser.location.href)?.href,
+    href => {
+      if (href && href !== browser.location.href) browser.history.replaceState(browser.history.state, '', href)
+    },
+    { immediate: true, flush: 'post' },
+  )
 }

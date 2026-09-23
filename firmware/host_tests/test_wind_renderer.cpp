@@ -294,8 +294,8 @@ TEST(WindRenderer, ProjectsNativeFourByThreeE1003Composition) {
     EXPECT_EQ(height, WIND_RENDERER_E1003_HEIGHT);
 
     Frame source(WIND_RENDERER_E1003_COMPOSITION_BYTES, 15);
-    std::fill(source.begin(), source.begin() + WIND_RENDERER_WIDTH, 0);
-    source[(WIND_RENDERER_E1003_COMPOSITION_HEIGHT - 1) * WIND_RENDERER_WIDTH] = 4;
+    std::fill(source.begin(), source.begin() + WIND_RENDERER_E1003_WIDTH, 0);
+    source[(WIND_RENDERER_E1003_HEIGHT - 1) * WIND_RENDERER_E1003_WIDTH] = 4;
     std::vector<uint8_t> row(static_cast<size_t>(width), 0x7f);
 
     ASSERT_EQ(wind_renderer_project_display_row(WIND_RENDERER_DISPLAY_E1003_GC16,
@@ -311,6 +311,99 @@ TEST(WindRenderer, ProjectsNativeFourByThreeE1003Composition) {
               0);
     EXPECT_EQ(row.front(), 4);
     EXPECT_EQ(row.back(), 15);
+}
+
+TEST(WindRenderer, E1003StraightGeometryKeepsNativePixelWidths) {
+    Frame source(WIND_RENDERER_E1003_COMPOSITION_BYTES, 15);
+    constexpr int day_line = 167;
+    constexpr int bar_left = 185;
+    for (int y = 0; y < WIND_RENDERER_E1003_HEIGHT; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + day_line, 2, 0);
+    for (int y = 200; y <= 210; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + bar_left, 38, 0);
+    for (int y : {300, 301})
+        std::fill(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 12,
+                  source.begin() + y * WIND_RENDERER_E1003_WIDTH + 788, 0);
+
+    Frame row(WIND_RENDERER_E1003_WIDTH, 15);
+    auto project = [&](int y) {
+        ASSERT_EQ(wind_renderer_project_display_row(
+                      WIND_RENDERER_DISPLAY_E1003_GC16, source.data(),
+                      source.size(), y, row.data(), row.size()), 0);
+    };
+    auto black_run = [&](int center) {
+        int left = center;
+        int right = center;
+        while (left > 0 && row[left - 1] == 0) --left;
+        while (right < WIND_RENDERER_E1003_WIDTH && row[right] == 0) ++right;
+        return right - left;
+    };
+
+    project(205);
+    EXPECT_EQ(black_run(day_line), 2);
+    EXPECT_EQ(black_run(bar_left), 38);
+
+    for (int y : {300, 301}) {
+        project(y);
+        EXPECT_EQ(row[700], 0);
+    }
+    project(302);
+    EXPECT_EQ(row[700], 15);
+
+    source[20 * WIND_RENDERER_E1003_WIDTH + day_line] = 0;
+    for (int y = 150; y <= 160; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + bar_left, 38, 0);
+    project(155);
+    EXPECT_EQ(black_run(day_line), 2);
+    EXPECT_EQ(black_run(bar_left), 38);
+
+    std::fill(source.begin(), source.end(), 15); // focused 13-sample day
+    for (int y = 200; y <= 210; ++y)
+        std::fill_n(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 59, 38, 0);
+    project(205);
+    EXPECT_EQ(black_run(59), 38);
+
+    std::fill(source.begin(), source.end(), 15);
+    for (int y : {300, 301})
+        std::fill(source.begin() + y * WIND_RENDERER_E1003_WIDTH + 30,
+                  source.begin() + y * WIND_RENDERER_E1003_WIDTH + 771, 5);
+    for (int y : {300, 301}) {
+        project(y);
+        EXPECT_EQ(row[700], 5);
+    }
+    project(302);
+    EXPECT_EQ(row[700], 15);
+}
+
+TEST(WindRenderer, NativeE1003DashboardKeepsRulesBarsAndThresholdExact) {
+    wind_renderer_input_v2_t input{};
+    wind_renderer_dashboard_t dashboard{};
+    ASSERT_EQ(wind_renderer_fixture_build(0, &input), 0);
+    ASSERT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
+    Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    wind_renderer_stats_t stats{};
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size(), &stats), 0);
+    EXPECT_EQ(stats.clipped_primitives, 0u);
+    const auto pixel = [&](int x, int y) {
+        return pixels[y * WIND_RENDERER_E1003_WIDTH + x];
+    };
+    for (int y : {240, 480, 600, 1000, 1100}) {
+        EXPECT_EQ(pixel(390, y), 15);
+        EXPECT_EQ(pixel(391, y), 0);
+        EXPECT_EQ(pixel(392, y), 0);
+        EXPECT_EQ(pixel(393, y), 15);
+    }
+    for (int x = 554; x < 592; ++x) EXPECT_EQ(pixel(x, 1100), 0);
+    EXPECT_EQ(pixel(553, 1100), 15);
+    EXPECT_EQ(pixel(592, 1100), 15);
+    for (int x : {400, 550, 750, 850}) {
+        EXPECT_EQ(pixel(x, 1125), 15);
+        EXPECT_EQ(pixel(x, 1126), 0);
+        EXPECT_EQ(pixel(x, 1127), 0);
+        EXPECT_EQ(pixel(x, 1128), 15);
+    }
+    EXPECT_EQ(pixel(500, 1126), 0); // The crossing is black as well.
 }
 
 TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
@@ -471,12 +564,17 @@ TEST(WindRenderer, UsesTheBottomBandAsATimeAxisAndStatusArea) {
     third_day_time_changed.days[2].samples[0].time = "09";
     EXPECT_NE(Render(third_day_time_changed), original);
 
+    auto fourth_day_time_changed = dashboard;
+    fourth_day_time_changed.days[3].samples[0].time = "09";
+    EXPECT_NE(Render(fourth_day_time_changed), original);
+
     auto long_status = dashboard;
     long_status.provider = "A VERY LONG FORECAST MODEL NAME";
     const Frame long_status_frame = Render(long_status);
+    EXPECT_EQ(long_status_frame, original);
     auto long_status_hidden_time_changed = long_status;
     long_status_hidden_time_changed.days[2].samples[0].time = "09";
-    EXPECT_EQ(Render(long_status_hidden_time_changed), long_status_frame);
+    EXPECT_NE(Render(long_status_hidden_time_changed), long_status_frame);
 
     auto status_changed = dashboard;
     status_changed.provider = "BEST MATCH";
@@ -490,6 +588,25 @@ TEST(WindRenderer, UsesTheBottomBandAsATimeAxisAndStatusArea) {
         const int divider_x = 12 + day * 155;
         EXPECT_EQ(original[450 * WIND_RENDERER_WIDTH + divider_x], 1)
             << "footer divider for day " << day;
+    }
+}
+
+TEST(WindRenderer, HidesAllHoursWhenTheFooterIsHidden) {
+    auto dashboard = Dashboard();
+    dashboard.show_dedicated_footer = 0;
+    for (bool ordered : {false, true}) {
+        dashboard.custom_modules = ordered;
+        dashboard.ordered_modules = ordered;
+        dashboard.wind_size = 2;
+        dashboard.swell_size = ordered ? 2 : 0;
+        for (int index = 0; index < 5; ++index) dashboard.module_order[index] = index;
+        for (bool twelve_hour : {false, true}) {
+            dashboard.use_24_hour = !twelve_hour;
+            const Frame original = Render(dashboard);
+            dashboard.days[0].samples[0].time = twelve_hour ? "8PM" : "20";
+            EXPECT_EQ(Render(dashboard), original);
+            dashboard.days[0].samples[0].time = "08";
+        }
     }
 }
 
@@ -729,6 +846,7 @@ TEST(WindRenderer, UsesRealTideDataInTheMarginsOutsideForecastLabels) {
 
 TEST(WindRenderer, DoesNotLabelTideExtremaOutsideForecastCenters) {
     auto dashboard = Dashboard();
+    dashboard.show_dedicated_footer = 0;
     dashboard.show_tide = 1;
     dashboard.tide_available = 1;
     dashboard.tide_sample_count = 24;
@@ -983,4 +1101,146 @@ TEST(WindRendererGolden, Unavailable) {
     auto dashboard = Dashboard(WIND_RENDERER_UNAVAILABLE);
     dashboard.battery_percent = -1;
     ExpectGolden("unavailable", dashboard);
+}
+
+TEST(BatteryEmptyRenderer, UsesEachPanelsNativeWhiteAndKeepsBlackBackground) {
+    for (auto display : {WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                         WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
+                         WIND_RENDERER_DISPLAY_E1003_GC16}) {
+        const int height = display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 600 : 480;
+        const int width = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+        const int physical_height = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_HEIGHT : WIND_RENDERER_HEIGHT;
+        const auto px = [display](int value) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? (value * WIND_RENDERER_E1003_WIDTH + 400) / 800 : value; };
+        const auto py = [display](int value) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? (value * WIND_RENDERER_E1003_HEIGHT + 300) / 600 : value; };
+        const int offset = (height - 480) / 2;
+        const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+            display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
+        std::vector<uint8_t> pixels(width * physical_height + 1, 0xA5);
+        ASSERT_EQ(wind_renderer_render_battery_empty_for_display(
+            display, pixels.data(), pixels.size() - 1), 0);
+        EXPECT_EQ(pixels.back(), 0xA5);
+        EXPECT_EQ(pixels.front(), 0);
+        EXPECT_EQ(pixels[py(184 + offset) * width + px(357)], white);
+        EXPECT_EQ(pixels[py(200 + offset) * width + px(400)], 0);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
+            [white, display](uint8_t p) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+                ? p <= white : p == 0 || p == white; }));
+        EXPECT_GT(std::count(pixels.begin() + py(245 + offset) * width,
+                             pixels.begin() + py(290 + offset) * width, white), 100);
+        int panel_width, panel_height;
+        ASSERT_EQ(wind_renderer_display_dimensions(display, &panel_width, &panel_height), 0);
+        std::vector<uint8_t> row(panel_width);
+        for (int y = 0; y < panel_height; ++y)
+            ASSERT_EQ(wind_renderer_project_display_row(display, pixels.data(),
+                pixels.size() - 1, y, row.data(), row.size()), 0);
+    }
+}
+
+TEST(SetupRenderer, ProducesTextInEachPanelsPaletteWithoutOverrunningTheBuffer) {
+    for (auto display : {WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                         WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
+                         WIND_RENDERER_DISPLAY_E1003_GC16}) {
+        const size_t size = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_COMPOSITION_BYTES : WIND_RENDERER_PALETTE_BYTES;
+        const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+            display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
+        std::vector<uint8_t> pixels(size + 1, 0xA5);
+        ASSERT_NE(wind_renderer_render_setup(display, pixels.data(), size - 1), 0);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
+        ASSERT_EQ(wind_renderer_render_setup(display, pixels.data(), size), 0);
+        EXPECT_EQ(pixels.back(), 0xA5);
+        EXPECT_EQ(pixels.front(), white);
+        EXPECT_GT(std::count(pixels.begin(), pixels.end() - 1, 0), 100);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
+            [white, display](uint8_t p) { return display == WIND_RENDERER_DISPLAY_E1003_GC16
+                ? p <= white : p == 0 || p == white; }));
+    }
+}
+
+TEST(BatteryEmptyRenderer, RejectsInvalidBuffersBeforeWriting) {
+    std::vector<uint8_t> pixels(WIND_RENDERER_PALETTE_BYTES, 0xA5);
+    EXPECT_NE(wind_renderer_render_battery_empty(nullptr, pixels.size()), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty(pixels.data(), pixels.size() - 1), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty_for_display(
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
+    EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
+}
+
+TEST(SpotOverviewRenderer, RendersMixedGraphsAndFullFinalPagesInGc16) {
+    wind_renderer_dashboard_t rows[3] = {Dashboard(), Dashboard(), Dashboard()};
+    rows[0].spot_name="EDAM"; rows[1].spot_name="WIJK AAN ZEE"; rows[2].spot_name="SCHEVENINGEN";
+    rows[1].swell_size=2;
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES+1,0xA5);
+    wind_renderer_stats_t stats{};
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,0,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels.back(),0xA5);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end()-1,[](uint8_t p){return p<=15;}));
+    EXPECT_GT(std::count(pixels.begin(),pixels.end(),11),0);
+    for (int y : {240, 480, 1100}) {
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+390], 15);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+391], 0);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+392], 0);
+        EXPECT_EQ(pixels[y*WIND_RENDERER_E1003_WIDTH+393], 15);
+    }
+    EXPECT_EQ(pixels[1273*WIND_RENDERER_E1003_WIDTH+1661],0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,1,4,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,2,5,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,4,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels[1374*WIND_RENDERER_E1003_WIDTH+117],0); // Outer bottom divider stays continuous.
+}
+
+TEST(SpotOverviewRenderer, RejectsInvalidPagesWithoutWriting) {
+    auto row=Dashboard();
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES,0xA5);
+    EXPECT_NE(wind_renderer_render_overview(&row,0,0,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,1,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,9,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,0,7,pixels.data(),pixels.size()-1,nullptr),0);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end(),[](uint8_t p){return p==0xA5;}));
+}
+
+TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
+    auto d=Dashboard();
+    d.custom_modules=1; d.ordered_modules=1; d.wind_size=2; d.swell_size=2;
+    d.show_temperature=1;
+    for(int i=0;i<5;++i)d.module_order[i]=i;
+    d.visible_day_count=5;
+    const auto render=[](const wind_renderer_dashboard_t &dashboard) {
+        Frame out(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+        wind_renderer_stats_t stats{};
+        EXPECT_EQ(wind_renderer_render_for_display(&dashboard,WIND_RENDERER_DISPLAY_E1003_GC16,out.data(),out.size(),&stats),0);
+        EXPECT_EQ(stats.clipped_primitives,0u);
+        return out;
+    };
+    const auto wide=render(d);
+    d.visible_day_count=1; d.visible_sample_count=13;
+    static const char *hours[]={"08","09","10","11","12","13","14","15","16","17","18","19","20"};
+    for(int i=0;i<13;++i){d.days[0].samples[i]=d.days[0].samples[0];d.days[0].samples[i].time=hours[i];}
+    const auto focus=render(d);
+    EXPECT_NE(wide,focus);
+    // Horizontal module boundaries remain at exactly the same y positions.
+    for(int y=188;y<1334;++y){
+        const auto line=[&](const Frame &f){for(int x=28;x<=1841;++x)if(f[y*WIND_RENDERER_E1003_WIDTH+x]!=0)return false;return true;};
+        EXPECT_EQ(line(wide),line(focus)) << y;
+    }
+    d.days[0].samples[1].time="XX";
+    const auto changed_time=render(d);
+    EXPECT_FALSE(std::equal(focus.begin()+WIND_RENDERER_E1003_WIDTH*1334,focus.end(),
+                            changed_time.begin()+WIND_RENDERER_E1003_WIDTH*1334));
+    d.days[0].samples[1].time=hours[1];
+    d.days[0].samples[12].sustained_kt=39;
+    EXPECT_NE(focus,render(d)); // The last hourly sample reaches the renderer.
+    d.visible_day_count=5;
+    Frame invalid(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
+    d.visible_sample_count=5; d.visible_day_count=3;
+    EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
 }

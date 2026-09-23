@@ -216,7 +216,6 @@ function applyStudioTheme() {
   if (grid) {
     grid.visible = true
     grid.material.uniforms.lineColor.value.set(dark ? 0x7f7f81 : 0x6f7784)
-    grid.material.uniforms.veilOpacity.value = dark ? 0 : 0.032
     grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 1.4 : 0.24
     grid.material.uniforms.stageFadeStart.value = dark ? 0.055 : 0.28
     grid.material.uniforms.stageFadeEnd.value = dark ? 0.22 : 0.82
@@ -523,7 +522,6 @@ function createPerspectiveSurface(stage) {
       horizonFadeEnd: { value: 1.35 },
       horizonFadeStart: { value: 0.58 },
       lineColor: { value: new THREE.Color(0x6f7784) },
-      veilOpacity: { value: 0.032 },
       lineOpacity: { value: 0.24 },
       spacing: { value: 0.032 },
       stageFadeEnd: { value: 0.82 },
@@ -540,7 +538,6 @@ function createPerspectiveSurface(stage) {
     `,
     fragmentShader: `
       uniform vec3 lineColor;
-      uniform float veilOpacity;
       uniform float lineOpacity;
       uniform float spacing;
       uniform float horizonFadeStart;
@@ -560,9 +557,8 @@ function createPerspectiveSurface(stage) {
         float horizonFade = 1.0 - smoothstep(horizonFadeStart, horizonFadeEnd, cameraDistance);
         float stageFade = 1.0 - smoothstep(stageFadeStart, stageFadeEnd, length(vWorldPosition.xz));
 
-        float surfaceVeil = horizonFade * stageFade * veilOpacity;
         float gridAlpha = line * densityFade * horizonFade * stageFade * stageFade * lineOpacity;
-        gl_FragColor = vec4(lineColor, surfaceVeil + gridAlpha);
+        gl_FragColor = vec4(lineColor, gridAlpha);
       }
     `,
   })

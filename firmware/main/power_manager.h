@@ -11,13 +11,20 @@ typedef enum {
     WAKEUP_SOURCE_BOOT_BUTTON,    // BOOT/WAKEUP button pressed
     WAKEUP_SOURCE_ROTATE_BUTTON,  // ROTATE button pressed
     WAKEUP_SOURCE_CLEAR_BUTTON,   // CLEAR button pressed
+    WAKEUP_SOURCE_TOUCH,          // E1003 touchscreen
     WAKEUP_SOURCE_EXT1_UNKNOWN,   // EXT1 wakeup from unknown GPIO
 } wakeup_source_t;
 
 esp_err_t power_manager_init(void);
 void power_manager_enter_sleep(void);
+/* No timer wakes while preserving the empty-battery screen. */
+void power_manager_set_battery_empty(bool empty);
 void power_manager_enter_sleep_with_timer(uint32_t sleep_time_sec);
 void power_manager_reset_sleep_timer(void);
+/* Keep sleep from interrupting network/display work. Nesting is supported. */
+void power_manager_work_begin(void);
+void power_manager_work_end(void);
+bool power_manager_work_active(void);
 
 /**
  * @brief Override the auto-sleep timeout at runtime (seconds).

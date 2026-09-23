@@ -281,8 +281,8 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
         input.swellFocus = swellSize > 0
         for (const displayId of [1, 2, 3]) {
           const frame = renderer.renderPreviewForDisplay(input, displayId)
-          expect(frame.width).toBe(800)
-          expect(frame.height).toBe(displayId === 3 ? 600 : 480)
+          expect(frame.width).toBe(displayId === 3 ? 1872 : 800)
+          expect(frame.height).toBe(displayId === 3 ? 1404 : 480)
           expect(frame.data).toHaveLength(frame.width * frame.height * 4)
         }
       }
@@ -368,9 +368,9 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
     const renderer = await loadRealRenderer()
     const frame = renderer.renderPreviewForDisplay(fixtureInput(1, 17), 3)
 
-    expect(frame.width).toBe(800)
-    expect(frame.height).toBe(600)
-    expect(frame.data).toHaveLength(800 * 600 * 4)
+    expect(frame.width).toBe(1872)
+    expect(frame.height).toBe(1404)
+    expect(frame.data).toHaveLength(1872 * 1404 * 4)
     for (let offset = 0; offset < frame.data.length; offset += 4) {
       expect(frame.data[offset]).toBe(frame.data[offset + 1])
       expect(frame.data[offset + 1]).toBe(frame.data[offset + 2])

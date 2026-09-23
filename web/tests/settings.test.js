@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
+import { toast } from 'vue-sonner'
+vi.mock('vue-sonner', () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }) }))
 
 import WindpeekSettings from '../src/components/WindpeekSettings.vue'
 import ReTerminalHelpDialog from '../src/components/ReTerminalHelpDialog.vue'
@@ -33,12 +35,81 @@ function bodyOption(label) {
 describe('Windpeek settings panel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    useConfiguratorStore().setSelectedBoardId('seeedstudio_reterminal_e1002')
   })
 
   afterEach(() => {
     wrapper?.unmount()
     wrapper = undefined
     document.body.innerHTML = ''
+  })
+
+  it('keeps E1003 search and default controls visible while adding and selecting spots', async () => {
+    const store = useConfiguratorStore()
+    store.setSelectedBoardId('seeedstudio_reterminal_e1003')
+    vi.spyOn(store, 'refreshForecast').mockResolvedValue(true)
+    mountSettings()
+    expect(rowControl('Wind').exists()).toBe(true)
+    expect(wrapper.find('.spot-list__heading').exists()).toBe(false)
+    expect(wrapper.get('.inspector-search input').attributes('placeholder')).toBe('Search spot…')
+    wrapper.findComponent(SettingCombobox).vm.$emit('update:modelValue', 'brouwersdam')
+    await nextTick()
+    expect(wrapper.find('.inspector-search').exists()).toBe(true)
+    expect(wrapper.find('.spot-list').exists()).toBe(false)
+    store.setThreshold(17)
+    const searchInput = wrapper.get('.inspector-search input').element
+    await wrapper.get('.add-more-spots').trigger('click')
+    await nextTick()
+    expect(wrapper.get('.inspector-search input').attributes('placeholder')).toBe('Add spot…')
+    expect(document.activeElement).toBe(searchInput)
+    expect(wrapper.findAll('.spot-list__row')).toHaveLength(1)
+    expect(wrapper.get('.spot-list__select').text()).toBe('Brouwersdam')
+    expect(wrapper.get('.spot-list__select').attributes('aria-pressed')).toBe('true')
+    expect(store.selectedSpotId).toBe('brouwersdam')
+    wrapper.findComponent(SettingCombobox).vm.$emit('update:modelValue', 'edam')
+    await nextTick()
+    expect(wrapper.get('.inspector-search input').element).toBe(searchInput)
+    expect(wrapper.get('.inspector-search input').element.value).toBe('')
+    expect(wrapper.get('.inspector-search input').attributes('placeholder')).toBe('Add spot…')
+    expect(wrapper.find('.add-more-spots').exists()).toBe(false)
+    expect(wrapper.findComponent(SettingCombobox).props('keepSelectionLabel')).toBe(false)
+    store.setThreshold(23)
+    expect(wrapper.findAll('.spot-list__row')).toHaveLength(2)
+    await wrapper.findAll('.spot-list__select')[0].trigger('click')
+    expect(store.threshold).toBe(17)
+    await wrapper.findAll('.spot-list__remove')[0].trigger('click')
+    expect(store.selectedSpotId).toBe('edam')
+    expect(store.threshold).toBe(23)
+    expect(wrapper.findAll('.spot-list__row')).toHaveLength(1)
+    expect(wrapper.find('.inspector-search').exists()).toBe(true)
+    expect(rowControl('Wind').exists()).toBe(true)
+  })
+
+  it('shows a toast at the ten-spot limit without adding an eleventh', async () => {
+    const store = useConfiguratorStore()
+    store.setSelectedBoardId('seeedstudio_reterminal_e1003')
+    vi.spyOn(store, 'refreshForecast').mockResolvedValue(true)
+    for (const spot of store.spots.slice(0, 10)) await store.addConfiguredSpot(spot.id)
+    const selected = store.selectedSpotId
+    toast.mockClear()
+    try {
+      mountSettings()
+      wrapper.findComponent(SettingCombobox).vm.$emit('update:modelValue', store.spots[10].id)
+      await nextTick()
+      expect(toast).toHaveBeenCalledWith("Can't add more spots", { id: 'spot-limit' })
+      expect(store.configuredSpotIds).toHaveLength(10)
+      expect(store.selectedSpotId).toBe(selected)
+    } finally { toast.mockClear() }
+  })
+
+  it('keeps the initial E1003 search focused and compact mode minimal', async () => {
+    const store = useConfiguratorStore()
+    store.setSelectedBoardId('seeedstudio_reterminal_e1003')
+    mountSettings()
+    expect(wrapper.findComponent(SettingCombobox).props('blurAfterSelect')).toBe(false)
+    await wrapper.setProps({ compact: true })
+    expect(wrapper.find('.inspector-search').exists()).toBe(false)
+    expect(wrapper.find('.add-more-spots').exists()).toBe(false)
   })
 
   it('opens model explanations from labels without changing the selection', async () => {
@@ -125,7 +196,7 @@ describe('Windpeek settings panel', () => {
       'Wave model',
       'Wind threshold',
       'Temperature',
-      'Footer',
+      'Hours',
     ])
     expect(wrapper.text()).not.toContain('Treatment')
     expect(wrapper.text()).not.toContain('Time format')

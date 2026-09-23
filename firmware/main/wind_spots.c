@@ -1,22 +1,29 @@
 #include "wind_spots.h"
 
-#include "installed_configuration.h"
+#include <string.h>
+#ifdef ESP_PLATFORM
+#include "nvs.h"
+#endif
 
 static installed_configuration_t s_configuration;
-static wind_spot_t s_spot;
+static wind_spot_t s_spots[INSTALLED_CONFIGURATION_MAX_SPOTS];
 static bool s_loaded;
+typedef struct { uint64_t digest; uint32_t index; } selected_spot_t;
+#ifndef ESP_PLATFORM
+static selected_spot_t s_selected;
+#endif
 
 esp_err_t wind_spots_use_configuration(const installed_configuration_t *configuration)
 {
     if (!installed_configuration_validate(configuration)) return ESP_ERR_INVALID_ARG;
     s_configuration = *configuration;
-    s_spot = (wind_spot_t) {
-        .id = s_configuration.spot.id,
-        .display_name = s_configuration.spot.display_name,
-        .latitude = s_configuration.spot.latitude,
-        .longitude = s_configuration.spot.longitude,
-        .timezone = s_configuration.spot.timezone,
-    };
+    for (size_t i = 0; i <= s_configuration.additional_spot_count; ++i) {
+        const installed_spot_t *spot = i == 0 ? &s_configuration.spot : &s_configuration.additional_spots[i - 1].spot;
+        s_spots[i] = (wind_spot_t) {
+            .id = spot->id, .display_name = spot->display_name,
+            .latitude = spot->latitude, .longitude = spot->longitude, .timezone = spot->timezone,
+        };
+    }
     s_loaded = true;
     return ESP_OK;
 }
@@ -42,30 +49,55 @@ const char *wind_spots_device_timezone(void)
 size_t wind_spots_count(void)
 {
     ensure_loaded();
-    return 1;
+    return 1 + s_configuration.additional_spot_count;
 }
 
 const wind_spot_t *wind_spots_at(size_t index)
 {
-    ensure_loaded();
-    return index == 0 ? &s_spot : NULL;
+    return index < wind_spots_count() ? &s_spots[index] : NULL;
 }
 
 size_t wind_spots_offset(size_t current, int direction)
 {
-    (void) current;
-    (void) direction;
-    return 0;
+    const int64_t count = (int64_t) wind_spots_count();
+    return (size_t) (((int64_t)(current % count) + direction % count + count) % count);
 }
 
 esp_err_t wind_spots_load_selected(size_t *out_index)
 {
     if (!out_index) return ESP_ERR_INVALID_ARG;
-    *out_index = 0;
+    ensure_loaded();
+    selected_spot_t selected = {0};
+#ifdef ESP_PLATFORM
+    nvs_handle_t handle;
+    if (nvs_open("wind", NVS_READONLY, &handle) == ESP_OK) {
+        size_t size = sizeof(selected);
+        if (nvs_get_blob(handle, "selection", &selected, &size) != ESP_OK || size != sizeof(selected))
+            memset(&selected, 0, sizeof(selected));
+        nvs_close(handle);
+    }
+#else
+    selected = s_selected;
+#endif
+    *out_index = selected.digest == installed_configuration_digest(&s_configuration) &&
+        selected.index < wind_spots_count() ? selected.index : 0;
     return ESP_OK;
 }
 
 esp_err_t wind_spots_store_selected(size_t index)
 {
-    return index == 0 ? ESP_OK : ESP_ERR_INVALID_ARG;
+    if (index >= wind_spots_count()) return ESP_ERR_INVALID_ARG;
+    const selected_spot_t selected = {.digest = installed_configuration_digest(&s_configuration), .index = index};
+#ifdef ESP_PLATFORM
+    nvs_handle_t handle;
+    esp_err_t result = nvs_open("wind", NVS_READWRITE, &handle);
+    if (result != ESP_OK) return result;
+    result = nvs_set_blob(handle, "selection", &selected, sizeof(selected));
+    if (result == ESP_OK) result = nvs_commit(handle);
+    nvs_close(handle);
+    return result;
+#else
+    s_selected = selected;
+    return ESP_OK;
+#endif
 }

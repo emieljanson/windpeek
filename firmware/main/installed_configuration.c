@@ -1,6 +1,8 @@
 #include "installed_configuration.h"
 
 #include <inttypes.h>
+#include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -102,8 +104,20 @@ typedef struct {
     char password[65];
 } configuration_record_v4_t;
 
+typedef struct {
+    uint32_t magic;
+    uint8_t committed;
+    uint8_t reserved[3];
+    uint64_t digest;
+    installed_configuration_single_t config;
+    uint8_t has_credentials;
+    char ssid[33];
+    char password[65];
+} configuration_record_v5_t;
+
 typedef union {
     configuration_record_t current;
+    configuration_record_v5_t v5;
     configuration_record_v4_t v4;
     configuration_record_v3_t v3;
     configuration_record_v2_t v2;
@@ -218,7 +232,7 @@ void installed_configuration_default(installed_configuration_t *config)
     config->display.show_weather = true;
     config->display.show_temperature = false;
     config->display.show_tide = false;
-    config->display.show_dedicated_footer = false;
+    config->display.show_dedicated_footer = true;
     config->display.use_24_hour = true;
     config->display.temperature_fahrenheit = false;
     config->display.wind_size = 2;
@@ -226,9 +240,9 @@ void installed_configuration_default(installed_configuration_t *config)
     for (int i = 0; i < 5; ++i) config->display.module_order[i] = i;
 }
 
-bool installed_configuration_validate(const installed_configuration_t *config)
+static bool single_validate(const installed_configuration_single_t *config)
 {
-    if (!config || config->version != INSTALLED_CONFIGURATION_VERSION || config->generation == 0 ||
+    if (!config || (config->version != INSTALLED_CONFIGURATION_VERSION && config->version != INSTALLED_CONFIGURATION_MULTI_VERSION) || config->generation == 0 ||
         !terminated(config->board_id, sizeof(config->board_id)) ||
         strcmp(config->board_id, WINDPEEK_BOARD_ID) != 0 ||
         !terminated(config->device_timezone, sizeof(config->device_timezone)) ||
@@ -236,6 +250,7 @@ bool installed_configuration_validate(const installed_configuration_t *config)
         !terminated(config->spot.id, sizeof(config->spot.id)) || config->spot.id[0] == '\0' ||
         !terminated(config->spot.display_name, sizeof(config->spot.display_name)) ||
         config->spot.display_name[0] == '\0' ||
+        !isfinite(config->spot.latitude) || !isfinite(config->spot.longitude) ||
         config->spot.latitude < -90.0 || config->spot.latitude > 90.0 ||
         config->spot.longitude < -180.0 || config->spot.longitude > 180.0 ||
         !terminated(config->spot.timezone, sizeof(config->spot.timezone)) ||
@@ -256,9 +271,9 @@ bool installed_configuration_validate(const installed_configuration_t *config)
     return true;
 }
 
-static uint64_t configuration_digest_unchecked(const installed_configuration_t *config)
+static uint64_t single_digest(const installed_configuration_single_t *config)
 {
-    char canonical[512];
+    char canonical[768];
     int length = snprintf(
         canonical, sizeof(canonical), "%" PRIu32 "|%s|%s|%s|%s|%.6f|%.6f|%s|%s|%u|%u|%u|%u|%u|%u|%s|%s",
         config->version, config->board_id, config->device_timezone, config->spot.id,
@@ -280,6 +295,54 @@ static uint64_t configuration_digest_unchecked(const installed_configuration_t *
         if (appended < 0 || (size_t)appended >= sizeof(canonical) - length) return 0;
     }
     return length > 0 && (size_t) length < sizeof(canonical) ? fnv1a(canonical) : 0;
+}
+
+// The single-spot prefix retains the v5 storage layout for migration.
+_Static_assert(offsetof(installed_configuration_t, additional_spot_count) >=
+               sizeof(installed_configuration_single_t), "single configuration prefix");
+
+void installed_configuration_get_spot(const installed_configuration_t *config, size_t index,
+                                      installed_configuration_single_t *out)
+{
+    if (index == 0) memcpy(out, config, sizeof(*out));
+    else *out = config->additional_spots[index - 1];
+}
+
+bool installed_configuration_validate(const installed_configuration_t *config)
+{
+    if (!config || config->additional_spot_count >= INSTALLED_CONFIGURATION_MAX_SPOTS) return false;
+    installed_configuration_single_t first;
+    installed_configuration_get_spot(config, 0, &first);
+    if (!single_validate(&first)) return false;
+    if (config->version == INSTALLED_CONFIGURATION_VERSION) return config->additional_spot_count == 0;
+    if (!config->additional_spot_count || strcmp(config->board_id, "seeedstudio_reterminal_e1003")) return false;
+    for (size_t i = 0; i < config->additional_spot_count; ++i) {
+        const installed_configuration_single_t *entry = &config->additional_spots[i];
+        if (entry->version != INSTALLED_CONFIGURATION_VERSION || !single_validate(entry) ||
+            strcmp(entry->device_timezone, config->device_timezone) ||
+            !strcmp(entry->spot.id, config->spot.id)) return false;
+        for (size_t j = 0; j < i; ++j)
+            if (!strcmp(entry->spot.id, config->additional_spots[j].spot.id)) return false;
+    }
+    return true;
+}
+
+static uint64_t configuration_digest_unchecked(const installed_configuration_t *config)
+{
+    installed_configuration_single_t first;
+    installed_configuration_get_spot(config, 0, &first);
+    uint64_t hash = single_digest(&first);
+    if (config->version < INSTALLED_CONFIGURATION_MULTI_VERSION) return hash;
+    // Extend the root canonical string with the ordered v5 entry digests.
+    char suffix[32];
+    for (size_t i = 0; i < config->additional_spot_count; ++i) {
+        snprintf(suffix, sizeof(suffix), "|%016" PRIx64, single_digest(&config->additional_spots[i]));
+        for (const unsigned char *p = (const unsigned char *)suffix; *p; ++p) {
+            hash ^= *p;
+            hash *= UINT64_C(0x100000001b3);
+        }
+    }
+    return hash;
 }
 
 uint64_t installed_configuration_digest(const installed_configuration_t *config)
@@ -376,6 +439,23 @@ static bool migrate_v4_record(const configuration_record_v4_t *legacy, configura
     return record_valid(migrated);
 }
 
+static bool migrate_v5_record(const configuration_record_v5_t *legacy, configuration_record_t *migrated)
+{
+    if (legacy->magic != CONFIG_RECORD_MAGIC || legacy->committed != 1 ||
+        legacy->config.version != INSTALLED_CONFIGURATION_VERSION || !single_validate(&legacy->config) ||
+        !credentials_valid(legacy->has_credentials, legacy->ssid, sizeof(legacy->ssid), legacy->password, sizeof(legacy->password)) ||
+        legacy->digest != single_digest(&legacy->config)) return false;
+    memset(migrated, 0, sizeof(*migrated));
+    migrated->magic = legacy->magic;
+    migrated->committed = 1;
+    memcpy(&migrated->config, &legacy->config, sizeof(legacy->config));
+    migrated->digest = legacy->digest;
+    migrated->has_credentials = legacy->has_credentials;
+    memcpy(migrated->ssid, legacy->ssid, sizeof(migrated->ssid));
+    memcpy(migrated->password, legacy->password, sizeof(migrated->password));
+    return record_valid(migrated);
+}
+
 static bool decode_record(const configuration_record_storage_t *stored, size_t stored_size,
                           configuration_record_t *decoded, bool *was_migrated)
 {
@@ -383,6 +463,10 @@ static bool decode_record(const configuration_record_storage_t *stored, size_t s
     if (stored_size == sizeof(stored->current) && record_valid(&stored->current)) {
         *decoded = stored->current;
         if (was_migrated) *was_migrated = false;
+        return true;
+    }
+    if (stored_size == sizeof(stored->v5) && migrate_v5_record(&stored->v5, decoded)) {
+        if (was_migrated) *was_migrated = true;
         return true;
     }
     if (stored_size == sizeof(stored->v4) && migrate_v4_record(&stored->v4, decoded)) {
@@ -406,12 +490,13 @@ static bool decode_record(const configuration_record_storage_t *stored, size_t s
 static esp_err_t read_record(nvs_handle_t handle, const char *key, configuration_record_t *record,
                              bool *was_migrated)
 {
-    configuration_record_storage_t stored;
-    memset(&stored, 0, sizeof(stored));
-    size_t size = sizeof(stored);
-    esp_err_t result = nvs_get_blob(handle, key, &stored, &size);
-    return result == ESP_OK && decode_record(&stored, size, record, was_migrated)
-               ? ESP_OK : ESP_ERR_INVALID_STATE;
+    configuration_record_storage_t *stored = calloc(1, sizeof(*stored));
+    if (!stored) return ESP_ERR_NO_MEM;
+    size_t size = sizeof(*stored);
+    esp_err_t result = nvs_get_blob(handle, key, stored, &size);
+    bool valid = result == ESP_OK && decode_record(stored, size, record, was_migrated);
+    free(stored);
+    return valid ? ESP_OK : ESP_ERR_INVALID_STATE;
 }
 
 esp_err_t installed_configuration_load(installed_configuration_t *out_config)
@@ -509,15 +594,17 @@ esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
 {
     if (!ssid || ssid_size == 0 || !password || password_size == 0) return ESP_ERR_INVALID_ARG;
     nvs_handle_t handle;
-    configuration_record_t record;
+    configuration_record_t *record = calloc(1, sizeof(*record));
+    if (!record) return ESP_ERR_NO_MEM;
     esp_err_t result = nvs_open(CONFIG_NAMESPACE, NVS_READONLY, &handle);
-    if (result != ESP_OK) return result;
-    result = read_record(handle, ACTIVE_KEY, &record, NULL);
+    if (result != ESP_OK) { free(record); return result; }
+    result = read_record(handle, ACTIVE_KEY, record, NULL);
     nvs_close(handle);
-    if (result != ESP_OK || !record.has_credentials || strlen(record.ssid) >= ssid_size ||
-        strlen(record.password) >= password_size) return ESP_ERR_NOT_FOUND;
-    snprintf(ssid, ssid_size, "%s", record.ssid);
-    snprintf(password, password_size, "%s", record.password);
+    if (result != ESP_OK || !record->has_credentials || strlen(record->ssid) >= ssid_size ||
+        strlen(record->password) >= password_size) { free(record); return ESP_ERR_NOT_FOUND; }
+    snprintf(ssid, ssid_size, "%s", record->ssid);
+    snprintf(password, password_size, "%s", record->password);
+    free(record);
     return ESP_OK;
 }
 #else
@@ -606,6 +693,23 @@ esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
     return ESP_OK;
 }
 
+void installed_configuration_seed_v5_host_storage(const installed_configuration_t *config,
+                                                   const char *ssid, const char *password)
+{
+    memset(&s_active, 0, sizeof(s_active));
+    s_active_size = sizeof(s_active.v5);
+    configuration_record_v5_t *record = &s_active.v5;
+    record->magic = CONFIG_RECORD_MAGIC;
+    record->committed = 1;
+    memcpy(&record->config, config, sizeof(record->config));
+    record->digest = single_digest(&record->config);
+    if (ssid) {
+        record->has_credentials = 1;
+        snprintf(record->ssid, sizeof(record->ssid), "%s", ssid);
+        snprintf(record->password, sizeof(record->password), "%s", password ? password : "");
+    }
+}
+
 void installed_configuration_seed_v2_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password)
 {
@@ -681,3 +785,15 @@ void installed_configuration_seed_v3_host_storage(const installed_configuration_
     record->digest = configuration_v3_digest(&record->config);
 }
 #endif
+
+// A factory/default configuration is not a completed installation.
+bool installed_configuration_has_setup(void)
+{
+    char ssid[33] = {0};
+    char password[65] = {0};
+    const bool ready = installed_configuration_load_credentials(
+        ssid, sizeof(ssid), password, sizeof(password)) == ESP_OK;
+    volatile unsigned char *secret = (volatile unsigned char *)password;
+    for (size_t i = 0; i < sizeof(password); ++i) secret[i] = 0;
+    return ready;
+}

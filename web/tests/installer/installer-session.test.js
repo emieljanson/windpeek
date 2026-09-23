@@ -58,6 +58,75 @@ function appProtocol(state = {}) {
 }
 
 describe('installer session', () => {
+  it.each([BOARD_IDS.E1001, BOARD_IDS.E1002, BOARD_IDS.E1003])(
+    'uses the current clock after five hours at Wi-Fi on %s', async (boardId) => {
+    let clock = 1787932800000
+    let wifiReady = false
+    const targetRelease = { ...release, manifest: { ...release.manifest,
+      boardId: boardId === BOARD_IDS.E1003 ? BOARD_IDS.E1003 : BOARD_IDS.E1002 } }
+    const protocol = appProtocol({ wifiHealthy: false, boardId: targetRelease.manifest.boardId,
+      ...(boardId === BOARD_IDS.E1001 ? { hardwareModel: 'e1001' } : {}) })
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') { wifiReady = true; return { status: 'wifi_ready' } }
+      if (command === 'get_state' && wifiReady) {
+        return { configurationDigest: 'wanted', wifi: 'connected', render: 'valid', apply: 'complete' }
+      }
+      return original(command, values, timeout)
+    })
+    const session = createInstallerSession({ configuration: { ...configuration, boardId }, requestPort: async () => ({}),
+      releaseLoader: async () => targetRelease, protocolFactory: () => protocol, now: () => clock })
+    await session.connect()
+    expect(session.getState().phase).toBe('wifi')
+    clock += 5 * 60 * 60 * 1000
+    await session.submitWifi({ ssid: 'Test network', password: 'test-value' })
+    expect(protocol.request).toHaveBeenCalledWith('begin', { unixTime: clock / 1000 })
+    expect(session.getState().phase).toBe('complete')
+  })
+
+  it('redacts the text of every configured spot from diagnostics', () => {
+    const diagnostics = createInstallerDiagnostics()
+    createInstallerSession({
+      configuration: {
+        spot: { id: 'first-spot', name: 'First spot', timezone: 'Europe/Amsterdam' },
+        additionalSpots: [{ spot: { id: 'private-cove', name: 'Private Cove', timezone: 'Pacific/Honolulu' } }],
+      },
+      diagnostics,
+    })
+    diagnostics.record({ message: 'Rendering private-cove Private Cove Pacific/Honolulu' })
+    const snapshot = JSON.stringify(diagnostics.snapshot())
+    for (const value of ['private-cove', 'Private Cove', 'Pacific/Honolulu']) expect(snapshot).not.toContain(value)
+  })
+
+  it('verifies a pending screen before completing an otherwise current installation', async () => {
+    const protocol = appProtocol()
+    const request = protocol.request.getMockImplementation()
+    let checks = 0
+    protocol.request.mockImplementation(async (command, values) => {
+      if (command === 'get_state' && ++checks === 1) {
+        return { configurationDigest: 'wanted', wifi: 'connected', render: 'pending' }
+      }
+      return request(command, values)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol, waitFor: async () => {} })
+    await session.connect()
+    expect(checks).toBe(2)
+    expect(session.getState().phase).toBe('complete')
+    expect(protocol.request.mock.calls.some(([command]) => command === 'stage_configuration')).toBe(false)
+  })
+
+  it('does not claim completion when the current setup has a failed screen', async () => {
+    const protocol = appProtocol()
+    const request = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values) => command === 'get_state'
+      ? { configurationDigest: 'wanted', wifi: 'connected', render: 'invalid', apply: 'render_failed' }
+      : request(command, values))
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol, waitFor: async () => {} })
+    await session.connect()
+    expect(session.getState()).toMatchObject({ phase: 'error', error: { code: INSTALLER_ERROR_CODES.VERIFICATION_FAILED } })
+  })
   it('registers only private spot text for diagnostic redaction', () => {
     const diagnostics = { registerSensitiveValues: vi.fn(), setContext: vi.fn() }
     createInstallerSession({

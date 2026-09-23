@@ -4,7 +4,7 @@ The E1002 USB-C connector exposes its UART bridge. Installer responses are seria
 
 ## Frame
 
-Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endian fields: protocol version (`u16`), message type (`u16`), request ID (`u32`), payload length (`u32`), payload CRC32 (`u32`), then a UTF-8 JSON object. Payloads are limited to 4096 bytes. Unknown versions, types, oversized payloads, timeouts, malformed JSON, or bad checksums return a typed error when a request ID can be trusted and otherwise reset the parser silently.
+Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endian fields: protocol version (`u16`), message type (`u16`), request ID (`u32`), payload length (`u32`), payload CRC32 (`u32`), then a UTF-8 JSON object. Payloads are limited to 16384 bytes. Unknown versions, types, oversized payloads, timeouts, malformed JSON, or bad checksums return a typed error when a request ID can be trusted and otherwise reset the parser silently.
 
 ## Commands
 
@@ -46,3 +46,32 @@ The command and setup guard use these typed errors:
 ## Redaction and compatibility
 
 `password` is write-only. It is forbidden in hello/state/status results, diagnostics, logs, errors, screenshots, and toasts. Implementations must reject unknown fields on credential-bearing requests. Capability negotiation, not firmware-version guessing, decides which optional commands are available. The flash-layout version decides whether an update may preserve partitions or requires a clean reinstall; firmware predating this field is layout 1. Protocol v1 supports configuration schema v4. A configuration requires `deviceTimezone` plus the spot timezone. Universal E1001/E1002 firmware uses release and configuration board ID `seeedstudio_reterminal_e1002`; E1001 remains a hardware-profile identity. E1003 firmware uses `seeedstudio_reterminal_e1003`.
+
+## Installation readiness and diagnostics
+
+An unconfigured device waits for USB setup before starting forecast refreshes.
+USB-powered sessions do not expire while the owner fills in Wi-Fi details. Each
+`begin` supplies the browser's current clock, even when setup has been open for
+hours. Battery-only abandoned sessions still expire after two minutes.
+
+Applying a setup must fetch and validate its forecast before touching the panel.
+An unavailable placeholder is never a successful installation. A failed fetch
+leaves the existing screen and committed configuration in place; another apply
+attempt fetches immediately, independently of the normal refresh schedule.
+
+`get_state` may include a `diagnostics` object with numeric `applyError`,
+`transportError`, `httpStatus`, `parseError`, `responseBytes`, `responseTooLarge`,
+`allocationFailed`, `resetReason`, `deviceTime`, `internalFreeBytes`, and
+`internalLargestBytes`. Forecast fields describe the
+last completed apply attempt; during `idle` or `applying` they are zero and must
+not be interpreted as a successful request. The browser forwards only these
+allowlisted numbers and connection/render flags to installer error reports.
+Credentials, network names, URLs, response bodies and location are excluded.
+
+## Multiple spots (E1003)
+
+Single-spot configurations retain version 5. Version 6 keeps the first spot in the root and adds `additionalSpots`: one to nine complete version-5 configurations in list order. All entries use the same E1003 board ID and device timezone; spot IDs must be unique. Nested lists are rejected. Each entry retains its forecast model and display settings.
+
+The v6 digest uses the existing root canonical fields with version 6, then appends `|` and each additional entry’s 16-character v5 digest in order before FNV-1a hashing. The shared ten-spot fixture is verified by both web and firmware tests. Firmware migrates the old v5 storage record without changing its configuration or Wi-Fi credentials.
+
+The physical left and right buttons select the previous and next spot, wrapping at either end. Selection is persisted against the configuration digest, so a new installation starts at its first spot. Button wake-ups navigate from the persisted selection; the two-button recovery chord is unchanged.

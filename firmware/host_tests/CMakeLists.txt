@@ -390,6 +390,26 @@ target_compile_definitions(
 )
 target_link_libraries(render_wind_fixture m)
 
+add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ${WIND_FONT_SOURCES})
+target_include_directories(render_battery_empty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../main)
+target_link_libraries(render_battery_empty m)
+add_test(NAME BatteryEmptyPreviewExport
+         COMMAND render_battery_empty ${CMAKE_CURRENT_BINARY_DIR}/battery-empty.ppm)
+
+
 add_wind_test(wind_swell_test test_wind_swell.cpp ../main/wind_swell.c ../main/wind_swell_cache.c ../main/open_meteo_marine_provider.c ../main/wind_tide.c)
 target_link_libraries(wind_swell_test cjson)
 target_include_directories(wind_swell_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(e1003_multiple_spots_test test_e1003_multiple_spots.cpp
+  ../main/installed_configuration.c ../main/wind_spots.c
+  ../main/wind_installer_service.c ../main/wind_clock.c)
+target_compile_definitions(e1003_multiple_spots_test PRIVATE
+  CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=1
+  MULTI_SPOT_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/configuration-fixtures/e1003-ten-spots.json")
+target_link_libraries(e1003_multiple_spots_test cjson)
+target_include_directories(e1003_multiple_spots_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(wind_overview_test test_wind_overview.cpp ../main/wind_overview.c)
+
+add_wind_test(e1003_touch_test test_e1003_touch.cpp ../main/wind_overview.c)

@@ -27,6 +27,8 @@ esp_err_t wifi_manager_connect(const char *ssid, const char *password);
 // keeps the more forgiving interactive connection policy above.
 esp_err_t wifi_manager_connect_for_refresh(const char *ssid, const char *password);
 esp_err_t wifi_manager_disconnect(void);
+/* Stop radio and reconnect attempts; a later explicit connect starts it again. */
+esp_err_t wifi_manager_stop(void);
 bool wifi_manager_is_connected(void);
 esp_err_t wifi_manager_get_ip(char *ip_str, size_t len);
 esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password);

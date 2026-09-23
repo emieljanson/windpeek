@@ -45,7 +45,7 @@ async function main() {
     '--no-entry',
     '-sSTANDALONE_WASM=1',
     '-sALLOW_MEMORY_GROWTH=0',
-    '-sINITIAL_MEMORY=8388608',
+    '-sINITIAL_MEMORY=33554432',
     '-sSTACK_SIZE=262144',
     '-Wl,--strip-all',
     '-o', outputInContainer,

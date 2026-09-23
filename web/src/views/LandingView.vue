@@ -33,7 +33,7 @@ const configureHref = configuratorLink()
 
       <section class="landing-section purchase" id="setup">
         <h2>Choose your reTerminal</h2>
-        <p>Windpeek is free software for all three models. Choose the screen size and display type that suits you.</p>
+        <p>Windpeek is free software for all three models. The E1003 stores up to 10 spots. Use its touchscreen to compare three at a time, swipe through the rest and tap a spot for its full forecast.</p>
 
         <ReTerminalComparison />
 

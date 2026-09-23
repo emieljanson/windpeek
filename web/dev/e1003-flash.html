@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windpeek E1003 local flash</title>
+    <style>
+      body { max-width: 38rem; margin: 4rem auto; padding: 0 1.5rem; font: 16px/1.5 system-ui, sans-serif; color: #171717; }
+      button { padding: .7rem 1rem; background: #171717; color: white; border: 0; border-radius: .5rem; font: inherit; cursor: pointer; }
+      button:disabled { opacity: .5; cursor: wait; }
+      progress { display: block; width: 100%; margin: 1.5rem 0 .5rem; }
+      pre { white-space: pre-wrap; font-size: .8rem; }
+    </style>
+  </head>
+  <body>
+    <h1>E1003 local flash</h1>
+    <p>The local build updates the app. Your saved Wi-Fi and spot setup stay on the device.</p>
+    <button id="flash" type="button">Connect and flash E1003</button>
+    <progress id="progress" max="100" value="0"></progress>
+    <p id="status" role="status">Ready.</p>
+    <pre id="log" aria-live="polite"></pre>
+    <script type="module" src="/dev/e1003-flash.js"></script>
+  </body>
+</html>

@@ -37,6 +37,8 @@ describe('Windpeek landing page', () => {
       'Questions before you start',
     ])
     expect(wrapper.get('.purchase').text()).toContain('free software')
+    expect(wrapper.get('.purchase').text()).toContain('E1003 stores up to 10 spots')
+    expect(wrapper.get('.purchase').text()).toContain('compare three at a time')
     expect(wrapper.get('.purchase').text()).toContain('~$74')
     expect(wrapper.get('.personalize').text()).toContain('Months between charges')
     expect(wrapper.findAll('.faq details')).toHaveLength(6)
@@ -44,18 +46,21 @@ describe('Windpeek landing page', () => {
     expect(devices).toHaveLength(3)
     expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1003Our pick', 'E1002', 'E1001'])
     const specs = wrapper.findAll('.hardware-spec')
-    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Spots you can monitor', 'Battery'])
+    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Saved spots', 'Forecast view', 'Hourly detail', 'Touchscreen', 'Battery'])
     wrapper.findAll('.hardware-spec__copy--mobile').forEach(copy => {
       expect(copy.attributes('aria-hidden')).toBeUndefined()
     })
     expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.find('.hardware-spec__copy--desktop').exists() ? line.get('.hardware-spec__copy--desktop').text() : line.text())))).toEqual([
       [['10.3″, 16 greys'], ['7.3″, 6 colours'], ['7.5″, 4 greys']],
       [['High-res screen'], ['Standard screen'], ['Standard screen']],
-      [['Monitor up to 10 spots'], ['Monitor 1 spot'], ['Monitor 1 spot']],
+      [['Up to 10 spots'], ['1 spot'], ['1 spot']],
+      [['3-spot overview'], ['—'], ['—']],
+      [['Hourly detail'], ['—'], ['—']],
+      [['Touchscreen'], ['—'], ['—']],
       [['6 month battery'], ['3 month battery'], ['3 month battery']],
     ])
-    expect(wrapper.findAll('.hardware-spec--spots .hardware-spec__copy--mobile').map(copy => copy.text()))
-      .toEqual(['Up to 10 spots', '1 spot', '1 spot'])
+    expect(wrapper.get('.hardware-spec--spots').text()).toContain('Up to 10 spots')
+    expect(wrapper.get('.hardware-spec--controls').text()).not.toContain('Buttons')
     devices.forEach((device, index) => {
       const model = `E100${3 - index}`
       const image = device.get('img')

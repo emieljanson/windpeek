@@ -57,6 +57,17 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
             return false;
         }
         previous_day = day_number;
+        int64_t previous_hour = 0;
+        for (size_t h = 0; h < WIND_FORECAST_HOURLY_COUNT; ++h) {
+            const wind_forecast_sample_t *sample = &forecast->hourly[d][h];
+            if (!sample->timestamp) continue; /* Older caches lack intermediate hours. */
+            if (sample->local_hour != h + 8 || sample->timestamp <= previous_hour ||
+                sample->wind_knots < 0 || sample->gust_knots < 0 ||
+                sample->destination_degrees >= 360 || sample->weather_available > 1 ||
+                sample->temperature_available > 1 ||
+                (sample->weather_available && (sample->cloud_cover_percent > 100 || sample->is_day > 1))) return false;
+            previous_hour = sample->timestamp;
+        }
         for (size_t s = 0; s < WIND_FORECAST_SAMPLES_PER_DAY; ++s) {
             const wind_forecast_sample_t *sample = &forecast->days[d].samples[s];
             if (sample->local_hour != REQUIRED_HOURS[s] || sample->timestamp <= previous_timestamp ||
@@ -154,10 +165,9 @@ wind_weather_state_t wind_forecast_weather_state(const wind_forecast_sample_t *s
     if (sample->precipitation_hundredths_mm >= 100) return WIND_WEATHER_RAIN;
     if (sample->precipitation_hundredths_mm >= 10) return WIND_WEATHER_LIGHT_RAIN;
     if (sample->cloud_cover_percent <= 20)
-        return sample->is_day ? WIND_WEATHER_CLEAR_DAY : WIND_WEATHER_CLEAR_NIGHT;
+        return WIND_WEATHER_CLEAR_DAY;
     if (sample->cloud_cover_percent <= 60)
-        return sample->is_day ? WIND_WEATHER_PARTLY_CLOUDY_DAY
-                              : WIND_WEATHER_PARTLY_CLOUDY_NIGHT;
+        return WIND_WEATHER_PARTLY_CLOUDY_DAY;
     return WIND_WEATHER_CLOUDY;
 }
 

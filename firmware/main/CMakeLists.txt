@@ -24,6 +24,7 @@ set(LEGACY_SOURCES
     "wifi_provisioning.c"
     "wind_forecast.c"
     "wind_spots.c"
+    "wind_overview.c"
     "installed_configuration.c"
     "wind_usb_protocol.c"
     "wind_installer_service.c"
@@ -57,6 +58,7 @@ set(WINDPEEK_SOURCES
     "wifi_manager.c"
     "wind_forecast.c"
     "wind_spots.c"
+    "wind_overview.c"
     "hardware_profile.c"
     "installed_configuration.c"
     "wind_usb_protocol.c"
@@ -120,6 +122,7 @@ set(WINDPEEK_PRIV_REQUIRES
     epaper_src
     esp_app_format
     esp_driver_gpio
+    esp_driver_ledc
     esp_driver_uart
     esp_event
     esp_http_client

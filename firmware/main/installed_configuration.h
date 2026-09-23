@@ -11,6 +11,8 @@ extern "C" {
 #endif
 
 #define INSTALLED_CONFIGURATION_VERSION 5u
+#define INSTALLED_CONFIGURATION_MULTI_VERSION 6u
+#define INSTALLED_CONFIGURATION_MAX_SPOTS 10u
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
 #define WINDPEEK_BOARD_ID "seeedstudio_reterminal_e1003"
 #else
@@ -49,8 +51,22 @@ typedef struct {
     installed_spot_t spot;
     char forecast_model[32];
     installed_display_configuration_t display;
+} installed_configuration_single_t;
+
+typedef struct {
+    uint32_t version;
+    uint32_t generation;
+    char board_id[40];
+    char device_timezone[64];
+    installed_spot_t spot;
+    char forecast_model[32];
+    installed_display_configuration_t display;
+    uint64_t additional_spot_count;
+    installed_configuration_single_t additional_spots[INSTALLED_CONFIGURATION_MAX_SPOTS - 1];
 } installed_configuration_t;
 
+void installed_configuration_get_spot(const installed_configuration_t *config, size_t index,
+                                      installed_configuration_single_t *out);
 void installed_configuration_default(installed_configuration_t *config);
 bool installed_configuration_validate(const installed_configuration_t *config);
 uint64_t installed_configuration_digest(const installed_configuration_t *config);
@@ -60,10 +76,13 @@ esp_err_t installed_configuration_promote_setup(const installed_configuration_t 
                                                  const char *ssid, const char *password);
 esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
                                                     char *password, size_t password_size);
+bool installed_configuration_has_setup(void);
 
 #ifndef ESP_PLATFORM
 void installed_configuration_reset_host_storage(void);
 void installed_configuration_set_host_failure_boundary(int boundary);
+void installed_configuration_seed_v5_host_storage(const installed_configuration_t *config,
+                                                   const char *ssid, const char *password);
 void installed_configuration_seed_v2_host_storage(const installed_configuration_t *config,
                                                    const char *ssid, const char *password);
 void installed_configuration_seed_v4_host_storage(const installed_configuration_t *config,

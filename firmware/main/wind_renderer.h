@@ -16,9 +16,10 @@ enum {
     WIND_RENDERER_E1003_HEIGHT = 1404,
     WIND_RENDERER_DAY_COUNT = 5,
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
+    WIND_RENDERER_MAX_SAMPLES_PER_DAY = 13,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_E1003_COMPOSITION_BYTES =
-        WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
+        WIND_RENDERER_E1003_WIDTH * WIND_RENDERER_E1003_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
     WIND_RENDERER_E1003_RGBA_BYTES = WIND_RENDERER_E1003_COMPOSITION_BYTES * 4,
     WIND_RENDERER_CONTRACT_VERSION = 10,
@@ -102,7 +103,7 @@ typedef struct {
 typedef struct {
     const char *day;
     const char *date;
-    wind_renderer_sample_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_sample_t samples[WIND_RENDERER_MAX_SAMPLES_PER_DAY];
 } wind_renderer_day_t;
 
 typedef struct {
@@ -123,8 +124,8 @@ typedef struct {
     int module_order[5];
     int swell_hourly[WIND_RENDERER_DAY_COUNT][24];
     int secondary_swell_hourly[WIND_RENDERER_DAY_COUNT][24];
-    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
-    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t secondary_swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_MAX_SAMPLES_PER_DAY];
+    wind_renderer_swell_sample_t swell[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_MAX_SAMPLES_PER_DAY];
     int show_weather;
     int show_temperature;
     int show_tide;
@@ -137,6 +138,9 @@ typedef struct {
     int tide_extremum_count;
     wind_renderer_tide_extremum_t tide_extrema[WIND_RENDERER_MAX_TIDE_EXTREMA];
     wind_renderer_day_t days[WIND_RENDERER_DAY_COUNT];
+    /* Zero retains the five-day, five-sample contract used by other displays. */
+    int visible_day_count;
+    int visible_sample_count;
 } wind_renderer_dashboard_t;
 
 /*
@@ -226,6 +230,11 @@ typedef struct {
  * palette_out. Output bytes use the native Spectra palette indices for black,
  * white, and red.
  */
+/* E1003-only, at most three rows. Missing samples stay visibly unavailable. */
+int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
+    size_t row_count, size_t first_spot, size_t total_spots,
+    uint8_t *gc16_out, size_t output_size, wind_renderer_stats_t *stats);
+
 int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          uint8_t *palette_out, size_t palette_size,
                          wind_renderer_stats_t *stats);
@@ -241,8 +250,8 @@ int wind_renderer_display_dimensions(wind_renderer_display_t display, int *width
                                      int *height);
 
 /*
- * Projects one logical composition row onto its physical panel. E1003 scales
- * the 800 x 600 composition exactly to the native 1872 x 1404 pixels.
+ * Projects one composition row onto its physical panel. E1003 compositions
+ * are already native 1872 x 1404 pixels, so its rows are copied directly.
  */
 int wind_renderer_project_display_row(wind_renderer_display_t display,
                                       const uint8_t *logical, size_t logical_size,
@@ -333,10 +342,16 @@ int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *i
                                                uint8_t *rgba_out, size_t rgba_size,
                                                wind_renderer_stats_t *stats);
 
-/*
- * Expands one renderer palette row to RGB888 for display-manager streaming.
- * Expands native black, white, and red palette values to RGB888.
- */
+/* Standalone 800 x 480 empty-battery UI; does not change battery policy. */
+int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size);
+int wind_renderer_render_setup(wind_renderer_display_t display,
+                               uint8_t *palette_out, size_t palette_size);
+/* E1001/E1002 require WIND_RENDERER_PALETTE_BYTES (800 x 480).
+ * E1003 requires WIND_RENDERER_E1003_COMPOSITION_BYTES (1872 x 1404). */
+int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t display,
+                                                   uint8_t *output, size_t size);
+
+/* Expands native black, white, and red palette values to RGB888. */
 int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
                                      uint8_t *rgb_row, size_t rgb_size);
 

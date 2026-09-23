@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeForecast, normalizeForecastModels } from '../src/forecast/normalizeForecast'
 import { getForecastModel } from '../src/forecast/models'
+import { createRendererInput } from '../src/renderer/rendererInput'
 import { SPOTS } from '../src/spots'
 
 function responseFor({ hours = [8, 11, 14, 17, 20], speedUnit = 'kn', omit = '' } = {}) {
@@ -105,6 +106,32 @@ describe('forecast normalizer', () => {
 
     expect(forecast.days[0].samples[0].weather).toBe(1)
     expect(forecast.days[0].samples[2].weather).toBe(3)
+  })
+
+  it('uses the same clear and partly cloudy icons at night', () => {
+    const response = responseFor()
+    response.hourly.cloud_cover[0] = 20
+    response.hourly.cloud_cover[2] = 21
+    response.hourly.is_day[0] = 0
+    response.hourly.is_day[2] = 0
+    const forecast = normalizeForecast(response, SPOTS[1], {
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+
+    expect(forecast.days[0].samples[0].weather).toBe(1)
+    expect(forecast.days[0].samples[2].weather).toBe(3)
+  })
+
+  it('replaces night icons in an older cached forecast when rendering', () => {
+    const forecast = normalizeForecast(responseFor(), SPOTS[1], {
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+    forecast.days[0].samples[0].weather = 2
+    forecast.days[0].samples[2].weather = 4
+
+    const rendered = createRendererInput(forecast, {})
+    expect(rendered.days[0].samples[0].weather).toBe(1)
+    expect(rendered.days[0].samples[2].weather).toBe(3)
   })
 
   it('normalizes suffixed model arrays into independently selectable forecasts', () => {
