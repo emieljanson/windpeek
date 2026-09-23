@@ -13,6 +13,8 @@
 enum {
     CANVAS_WHITE = 255,
     CANVAS_BLACK = 0,
+    /* 65% black; Gray4 rounds this to its darker gray level. */
+    CANVAS_SECONDARY = 89,
     PALETTE_BLACK = 0,
     PALETTE_WHITE = 1,
     PALETTE_RED = 3,
@@ -78,6 +80,7 @@ typedef struct {
     int height;
     size_t size;
     bool native_e1003;
+    bool muted_status;
     uint8_t *font_mask;
     int clipped;
     bool antialias_text;
@@ -92,6 +95,7 @@ typedef enum {
     OUTPUT_GC16,
     OUTPUT_RGBA,
     OUTPUT_RGBA_GC16,
+    OUTPUT_RGBA_GRAY4,
 } output_format_t;
 
 typedef enum {
@@ -162,6 +166,9 @@ static void uppercase_spot_name(char *output, size_t output_size, const char *in
 
 static int divide_rounded(int value, int divisor);
 static void draw_battery(canvas_t *canvas, int right, int center_y, int percent);
+static uint8_t status_ink(const canvas_t *canvas) {
+    return canvas->muted_status ? CANVAS_SECONDARY : CANVAS_BLACK;
+}
 
 static int canvas_outer_bottom(const canvas_t *canvas) {
     return OUTER_BOTTOM + canvas->height - WIND_RENDERER_HEIGHT;
@@ -594,13 +601,6 @@ static void draw_outlined_text_center(canvas_t *canvas, int center_x, int baseli
         }
     }
     draw_text(canvas, x, baseline, family, size, text);
-}
-
-static void draw_text_right(canvas_t *canvas, int right, int baseline,
-                            wind_font_family_t family, int size, const char *text) {
-    const wind_text_metrics_t metrics =
-        wind_font_measure(family, size, safe_text(text));
-    draw_text(canvas, right - metrics.width + 1, baseline, family, size, text);
 }
 
 static int triangle_edge(int ax, int ay, int bx, int by, int px, int py) {
@@ -1197,17 +1197,17 @@ static void draw_footer(canvas_t *canvas, const wind_renderer_dashboard_t *dashb
                                       WIND_FONT_SIZE_FOOTER, label);
                 const int left = forecast_sample_center_x(canvas, day, sample) - metrics.width / 2;
                 if (left + metrics.width - 1 + FOOTER_STATUS_GAP >= status_left) break;
-                draw_text(canvas,
+                draw_text_color(canvas,
                           left,
                           footer_text_baseline, WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                          WIND_FONT_SIZE_FOOTER, label);
+                          WIND_FONT_SIZE_FOOTER, status_ink(canvas), label);
             }
         }
     }
 
-    draw_text_right(canvas, status_right, footer_text_baseline,
+    draw_text_color(canvas, status_left, footer_text_baseline,
                     WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_FOOTER,
-                    status);
+                    status_ink(canvas), status);
     draw_battery(canvas, CONTENT_RIGHT, footer_battery_center_y,
                  dashboard->battery_percent);
 }
@@ -1217,9 +1217,11 @@ static void draw_header_status(canvas_t *canvas,
     char update[48];
     build_header_update(dashboard, update, sizeof(update));
     draw_battery(canvas, CONTENT_RIGHT, 36, dashboard->battery_percent);
-    draw_text_right(canvas, CONTENT_RIGHT, HEADER_TEXT_BASELINE,
+    const wind_text_metrics_t metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, update);
+    draw_text_color(canvas, CONTENT_RIGHT - metrics.width + 1, HEADER_TEXT_BASELINE,
                     WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS,
-                    update);
+                    status_ink(canvas), update);
 }
 
 /* Compact decimal spacing is local to wave heights; other mono text stays unchanged. */
@@ -1515,14 +1517,18 @@ static void draw_battery(canvas_t *canvas, int right, int center_y, int percent)
     const int body_height = 11;
     const int x = right - body_width - 2;
     const int y = center_y - body_height / 2;
-    outline_rect(canvas, x, y, body_width, body_height);
-    fill_rect(canvas, right - 1, center_y - 2, 2, 5, CANVAS_BLACK);
+    const uint8_t ink = status_ink(canvas);
+    horizontal_line(canvas, x, x + body_width - 1, y, ink);
+    horizontal_line(canvas, x, x + body_width - 1, y + body_height - 1, ink);
+    vertical_line(canvas, x, y, y + body_height - 1, ink);
+    vertical_line(canvas, x + body_width - 1, y, y + body_height - 1, ink);
+    fill_rect(canvas, right - 1, center_y - 2, 2, 5, ink);
     if (percent >= 0) {
         const int interior_width = body_width - 4;
         const int clamped_percent = clamp_int(percent, 0, 100);
         const int fill = clamped_percent >= 99 ? interior_width
                                                : clamped_percent * interior_width / 100;
-        fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, CANVAS_BLACK);
+        fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, ink);
     }
 }
 
@@ -2136,7 +2142,8 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         ? WIND_RENDERER_E1003_COMPOSITION_BYTES
         : (size_t)WIND_RENDERER_WIDTH * canvas_height;
     const size_t required_size =
-        output_format == OUTPUT_RGBA || output_format == OUTPUT_RGBA_GC16
+        output_format == OUTPUT_RGBA || output_format == OUTPUT_RGBA_GC16 ||
+        output_format == OUTPUT_RGBA_GRAY4
             ? canvas_size * 4u
             : canvas_size;
     if (!dashboard || !output_pixels || output_size < required_size) return -1;
@@ -2155,6 +2162,10 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         ? output_pixels : (uint8_t *)malloc(canvas_size);
     if (!canvas.pixels) return -2;
     canvas.native_e1003 = native_e1003;
+    canvas.muted_status = output_format == OUTPUT_GRAY4 ||
+                          output_format == OUTPUT_GC16 ||
+                          output_format == OUTPUT_RGBA_GRAY4 ||
+                          output_format == OUTPUT_RGBA_GC16;
     if (native_e1003) {
         canvas.font_mask = (uint8_t *)malloc(WIND_RENDERER_WIDTH * 80u);
         if (!canvas.font_mask) {
@@ -2168,6 +2179,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     canvas.smooth_curves = dashboard->custom_modules;
     canvas.size = canvas_size;
     canvas.antialias_text = output_format == OUTPUT_RGBA ||
+                            output_format == OUTPUT_RGBA_GRAY4 ||
                             output_format == OUTPUT_RGBA_GC16 ||
                             output_format == OUTPUT_GC16;
     memset(canvas.pixels, CANVAS_WHITE, canvas_size);
@@ -2421,8 +2433,11 @@ int wind_renderer_render_preview_rgba_for_display(
         return render_dashboard(dashboard, rgba_out, rgba_size, OUTPUT_RGBA_GC16,
                                 stats);
     }
-    if (display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ||
-        display == WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
+    if (display == WIND_RENDERER_DISPLAY_E1001_GRAY4) {
+        return render_dashboard(dashboard, rgba_out, rgba_size, OUTPUT_RGBA_GRAY4,
+                                stats);
+    }
+    if (display == WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
         return wind_renderer_render_preview_rgba(dashboard, rgba_out, rgba_size, stats);
     }
     return -1;

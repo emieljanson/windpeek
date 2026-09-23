@@ -244,6 +244,25 @@ TEST(WindRenderer, Gray4UsesFourIntentionalLevelsWithoutDithering) {
     ExpectGray4Golden("threshold-17", frame);
 }
 
+TEST(WindRenderer, MutedFooterStatusIsModelSpecific) {
+    auto dashboard = Dashboard();
+    Frame e1001(WIND_RENDERER_PALETTE_BYTES);
+    Frame e1003(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+                  WIND_RENDERER_DISPLAY_E1001_GRAY4, e1001.data(), e1001.size(),
+                  nullptr), 0);
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+                  WIND_RENDERER_DISPLAY_E1003_GC16, e1003.data(), e1003.size(),
+                  nullptr), 0);
+    const Frame e1002 = Render(dashboard);
+
+    EXPECT_GT(CountColor(e1001, 30, 450, 770, 479, 1), 0);
+    EXPECT_EQ(CountColor(e1001, 30, 450, 770, 479, 0), 0);
+    EXPECT_GT(CountColor(e1002, 30, 450, 770, 479, 0), 0);
+    EXPECT_GT(std::count(e1003.begin() + 1334 * WIND_RENDERER_E1003_WIDTH,
+                         e1003.end(), 5), 0);
+}
+
 TEST(WindRenderer, WarningRemainsDistinctAndRenderSignatureCannotCrossModels) {
     auto dashboard = Dashboard();
     dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
