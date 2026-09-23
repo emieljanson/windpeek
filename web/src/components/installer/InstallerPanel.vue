@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { createInstallerSession } from '../../installer/createInstallerSession'
 import { isInstallerDiagnosticReference } from '../../installer/sentryReporter'
-import { getSerialSupport } from '../../installer/serialPortAdapter'
+import { getSerialSupport, installerTransports } from '../../installer/serialPortAdapter'
 import { BOARD_IDS } from '../../config/configuration'
 import ReTerminalHelpDialog from '../ReTerminalHelpDialog.vue'
 import InstallerComplete from './InstallerComplete.vue'
@@ -27,6 +27,10 @@ const scanBusy = ref(false)
 const reTerminalHelpOpen = ref(false)
 let scanPromise = null
 const support = getSerialSupport()
+const transports = installerTransports(globalThis.navigator, props.configuration.boardId)
+const activeTransport = ref(transports[0])
+const chooserCancelled = ref(false)
+const fallbackTransport = computed(() => transports.find(transport => transport !== activeTransport.value) ?? '')
 const session = props.sessionFactory({
   configuration: props.configuration,
 })
@@ -104,9 +108,13 @@ watch(
   { immediate: true },
 )
 
-async function connect() {
+async function connect(transport = activeTransport.value) {
   if (!support.supported && !isDemo) return
-  await session.connect()
+  activeTransport.value = transport
+  chooserCancelled.value = false
+  const result = await session.connect(transport)
+  chooserCancelled.value = result?.phase === 'ready'
+  if (chooserCancelled.value) await focusStep()
 }
 
 async function scanNetworks() {
@@ -167,6 +175,9 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
             v-if="state.phase === 'ready'"
             :device-label="deviceLabel"
             :unsupported-reason="unsupportedReason"
+            :active-transport="activeTransport"
+            :alternate-transport="fallbackTransport"
+            :chooser-cancelled="chooserCancelled"
             @buy="reTerminalHelpOpen = true"
             @connect="connect"
           />
@@ -218,8 +229,9 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
               <p class="installer-connection-state">{{ state.safeToDisconnect ? 'It is safe to disconnect the USB cable.' : 'Keep the cable connected while the writer stops.' }}</p>
             </div>
             <div v-if="state.safeToDisconnect" class="installer-actions">
-              <button v-if="state.error?.recoverable !== false" data-autofocus class="installer-primary" type="button" @click="connect">Try again</button>
+              <button v-if="state.error?.recoverable !== false" data-autofocus class="installer-primary" type="button" @click="connect(activeTransport)">Try again</button>
               <button :class="state.error?.recoverable === false ? 'installer-primary' : 'installer-secondary'" type="button" @click="close">Close</button>
+              <button v-if="fallbackTransport && state.error?.recoverable !== false" class="installer-secondary" type="button" @click="connect(fallbackTransport)">Try another connection</button>
             </div>
           </div>
 

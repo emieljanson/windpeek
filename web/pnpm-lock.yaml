@@ -18,8 +18,8 @@ importers:
         specifier: 10.72.0
         version: 10.72.0
       esptool-js:
-        specifier: 0.6.1
-        version: 0.6.1
+        specifier: 0.7.0
+        version: 0.7.0
       maplibre-gl:
         specifier: ^5.24.0
         version: 5.24.0
@@ -923,8 +923,8 @@ packages:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
 
-  esptool-js@0.6.1:
-    resolution: {integrity: sha512-WNgQTfaEIgHyEiT56pI5v7Tq6Pzjc2XaibLxAtWY4v3zE2Ofk5ImkJY5foEUr0JrdkfHWf6rNizAewN4/kSpHw==}
+  esptool-js@0.7.0:
+    resolution: {integrity: sha512-9wHuW/s9t4Vs6HKcr3pra3gbRVWwaN0eabMWodWH4KEJHEYZxgmWwZ3s0F4xcWVCZOc/L98bGZ4uWoZvR8KBKA==}
 
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
@@ -2289,11 +2289,10 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  esptool-js@0.6.1:
+  esptool-js@0.7.0:
     dependencies:
       atob-lite: 2.0.0
       pako: 2.2.0
-      tslib: 2.8.1
 
   estree-walker@2.0.2: {}
 

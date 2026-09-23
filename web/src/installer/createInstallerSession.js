@@ -16,7 +16,7 @@ import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './insta
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { browserContext, filterInstallerEvent, installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
-import { createSerialProtocol, findGrantedInstallerPort, requestInstallerPort } from './serialPortAdapter'
+import { createSerialProtocol, findGrantedInstallerPort, installerTransports, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
@@ -52,7 +52,7 @@ export function createInstallerSession({
   reporter = installerSentryReporter,
   protocolFactory = createSerialProtocol,
   esptool = createEsptoolAdapter({ diagnostics }),
-  requestPort = () => requestInstallerPort(navigatorApi),
+  requestPort = (transport) => requestInstallerPort(navigatorApi, { transport }),
   waitFor = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   portDiscoveryTimeoutMs = PORT_DISCOVERY_TIMEOUT_MS,
   now = () => Date.now(),
@@ -76,6 +76,7 @@ export function createInstallerSession({
   const listeners = new Set()
   const probingProtocols = new Set()
   const expectedHardwareModel = configuration?.boardId || BOARD_ID
+  let transport = installerTransports(navigatorApi, expectedHardwareModel)[0]
   const releaseBoardId = installerReleaseBoardId(expectedHardwareModel)
   const installationConfiguration = expectedHardwareModel === BOARD_IDS.E1001 &&
       configuration?.version === CONFIGURATION_VERSION
@@ -247,8 +248,9 @@ export function createInstallerSession({
   }
 
   function rememberVerifiedPort(selectedPort = port) {
-    if (device?.verifiedBoard && selectedPort && navigatorApi?.serial) {
-      rememberedInstallerPorts.set(navigatorApi.serial, selectedPort)
+    const provider = transport === 'webusb' ? navigatorApi?.usb : navigatorApi?.serial
+    if (device?.verifiedBoard && selectedPort && provider) {
+      rememberedInstallerPorts.set(provider, selectedPort)
     }
   }
 
@@ -268,10 +270,11 @@ export function createInstallerSession({
   }
 
   async function findRememberedPort(rememberedPort) {
-    if (!navigatorApi?.serial?.getPorts) return null
+    if (!(transport === 'webusb' ? navigatorApi?.usb?.getDevices : navigatorApi?.serial?.getPorts)) return null
     try {
       return await findGrantedPort({
         navigatorApi,
+        transport,
         signal: operationController?.signal,
         classify: (candidate) => candidate === rememberedPort,
       })
@@ -281,10 +284,10 @@ export function createInstallerSession({
   }
 
   async function retryChooserAfterStaleRememberedPort(expectedAttempt) {
-    rememberedInstallerPorts.delete(navigatorApi.serial)
+    rememberedInstallerPorts.delete(transport === 'webusb' ? navigatorApi.usb : navigatorApi.serial)
     await releaseConnections({ clearDevice: true })
     if (!isCurrent(expectedAttempt)) return state
-    return connect()
+    return connect(transport)
   }
 
   async function inspectApp(candidate) {
@@ -377,14 +380,16 @@ export function createInstallerSession({
     }
   }
 
-  async function connect() {
+  async function connect(selectedTransport = transport) {
+    transport = selectedTransport
     const currentAttempt = ++attempt
     confirmed = false
     awaitingWrittenFirmware = false
     operationController?.abort()
     operationController = new AbortController()
-    const rememberedPort = navigatorApi?.serial
-      ? rememberedInstallerPorts.get(navigatorApi.serial)
+    const provider = transport === 'webusb' ? navigatorApi?.usb : navigatorApi?.serial
+    const rememberedPort = provider
+      ? rememberedInstallerPorts.get(provider)
       : null
     let selectedPort = rememberedPort ? await findRememberedPort(rememberedPort) : null
     const usingRememberedPort = Boolean(rememberedPort && selectedPort === rememberedPort)
@@ -392,7 +397,7 @@ export function createInstallerSession({
     if (!selectedPort) {
       update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
       try {
-        selectedPort = await requestPort()
+        selectedPort = await requestPort(transport)
       } catch (error) {
         if (currentAttempt !== attempt) return state
         const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windpeek could not access the selected USB device.')
@@ -684,7 +689,7 @@ export function createInstallerSession({
   async function reconnectGrantedPort(expectedAttempt = attempt) {
     const previouslySelectedPort = port
     update({ phase: 'reconnecting', progress: 0.78, error: null, safeToDisconnect: true })
-    if (!navigatorApi?.serial?.getPorts) {
+    if (!(transport === 'webusb' ? navigatorApi?.usb?.getDevices : navigatorApi?.serial?.getPorts)) {
       update({ phase: 'reconnect', safeToDisconnect: true })
       return state
     }
@@ -693,6 +698,7 @@ export function createInstallerSession({
       for (let searchAttempt = 0; searchAttempt < POST_FLASH_PORT_DISCOVERY_ATTEMPTS && !grantedPort; searchAttempt += 1) {
         grantedPort = await findGrantedPort({
           navigatorApi,
+          transport,
           signal: operationController?.signal,
           classify: (candidate) => candidate === previouslySelectedPort,
         })
@@ -727,7 +733,7 @@ export function createInstallerSession({
     try { await protocol?.close() } catch {}
     protocol = null
     try {
-      const selectedPort = await requestPort()
+      const selectedPort = await requestPort(transport)
       if (currentAttempt !== attempt) return state
       if (!selectedPort) {
         update({ phase: 'reconnect', safeToDisconnect: true })
