@@ -293,7 +293,7 @@ export function createSentryReporter({
         },
       })
       return sdk
-    })
+    }).catch(error => { sdkPromise = undefined; throw error })
     return sdkPromise
   }
 
@@ -311,7 +311,6 @@ export function createSentryReporter({
         }),
       ])
     } catch {
-      sdkPromise = undefined
       return { status: 'failed' }
     }
     finally { clearTimeout(initializationTimeout) }
@@ -384,7 +383,7 @@ export function createSentryReporter({
 }
 
 export function sanitizeQueuedDiagnostic(input) {
-  if (!input || typeof input.occurrence !== 'string' || input.occurrence.length > 100) return null
+  if (!input || typeof input.occurrence !== 'string' || !input.occurrence.length || input.occurrence.length > 100) return null
   const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': INSTALLER_MARKER },
     contexts: { installer: input.snapshot?.context },
     extra: { timeline: input.snapshot?.entries, firstDeviceFailure: input.snapshot?.firstDeviceFailure,

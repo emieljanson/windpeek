@@ -12,6 +12,34 @@ const sanitize = input => ({ occurrence: input.occurrence, snapshot: { code: inp
 const input = { occurrence: 'attempt:1', snapshot: { code: 'connection-lost', password: 'must-not-store' } }
 
 describe('automatic diagnostic outbox', () => {
+  it('does not restore reports another tab has already delivered', async () => {
+    const store = storage()
+    const first = createDiagnosticOutbox({ storage: () => store, eventTarget: new EventTarget(), sanitize,
+      reporter: { report: async () => ({ status: 'failed' }) } })
+    await first.report(input)
+    const second = createDiagnosticOutbox({ storage: () => store, eventTarget: new EventTarget(), sanitize,
+      reporter: { report: async () => ({ status: 'sent', reference: 'WS-TEST123456' }) } })
+    await vi.waitFor(() => expect(store.length).toBe(0))
+    await first.report({ ...input, occurrence: 'new-report' })
+    expect(store.length).toBe(1)
+    expect(JSON.parse(store.getItem(store.key(0))).key).toBe('new-report')
+    first.dispose(); second.dispose()
+  })
+
+  it('retains in-flight reports when the queue temporarily exceeds its cap', async () => {
+    const store = storage()
+    const finish = []
+    const outbox = createDiagnosticOutbox({ storage: () => store, eventTarget: new EventTarget(), sanitize,
+      reporter: { report: () => new Promise(resolve => finish.push(resolve)) } })
+    const reports = Array.from({ length: 11 }, (_, index) => outbox.report({ ...input, occurrence: `report-${index}` }))
+    await Promise.resolve()
+    expect(store.length).toBe(11)
+    for (const resolve of finish) resolve({ status: 'sent', reference: 'WS-TEST123456' })
+    await Promise.all(reports)
+    expect(store.length).toBe(0)
+    outbox.dispose()
+  })
+
   it('retains only sanitized reports and delivers them after a page reload', async () => {
     const store = storage()
     const first = createDiagnosticOutbox({ storage: () => store, eventTarget: new EventTarget(), sanitize,
@@ -27,9 +55,10 @@ describe('automatic diagnostic outbox', () => {
   })
 
   it('retries automatically on connectivity returning and deduplicates concurrent sends', async () => {
+    const store = storage()
     const target = new EventTarget()
     const reporter = { report: vi.fn().mockResolvedValueOnce({ status: 'failed' }).mockResolvedValue({ status: 'sent', reference: 'WS-TEST123456' }) }
-    const outbox = createDiagnosticOutbox({ storage, eventTarget: target, sanitize, reporter })
+    const outbox = createDiagnosticOutbox({ storage: () => store, eventTarget: target, sanitize, reporter })
     await Promise.all([outbox.report(input), outbox.report(input)])
     expect(reporter.report).toHaveBeenCalledOnce()
     target.dispatchEvent(new Event('online'))
@@ -54,9 +83,10 @@ describe('automatic diagnostic outbox', () => {
   })
 
   it('retries after a delay without requiring a click', async () => {
+    const store = storage()
     vi.useFakeTimers()
     const reporter = { report: vi.fn().mockResolvedValue({ status: 'failed' }) }
-    const outbox = createDiagnosticOutbox({ storage, eventTarget: new EventTarget(), sanitize, reporter })
+    const outbox = createDiagnosticOutbox({ storage: () => store, eventTarget: new EventTarget(), sanitize, reporter })
     try {
       await outbox.report(input)
       await vi.advanceTimersByTimeAsync(30000)

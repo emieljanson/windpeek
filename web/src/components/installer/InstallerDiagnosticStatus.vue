@@ -18,7 +18,8 @@ const emailHref = computed(() => {
   const subject = 'Windpeek installation help'
   const body = confirmedReference.value
     ? `My diagnostic reference is ${confirmedReference.value}. Please help me finish setup.`
-    : 'I downloaded the Windpeek diagnostic report and will attach it to this email.'
+    : props.report ? 'I downloaded the Windpeek diagnostic report and will attach it to this email.'
+      : 'Please help me finish setting up my Windpeek.'
   return `mailto:emiel@emieljanson.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 })
 </script>

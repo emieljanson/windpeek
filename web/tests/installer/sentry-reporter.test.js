@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSentryReporter, createDiagnosticReport, filterInstallerEvent } from '../../src/installer/sentryReporter'
+import { createSentryReporter, createDiagnosticReport, filterInstallerEvent, sanitizeQueuedDiagnostic } from '../../src/installer/sentryReporter'
 
 function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
   let options
@@ -68,6 +68,27 @@ function reportInput(overrides = {}) {
 }
 
 describe('Sentry installer reporter', () => {
+  it('rejects a queued diagnostic without an occurrence', () => {
+    expect(sanitizeQueuedDiagnostic(reportInput({ occurrence: '' }))).toBeNull()
+  })
+
+  it('reuses a slow SDK initialization after the first send times out', async () => {
+    vi.useFakeTimers()
+    try {
+      const sdk = fakeSdk()
+      let resolveSdk
+      const loadSentry = vi.fn(() => new Promise(resolve => { resolveSdk = resolve }))
+      const reporter = createSentryReporter({ enabled: true, dsn: 'https://public@example.test/1', timeoutMs: 100, loadSentry })
+      const first = reporter.report(reportInput())
+      await vi.advanceTimersByTimeAsync(101)
+      expect(await first).toEqual({ status: 'failed' })
+      resolveSdk(sdk)
+      await expect(reporter.report(reportInput())).resolves.toMatchObject({ status: 'sent' })
+      expect(loadSentry).toHaveBeenCalledOnce()
+      expect(sdk.init).toHaveBeenCalledOnce()
+    } finally { vi.useRealTimers() }
+  })
+
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()

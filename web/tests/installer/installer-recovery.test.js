@@ -427,6 +427,26 @@ it('does not send a retry after cancellation during the recovery pause', async (
 
 
 describe('automatic read-only verification recovery', () => {
+  it('surfaces an explicit apply rejection without accepting a previous completed state', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, ...args) => {
+      if (command === 'apply_configuration') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'The device rejected the request.')
+      return original(command, ...args)
+    })
+    const factory = vi.fn(() => protocol)
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release,
+      protocolFactory: factory, waitFor: async () => {} })
+    await session.connect()
+    protocol.request.mockClear()
+    await session.submitWifi({ ssid: 'Example', password: 'test-only' })
+    expect(session.getState().phase).toBe('verification-issue')
+    expect(session.getState().error.cause.message).toBe('The device rejected the request.')
+    expect(session.getState().canRetrySetup).toBe(false)
+    expect(factory).toHaveBeenCalledOnce()
+    expect(protocol.request.mock.calls.map(([command]) => command)).not.toContain('get_state')
+  })
+
   it.each(['get_state', 'apply_configuration'])('recovers a lost %s response without another chooser or apply', async (failedCommand) => {
     let applied = false
     const first = appProtocol({ wifiHealthy: false })

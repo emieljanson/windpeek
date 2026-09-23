@@ -1584,29 +1584,28 @@ describe('installer session', () => {
     expect(incomplete.close).toHaveBeenCalled()
     expect(session.getState().phase).toBe('confirm-device')
   })
-})
 
-
-it('clears a failed scan after a successful rescan without clearing a wifi rejection', async () => {
-  const protocol = appProtocol({ wifiHealthy: false })
-  const original = protocol.request.getMockImplementation()
-  let scans = 0
-  protocol.request.mockImplementation(async (command, ...args) => {
-    if (command === 'scan_networks') {
-      if (++scans === 1) throw new Error('scan failed')
-      return { networks: [{ ssid: 'Example', secured: true }] }
-    }
-    if (command === 'test_wifi') return { status: 'wifi_failed' }
-    return original(command, ...args)
+  it('clears a failed scan after a successful rescan without clearing a wifi rejection', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const original = protocol.request.getMockImplementation()
+    let scans = 0
+    protocol.request.mockImplementation(async (command, ...args) => {
+      if (command === 'scan_networks') {
+        if (++scans === 1) throw new Error('scan failed')
+        return { networks: [{ ssid: 'Example', secured: true }] }
+      }
+      if (command === 'test_wifi') return { status: 'wifi_failed' }
+      return original(command, ...args)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release,
+      protocolFactory: () => protocol, reporter: { report: async () => ({ status: 'failed' }) } })
+    await session.connect()
+    await expect(session.scanNetworks()).rejects.toThrow()
+    expect(await session.scanNetworks()).toHaveLength(1)
+    expect(session.getState().error).toBeNull()
+    await session.submitWifi({ ssid: 'Example', password: 'test-only' })
+    const error = session.getState().error
+    await session.scanNetworks()
+    expect(session.getState().error).toBe(error)
   })
-  const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release,
-    protocolFactory: () => protocol, reporter: { report: async () => ({ status: 'failed' }) } })
-  await session.connect()
-  await expect(session.scanNetworks()).rejects.toThrow()
-  expect(await session.scanNetworks()).toHaveLength(1)
-  expect(session.getState().error).toBeNull()
-  await session.submitWifi({ ssid: 'Example', password: 'test-only' })
-  const error = session.getState().error
-  await session.scanNetworks()
-  expect(session.getState().error).toBe(error)
 })

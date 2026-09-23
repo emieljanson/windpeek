@@ -1,7 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createInstallerSession } from '../../installer/createInstallerSession'
-import { isInstallerDiagnosticReference } from '../../installer/sentryReporter'
 import { getSerialSupport, installerTransports } from '../../installer/serialPortAdapter'
 import { BOARD_IDS } from '../../config/configuration'
 import ReTerminalHelpDialog from '../ReTerminalHelpDialog.vue'
@@ -150,8 +149,6 @@ onBeforeUnmount(() => { unsubscribe(); document.removeEventListener('keydown', h
     class="installer-layer"
     :data-phase="displayPhase"
     :data-has-error="Boolean(state.error)"
-    :data-has-diagnostic-reference="state.diagnosticStatus === 'sent' && isInstallerDiagnosticReference(state.diagnosticReference)"
-    :data-has-diagnostic-download="state.diagnosticStatus === 'failed' && Boolean(state.diagnosticReport)"
     aria-labelledby="installer-title"
   >
     <button class="installer-back" type="button" aria-label="Back to configurator" :disabled="critical" @click="close">

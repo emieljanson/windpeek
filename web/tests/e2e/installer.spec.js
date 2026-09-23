@@ -45,7 +45,7 @@ async function installFailingDevice(page) {
         async connect() {
           update({
             phase: 'error',
-            error: { message: 'Windpeek could not access the selected USB device.' },
+            error: { message: 'The browser could not access this device.' },
             diagnosticStatus: 'sent',
             diagnosticReference: 'WS-TEST123456',
           })

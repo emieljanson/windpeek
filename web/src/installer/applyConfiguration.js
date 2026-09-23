@@ -28,8 +28,9 @@ export async function applyConfiguration({
 }) {
   let recoveredConnection = false
   async function recover(error) {
-    if (recoveredConnection || !recoverConnection || !isCurrent() ||
-        ![INSTALLER_ERROR_CODES.CONNECTION_LOST, INSTALLER_ERROR_CODES.INVALID_RESPONSE].includes(error?.code)) throw error
+    const lostResponse = error?.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ||
+      (error?.code === INSTALLER_ERROR_CODES.INVALID_RESPONSE && error.corruptFrame === true)
+    if (recoveredConnection || !recoverConnection || !isCurrent() || !lostResponse) throw error
     recoveredConnection = true
     protocol = await recoverConnection(error)
     if (!protocol) throw error

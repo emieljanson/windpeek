@@ -394,6 +394,13 @@ describe('installer inspector panel', () => {
     expect(decodeURIComponent(email.attributes('href'))).toContain('attach it to this email')
   })
 
+  it('does not claim a report was downloaded when no report is available', () => {
+    mountPanel(fakeSession({ phase: 'error', safeToDisconnect: true, error: { message: 'Stopped' } }))
+    const email = decodeURIComponent(wrapper.get('a[href^="mailto:"]').attributes('href'))
+    expect(email).toContain('Please help me finish setting up my Windpeek.')
+    expect(email).not.toContain('downloaded')
+  })
+
   it.each(['sending', 'sent', 'failed'])('keeps the report downloadable while delivery is %s', (status) => {
     mountPanel(fakeSession({ phase: 'error', safeToDisconnect: true, error: { message: 'Stopped' },
       diagnosticStatus: status, diagnosticReport: '{"version":1}' }))

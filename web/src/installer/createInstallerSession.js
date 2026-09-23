@@ -497,7 +497,8 @@ export function createInstallerSession({
   }
 
   function canRetryOnConnection(error) {
-    return Boolean(protocol) && ![INSTALLER_ERROR_CODES.CONNECTION_LOST, INSTALLER_ERROR_CODES.INVALID_RESPONSE].includes(error?.code)
+    return Boolean(protocol) && [error, error?.cause].filter(Boolean).every(cause =>
+      Boolean(cause.code) && ![INSTALLER_ERROR_CODES.CONNECTION_LOST, INSTALLER_ERROR_CODES.INVALID_RESPONSE].includes(cause.code))
   }
 
   async function recoverVerificationConnection(error, expectedAttempt) {
@@ -597,7 +598,7 @@ export function createInstallerSession({
       update({
         phase: state.phase === 'verifying' ? 'verification-issue'
           : [INSTALLER_ERROR_CODES.FLASH_FAILED, INSTALLER_ERROR_CODES.CONNECTION_LOST].includes(installerError.code) ? 'reconnect' : 'error',
-        error: installerError, canRetrySetup: canRetryOnConnection(error),
+        error: installerError, canRetrySetup: canRetryOnConnection(installerError),
         safeToDisconnect: installerError.safeToDisconnect,
       })
       reportFailure(installerError, state.phase)
@@ -783,7 +784,7 @@ export function createInstallerSession({
         : asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windpeek did not reconnect yet.')
       const phase = checkingVerification && installerError.code !== INSTALLER_ERROR_CODES.CONNECTION_LOST
         ? 'verification-issue' : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
-      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(error) })
+      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(installerError) })
       reportFailure(installerError, 'reconnect')
       return state
     }
@@ -811,7 +812,7 @@ export function createInstallerSession({
       const phase = checkingVerification ? 'verification-issue'
         : installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED ? 'wifi'
           : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
-      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(error) })
+      update({ phase, error: installerError, safeToDisconnect: true, canRetrySetup: canRetryOnConnection(installerError) })
       reportFailure(installerError, phase)
     } finally {
       credentials.ssid = ''
