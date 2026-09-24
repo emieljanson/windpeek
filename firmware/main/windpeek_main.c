@@ -39,6 +39,7 @@
 #include "board_touch.h"
 #include "freertos/queue.h"
 #include "wind_overview.h"
+#include <stdatomic.h>
 #endif
 
 static const char *TAG = "windpeek";
@@ -56,6 +57,8 @@ typedef struct {
 } input_command_t;
 static QueueHandle_t s_input_commands;
 static atomic_uint s_pending_input_actions;
+static atomic_bool s_interactive_refresh_requested;
+static atomic_int_fast64_t s_last_input_action_us;
 static bool s_input_initial_overview_open;
 static size_t s_input_initial_overview_page;
 #endif
@@ -290,7 +293,6 @@ static void run_touch_action(wind_touch_action_t action, bool click) {
         ? wind_app_spot_requires_network(action.spot_index)
         : wind_app_overview_requires_network(action.kind==WIND_TOUCH_NEXT_PAGE ? 1 :
             action.kind==WIND_TOUCH_PREVIOUS_PAGE ? -1 : 0);
-    if (need_network && !wifi_manager_is_connected()) (void)connect_installed_wifi();
     esp_err_t result=ESP_OK;
     switch (action.kind) {
         case WIND_TOUCH_OPEN: result=wind_app_show_overview(); break;
@@ -301,7 +303,11 @@ static void run_touch_action(wind_touch_action_t action, bool click) {
         default: break;
     }
     if (result!=ESP_OK) ESP_LOGW(TAG,"Touch action failed: %s",esp_err_to_name(result));
-    else if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+    else {
+        if (need_network) atomic_store(&s_interactive_refresh_requested, true);
+        atomic_store(&s_last_input_action_us, esp_timer_get_time());
+        if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+    }
     power_manager_reset_sleep_timer();
     power_manager_work_end();
 }
@@ -310,11 +316,14 @@ static void navigate_spot_button(int direction) {
     if (!battery_allows_work()) return;
     power_manager_work_begin();
     power_manager_reset_sleep_timer();
-    if (wind_app_navigation_requires_network(direction) && !wifi_manager_is_connected())
-        (void)connect_installed_wifi();
+    const bool need_network = wind_app_navigation_requires_network(direction);
     esp_err_t result=direction<0?wind_app_select_previous():wind_app_select_next();
     if (result!=ESP_OK) ESP_LOGW(TAG,"Spot navigation failed: %s",esp_err_to_name(result));
-    else if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+    else {
+        if (need_network) atomic_store(&s_interactive_refresh_requested, true);
+        atomic_store(&s_last_input_action_us, esp_timer_get_time());
+        if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+    }
     power_manager_reset_sleep_timer();
     power_manager_work_end();
 }
@@ -322,7 +331,11 @@ static void navigate_spot_button(int direction) {
 static bool queue_input_command(input_command_t command) {
     if (!s_input_commands) return false;
     atomic_fetch_add(&s_pending_input_actions, 1);
-    if (xQueueSend(s_input_commands, &command, 0) == pdTRUE) return true;
+    if (xQueueSend(s_input_commands, &command, 0) == pdTRUE) {
+        atomic_store(&s_last_input_action_us, esp_timer_get_time());
+        if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+        return true;
+    }
     atomic_fetch_sub(&s_pending_input_actions, 1);
     return false;
 }
@@ -471,14 +484,37 @@ static void dashboard_task(void *argument)
 {
     (void) argument;
     while (true) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        bool requested = atomic_exchange(&s_interactive_refresh_requested, false);
+        if (!requested) {
+            const int seconds = dashboard_seconds_until_wake(NULL);
+            const bool notified = dashboard_wait_notified(NULL, seconds > 0 ? seconds : 1);
+            requested = atomic_exchange(&s_interactive_refresh_requested, false);
+            if (notified && !requested) continue;
+        }
+        // Leave the panel and radio available throughout a short navigation session.
+        while (atomic_load(&s_pending_input_actions) > 0 ||
+               (atomic_load(&s_last_input_action_us) > 0 &&
+                esp_timer_get_time() - atomic_load(&s_last_input_action_us) < INT64_C(30000000))) {
+            (void)dashboard_wait_notified(NULL, 1);
+            requested |= atomic_exchange(&s_interactive_refresh_requested, false);
+        }
+#else
         wind_navigation_wait_for_refresh(NULL, dashboard_seconds_until_wake, dashboard_wait_notified);
+#endif
         if (!power_manager_is_installer_active()) {
             if (!battery_allows_work()) continue;
             power_manager_work_begin();
             if (!wifi_manager_is_connected() && !connect_installed_wifi()) {
                 ESP_LOGW(TAG, "Scheduled refresh is offline");
             }
-            esp_err_t result = wind_app_refresh(false);
+            esp_err_t result = wind_app_refresh(
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+                requested
+#else
+                false
+#endif
+            );
             if (result != ESP_OK) {
                 ESP_LOGW(TAG, "Scheduled forecast refresh failed: %s", esp_err_to_name(result));
             }
@@ -599,7 +635,18 @@ void app_main(void)
         power_manager_work_begin(); // USB may have arrived during boot.
     }
 #endif
-    const bool connected = !touch_wake &&
+    bool cached_start = false;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    cached_start = wake == WAKEUP_SOURCE_NONE && wind_app_has_cached_start();
+#endif
+    bool interactive_wake = touch_wake;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    interactive_wake = interactive_wake ||
+        wake == WAKEUP_SOURCE_BOOT_BUTTON ||
+        wake == WAKEUP_SOURCE_ROTATE_BUTTON ||
+        wake == WAKEUP_SOURCE_CLEAR_BUTTON || cached_start;
+#endif
+    const bool connected = !interactive_wake &&
                            (wifi_manager_is_connected() || connect_installed_wifi());
     if (connected && synchronize_clock() != ESP_OK) {
         ESP_LOGW(TAG, "Clock sync timed out; using the retained RTC clock");
@@ -628,11 +675,27 @@ void app_main(void)
                 s_boot_release_ms,open,page,wind_spots_count());
         run_touch_action(action, true);
         result=ESP_OK;
-    } else result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() : wind_app_start();
+    } else result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() :
+        cached_start ? wind_app_show_cached_start() : wind_app_start();
 #else
     result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() : wind_app_start();
 #endif
     power_manager_reset_sleep_timer();
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (result == ESP_OK && wake == WAKEUP_SOURCE_TIMER)
+        (void)wind_app_prepare_quick_frames();
+    const bool boot_navigation = previous_spot || next_spot ||
+        wake == WAKEUP_SOURCE_BOOT_BUTTON || cached_start;
+    if (result == ESP_OK && boot_navigation) {
+        const bool needs_network = wake == WAKEUP_SOURCE_BOOT_BUTTON
+            ? wind_app_overview_requires_network(0)
+            : wind_app_navigation_requires_network(0);
+        if (needs_network || cached_start) {
+            atomic_store(&s_interactive_refresh_requested, true);
+            atomic_store(&s_last_input_action_us, esp_timer_get_time());
+        }
+    }
+#endif
     power_manager_work_end();
     if (result != ESP_OK) {
         ESP_LOGW(TAG, "Dashboard refresh completed with error: %s", esp_err_to_name(result));

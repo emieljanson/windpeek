@@ -106,10 +106,8 @@ TEST(WindNavigation, DeviceUsesInterruptibleWaitAndNotifiesSuccessfulSelection)
     buffer << input.rdbuf();
     const auto source = buffer.str();
     const auto navigation = source.find("const esp_err_t result = direction < 0");
-    const auto success = source.find("else if (s_dashboard_task)", navigation);
-    const auto notification = source.find("xTaskNotifyGive(s_dashboard_task)", success);
+    const auto notification = source.find("xTaskNotifyGive(s_dashboard_task)", navigation);
     ASSERT_NE(navigation, std::string::npos);
-    ASSERT_NE(success, std::string::npos);
     ASSERT_NE(notification, std::string::npos);
     EXPECT_NE(source.find("ulTaskNotifyTake(pdTRUE"), std::string::npos);
     EXPECT_NE(source.find("wind_navigation_wait_for_refresh(NULL, dashboard_seconds_until_wake, dashboard_wait_notified)"), std::string::npos);

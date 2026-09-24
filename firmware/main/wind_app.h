@@ -73,6 +73,9 @@ esp_err_t wind_app_prefetch(wind_app_t *app, bool force_refresh, int64_t now,
 esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
 esp_err_t wind_app_configure_runtime(void);
 esp_err_t wind_app_start(void);
+bool wind_app_has_cached_start(void);
+esp_err_t wind_app_show_cached_start(void);
+esp_err_t wind_app_prepare_quick_frames(void);
 esp_err_t wind_app_refresh(bool force_refresh);
 esp_err_t wind_app_show_overview(void);
 esp_err_t wind_app_toggle_day(size_t day_index);

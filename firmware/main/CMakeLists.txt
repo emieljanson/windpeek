@@ -49,6 +49,10 @@ set(WINDPEEK_SOURCES
     "wind_analytics.c"
 )
 
+if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003)
+    list(APPEND WINDPEEK_SOURCES "wind_quick_cache.c")
+endif()
+
 set(WINDPEEK_PRIV_REQUIRES
     acetimec
     board_hal
@@ -65,6 +69,7 @@ set(WINDPEEK_PRIV_REQUIRES
     esp_timer
     esp_wifi
     espressif__cjson
+    espressif__zlib
     fatfs
     mbedtls
     memfs
