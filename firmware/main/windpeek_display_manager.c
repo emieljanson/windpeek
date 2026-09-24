@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "GUI_ColorMap.h"
 #include "GUI_Paint.h"
 #include "board_hal.h"
 #include "display_manager.h"
@@ -50,10 +49,6 @@ static UWORD display_white(void) {
     return display_is_grayscale() ? 3 : EPD_7IN3E_WHITE;
 }
 
-void display_manager_initialize_paint(void) {
-    /* Windpeek keeps one byte per logical pixel until the selected backend. */
-}
-
 esp_err_t display_manager_init(void) {
     if (s_display_mutex || s_image_buffer) return ESP_ERR_INVALID_STATE;
     s_display_mutex = xSemaphoreCreateMutex();
@@ -75,7 +70,6 @@ esp_err_t display_manager_init(void) {
         s_display_mutex = NULL;
         return ESP_ERR_NO_MEM;
     }
-    display_manager_initialize_paint();
     ESP_LOGI(TAG, "Wind dashboard display initialized");
     return ESP_OK;
 }
@@ -89,21 +83,6 @@ esp_err_t display_manager_begin_rgb_stream(void) {
     memset(s_image_buffer, display_uses_packed_gc16() ? 0xFF : display_white(),
            s_frame_size);
     s_stream_active = true;
-    return ESP_OK;
-}
-
-esp_err_t display_manager_push_rgb_row(int y, const uint8_t *rgb_row, int width) {
-    if (!rgb_row || y < 0 || width < 0) return ESP_ERR_INVALID_ARG;
-    if (!s_stream_active) return ESP_ERR_INVALID_STATE;
-    if (y >= s_display_height) return ESP_OK;
-    GUI_RGBMapFn map_rgb = display_uses_packed_gc16()
-                               ? GUI_RGBToGray16
-                               : display_is_grayscale() ? GUI_RGBToGray4
-                                                        : GUI_RGBToSpectra6Logical;
-    for (int x = 0; x < width && x < s_display_width; ++x) {
-        const uint8_t *pixel = &rgb_row[x * 3];
-        set_logical_pixel(x, y, map_rgb(pixel[0], pixel[1], pixel[2]));
-    }
     return ESP_OK;
 }
 
@@ -125,8 +104,7 @@ esp_err_t display_manager_push_palette_row(int y, const uint8_t *palette_row,
     return ESP_OK;
 }
 
-esp_err_t display_manager_end_rgb_stream(bool show, const display_publish_t *publish) {
-    (void)publish;
+esp_err_t display_manager_end_rgb_stream(bool show) {
     if (!s_display_mutex || !s_stream_active) return ESP_ERR_INVALID_STATE;
     esp_err_t result = ESP_OK;
     if (show) {

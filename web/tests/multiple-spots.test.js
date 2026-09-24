@@ -5,6 +5,7 @@ import { BOARD_IDS, installedConfigurationFromStore, installedConfigurationDiges
 import fixture from '../../shared/configuration-fixtures/e1003-ten-spots.json'
 import { configurationUrl, applyConfigurationUrl } from '../src/config/configurationUrl'
 import { persistConfigurator } from '../src/config/configuratorPreferences'
+import { createPersonalSpot, readPersonalSpots } from '../src/spots/personalSpots'
 
 describe('E1003 spots', () => {
   beforeEach(() => setActivePinia(createPinia()))
@@ -13,6 +14,60 @@ describe('E1003 spots', () => {
     vi.spyOn(store, 'refreshForecast').mockResolvedValue(true)
     return store
   }
+  it('replaces the previous per-spot settings when opening a different shared setup', async () => {
+    const source = setup()
+    const link = configurationUrl(source, 'http://localhost/?configure')
+    const target = useConfiguratorStore(createPinia())
+    vi.spyOn(target, 'refreshForecast').mockResolvedValue(true)
+    await target.addConfiguredSpot('edam')
+    target.setThreshold(30)
+    await target.addConfiguredSpot('brouwersdam')
+    expect(target.spotSettings.edam.threshold).toBe(30)
+    expect(applyConfigurationUrl(target, link.search)).toBe(true)
+    expect(target.configuredSpotIds).toEqual([])
+    expect(target.spotSettings).toEqual({})
+    await target.addConfiguredSpot('edam')
+    expect(target.threshold).toBe(source.threshold)
+  })
+  it('does not retain settings for a replaced or removed active spot', async () => {
+    const store = setup()
+    await store.addConfiguredSpot('brouwersdam')
+    await store.addConfiguredSpot('edam')
+    await store.replaceConfiguredSpot('castricum-aan-zee')
+    expect(store.spotSettings.edam).toBeUndefined()
+    expect(store.spotSettings['castricum-aan-zee']).toBeUndefined()
+    await store.removeConfiguredSpot('castricum-aan-zee')
+    expect(store.spotSettings['castricum-aan-zee']).toBeUndefined()
+  })
+  it('imports ten personal spots in one storage write without duplicates', () => {
+    const source = setup()
+    source.personalSpots = Array.from({ length: 10 }, (_, index) => createPersonalSpot({
+      name: `Custom beach ${index}`, latitude: 52 + index / 100,
+      longitude: 5, timezone: 'Europe/Amsterdam', countryCode: 'nl',
+    }))
+    source.configuredSpotIds = source.personalSpots.map(spot => spot.id)
+    source.selectedSpotId = source.configuredSpotIds[4]
+    const link = configurationUrl(source, 'http://localhost/?configure')
+    const target = useConfiguratorStore(createPinia())
+    let saved
+    const storage = { getItem: () => saved ?? null, setItem: vi.fn((_, value) => { saved = value }) }
+    expect(applyConfigurationUrl(target, link.search, storage)).toBe(true)
+    expect(storage.setItem).toHaveBeenCalledOnce()
+    expect(readPersonalSpots(storage)).toHaveLength(10)
+    expect(target.personalSpots).toHaveLength(10)
+    expect(target.personalSpots.at(-1).id).toBe(source.selectedSpotId)
+  })
+  it('persists nested spot edits but does not rewrite preferences for forecast activity', () => {
+    const store = setup()
+    const storage = { getItem: () => null, setItem: vi.fn() }
+    persistConfigurator({ store }, storage)
+    store.forecastRevision++
+    store.forecastMessage = 'Forecast refreshed'
+    expect(storage.setItem).not.toHaveBeenCalled()
+    store.spotSettings.edam = { threshold: 20 }
+    store.spotSettings.edam.threshold = 24
+    expect(JSON.parse(storage.setItem.mock.lastCall[1]).spotSettings.edam.threshold).toBe(24)
+  })
   it('matches the ten-spot firmware fixture and detects changed settings', () => {
     expect(validateInstalledConfiguration(fixture)).toBe(true)
     expect(installedConfigurationDigest(fixture)).toBe(fixture.digest)
@@ -88,6 +143,7 @@ describe('E1003 spots', () => {
       store.setThreshold(index + 10)
     }
     const url = configurationUrl(store, 'http://localhost/?configure')
+    expect(url.search.length).toBeLessThan(5000)
     setActivePinia(createPinia())
     const restored = setup()
     expect(applyConfigurationUrl(restored, url.search)).toBe(true)
@@ -106,6 +162,15 @@ describe('E1003 spots', () => {
     expect(applyConfigurationUrl(store, url.search)).toBe(false)
     url.searchParams.set('spots', JSON.stringify([url.search]))
     expect(applyConfigurationUrl(store, url.search)).toBe(false)
+  })
+  it('continues to accept older full-query spot links', async () => {
+    const store = setup()
+    await store.addConfiguredSpot('brouwersdam')
+    const url = configurationUrl(store, 'http://localhost/?configure')
+    const oldEntry = configurationUrl(store, 'http://localhost/?configure', { includeSpots: false }).search
+    url.searchParams.set('spots', JSON.stringify([oldEntry]))
+    expect(applyConfigurationUrl(store, url.search)).toBe(true)
+    expect(store.configuredSpotIds).toEqual(['brouwersdam'])
   })
   it('migrates an existing single spot without replacing its device choice', () => {
     const store = setup()

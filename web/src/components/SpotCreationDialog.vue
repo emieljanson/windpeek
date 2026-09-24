@@ -14,7 +14,6 @@ import {
   reverseGeoapifyLocation,
   searchGeoapifyPlaces,
 } from '../map/geoapify'
-import { createGeoapifyMap } from '../map/geoapifyMap'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -22,7 +21,13 @@ const props = defineProps({
   apiKey: { type: String, default: geoapifyApiKey },
   searchPlaces: { type: Function, default: searchGeoapifyPlaces },
   reverseLocation: { type: Function, default: reverseGeoapifyLocation },
-  createMap: { type: Function, default: createGeoapifyMap },
+  createMap: {
+    type: Function,
+    default: async (...args) => {
+      const { createGeoapifyMap } = await import('../map/geoapifyMap')
+      return createGeoapifyMap(...args)
+    },
+  },
   saveSpot: { type: Function, default: null },
 })
 

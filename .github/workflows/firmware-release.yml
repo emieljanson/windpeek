@@ -229,7 +229,7 @@ jobs:
           command: >-
             ( test "${{ github.event_name }}" = "pull_request" ||
             test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
-            python3 build.py --board seeedstudio_reterminal_e100x --step firmware
+            python3 build.py --board seeedstudio_reterminal_e100x
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}' &&
             python3 scripts/check_installer_stack.py build
 
@@ -264,7 +264,7 @@ jobs:
           command: >-
             ( test "${{ github.event_name }}" = "pull_request" ||
             test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
-            python3 build.py --board seeedstudio_reterminal_e1003 --step firmware --fullclean
+            python3 build.py --board seeedstudio_reterminal_e1003 --fullclean
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}' &&
             python3 scripts/check_installer_stack.py build
 

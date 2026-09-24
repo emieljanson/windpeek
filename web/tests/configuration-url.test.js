@@ -69,7 +69,7 @@ describe('site entry and share URLs', () => {
     })
     const store = storeWith(browserAt('https://swellpeek.com/?configure'), storage)
     expect(store.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
-    expect(store.spotSettings.brouwersdam.moduleOrder.slice(0, 2)).toEqual(['wind', 'swell'])
+    expect(store.spotSettings.brouwersdam).toBeUndefined()
   })
   it('allows either variant on every host and keeps shared settings intact', () => {
     for (const host of ['windpeek.com', 'www.windpeek.com', 'swellpeek.com', 'preview.example.org', 'localhost']) {

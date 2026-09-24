@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate partitions.csv for ESP32 PhotoFrame based on sdkconfig settings.
+Generate Windpeek partitions.csv from sdkconfig settings.
 
 Reads CONFIG_USE_INTERNAL_FLASH_STORAGE and CONFIG_ESPTOOLPY_FLASHSIZE_*
 from one or more config files to determine the appropriate partition layout.
@@ -108,7 +108,7 @@ def generate_csv(use_internal_flash, flash_size_mb, coredump=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate partitions.csv for ESP32 PhotoFrame"
+        description="Generate Windpeek partitions.csv"
     )
     parser.add_argument(
         "--sdkconfig",

@@ -17,33 +17,18 @@ extern "C" {
 #define BOARD_HAL_DISPLAY_HEIGHT epaper_get_height()
 
 typedef enum {
-    BOARD_TYPE_WAVESHARE_PHOTOPAINTER,
-    BOARD_TYPE_SEEEDSTUDIO_XIAO_EE02,
-    BOARD_TYPE_SEEEDSTUDIO_XIAO_EE03,
-    BOARD_TYPE_SEEEDSTUDIO_XIAO_EE04,
     BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002,
     BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E100X,
     BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1003,
-    BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1004,
     BOARD_TYPE_UNKNOWN
 } board_type_t;
 
-#ifdef CONFIG_BOARD_DRIVER_WAVESHARE_PHOTOPAINTER_73
-#include "board_waveshare_photopainter_73.h"
-#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_XIAO_EE02)
-#include "board_seeedstudio_xiao_ee02.h"
-#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_XIAO_EE03)
-#include "board_seeedstudio_xiao_ee03.h"
-#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_XIAO_EE04)
-#include "board_seeedstudio_xiao_ee04.h"
-#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002)
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
 #include "board_seeedstudio_reterminal_e1002.h"
 #elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X)
 #include "board_seeedstudio_reterminal_e100x.h"
 #elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003)
 #include "board_seeedstudio_reterminal_e1003.h"
-#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1004)
-#include "board_seeedstudio_reterminal_e1004.h"
 #else
 // Default definitions if no board selected (fallback)
 #error "No board selected! Please define CONFIG_BOARD_DRIVER_..."

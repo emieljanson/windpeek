@@ -129,8 +129,8 @@ class InstallerManifestTest(unittest.TestCase):
             )
 
         args = json.loads((self.build / "flasher_args.json").read_text())
-        args["flash_files"]["0x20000"] = "photoframe.bin"
-        (self.build / "photoframe.bin").write_bytes(b"legacy")
+        args["flash_files"]["0x20000"] = "old-app.bin"
+        (self.build / "old-app.bin").write_bytes(b"legacy")
         (self.build / "flasher_args.json").write_text(json.dumps(args))
         with self.assertRaises(ManifestError):
             generate_installer_bundle(

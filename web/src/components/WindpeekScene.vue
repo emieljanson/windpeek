@@ -31,15 +31,17 @@ import {
   usbCameraForBoard,
   isWebGLAvailable,
 } from '../configurator/sceneController'
-import { createResourceLifetime } from '../configurator/sceneLifetime'
+import { createResourceLifetime, disposeSceneObject, disposeSceneResources } from '../configurator/sceneLifetime'
 import { loadSceneResources } from '../configurator/sceneResources'
 import { createScreenTexture } from '../configurator/screenTexture'
 import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
+import { createPerspectiveSurface, createPhysicalShadowLayer, createContactOcclusion } from '../configurator/studioSurface'
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { createSceneComposer } from '../configurator/sceneComposer'
 import { createSceneQuality, SCENE_QUALITY, scenePixelRatio } from '../configurator/sceneQuality'
 import { PRODUCT_LIGHTING, DARK_PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
+import SceneDebugLabs from './SceneDebugLabs.vue'
 import { markingGroupForSourceMesh } from '../configurator/markingDebug'
 import {
   cablePoseAt,
@@ -270,14 +272,6 @@ let disposeSurface
 let disposeRearMarkings
 let markingBasePositions = new Map()
 const lifetime = createResourceLifetime()
-
-function disposeObject(object) {
-  object?.traverse((child) => {
-    child.geometry?.dispose?.()
-    const materials = Array.isArray(child.material) ? child.material : [child.material]
-    materials.filter(Boolean).forEach((material) => material.dispose?.())
-  })
-}
 
 function resize() {
   if (!renderer || !camera || !host.value) return
@@ -511,129 +505,6 @@ function handleReducedMotionChange(event) {
   usbCameraAnimation?.finishForReducedMotion()
 }
 
-function createPerspectiveSurface(stage) {
-  const gridMaterial = new THREE.ShaderMaterial({
-    name: 'perspective-line-surface',
-    transparent: true,
-    depthWrite: false,
-    toneMapped: false,
-    extensions: { derivatives: true },
-    uniforms: {
-      horizonFadeEnd: { value: 1.35 },
-      horizonFadeStart: { value: 0.58 },
-      lineColor: { value: new THREE.Color(0x6f7784) },
-      lineOpacity: { value: 0.24 },
-      spacing: { value: 0.032 },
-      stageFadeEnd: { value: 0.82 },
-      stageFadeStart: { value: 0.28 },
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 lineColor;
-      uniform float lineOpacity;
-      uniform float spacing;
-      uniform float horizonFadeStart;
-      uniform float horizonFadeEnd;
-      uniform float stageFadeStart;
-      uniform float stageFadeEnd;
-      varying vec3 vWorldPosition;
-
-      void main() {
-        vec2 coordinate = vWorldPosition.xz / spacing;
-        vec2 footprint = max(fwidth(coordinate), vec2(0.0001));
-        vec2 distanceToLine = abs(fract(coordinate - 0.5) - 0.5) / footprint;
-        float line = 1.0 - min(min(distanceToLine.x, distanceToLine.y), 1.0);
-        float cellSizeInPixels = 1.0 / max(footprint.x, footprint.y);
-        float densityFade = smoothstep(3.5, 9.0, cellSizeInPixels);
-        float cameraDistance = distance(cameraPosition, vWorldPosition);
-        float horizonFade = 1.0 - smoothstep(horizonFadeStart, horizonFadeEnd, cameraDistance);
-        float stageFade = 1.0 - smoothstep(stageFadeStart, stageFadeEnd, length(vWorldPosition.xz));
-
-        float gridAlpha = line * densityFade * horizonFade * stageFade * stageFade * lineOpacity;
-        gl_FragColor = vec4(lineColor, gridAlpha);
-      }
-    `,
-  })
-  const grid = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), gridMaterial)
-  grid.name = 'SURFACE_GRID'
-  grid.rotation.x = -Math.PI / 2
-  grid.position.y = stage.surfaceY
-  grid.renderOrder = -1
-  return grid
-}
-
-function createPhysicalShadowLayer(stage, opacity = 0.28) {
-  const material = new THREE.ShadowMaterial({
-    color: 0x4d524f,
-    opacity,
-    transparent: true,
-    depthWrite: false,
-    toneMapped: false,
-  })
-  const shadowLayer = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), material)
-  shadowLayer.name = 'PHYSICAL_SHADOW_LAYER'
-  shadowLayer.rotation.x = -Math.PI / 2
-  shadowLayer.position.y = stage.shadowY
-  shadowLayer.receiveShadow = true
-  shadowLayer.renderOrder = 0
-  return shadowLayer
-}
-
-function createContactOcclusion(stage, opacityScale = 1) {
-  const material = new THREE.ShaderMaterial({
-    name: 'contact-occlusion',
-    transparent: true,
-    depthWrite: false,
-    toneMapped: false,
-    uniforms: {
-      contactOpacity: { value: stage.contactOpacity * opacityScale },
-      contactPower: { value: stage.contactPower },
-      contactColor: { value: new THREE.Color().setRGB(0.075, 0.082, 0.078) },
-    },
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      varying vec2 vUv;
-      uniform float contactOpacity;
-      uniform float contactPower;
-      uniform vec3 contactColor;
-      void main() {
-        float ends = 1.0 - smoothstep(0.462, 0.5, abs(vUv.x - 0.5));
-        float frontTail = smoothstep(0.0, 0.5, vUv.y);
-        float backTail = 1.0 - smoothstep(0.5, 1.0, vUv.y);
-        float contact = vUv.y < 0.5 ? frontTail : backTail;
-        contact = pow(max(contact, 0.0), contactPower);
-        gl_FragColor = vec4(contactColor, ends * contact * contactOpacity);
-      }
-    `,
-  })
-  const contact = new THREE.Mesh(
-    new THREE.PlaneGeometry(stage.contactWidth, stage.contactDepth),
-    material,
-  )
-  contact.name = 'CONTACT_OCCLUSION'
-  contact.rotation.x = -Math.PI / 2
-  // BODY_03 touches the surface across x ±87.5 mm and z 0…4 mm. Keep the
-  // shader's end fade outside that footprint so the shadow reaches beneath
-  // both rounded corners instead of disappearing just before them.
-  contact.position.set(0, stage.contactY, stage.contactZ)
-  contact.renderOrder = 1
-  return contact
-}
-
 async function initialize() {
   if (!host.value || !isWebGLAvailable()) {
     status.value = 'error'
@@ -673,6 +544,19 @@ async function initialize() {
     composer = createSceneComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
     gtaoPass = configureAmbientOcclusion(new GTAOPass(scene, camera, 1, 1))
+    const renderAmbientOcclusion = gtaoPass.render.bind(gtaoPass)
+    gtaoPass.render = (...args) => {
+      const grid = scene.getObjectByName('SURFACE_GRID')
+      if (!grid?.visible) return renderAmbientOcclusion(...args)
+      // GTAO replaces every mesh material with a solid normal material. Hide
+      // the transparent raster only for its depth pass, then restore it.
+      grid.visible = false
+      try {
+        return renderAmbientOcclusion(...args)
+      } finally {
+        grid.visible = true
+      }
+    }
     gtaoPass.updateGtaoMaterial({ samples: SCENE_QUALITY[qualityLevel.value].aoSamples })
     composer.addPass(gtaoPass)
     smaaPass = new SMAAPass()
@@ -749,7 +633,7 @@ async function initialize() {
     const deviceStage = deviceStageForBoard(props.boardId)
     if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
     if (!props.captureMode) {
-      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x303032, roughness: 0.92, metalness: 0, envMapIntensity: 0.12, transparent: true, depthWrite: false })
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x505052, roughness: 0.92, metalness: 0, envMapIntensity: 0.12, transparent: true, depthWrite: false })
       // Fade the lit floor into the studio background, leaving a soft pool
       // around the product. Local XY is the floor's horizontal plane.
       floorMaterial.onBeforeCompile = (shader) => {
@@ -758,8 +642,8 @@ async function initialize() {
           .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFloorPosition = position.xy;')
         shader.fragmentShader = shader.fragmentShader
           .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
-          .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= 1.0 - smoothstep(0.055, 0.22, length(vFloorPosition));')
-          .replace('#include <opaque_fragment>', 'outgoingLight *= 0.5;\n#include <opaque_fragment>')
+          .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= 1.0 - smoothstep(0.08, 0.38, length(vFloorPosition));')
+          .replace('#include <opaque_fragment>', 'outgoingLight *= 0.8;\n#include <opaque_fragment>')
       }
       const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMaterial)
       floor.name = 'STUDIO_LIT_FLOOR'
@@ -786,7 +670,7 @@ async function initialize() {
     })
     if (!resources) return
     if (!lifetime.active) {
-      disposeObject(resources.model)
+      disposeSceneObject(resources.model)
       resources.screen.dispose()
       return
     }
@@ -937,26 +821,11 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('scroll', scheduleViewportResize)
   reduceMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   document.removeEventListener('visibilitychange', handleSceneVisibility)
-  orbitRendering?.dispose()
-  controls?.dispose()
-  screenSource?.dispose()
-  disposeSurface?.()
-  disposeRearMarkings?.()
-  environmentTarget?.dispose()
-  keyLight?.shadow.dispose()
-  gtaoPass?.dispose()
-  smaaPass?.dispose()
-  outputPass?.dispose()
-  composer?.dispose()
-  disposeObject(model)
-  disposeObject(scene?.getObjectByName('SURFACE_GRID'))
-  disposeObject(scene?.getObjectByName('STUDIO_LIT_FLOOR'))
-  disposeObject(scene?.getObjectByName('PHYSICAL_SHADOW_LAYER'))
-  disposeObject(scene?.getObjectByName('CONTACT_OCCLUSION'))
-  usbCable?.dispose()
-  renderer?.dispose()
-  renderer?.forceContextLoss()
-  renderer?.domElement.remove()
+  disposeSceneResources({
+    orbitRendering, controls, screenSource, disposeSurface, disposeRearMarkings,
+    environmentTarget, keyLight, gtaoPass, smaaPass, outputPass, composer,
+    model, scene, usbCable, renderer,
+  })
 })
 
 </script>
@@ -972,96 +841,25 @@ onBeforeUnmount(() => {
     :data-forecast-revision="forecastRevision"
   >
     <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windpeek…</span>
-    <aside v-if="cableLabEnabled" class="cable-lab" aria-label="Cable motion lab">
-      <header>
-        <strong>Cable motion lab</strong>
-        <span>Temporary prototype</span>
-      </header>
-
-      <label>
-        <span>Route distance <output>{{ cableLab.distance.toFixed(2) }}</output></span>
-        <input v-model.number="cableLab.distance" type="range" min="0.35" max="1.8" step="0.05">
-      </label>
-      <label>
-        <span>3D speed <output>{{ cableLab.speed.toFixed(2) }}/s</output></span>
-        <input v-model.number="cableLab.speed" type="range" min="0.15" max="0.9" step="0.05">
-      </label>
-      <p class="cable-lab__duration">Duration <strong>{{ cableLabDuration.toFixed(2) }}s</strong></p>
-
-      <label>
-        <span>Shared haze start <output>{{ cableLab.hazeStart.toFixed(2) }}</output></span>
-        <input v-model.number="cableLab.hazeStart" type="range" min="0.15" max="1.4" step="0.05">
-      </label>
-      <label>
-        <span>Shared haze end <output>{{ cableLab.hazeEnd.toFixed(2) }}</output></span>
-        <input v-model.number="cableLab.hazeEnd" type="range" min="0.25" max="2.5" step="0.05">
-      </label>
-      <label>
-        <span>Grid horizon start <output>{{ cableLab.gridHorizonStart.toFixed(2) }}</output></span>
-        <input v-model.number="cableLab.gridHorizonStart" type="range" min="0.4" max="2.5" step="0.1">
-      </label>
-      <label>
-        <span>Grid horizon end <output>{{ cableLab.gridHorizonEnd.toFixed(2) }}</output></span>
-        <input v-model.number="cableLab.gridHorizonEnd" type="range" min="0.8" max="5" step="0.1">
-      </label>
-
-      <div class="cable-lab__actions">
-        <button type="button" @click="runCableLab(true)">Insert</button>
-        <button type="button" @click="runCableLab(false)">Retract</button>
-        <button type="button" @click="setCableLabCamera('usb')">USB view</button>
-        <button type="button" @click="setCableLabCamera('cable')">Cable detail</button>
-        <button type="button" @click="setCableLabCamera('hero')">Hero view</button>
-      </div>
-    </aside>
-    <button
-      v-if="markingsLabEnabled && boardId === BOARD_IDS.E1002 && !markingsLabOpen"
-      type="button"
-      class="markings-lab-launch"
-      @pointerdown.stop
-      @click="markingsLabOpen = true"
-    >
-      Markings
-    </button>
-    <aside
-      v-if="markingsLabEnabled && boardId === BOARD_IDS.E1002 && markingsLabOpen"
-      class="markings-lab"
-      aria-label="E1002 marking position controls"
-      @pointerdown.stop
-    >
-      <header>
-        <strong>E1002 markings</strong>
-        <button type="button" @click="markingsLabOpen = false">Hide</button>
-      </header>
-
-      <section v-for="(label, group) in markingGroupLabels" :key="group">
-        <strong>{{ label }}</strong>
-        <label>
-          <span>X</span>
-          <input v-model.number="markingOffsets[group].x" type="range" min="-60" max="60" step="0.1">
-          <input v-model.number="markingOffsets[group].x" type="number" min="-60" max="60" step="0.1">
-        </label>
-        <label>
-          <span>Y</span>
-          <input v-model.number="markingOffsets[group].y" type="range" min="-60" max="60" step="0.1">
-          <input v-model.number="markingOffsets[group].y" type="number" min="-60" max="60" step="0.1">
-        </label>
-      </section>
-
-      <div class="markings-lab__actions">
-        <button type="button" @click="showMarkingsRearView">Rear view</button>
-        <button type="button" @click="resetMarkingOffsets">Reset</button>
-        <button type="button" class="markings-lab__copy" @click="copyMarkingOffsets">
-          {{ markingCopyStatus || 'Copy values' }}
-        </button>
-      </div>
-      <textarea
-        class="markings-lab__values"
-        :value="markingValuesJson"
-        readonly
-        aria-label="Marking offsets as JSON"
-        @focus="$event.target.select()"
-      />
-    </aside>
+    <SceneDebugLabs
+      v-if="cableLabEnabled || markingsLabEnabled"
+      :board-id="boardId"
+      :cable-lab-enabled="cableLabEnabled"
+      :markings-lab-enabled="markingsLabEnabled"
+      :markings-lab-open="markingsLabOpen"
+      :cable-lab="cableLab"
+      :cable-lab-duration="cableLabDuration"
+      :marking-group-labels="markingGroupLabels"
+      :marking-offsets="markingOffsets"
+      :marking-copy-status="markingCopyStatus"
+      :marking-values-json="markingValuesJson"
+      @run-cable="runCableLab"
+      @camera="setCableLabCamera"
+      @set-markings-open="markingsLabOpen = $event"
+      @rear-view="showMarkingsRearView"
+      @reset-markings="resetMarkingOffsets"
+      @copy-markings="copyMarkingOffsets"
+    />
   </div>
 </template>
 
@@ -1085,149 +883,5 @@ onBeforeUnmount(() => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transform: translate(-50%, -50%);
-}
-.cable-lab {
-  position: absolute;
-  z-index: 10;
-  inset: auto auto 1rem 1rem;
-  width: min(18rem, calc(100% - 2rem));
-  padding: 0.9rem;
-  border: 1px solid rgb(255 255 255 / 72%);
-  border-radius: 0.9rem;
-  background: rgb(245 247 249 / 88%);
-  box-shadow: 0 1rem 3rem rgb(31 38 43 / 14%);
-  color: #20262b;
-  cursor: default;
-  backdrop-filter: blur(20px);
-  max-height: calc(100% - 2rem);
-  overflow: auto;
-  scrollbar-width: thin;
-}
-.cable-lab header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: baseline;
-  margin-block-end: 0.75rem;
-}
-.cable-lab header strong { font-size: 0.8rem; }
-.cable-lab header span,
-.cable-lab__duration { color: #687078; font-size: 0.65rem; }
-.cable-lab label { display: grid; gap: 0.2rem; margin-block: 0.55rem; }
-.cable-lab label > span {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.68rem;
-}
-.cable-lab output { font-family: 'JetBrains Mono Variable', monospace; }
-.cable-lab input { width: 100%; accent-color: #70ad32; }
-.cable-lab__duration { margin: -0.15rem 0 0.75rem; }
-.cable-lab__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-.cable-lab button {
-  min-height: 2rem;
-  border: 1px solid rgb(32 38 43 / 12%);
-  border-radius: 0.55rem;
-  background: #fff;
-  color: inherit;
-  font: 600 0.68rem/1 Inter, sans-serif;
-  cursor: pointer;
-}
-.cable-lab button:active { transform: translateY(1px); }
-.markings-lab {
-  position: absolute;
-  z-index: 12;
-  inset: 0.75rem auto auto 0.75rem;
-  width: min(18rem, calc(100% - 1.5rem));
-  max-height: calc(100% - 1.5rem);
-  overflow: auto;
-  padding: 0.8rem;
-  border-radius: 0.9rem;
-  background: rgb(247 248 247 / 92%);
-  box-shadow: 0 1rem 3rem rgb(20 24 22 / 18%), inset 0 0 0 1px rgb(0 0 0 / 8%);
-  color: #202420;
-  cursor: default;
-  backdrop-filter: blur(18px);
-}
-.markings-lab header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-block-end: 0.55rem;
-}
-.markings-lab header strong { font-size: 0.78rem; }
-.markings-lab header button {
-  min-height: 1.65rem;
-  padding-inline: 0.65rem;
-  color: #5d635d;
-}
-.markings-lab section {
-  padding-block: 0.5rem;
-  border-block-start: 1px solid rgb(0 0 0 / 8%);
-}
-.markings-lab section > strong { display: block; margin-block-end: 0.35rem; font-size: 0.68rem; }
-.markings-lab label {
-  display: grid;
-  grid-template-columns: 0.8rem 1fr 3.6rem;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 1.8rem;
-  font: 600 0.64rem/1 'JetBrains Mono Variable', monospace;
-}
-.markings-lab input[type='range'] { width: 100%; accent-color: #70ad32; }
-.markings-lab input[type='number'] {
-  width: 100%;
-  min-height: 1.65rem;
-  padding-inline: 0.35rem;
-  border: 1px solid rgb(0 0 0 / 12%);
-  border-radius: 0.4rem;
-  background: #fff;
-  color: inherit;
-  font: inherit;
-  text-align: right;
-}
-.markings-lab__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-block-start: 0.45rem; }
-.markings-lab button {
-  min-height: 2rem;
-  border: 0;
-  border-radius: 0.55rem;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
-  color: inherit;
-  font: 600 0.68rem/1 Inter, sans-serif;
-  cursor: pointer;
-}
-.markings-lab button:active { scale: 0.96; }
-.markings-lab__copy { grid-column: 1 / -1; background: #171a17 !important; color: #fff !important; }
-.markings-lab__values {
-  width: 100%;
-  height: 3.25rem;
-  margin-block-start: 0.45rem;
-  padding: 0.45rem;
-  resize: vertical;
-  border: 1px solid rgb(0 0 0 / 10%);
-  border-radius: 0.5rem;
-  background: rgb(255 255 255 / 75%);
-  color: #505650;
-  font: 500 0.58rem/1.35 'JetBrains Mono Variable', monospace;
-}
-.markings-lab-launch {
-  position: absolute;
-  z-index: 12;
-  inset: 0.75rem auto auto 0.75rem;
-  min-height: 2.25rem;
-  padding-inline: 0.85rem;
-  border: 0;
-  border-radius: 0.65rem;
-  background: #171a17;
-  box-shadow: 0 0.75rem 2rem rgb(20 24 22 / 20%);
-  color: #fff;
-  font: 650 0.72rem/1 Inter, sans-serif;
-  cursor: pointer;
-}
-.markings-lab-launch:active { scale: 0.96; }
-@media (max-width: 40rem) {
-  .markings-lab { max-height: 48%; }
 }
 </style>

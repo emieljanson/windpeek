@@ -196,10 +196,10 @@ describe('Windpeek settings panel', () => {
       'Wave model',
       'Wind threshold',
       'Temperature',
+      'Time format',
       'Hours',
     ])
     expect(wrapper.text()).not.toContain('Treatment')
-    expect(wrapper.text()).not.toContain('Time format')
     const spotSearch = wrapper.get('.inspector-search input[role="combobox"]')
     expect(spotSearch.element.value).toBe('')
     expect(spotSearch.attributes('placeholder')).toBe('Search spot…')
@@ -430,6 +430,22 @@ describe('Windpeek settings panel', () => {
     await rowControl('Temperature').get('[role="switch"]').trigger('click')
     expect([store.showWeather, store.showTemperature]).toEqual([false, false])
     expect(store.temperatureUnit).toBe('fahrenheit')
+  })
+
+  it('changes the time format from Advanced', async () => {
+    const store = useConfiguratorStore()
+    mountSettings()
+    const timeFormat = rowControl('Time format').findComponent(SettingSegments)
+
+    expect(timeFormat.props('modelValue')).toBe(store.timeFormat)
+    expect(timeFormat.props('options')).toEqual([
+      { value: '12-hour', label: '12h' },
+      { value: '24-hour', label: '24h' },
+    ])
+    timeFormat.vm.$emit('update:modelValue', '12-hour')
+    await nextTick()
+    expect(store.timeFormat).toBe('12-hour')
+    expect(timeFormat.props('modelValue')).toBe('12-hour')
   })
 
   it('shows Tide effectively off while unavailable without losing its preference', async () => {

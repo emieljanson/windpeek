@@ -590,7 +590,7 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
         }
         result = display_manager_push_palette_row(y, row, width);
     }
-    esp_err_t end_result = display_manager_end_rgb_stream(result == ESP_OK, NULL);
+    esp_err_t end_result = display_manager_end_rgb_stream(result == ESP_OK);
     free(row);
     return result != ESP_OK ? result : end_result;
 }
@@ -960,6 +960,14 @@ void wind_app_overview_state(bool *open,size_t *page) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return;
     if (ensure_ready()==ESP_OK) { *open=s_overview_open; *page=s_overview_page; }
     xSemaphoreGive(s_runtime_lock);
+}
+
+bool wind_app_overview_state_if_ready(bool *open,size_t *page) {
+    if (!open || !page || !s_runtime_lock ||
+        xSemaphoreTake(s_runtime_lock, 0) != pdTRUE) return false;
+    if (s_ready) { *open=s_overview_open; *page=s_overview_page; }
+    xSemaphoreGive(s_runtime_lock);
+    return s_ready;
 }
 
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
@@ -1363,6 +1371,11 @@ esp_err_t wind_app_show_overview(void) { return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_overview_page(int direction) { (void)direction; return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_select_spot(size_t index) { (void)index; return ESP_ERR_NOT_SUPPORTED; }
 void wind_app_overview_state(bool *open,size_t *page) { if (open) *open=false; if (page) *page=0; }
+bool wind_app_overview_state_if_ready(bool *open,size_t *page) {
+    if (open) *open=false;
+    if (page) *page=0;
+    return false;
+}
 esp_err_t wind_app_configure_runtime(void) {
     return ESP_ERR_NOT_SUPPORTED;
 }

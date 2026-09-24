@@ -5,6 +5,7 @@ import { buildNearbyIndex } from '../scripts/spots/lib/nearby-index.mjs'
 import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
 import { stableSpotId } from '../src/spots/spotIdentity'
+import { SPOTS } from '../src/spots'
 import worldwideCatalog from '../src/spots/catalog.generated.json'
 
 const existing = [
@@ -22,6 +23,9 @@ const accepted = {
 }
 
 describe('runtime spot catalog', () => {
+  it('decodes every compact runtime entry without changing spot data', () => {
+    expect(SPOTS).toEqual(worldwideCatalog)
+  })
   it('rejects the same curated location listed under both a current and former ID', () => {
     expect(() => buildNearbyIndex({
       catalog: [{ ...existing[0], aliasIds: ['old-edam'] }],

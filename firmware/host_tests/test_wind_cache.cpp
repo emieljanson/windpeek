@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <cstring>
+#include <string>
 
 extern "C" {
 #include "wind_cache.h"
@@ -37,7 +38,9 @@ class WindCacheTest : public testing::Test {
   protected:
     void SetUp() override
     {
-        root = std::filesystem::temp_directory_path() / "einkwind-cache-test";
+        root = std::filesystem::temp_directory_path() /
+            (std::string("einkwind-cache-test-") +
+             testing::UnitTest::GetInstance()->current_test_info()->name());
         std::filesystem::remove_all(root);
         std::filesystem::create_directories(root);
     }

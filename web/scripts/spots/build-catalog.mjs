@@ -10,6 +10,7 @@ import { consolidateLocations } from './lib/consolidate-locations.mjs'
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const dataRoot = path.join(webRoot, 'data/spots')
 const outputPath = path.join(webRoot, 'src/spots/catalog.generated.json')
+const runtimePath = path.join(webRoot, 'src/spots/catalog.runtime.generated.json')
 const checkOnly = process.argv.includes('--check')
 const existing = [
   { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
@@ -41,9 +42,15 @@ const catalog = consolidateLocations(buildRuntimeCatalog({
   decisions: decisionData.decisions ?? [],
 }), { preferred: popularData.spots, protectedIds: existing.map((spot) => spot.id), reviewedMerges: mergeData.merges, coordinateCorrections: mergeData.coordinateCorrections })
 const output = `${JSON.stringify(catalog, null, 2)}\n`
+const runtime = `${JSON.stringify(catalog.map((spot) => [
+  spot.id, spot.name, spot.latitude, spot.longitude,
+  spot.timezone, spot.countryCode, ...(spot.aliases ? [spot.aliases, spot.aliasIds] : []),
+]))}\n`
 if (checkOnly) {
   if (await readFile(outputPath, 'utf8') !== output) throw new Error('src/spots/catalog.generated.json is stale.')
+  if (await readFile(runtimePath, 'utf8') !== runtime) throw new Error('src/spots/catalog.runtime.generated.json is stale.')
 } else {
   await writeFile(outputPath, output)
+  await writeFile(runtimePath, runtime)
 }
 console.log(`Catalog contains ${catalog.length} spots.`)

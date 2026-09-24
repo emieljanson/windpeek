@@ -18,9 +18,6 @@
 #include "nvs_flash.h"
 #include "installed_configuration.h"
 #include "storage.h"
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-#include "utils.h"
-#endif
 
 static const char *TAG = "wifi_manager";
 
@@ -116,11 +113,7 @@ esp_err_t wifi_manager_update_hostname(void)
     // DHCP hostname from the device name (CamelCase, shown in router device
     // lists). The router picks it up at the next DHCP negotiation (reconnect).
     char hostname[64];
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     strncpy(hostname, "windpeek", sizeof(hostname));
-#else
-    sanitize_dhcp_hostname(config_manager_get_device_name(), hostname, sizeof(hostname));
-#endif
     esp_err_t err = esp_netif_set_hostname(s_sta_netif, hostname);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set DHCP hostname: %s", esp_err_to_name(err));
@@ -139,9 +132,6 @@ esp_err_t wifi_manager_init(void)
 
     // Windpeek is configured over USB and only needs a station interface.
     s_sta_netif = esp_netif_create_default_wifi_sta();
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-    esp_netif_create_default_wifi_ap();
-#endif
 
     wifi_manager_update_hostname();
 
@@ -177,33 +167,8 @@ esp_err_t wifi_manager_apply_ip_config(void)
         return ESP_ERR_INVALID_STATE;
     }
 
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     esp_netif_dhcpc_start(s_sta_netif);
     return ESP_OK;
-#else
-    if (config_manager_get_ip_mode() == IP_MODE_STATIC) {
-        esp_netif_ip_info_t ip_info = {0};
-        if (esp_netif_str_to_ip4(config_manager_get_static_ip(), &ip_info.ip) != ESP_OK ||
-            esp_netif_str_to_ip4(config_manager_get_static_netmask(), &ip_info.netmask) != ESP_OK ||
-            esp_netif_str_to_ip4(config_manager_get_static_gateway(), &ip_info.gw) != ESP_OK) {
-            // Never brick the connection on a malformed config — fall back to
-            // DHCP so the frame stays reachable and the user can fix it.
-            ESP_LOGE(TAG, "Invalid static IP config, falling back to DHCP");
-            esp_netif_dhcpc_start(s_sta_netif);
-            return ESP_ERR_INVALID_ARG;
-        }
-
-        esp_netif_dhcpc_stop(s_sta_netif);
-        esp_netif_set_ip_info(s_sta_netif, &ip_info);
-        ESP_LOGI(TAG, "Static IP applied: %s/%s gw %s", config_manager_get_static_ip(),
-                 config_manager_get_static_netmask(), config_manager_get_static_gateway());
-    } else {
-        // Make sure DHCP runs when switching back from a static config.
-        // Returns ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED in the normal case.
-        esp_netif_dhcpc_start(s_sta_netif);
-    }
-    return ESP_OK;
-#endif
 }
 
 // Apply the DNS override (if configured). Called after GOT_IP so it takes
@@ -211,26 +176,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
 // only DNS source (defaults to the gateway when unset).
 static void apply_dns_override(void)
 {
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     return;
-#else
-    const char *dns = config_manager_get_dns_server();
-    if ((dns == NULL || dns[0] == '\0') && config_manager_get_ip_mode() == IP_MODE_STATIC) {
-        dns = config_manager_get_static_gateway();
-    }
-    if (dns == NULL || dns[0] == '\0') {
-        return;
-    }
-
-    esp_netif_dns_info_t dns_info = {0};
-    if (esp_netif_str_to_ip4(dns, &dns_info.ip.u_addr.ip4) != ESP_OK) {
-        ESP_LOGE(TAG, "Invalid DNS server: %s", dns);
-        return;
-    }
-    dns_info.ip.type = ESP_IPADDR_TYPE_V4;
-    esp_netif_set_dns_info(s_sta_netif, ESP_NETIF_DNS_MAIN, &dns_info);
-    ESP_LOGI(TAG, "DNS server set to: %s", dns);
-#endif
 }
 
 static esp_err_t connect_with_policy(const char *ssid, const char *password,
@@ -367,39 +313,12 @@ esp_err_t wifi_manager_get_ip(char *ip_str, size_t len)
 
 esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
 {
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     installed_configuration_t active;
     esp_err_t installed_result = installed_configuration_load(&active);
     if (installed_result != ESP_OK) return installed_result;
     installed_result = installed_configuration_promote_setup(&active, ssid, password);
     if (installed_result != ESP_OK) return installed_result;
     return ESP_OK;
-#else
-    nvs_handle_t nvs_handle;
-    esp_err_t err;
-
-    err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    err = nvs_set_str(nvs_handle, NVS_WIFI_SSID_KEY, ssid);
-    if (err != ESP_OK) {
-        nvs_close(nvs_handle);
-        return err;
-    }
-
-    err = nvs_set_str(nvs_handle, NVS_WIFI_PASS_KEY, password);
-    if (err != ESP_OK) {
-        nvs_close(nvs_handle);
-        return err;
-    }
-
-    err = nvs_commit(nvs_handle);
-    nvs_close(nvs_handle);
-
-    return err;
-#endif
 }
 
 esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
@@ -408,30 +327,7 @@ esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
                                                  password, WIFI_PASS_MAX_LEN) == ESP_OK) {
         return ESP_OK;
     }
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     return ESP_ERR_NOT_FOUND;
-#else
-    nvs_handle_t nvs_handle;
-    esp_err_t err;
-
-    err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_handle);
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    size_t ssid_len = WIFI_SSID_MAX_LEN;
-    err = nvs_get_str(nvs_handle, NVS_WIFI_SSID_KEY, ssid, &ssid_len);
-    if (err != ESP_OK) {
-        nvs_close(nvs_handle);
-        return err;
-    }
-
-    size_t pass_len = WIFI_PASS_MAX_LEN;
-    err = nvs_get_str(nvs_handle, NVS_WIFI_PASS_KEY, password, &pass_len);
-    nvs_close(nvs_handle);
-
-    return err;
-#endif
 }
 
 EventGroupHandle_t wifi_manager_get_event_group(void)
