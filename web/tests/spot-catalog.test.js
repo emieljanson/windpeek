@@ -112,6 +112,36 @@ describe('catalog search', () => {
       .toEqual(['town-lake', 'personal-cape'])
   })
 
+  it('puts visible name matches ahead of alias-only results', () => {
+    const matches = [
+      { id: 'alias', name: 'El Balneario', aliases: ['Tarifa'] },
+      { id: 'long', name: 'Tarifa, Valdevaqueros' },
+      { id: 'short', name: 'Tarifa, Arte Vida' },
+      { id: 'exact', name: 'Tarifa' },
+    ]
+    expect(searchSpots(matches, 'tarifa').map((spot) => spot.id))
+      .toEqual(['exact', 'short', 'long', 'alias'])
+  })
+
+  it('keeps a visible name match in the limited results when aliases are plentiful', () => {
+    const aliases = Array.from({ length: 25 }, (_, index) => ({
+      id: `alias-${index}`,
+      name: `Beach ${index}`,
+      aliases: ['Tarifa'],
+    }))
+    expect(searchSpots([...aliases, { id: 'tarifa-beach', name: 'Tarifa Beach' }], 'tarifa')[0].id)
+      .toBe('tarifa-beach')
+  })
+
+  it('prefers a word match over a buried substring', () => {
+    const matches = [
+      { id: 'buried', name: 'Eastown Beach' },
+      { id: 'word', name: 'Cape Town Beach' },
+    ]
+    expect(searchSpots(matches, 'town').map((spot) => spot.id))
+      .toEqual(['word', 'buried'])
+  })
+
   it('keeps same-name catalog spots unless a personal spot replaces them', () => {
     const duplicates = [
       { id: 'north', name: 'Kite Beach' },
