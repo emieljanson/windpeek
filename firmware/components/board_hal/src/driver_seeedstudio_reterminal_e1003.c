@@ -8,6 +8,7 @@
 #include "driver/spi_master.h"
 #include "driver/usb_serial_jtag.h"
 #include "epaper.h"
+#include "esp_attr.h"
 #include "esp_log.h"
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
@@ -24,6 +25,10 @@
 static const char *TAG = "board_hal_reterminal_e1003";
 
 static i2c_master_bus_handle_t i2c_bus = NULL;
+#ifdef CONFIG_HAS_SDCARD
+#define SD_ABSENT_MARKER UINT32_C(0x53444142)
+RTC_DATA_ATTR static uint32_t s_sd_absent_marker;
+#endif
 #include "e1003_touch.inc"
 
 // Battery measurement constants
@@ -62,6 +67,14 @@ static void board_hal_battery_adc_init(void)
 esp_err_t board_hal_init(void)
 {
     ESP_LOGI(TAG, "Initializing reTerminal E1003 Board HAL");
+#ifdef CONFIG_HAS_SDCARD
+    const uint32_t wake_causes = esp_sleep_get_wakeup_causes();
+    const bool interactive_wake = (wake_causes & ((1u << ESP_SLEEP_WAKEUP_EXT0) |
+                                                 (1u << ESP_SLEEP_WAKEUP_EXT1))) != 0;
+    // A missing card has no useful work on an interactive wake. Timer and cold
+    // boots still probe so a newly inserted card is picked up later.
+    const bool probe_sd = !interactive_wake || s_sd_absent_marker != SD_ABSENT_MARKER;
+#endif
 
     // Release any pad holds latched by the previous deep-sleep cycle.
     gpio_hold_dis(BOARD_HAL_LED_PIN);
@@ -127,23 +140,29 @@ esp_err_t board_hal_init(void)
         .mode = GPIO_MODE_OUTPUT,
     };
     gpio_config(&sd_pwr_cfg);
-    gpio_set_level(BOARD_HAL_SD_PWR_PIN, 1);
-    ESP_LOGI(TAG, "SD Card Power ON");
+    if (probe_sd) {
+        gpio_set_level(BOARD_HAL_SD_PWR_PIN, 1);
+        ESP_LOGI(TAG, "SD Card Power ON");
+        vTaskDelay(pdMS_TO_TICKS(500));
 
-    vTaskDelay(pdMS_TO_TICKS(500));
+        ESP_LOGI(TAG, "Initializing SD card (SPI)...");
+        sdcard_config_t sd_cfg = {
+            .mount_point = "/storage",
+            .host_id = SPI2_HOST,
+            .cs_pin = BOARD_HAL_SD_CS_PIN,
+        };
 
-    ESP_LOGI(TAG, "Initializing SD card (SPI)...");
-    sdcard_config_t sd_cfg = {
-        .mount_point = "/storage",
-        .host_id = SPI2_HOST,
-        .cs_pin = BOARD_HAL_SD_CS_PIN,
-    };
-
-    esp_err_t sd_ret = sdcard_init(&sd_cfg);
-    if (sd_ret == ESP_OK) {
-        ESP_LOGI(TAG, "SD card initialized successfully");
+        esp_err_t sd_ret = sdcard_init(&sd_cfg);
+        s_sd_absent_marker = sd_ret == ESP_OK ? 0 : SD_ABSENT_MARKER;
+        if (sd_ret == ESP_OK) {
+            ESP_LOGI(TAG, "SD card initialized successfully");
+        } else {
+            gpio_set_level(BOARD_HAL_SD_PWR_PIN, 0);
+            ESP_LOGW(TAG, "SD card initialization failed: %s", esp_err_to_name(sd_ret));
+        }
     } else {
-        ESP_LOGW(TAG, "SD card initialization failed: %s", esp_err_to_name(sd_ret));
+        gpio_set_level(BOARD_HAL_SD_PWR_PIN, 0);
+        ESP_LOGI(TAG, "Skipping absent SD card on interactive wake");
     }
 #endif
 

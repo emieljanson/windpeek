@@ -11,6 +11,8 @@
 #include "wind_timezone.h"
 
 #ifdef ESP_PLATFORM
+#include "wind_app_runtime.h"
+#include "wind_quick_cache.h"
 #include <stdatomic.h>
 #include "board_hal.h"
 #include "config.h"
@@ -40,23 +42,6 @@
 #define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000011)
 
 static const char *TAG = "wind_app";
-typedef struct {
-    wind_app_t app;
-    open_meteo_knmi_config_t provider_config;
-    open_meteo_marine_config_t marine_config;
-    wind_tide_provider_t tide_provider;
-    wind_tide_t tide;
-    bool have_tide;
-    wind_swell_t swell;
-    bool have_swell;
-    bool swell_failed;
-    const wind_spot_t *spot;
-    const char *device_timezone;
-    char forecast_path[96];
-    char schedule_path[96];
-    char tide_path[96];
-} wind_spot_runtime_t;
-
 static wind_spot_runtime_t *s_spots;
 static installed_configuration_t s_installed_configuration;
 static const installed_configuration_t *s_preview_configuration;
@@ -73,7 +58,13 @@ RTC_DATA_ATTR static bool s_overview_open;
 RTC_DATA_ATTR static char s_focused_date[WIND_FORECAST_DATE_LENGTH];
 RTC_DATA_ATTR static size_t s_overview_page;
 RTC_DATA_ATTR static uint64_t s_overview_configuration;
-static esp_err_t show_overview_unlocked(size_t page, bool force);
+typedef enum {
+    OVERVIEW_INTERACTIVE,
+    OVERVIEW_REFRESH,
+    OVERVIEW_PREPARE,
+} overview_render_mode_t;
+static esp_err_t render_overview_unlocked(size_t page,
+    overview_render_mode_t mode, bool force);
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_t *outcome);
 static void apply_spot_display(size_t index);
@@ -544,13 +535,9 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
 
 static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
                                    size_t bitmap_size) {
-    (void)context;
     const wind_renderer_display_t display = active_renderer_display();
     if (!bitmap || bitmap_size != active_renderer_bitmap_size()) {
         return ESP_ERR_INVALID_SIZE;
-    }
-    if (write_dashboard_preview(bitmap, bitmap_size, display) != ESP_OK) {
-        ESP_LOGW(TAG, "Could not publish dashboard preview");
     }
     int width = 0;
     int height = 0;
@@ -574,7 +561,17 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
     }
     esp_err_t end_result = display_manager_end_rgb_stream(result == ESP_OK);
     free(row);
-    return result != ESP_OK ? result : end_result;
+    if (result != ESP_OK || end_result != ESP_OK)
+        return result != ESP_OK ? result : end_result;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (context && !s_preview_configuration)
+        wind_quick_spot_save(context, s_focused_date, s_overview_configuration,
+                             bitmap, bitmap_size);
+#endif
+    // The preview is useful over USB, but its SD write must not delay the panel.
+    if (write_dashboard_preview(bitmap, bitmap_size, display) != ESP_OK)
+        ESP_LOGW(TAG, "Could not publish dashboard preview");
+    return ESP_OK;
 }
 
 esp_err_t wind_app_show_battery_empty(void) {
@@ -799,20 +796,51 @@ static void apply_spot_display(size_t index) {
     (void)config_manager_set_timezone_transient(s_spots[index].spot->timezone);
 }
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static uint64_t quick_overview_configuration(void) {
+    return s_overview_configuration ^ WIND_DASHBOARD_RENDER_SIGNATURE;
+}
+
+static bool show_quick_spot(wind_spot_runtime_t *runtime) {
+    if (!wind_quick_spot_show(runtime, s_focused_date, s_overview_configuration))
+        return false;
+    (void)clear_panel_confirmation_unlocked();
+    s_last_render_succeeded = true;
+    return true;
+}
+
+static bool show_quick_overview(size_t page) {
+    time_t now;
+    time(&now);
+    if (!wind_quick_overview_show(s_spots, wind_spots_count(),
+                                  quick_overview_configuration(), page, now))
+        return false;
+    (void)clear_panel_confirmation_unlocked();
+    s_last_render_succeeded = true;
+    s_overview_open = true;
+    s_overview_page = page;
+    s_focused_date[0] = 0;
+    return true;
+}
+#endif
+
 /* All overview work runs under s_runtime_lock. No intermediate row is shown. */
-static esp_err_t show_overview_unlocked(size_t page, bool force) {
+static esp_err_t render_overview_unlocked(size_t page,
+    overview_render_mode_t mode, bool force) {
+    const bool show = mode != OVERVIEW_PREPARE;
+    const bool fetch = mode == OVERVIEW_REFRESH;
     if (active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16) {
-        wind_app_status_finish(ESP_ERR_NOT_SUPPORTED, ESP_OK, false, false, NULL);
+        if (show) wind_app_status_finish(ESP_ERR_NOT_SUPPORTED, ESP_OK, false, false, NULL);
         return ESP_ERR_NOT_SUPPORTED;
     }
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
-        wind_app_status_finish(result, ESP_OK, false, false, NULL);
+        if (show) wind_app_status_finish(result, ESP_OK, false, false, NULL);
         return result;
     }
     size_t total = wind_spots_count();
     if (page > wind_overview_last_page(total)) {
-        wind_app_status_finish(ESP_ERR_INVALID_ARG, ESP_OK, false, false, NULL);
+        if (show) wind_app_status_finish(ESP_ERR_INVALID_ARG, ESP_OK, false, false, NULL);
         return ESP_ERR_INVALID_ARG;
     }
     size_t first = page * WIND_OVERVIEW_PAGE_SIZE;
@@ -822,7 +850,7 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
     uint8_t *bitmap = malloc(WIND_RENDERER_E1003_COMPOSITION_BYTES);
     if (!rows || !cached || !bitmap) {
         free(rows); free(cached); free(bitmap);
-        wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, NULL);
+        if (show) wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, NULL);
         return ESP_ERR_NO_MEM;
     }
     bool reported_failure = false;
@@ -843,8 +871,9 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
            overdue wind retry can keep waking the overview every second. This
            also prepares the wind cache for opening the full spot dashboard. */
         wind_app_outcome_t outcome = {0};
-        const esp_err_t prefetch_result = wind_app_prefetch(&runtime->app, force, now, &outcome);
-        if (!reported_failure && (prefetch_result != ESP_OK || outcome.fetch_result != ESP_OK ||
+        const esp_err_t prefetch_result = fetch
+            ? wind_app_prefetch(&runtime->app, force, now, &outcome) : ESP_OK;
+        if (fetch && !reported_failure && (prefetch_result != ESP_OK || outcome.fetch_result != ESP_OK ||
                                   outcome.freshness == WIND_FRESHNESS_UNAVAILABLE)) {
             wind_provider_diagnostics_t forecast = {0};
             if (outcome.attempted_fetch) open_meteo_knmi_get_diagnostics(&forecast);
@@ -852,7 +881,7 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
                                    outcome.attempted_fetch, false, &forecast);
             reported_failure = true;
         }
-        if (wifi_manager_is_connected()) {
+        if (fetch && wifi_manager_is_connected()) {
             if (swell) load_or_refresh_swell(runtime, force, true, now);
         } else if (swell) {
             char path[128]; snprintf(path,sizeof(path),"%s.swell",runtime->forecast_path);
@@ -874,14 +903,22 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
         result = wind_renderer_render_overview(rows,count,first,total,bitmap,
             WIND_RENDERER_E1003_COMPOSITION_BYTES,&stats) == 0 ? ESP_OK : ESP_FAIL;
     }
-    if (result == ESP_OK) {
+    if (result == ESP_OK && show) {
         /* The regular dashboard hash must never suppress returning from this page. */
         (void)clear_panel_confirmation_unlocked();
         result = display_dashboard(NULL,bitmap,WIND_RENDERER_E1003_COMPOSITION_BYTES);
-        if (result == ESP_OK) { s_overview_open=true; s_overview_page=page; s_focused_date[0]=0; }
+        if (result == ESP_OK) {
+            s_overview_open=true; s_overview_page=page; s_focused_date[0]=0;
+        }
+    }
+    if (result == ESP_OK) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        wind_quick_overview_save(s_spots, total, quick_overview_configuration(),
+                                 page, now, bitmap);
+#endif
     }
     free(rows); free(cached); free(bitmap);
-    if (result != ESP_OK && !reported_failure)
+    if (show && result != ESP_OK && !reported_failure)
         wind_app_status_finish(result, ESP_OK, false, false, NULL);
     // Overview rows do not save a dashboard panel confirmation. Drawing them
     // cannot clear an earlier forecast failure, even when cached rows look valid.
@@ -891,7 +928,13 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
 esp_err_t wind_app_show_overview(void) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return ESP_ERR_INVALID_STATE;
     esp_err_t result=ensure_ready();
-    if (result==ESP_OK) result=show_overview_unlocked(s_overview_open ? s_overview_page : s_selected_index/3,false);
+    if (result==ESP_OK) {
+        const size_t page = s_overview_open ? s_overview_page : s_selected_index/3;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        if (!show_quick_overview(page))
+#endif
+            result=render_overview_unlocked(page, OVERVIEW_INTERACTIVE, false);
+    }
     xSemaphoreGive(s_runtime_lock);
     return result;
 }
@@ -900,8 +943,12 @@ esp_err_t wind_app_overview_page(int direction) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return ESP_ERR_INVALID_STATE;
     int page=(int)s_overview_page+direction;
     esp_err_t result=ESP_OK;
-    if (s_overview_open && page>=0 && (size_t)page<=wind_overview_last_page(wind_spots_count()))
-        result=show_overview_unlocked((size_t)page,false);
+    if (s_overview_open && page>=0 && (size_t)page<=wind_overview_last_page(wind_spots_count())) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        if (!show_quick_overview((size_t)page))
+#endif
+            result=render_overview_unlocked((size_t)page, OVERVIEW_INTERACTIVE, false);
+    }
     xSemaphoreGive(s_runtime_lock);
     return result;
 }
@@ -987,7 +1034,7 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_
         return result;
     }
     if (s_overview_open && !s_preview_configuration) {
-        return show_overview_unlocked(s_overview_page, force_refresh);
+        return render_overview_unlocked(s_overview_page, OVERVIEW_REFRESH, force_refresh);
     }
     if (report_status) wind_app_status_begin();
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
@@ -1070,7 +1117,12 @@ static esp_err_t navigate(int direction, bool absolute) {
     refresh_render_signatures();
     load_or_refresh_tide(runtime, false, fetch_before_display, now);
     wind_app_outcome_t outcome = {0};
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    result = have_cache && show_quick_spot(runtime)
+        ? ESP_OK : wind_app_run(&runtime->app, !have_cache, now, &outcome);
+#else
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
+#endif
     if (outcome.displayed) s_force_next_display = false;
     if (result == ESP_OK) {
         s_overview_open = false;
@@ -1137,6 +1189,13 @@ esp_err_t wind_app_toggle_day(size_t day_index) {
     if (result == ESP_OK) {
         runtime->app.force_display = true;
         wind_app_outcome_t outcome;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        if (show_quick_spot(runtime)) {
+            xSemaphoreGive(s_app_lock);
+            xSemaphoreGive(s_runtime_lock);
+            return ESP_OK;
+        }
+#endif
         result = wind_app_show_cached(&runtime->app, now, &outcome);
         s_last_render_succeeded = result == ESP_OK &&
             outcome.freshness != WIND_FRESHNESS_UNAVAILABLE &&
@@ -1264,6 +1323,121 @@ bool wind_app_overview_requires_network(int direction) {
 
 esp_err_t wind_app_start(void) {
     return wind_app_refresh(false);
+}
+
+bool wind_app_has_cached_start(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return false;
+    bool cached = false;
+    if (ensure_ready() == ESP_OK) {
+        time_t now;
+        time(&now);
+        wind_spot_runtime_t *runtime = &s_spots[s_selected_index];
+        apply_spot_display(s_selected_index);
+        load_or_refresh_swell(runtime, false, false, now);
+        load_or_refresh_tide(runtime, false, false, now);
+        refresh_render_signatures();
+        cached = wind_quick_spot_cached(runtime, "", s_overview_configuration);
+    }
+    xSemaphoreGive(s_runtime_lock);
+    return cached;
+#else
+    return false;
+#endif
+}
+
+esp_err_t wind_app_show_cached_start(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (wind_app_has_cached_start()) {
+        size_t selected = 0;
+        if (wind_spots_load_selected(&selected) == ESP_OK)
+            return wind_app_select_spot(selected);
+    }
+#endif
+    return wind_app_start();
+}
+
+esp_err_t wind_app_prepare_quick_frames(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = ensure_ready();
+    wind_forecast_t *forecast = malloc(sizeof(*forecast));
+    uint8_t *bitmap = heap_caps_malloc(WIND_RENDERER_E1003_COMPOSITION_BYTES,
+                                       MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (result == ESP_OK && (!forecast || !bitmap)) result = ESP_ERR_NO_MEM;
+    char previous_focus[sizeof(s_focused_date)];
+    memcpy(previous_focus, s_focused_date, sizeof(previous_focus));
+    time_t now;
+    time(&now);
+    if (result == ESP_OK && !s_preview_configuration) {
+        const size_t count = wind_spots_count();
+        // A timer wake has no interactive input task. Refresh the remaining
+        // spots here so their prepared frames use current source data.
+        if (wifi_manager_is_connected()) {
+            for (size_t index = 0; index < count; ++index) {
+                if (index == s_selected_index) continue;
+                wind_spot_runtime_t *runtime = &s_spots[index];
+                apply_spot_display(index);
+                wind_app_outcome_t outcome = {0};
+                (void)wind_app_prefetch(&runtime->app, false, now, &outcome);
+                load_or_refresh_swell(runtime, false, true, now);
+                load_or_refresh_tide(runtime, false, true, now);
+            }
+        }
+        for (size_t rank = 0; rank < count; ++rank) {
+            const int offset = rank == 0 ? 0 : (rank & 1u)
+                ? (int)((rank + 1) / 2) : -(int)(rank / 2);
+            const size_t index = wind_spots_offset(s_selected_index, offset);
+            wind_spot_runtime_t *runtime = &s_spots[index];
+            apply_spot_display(index);
+            load_or_refresh_swell(runtime, false, false, now);
+            load_or_refresh_tide(runtime, false, false, now);
+            refresh_render_signatures();
+            if (wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
+                                forecast) != ESP_OK) continue;
+            for (int variant = 0; variant <= 3; ++variant) {
+                s_focused_date[0] = 0;
+                if (variant)
+                    snprintf(s_focused_date, sizeof(s_focused_date), "%s",
+                             forecast->days[variant - 1].local_date);
+                if (wind_quick_spot_cached(runtime, s_focused_date,
+                                           s_overview_configuration)) continue;
+                result = render_dashboard(runtime, forecast,
+                    wind_app_forecast_freshness(forecast, now), false, now,
+                    bitmap, WIND_RENDERER_E1003_COMPOSITION_BYTES);
+                if (result == ESP_OK)
+                    wind_quick_spot_save(runtime, s_focused_date,
+                        s_overview_configuration, bitmap,
+                        WIND_RENDERER_E1003_COMPOSITION_BYTES);
+                else break;
+            }
+            if (result != ESP_OK) break;
+        }
+        free(bitmap);
+        bitmap = NULL;
+        if (result == ESP_OK) {
+            for (size_t page = 0; page <= wind_overview_last_page(count); ++page) {
+                if (wind_quick_overview_cached(s_spots, count,
+                        quick_overview_configuration(), page, now)) continue;
+                result = render_overview_unlocked(page, OVERVIEW_PREPARE, false);
+                if (result != ESP_OK) break;
+            }
+        }
+    }
+    memcpy(s_focused_date, previous_focus, sizeof(s_focused_date));
+    if (s_ready) {
+        apply_spot_display(s_selected_index);
+        refresh_render_signatures();
+    }
+    free(bitmap);
+    free(forecast);
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+#else
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
 
 static esp_err_t clear_panel_confirmation_unlocked(void) {

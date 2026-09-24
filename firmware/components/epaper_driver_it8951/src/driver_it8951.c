@@ -22,6 +22,7 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "epaper.h"
+#include "esp_attr.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -65,7 +66,6 @@ static const char *TAG = "it8951";
 // ---- Display update modes (ED103TC2 / 10.3") ----
 #define IT8951_MODE_INIT 0
 #define IT8951_MODE_GC16 2
-#define IT8951_MODE_A2 6
 
 // Fallback VCOM magnitude (-2.0 V) applied only if the panel's stored VCOM is
 // missing/invalid. A blank panel with VCOM ~= 0 is the classic symptom. The
@@ -77,11 +77,10 @@ static const char *TAG = "it8951";
 // A fixed room-temperature value is sufficient (the waveform tolerance is wide).
 #define IT8951_DEFAULT_TEMP_C 20
 
-// Seeed's own driver clocks IT8951 *reads* at 4 MHz (SPI_READ_FREQUENCY); reads
-// above that return stale MISO (the GetSystemInfo high word came back garbled).
-// The GC16 refresh dominates update time (~30 s), so we run the whole device at
-// the read-safe 4 MHz rather than juggling a separate write clock.
+// Reads above 4 MHz return stale MISO. Image writes can use the faster write
+// clock while commands and register reads stay at the safe clock.
 #define IT8951_SPI_CLOCK_HZ (4 * 1000 * 1000)
+#define IT8951_SPI_WRITE_CLOCK_HZ (10 * 1000 * 1000)
 #define IT8951_SPI_CHUNK 4000 // bytes per data burst (must be <= bus max_transfer_sz)
 #define IT8951_BUSY_TIMEOUT_US (5 * 1000 * 1000)
 
@@ -95,6 +94,7 @@ typedef struct {
 } it8951_dev_info_t;
 
 static spi_device_handle_t s_spi = NULL;
+static spi_device_handle_t s_spi_fast = NULL;
 // Internal-RAM, DMA-capable bounce buffer: the framebuffer lives in PSRAM, which
 // SPI DMA can't transmit from directly, so image chunks are copied through this.
 static uint8_t *s_dma_buf = NULL;
@@ -104,7 +104,9 @@ static int s_pin_busy = -1;   // HRDY: high = ready, low = busy
 static int s_pin_enable = -1; // EPD bias (TPS65185) enable
 static uint32_t s_img_addr = 0;
 static int8_t s_temp_c = IT8951_DEFAULT_TEMP_C; // panel temperature for waveform select
-static unsigned s_refresh_count = 0;
+// Keep the cleaning cadence across deep sleep: otherwise every button wake
+// starts at zero and runs a full white INIT before the first GC16 update.
+RTC_DATA_ATTR static unsigned s_refresh_count = 0;
 // Default to the ED103TC2 geometry until GetSystemInfo reports the real values.
 static it8951_dev_info_t s_dev = {.panel_w = 1872, .panel_h = 1404};
 
@@ -138,12 +140,17 @@ static bool wait_ready(void) {
     return true;
 }
 
-static void spi_tx(const uint8_t *tx, size_t len) {
+static esp_err_t spi_tx_on(spi_device_handle_t device, const uint8_t *tx, size_t len) {
     spi_transaction_t t = {.length = len * 8, .tx_buffer = tx};
-    esp_err_t ret = spi_device_polling_transmit(s_spi, &t);
+    esp_err_t ret = spi_device_polling_transmit(device, &t);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "SPI tx %d bytes failed: %s", (int)len, esp_err_to_name(ret));
     }
+    return ret;
+}
+
+static void spi_tx(const uint8_t *tx, size_t len) {
+    spi_tx_on(s_spi, tx, len);
 }
 
 static void spi_txrx(const uint8_t *tx, uint8_t *rx, size_t len) {
@@ -355,6 +362,12 @@ esp_err_t epaper_init(const epaper_config_t *cfg) {
         ESP_LOGE(TAG, "spi_bus_add_device failed: %s", esp_err_to_name(ret));
         return ret;
     }
+    dev_cfg.clock_speed_hz = IT8951_SPI_WRITE_CLOCK_HZ;
+    ret = spi_bus_add_device(cfg->spi_host, &dev_cfg, &s_spi_fast);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "Fast SPI write unavailable: %s", esp_err_to_name(ret));
+        s_spi_fast = s_spi;
+    }
 
 #ifdef CONFIG_PM_ENABLE
     esp_err_t pm_ret =
@@ -407,6 +420,42 @@ void epaper_set_temperature(int8_t celsius) {
     }
 }
 
+/* The controller scans rows right-to-left in 16-bit words for both formats. */
+static esp_err_t upload_image(const uint8_t *image, uint16_t height,
+                              size_t row_bytes, uint16_t format, uint16_t area_width,
+                              spi_device_handle_t write_spi) {
+    it8951_set_target_memory(s_img_addr);
+    it8951_write_cmd(IT8951_TCON_LD_IMG_AREA);
+    it8951_write_data((IT8951_LD_ENDIAN << 8) | (format << 4) | IT8951_LD_ROTATE);
+    it8951_write_data(0);
+    it8951_write_data(0);
+    it8951_write_data(area_width);
+    it8951_write_data(height);
+    if (!wait_ready()) return ESP_ERR_TIMEOUT;
+
+    esp_err_t result = spi_device_acquire_bus(write_spi, portMAX_DELAY);
+    if (result != ESP_OK) return result;
+    cs_low();
+    const uint8_t preamble[] = {(uint8_t)(IT8951_PRE_WR_DATA >> 8),
+                                (uint8_t)IT8951_PRE_WR_DATA};
+    result = spi_tx_on(write_spi, preamble, sizeof(preamble));
+    const size_t row_words = row_bytes / 2;
+    for (uint16_t y = 0; y < height && result == ESP_OK; ++y) {
+        const uint8_t *row = image + (size_t)y * row_bytes;
+        for (size_t wi = 0; wi < row_words; ++wi) {
+            const uint8_t *word = row + (row_words - 1 - wi) * 2;
+            s_dma_buf[wi * 2] = word[0];
+            s_dma_buf[wi * 2 + 1] = word[1];
+        }
+        result = spi_tx_on(write_spi, s_dma_buf, row_bytes);
+        if ((y & 63) == 63) vTaskDelay(1);
+    }
+    cs_high();
+    spi_device_release_bus(write_spi);
+    if (result == ESP_OK) it8951_write_cmd(IT8951_TCON_LD_IMG_END);
+    return result;
+}
+
 esp_err_t epaper_display(uint8_t *image) {
     if (!s_spi || !image || !s_dma_buf) {
         return ESP_ERR_INVALID_STATE;
@@ -419,68 +468,30 @@ esp_err_t epaper_display(uint8_t *image) {
     const uint16_t w = s_dev.panel_w;
     const uint16_t h = s_dev.panel_h;
     const size_t row_bytes = (size_t)w / 2; // 4bpp = 2 px/byte
+    const int64_t started = esp_timer_get_time();
 
-    it8951_set_target_memory(s_img_addr);
-
-    // Load full-frame image area (4bpp).
-    it8951_write_cmd(IT8951_TCON_LD_IMG_AREA);
-    it8951_write_data((IT8951_LD_ENDIAN << 8) | (IT8951_BPP_4 << 4) | IT8951_LD_ROTATE);
-    it8951_write_data(0); // x
-    it8951_write_data(0); // y
-    it8951_write_data(w);
-    it8951_write_data(h);
-
-    // Stream the image in ONE CS-low session (single 0x0000 write preamble, all
-    // data back-to-back; toggling CS mid-load resets the IT8951 write pointer).
-    // The ED103TC2 scans each row right-to-left, so mirror it -- but at 16-bit
-    // *word* granularity (the unit the IT8951 reconstructs from the SPI byte
-    // stream): emit the row's words in reverse order while keeping each word's
-    // two bytes intact, exactly as Seeed's driver does. Reversing at byte
-    // granularity would swap the two bytes inside each word and scramble pixels
-    // locally. The bounce buffer also keeps SPI DMA off the PSRAM frame buffer
-    // (which it can't transmit from directly).
-    const size_t row_words = row_bytes / 2;
-    wait_ready();
-    // Hold the SPI bus exclusively for the whole CS-low image stream. CS stays
-    // low across every row transmit below (toggling it mid-load resets the
-    // write pointer), and the SD card shares this SPI2_HOST bus. Without the
-    // lock an SD transaction (e.g. a thumbnail being written) could win the bus
-    // in a gap between row transmits and clock its bytes into the IT8951 while
-    // CS is low, desyncing the image (broken rows + everything after shifted).
-    // Released after cs_high so the SD is free again for the refresh wait.
-    spi_device_acquire_bus(s_spi, portMAX_DELAY);
-    cs_low();
-    spi_write16(IT8951_PRE_WR_DATA);
-    for (uint16_t y = 0; y < h; y++) {
-        const uint8_t *src = image + (size_t)y * row_bytes;
-        for (size_t wi = 0; wi < row_words; wi++) {
-            const uint8_t *sw = src + (row_words - 1 - wi) * 2;
-            s_dma_buf[wi * 2] = sw[0];
-            s_dma_buf[wi * 2 + 1] = sw[1];
-        }
-        spi_tx(s_dma_buf, row_bytes);
-        // The polling transmits busy-spin the CPU for the whole multi-second
-        // frame push, starving the IDLE task and tripping its watchdog on
-        // large panels. Yielding is safe mid-load: the bus is held, CS stays
-        // low, and the IT8951 has no inter-row deadline.
-        if ((y & 63) == 63) {
-            vTaskDelay(1);
-        }
+    // Keep CS low and the shared SPI bus locked until every row is transmitted.
+    esp_err_t transfer = upload_image(image, h, row_bytes, IT8951_BPP_4, w,
+                                      s_spi_fast ? s_spi_fast : s_spi);
+    if (transfer != ESP_OK) {
+#ifdef CONFIG_PM_ENABLE
+        if (pm_lock) esp_pm_lock_release(pm_lock);
+#endif
+        return transfer;
     }
-    cs_high();
-    spi_device_release_bus(s_spi);
-
-    it8951_write_cmd(IT8951_TCON_LD_IMG_END);
+    ESP_LOGI(TAG, "Frame upload: %lld ms", (long long)((esp_timer_get_time()-started)/1000));
 
     // Clear on the first frame and periodically to control ghosting. Repeating
     // the full white INIT on every touch adds a long blank phase before GC16.
     if (s_refresh_count++ % 4 == 0) {
         it8951_display_area(0, 0, w, h, IT8951_MODE_INIT);
         it8951_wait_display_ready();
+        ESP_LOGI(TAG, "INIT complete: %lld ms", (long long)((esp_timer_get_time()-started)/1000));
     }
 
     it8951_display_area(0, 0, w, h, IT8951_MODE_GC16);
     it8951_wait_display_ready();
+    ESP_LOGI(TAG, "GC16 complete: %lld ms", (long long)((esp_timer_get_time()-started)/1000));
 
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
