@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include "wind_renderer.h"
 
-/* Rasterize shapes on E1003 pixels from 800x600 composition coordinates. */
+/* Shape points use 800x600 composition coordinates. Curve clip bounds use
+ * physical E1003 x coordinates and are clamped to the panel. */
 void wind_renderer_native_triangle(uint8_t *pixels, double ax, double ay,
                                    double bx, double by, double cx, double cy);
 void wind_renderer_native_curve(uint8_t *pixels, double x0, double y0,

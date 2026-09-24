@@ -1421,7 +1421,7 @@ TEST(SpotOverviewRenderer, E1003SpotNameUsesIndividualPanelPixels) {
     ASSERT_EQ(wind_renderer_render_overview(&row, 1, 0, 1,
         pixels.data(), pixels.size(), nullptr), 0);
     std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
-    for (int x = 0; x <= WIND_RENDERER_WIDTH; ++x)
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
         logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
                            WIND_RENDERER_WIDTH] = true;
     int native_edges = 0;
@@ -1445,7 +1445,7 @@ TEST(WindRenderer, E1003TextUsesIndividualPanelPixels) {
     ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
         WIND_RENDERER_DISPLAY_E1003_GC16, frame.data(), frame.size(), nullptr), 0);
     std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
-    for (int x = 0; x <= WIND_RENDERER_WIDTH; ++x)
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
         logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
                            WIND_RENDERER_WIDTH] = true;
     int native_edges = 0;
@@ -1492,7 +1492,7 @@ TEST(WindRenderer, E1003WeatherIconsUseIndividualPanelPixels) {
     ASSERT_EQ(wind_renderer_render_for_display(&without_weather,
         WIND_RENDERER_DISPLAY_E1003_GC16, without_icon.data(), without_icon.size(), nullptr), 0);
     std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
-    for (int x = 0; x <= WIND_RENDERER_WIDTH; ++x)
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
         logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
                            WIND_RENDERER_WIDTH] = true;
     int native_edges = 0;

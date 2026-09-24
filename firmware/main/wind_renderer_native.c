@@ -58,10 +58,14 @@ void wind_renderer_native_curve(uint8_t *pixels, double x0, double y0,
     const double length_squared = dx * dx + dy * dy;
     const double radius = width * (double)WIND_RENDERER_E1003_WIDTH /
                           WIND_RENDERER_WIDTH / 2.0;
+    const int clip_min = clip_left < 0 ? 0 : clip_left;
+    const int clip_max = clip_right >= WIND_RENDERER_E1003_WIDTH
+        ? WIND_RENDERER_E1003_WIDTH - 1 : clip_right;
+    if (clip_min > clip_max) return;
     const int left = clamp_int((int)floor(fmin(x0, x1) - radius),
-                               clip_left, clip_right);
+                               clip_min, clip_max);
     const int right = clamp_int((int)ceil(fmax(x0, x1) + radius),
-                                clip_left, clip_right);
+                                clip_min, clip_max);
     const int top = clamp_int((int)floor(fmin(y0, y1) - radius),
                               0, WIND_RENDERER_E1003_HEIGHT - 1);
     const int bottom = clamp_int((int)ceil(fmax(y0, y1) + radius),

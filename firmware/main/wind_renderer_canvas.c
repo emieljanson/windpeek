@@ -142,7 +142,9 @@ void wind_canvas_fade_region_to_white(canvas_t *canvas, int left, int top, int r
         const int span = native_right - native_left;
         for (int y = wind_canvas_native_y(top); y < wind_canvas_native_y(bottom + 1); ++y)
             for (int x = native_left; x < native_right; ++x) {
-                const int linear = clamp_int((x - native_left) * 255 / span, 0, 255);
+                const int linear = span > 1
+                    ? clamp_int((x - native_left) * 255 / (span - 1), 0, 255)
+                    : 255;
                 const int fade = (linear * linear * (765 - 2 * linear) + 32512) / 65025;
                 uint8_t *pixel = canvas->pixels + (size_t)y * WIND_RENDERER_E1003_WIDTH + x;
                 *pixel = (uint8_t)((int)*pixel +

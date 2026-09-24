@@ -139,7 +139,7 @@ def main():
     inter_name = "InterVariable.ttf" if inter != args.berkeley else "Berkeley Mono deterministic Inter fallback"
     args.output.mkdir(parents=True, exist_ok=True)
     for family, pixel_size, variation in (
-        NATIVE_E1003_SPECS if args.native_e1003_only else SPECS
+        NATIVE_E1003_SPECS if args.native_e1003_only else SPECS + NATIVE_E1003_SPECS
     ):
         is_berkeley = family.startswith("berkeley_mono")
         source = args.berkeley if is_berkeley else inter

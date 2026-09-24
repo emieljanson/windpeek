@@ -159,4 +159,6 @@ TEST(WindFont, EveryNativeDashboardSizeHasAnAsset) {
         EXPECT_EQ(wind_font_native_size(item.family, item.logical_size), item.native_size);
         EXPECT_GT(wind_font_measure(item.family, item.native_size, "17KTS").width, 0);
     }
+    EXPECT_GT(wind_font_measure(WIND_FONT_INTER,
+              WIND_FONT_SIZE_OVERVIEW_NATIVE, "WIJK AAN ZEE").width, 0);
 }
