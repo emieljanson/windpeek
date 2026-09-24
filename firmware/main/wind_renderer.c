@@ -1,5 +1,7 @@
 #include "wind_renderer.h"
 #include "wind_renderer_internal.h"
+#include "wind_renderer_output.h"
+#include "wind_renderer_canvas.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -12,8 +14,6 @@
 #include "wind_overview.h"
 
 enum {
-    CANVAS_WHITE = 255,
-    CANVAS_BLACK = 0,
     /* 65% black; Gray4 rounds this to its darker gray level. */
     CANVAS_SECONDARY = 89,
     PALETTE_BLACK = 0,
@@ -75,29 +75,6 @@ typedef struct {
     int tide_bottom;
     bool combined_conditions;
 } dashboard_layout_t;
-
-typedef struct {
-    uint8_t *pixels;
-    int height;
-    size_t size;
-    bool native_e1003;
-    bool muted_status;
-    uint8_t *font_mask;
-    int clipped;
-    bool antialias_text;
-    bool smooth_curves;
-    int day_count;
-    int sample_count;
-} canvas_t;
-
-typedef enum {
-    OUTPUT_PALETTE,
-    OUTPUT_GRAY4,
-    OUTPUT_GC16,
-    OUTPUT_RGBA,
-    OUTPUT_RGBA_GC16,
-    OUTPUT_RGBA_GRAY4,
-} output_format_t;
 
 typedef enum {
     OUTPUT_BLACK,
@@ -376,234 +353,6 @@ int wind_renderer_dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
     return 1;
 }
 
-static int native_x(int x) {
-    return (x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
-           WIND_RENDERER_WIDTH;
-}
-
-static int native_y(int y) {
-    return (y * WIND_RENDERER_E1003_HEIGHT +
-            WIND_RENDERER_E1003_COMPOSITION_HEIGHT / 2) /
-           WIND_RENDERER_E1003_COMPOSITION_HEIGHT;
-}
-
-static void native_rect(canvas_t *canvas, int left, int top, int width,
-                        int height, uint8_t gray) {
-    if (width <= 0 || height <= 0 || left < 0 || top < 0 ||
-        left + width > WIND_RENDERER_E1003_WIDTH ||
-        top + height > WIND_RENDERER_E1003_HEIGHT) {
-        canvas->clipped++;
-        return;
-    }
-    for (int row = top; row < top + height; ++row)
-        memset(canvas->pixels + (size_t)row * WIND_RENDERER_E1003_WIDTH + left,
-               gray, (size_t)width);
-}
-
-static uint8_t get_pixel(const canvas_t *canvas, int x, int y) {
-    if (canvas->native_e1003)
-        return canvas->pixels[(size_t)native_y(y) * WIND_RENDERER_E1003_WIDTH + native_x(x)];
-    return canvas->pixels[y * WIND_RENDERER_WIDTH + x];
-}
-
-static void set_pixel(canvas_t *canvas, int x, int y, uint8_t gray) {
-    if (x < 0 || x >= WIND_RENDERER_WIDTH || y < 0 || y >= canvas->height) {
-        canvas->clipped++;
-        return;
-    }
-    if (canvas->native_e1003) {
-        const int left = native_x(x), top = native_y(y);
-        native_rect(canvas, left, top, native_x(x + 1) - left,
-                    native_y(y + 1) - top, gray);
-        return;
-    }
-    canvas->pixels[y * WIND_RENDERER_WIDTH + x] = gray;
-}
-
-static void fill_rect(canvas_t *canvas, int x, int y, int width, int height,
-                      uint8_t gray) {
-    if (width <= 0 || height <= 0) return;
-    if (x < 0 || y < 0 || x + width > WIND_RENDERER_WIDTH ||
-        y + height > canvas->height) {
-        canvas->clipped++;
-        return;
-    }
-    if (canvas->native_e1003) {
-        native_rect(canvas, native_x(x), native_y(y),
-                    native_x(x + width) - native_x(x),
-                    native_y(y + height) - native_y(y), gray);
-        return;
-    }
-    for (int row = y; row < y + height; ++row)
-        memset(canvas->pixels + row * WIND_RENDERER_WIDTH + x, gray, (size_t)width);
-}
-
-static void horizontal_line(canvas_t *canvas, int x0, int x1, int y, uint8_t gray) {
-    if (x1 < x0) {
-        const int swap = x0;
-        x0 = x1;
-        x1 = swap;
-    }
-    if (canvas->native_e1003) {
-        native_rect(canvas, native_x(x0), native_y(y),
-                    native_x(x1 + 1) - native_x(x0), 2, gray);
-        return;
-    }
-    fill_rect(canvas, x0, y, x1 - x0 + 1, 1, gray);
-}
-
-static void vertical_line(canvas_t *canvas, int x, int y0, int y1, uint8_t gray) {
-    if (y1 < y0) {
-        const int swap = y0;
-        y0 = y1;
-        y1 = swap;
-    }
-    if (canvas->native_e1003) {
-        native_rect(canvas, native_x(x), native_y(y0), 2,
-                    native_y(y1 + 1) - native_y(y0), gray);
-        return;
-    }
-    for (int y = y0; y <= y1; ++y) set_pixel(canvas, x, y, gray);
-}
-
-static void grid_dot(canvas_t *canvas, int x, int y) {
-    if (canvas->native_e1003)
-        native_rect(canvas, native_x(x), native_y(y), 2, 2, CANVAS_BLACK);
-    else set_pixel(canvas, x, y, CANVAS_BLACK);
-}
-
-static void outline_rect(canvas_t *canvas, int x, int y, int width, int height) {
-    horizontal_line(canvas, x, x + width - 1, y, CANVAS_BLACK);
-    horizontal_line(canvas, x, x + width - 1, y + height - 1, CANVAS_BLACK);
-    vertical_line(canvas, x, y, y + height - 1, CANVAS_BLACK);
-    vertical_line(canvas, x + width - 1, y, y + height - 1, CANVAS_BLACK);
-}
-
-static void draw_text_color(canvas_t *canvas, int x, int baseline,
-                            wind_font_family_t family, int size, uint8_t gray,
-                            const char *text);
-
-static void draw_text(canvas_t *canvas, int x, int baseline, wind_font_family_t family,
-                      int size, const char *text) {
-    draw_text_color(canvas, x, baseline, family, size, CANVAS_BLACK, text);
-}
-
-static void draw_text_mask(canvas_t *canvas, int x, int baseline,
-                           wind_font_family_t family, int size, const char *text) {
-    if (canvas->native_e1003) {
-        draw_text_color(canvas, x, baseline, family, size, CANVAS_BLACK, text);
-        return;
-    }
-    wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, canvas->height,
-                   WIND_RENDERER_WIDTH, x, baseline, family, size, CANVAS_BLACK,
-                   safe_text(text));
-}
-
-static void fade_region_to_white(canvas_t *canvas, int left, int top, int right,
-                                 int bottom) {
-    left = clamp_int(left, 0, WIND_RENDERER_WIDTH - 1);
-    right = clamp_int(right, 0, WIND_RENDERER_WIDTH - 1);
-    top = clamp_int(top, 0, canvas->height - 1);
-    bottom = clamp_int(bottom, 0, canvas->height - 1);
-    if (right <= left || bottom < top) return;
-
-    const int span = right - left;
-    for (int y = top; y <= bottom; ++y) {
-        for (int x = left; x <= right; ++x) {
-            const int linear = (x - left) * 255 / span;
-            const int fade = (linear * linear * (765 - 2 * linear) + 32512) / 65025;
-            const uint8_t previous = get_pixel(canvas, x, y);
-            set_pixel(canvas, x, y, (uint8_t)((int)previous +
-                      ((CANVAS_WHITE - (int)previous) * fade + 127) / 255));
-        }
-    }
-}
-
-static int rightmost_ink_pixel(const canvas_t *canvas, int left, int top, int right,
-                               int bottom) {
-    left = clamp_int(left, 0, WIND_RENDERER_WIDTH - 1);
-    right = clamp_int(right, 0, WIND_RENDERER_WIDTH - 1);
-    top = clamp_int(top, 0, canvas->height - 1);
-    bottom = clamp_int(bottom, 0, canvas->height - 1);
-    for (int x = right; x >= left; --x) {
-        for (int y = top; y <= bottom; ++y) {
-            if (get_pixel(canvas, x, y) < CANVAS_WHITE) return x;
-        }
-    }
-    return left;
-}
-
-static void draw_text_color(canvas_t *canvas, int x, int baseline,
-                            wind_font_family_t family, int size, uint8_t gray,
-                            const char *text) {
-    if (canvas->native_e1003) {
-        if (!canvas->font_mask) return;
-        enum { MASK_HEIGHT = 80, MASK_BASELINE = 60 };
-        memset(canvas->font_mask, CANVAS_WHITE,
-               WIND_RENDERER_WIDTH * MASK_HEIGHT);
-        if (canvas->antialias_text)
-            wind_font_draw_antialiased(canvas->font_mask, WIND_RENDERER_WIDTH,
-                                       MASK_HEIGHT, WIND_RENDERER_WIDTH, 0,
-                                       MASK_BASELINE, family, size, CANVAS_BLACK,
-                                       safe_text(text));
-        else
-            wind_font_draw(canvas->font_mask, WIND_RENDERER_WIDTH,
-                           MASK_HEIGHT, WIND_RENDERER_WIDTH, 0,
-                           MASK_BASELINE, family, size, CANVAS_BLACK,
-                           safe_text(text));
-        const int right = clamp_int(wind_font_measure(family, size,
-                                                      safe_text(text)).width + 2,
-                                    0, WIND_RENDERER_WIDTH);
-        for (int sy = 0; sy < MASK_HEIGHT; ++sy) {
-            const int logical_y = baseline - MASK_BASELINE + sy;
-            if (logical_y < 0 || logical_y >= canvas->height) continue;
-            const int top = native_y(logical_y);
-            const int bottom = native_y(logical_y + 1);
-            for (int sx = 0; sx < right; ++sx) {
-                const int logical_x = x + sx;
-                if (logical_x < 0 || logical_x >= WIND_RENDERER_WIDTH) continue;
-                const unsigned alpha = 255u - canvas->font_mask[sy * WIND_RENDERER_WIDTH + sx];
-                if (!alpha) continue;
-                const int left = native_x(logical_x);
-                const int pixel_right = native_x(logical_x + 1);
-                for (int py = top; py < bottom; ++py) {
-                    uint8_t *pixel = canvas->pixels +
-                        (size_t)py * WIND_RENDERER_E1003_WIDTH + left;
-                    for (int px = left; px < pixel_right; ++px, ++pixel)
-                        *pixel = (uint8_t)((gray * alpha +
-                            *pixel * (255u - alpha) + 127u) / 255u);
-                }
-            }
-        }
-        return;
-    }
-    if (canvas->antialias_text) {
-        wind_font_draw_antialiased(canvas->pixels, WIND_RENDERER_WIDTH, canvas->height,
-                                   WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
-                                   safe_text(text));
-    } else {
-        wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, canvas->height,
-                       WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
-                       safe_text(text));
-    }
-}
-
-static void draw_outlined_text_center(canvas_t *canvas, int center_x, int baseline,
-                                      wind_font_family_t family, int size,
-                                      const char *text) {
-    const wind_text_metrics_t metrics =
-        wind_font_measure(family, size, safe_text(text));
-    const int x = center_x - metrics.width / 2;
-    for (int dy = -2; dy <= 2; ++dy) {
-        for (int dx = -2; dx <= 2; ++dx) {
-            if ((dx == 0 && dy == 0) || dx * dx + dy * dy > 4) continue;
-            draw_text_color(canvas, x + dx, baseline + dy, family, size, CANVAS_WHITE,
-                            text);
-        }
-    }
-    draw_text(canvas, x, baseline, family, size, text);
-}
-
 static int triangle_edge(int ax, int ay, int bx, int by, int px, int py) {
     return (px - ax) * (by - ay) - (py - ay) * (bx - ax);
 }
@@ -624,7 +373,7 @@ static void fill_triangle(canvas_t *canvas, int ax, int ay, int bx, int by, int 
             const int e1 = triangle_edge(bx, by, cx, cy, x, y);
             const int e2 = triangle_edge(cx, cy, ax, ay, x, y);
             if ((e0 >= 0 && e1 >= 0 && e2 >= 0) || (e0 <= 0 && e1 <= 0 && e2 <= 0))
-                set_pixel(canvas, x, y, CANVAS_BLACK);
+                wind_canvas_set_pixel(canvas, x, y, CANVAS_BLACK);
         }
     }
 }
@@ -669,8 +418,8 @@ static void draw_alpha_icon(canvas_t *canvas, int center_x, int center_y, int wi
             if (!opacity) continue;
             const int pixel_x = left + x;
             const int pixel_y = top + y;
-            const uint8_t background = get_pixel(canvas, pixel_x, pixel_y);
-            set_pixel(canvas, pixel_x, pixel_y,
+            const uint8_t background = wind_canvas_get_pixel(canvas, pixel_x, pixel_y);
+            wind_canvas_set_pixel(canvas, pixel_x, pixel_y,
                       (uint8_t)((background * (255 - opacity) + 127) / 255));
         }
     }
@@ -732,7 +481,7 @@ static void draw_sample(canvas_t *canvas, int center_x,
     if (!sample->available) {
         const wind_text_metrics_t missing = wind_font_measure(
             WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, "--");
-        draw_text(canvas, center_x - missing.width / 2, layout->wind_baseline,
+        wind_canvas_draw_text(canvas, center_x - missing.width / 2, layout->wind_baseline,
                   WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, "--");
         return;
     }
@@ -745,40 +494,40 @@ static void draw_sample(canvas_t *canvas, int center_x,
     const int sustained_y = layout->wind_baseline - sustained_height;
     const int gust_y = layout->wind_baseline - gust * layout->chart_scale_height / 40;
     if (canvas->native_e1003) {
-        const int left = native_x(center_x) - 19;
-        const int top = native_y(sustained_y);
-        const int bottom = native_y(layout->wind_baseline);
+        const int left = wind_canvas_native_x(center_x) - 19;
+        const int top = wind_canvas_native_y(sustained_y);
+        const int bottom = wind_canvas_native_y(layout->wind_baseline);
         if (layout->outline_bars && sustained_height > 0)
-            native_rect(canvas, left - 2, top - 2, 42, bottom - top + 4,
+            wind_canvas_native_rect(canvas, left - 2, top - 2, 42, bottom - top + 4,
                         CANVAS_WHITE);
         if (bottom > top)
-            native_rect(canvas, left, top, 38, bottom - top, CANVAS_BLACK);
+            wind_canvas_native_rect(canvas, left, top, 38, bottom - top, CANVAS_BLACK);
     } else {
         if (layout->outline_bars && sustained_height > 0)
-            fill_rect(canvas, center_x - SUSTAINED_BAR_WIDTH / 2 - 1,
+            wind_canvas_fill_rect(canvas, center_x - SUSTAINED_BAR_WIDTH / 2 - 1,
                       sustained_y - 1, SUSTAINED_BAR_WIDTH + 2,
                       sustained_height + 2, CANVAS_WHITE);
-        fill_rect(canvas, center_x - SUSTAINED_BAR_WIDTH / 2, sustained_y,
+        wind_canvas_fill_rect(canvas, center_x - SUSTAINED_BAR_WIDTH / 2, sustained_y,
                   SUSTAINED_BAR_WIDTH, sustained_height, CANVAS_BLACK);
     }
     const int gust_gap = (gust - sustained) * layout->chart_scale_height / 40;
     if (gust > sustained && gust_gap >= 6) {
         if (canvas->native_e1003) {
             if (layout->outline_bars)
-                native_rect(canvas, native_x(center_x) - 21, native_y(gust_y) - 2,
+                wind_canvas_native_rect(canvas, wind_canvas_native_x(center_x) - 21, wind_canvas_native_y(gust_y) - 2,
                             42, 6, CANVAS_WHITE);
-            native_rect(canvas, native_x(center_x) - 19, native_y(gust_y),
+            wind_canvas_native_rect(canvas, wind_canvas_native_x(center_x) - 19, wind_canvas_native_y(gust_y),
                         38, 2, CANVAS_BLACK);
         } else {
             if (layout->outline_bars)
-                fill_rect(canvas, center_x - 9, gust_y - 1, 18, 3, CANVAS_WHITE);
-            horizontal_line(canvas, center_x - 8, center_x + 7, gust_y, CANVAS_BLACK);
+                wind_canvas_fill_rect(canvas, center_x - 9, gust_y - 1, 18, 3, CANVAS_WHITE);
+            wind_canvas_horizontal_line(canvas, center_x - 8, center_x + 7, gust_y, CANVAS_BLACK);
         }
     }
 
     snprintf(value, sizeof(value), "%d", clamp_int(sample->sustained_kt, 0, 999));
     const int label_baseline = wind_label_baseline(sustained_y, layout);
-    draw_outlined_text_center(canvas, center_x, label_baseline,
+    wind_canvas_draw_outlined_text_center(canvas, center_x, label_baseline,
                               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                               WIND_FONT_SIZE_STATUS, value);
 }
@@ -799,7 +548,7 @@ static void draw_temperature(canvas_t *canvas, int center_x, int row_top,
     const int baseline =
         text_center > 0 ? module_text_baseline(text_center) :
         row_top + (row_height + value_metrics.ascent - value_metrics.descent) / 2;
-    draw_text(canvas, center_x - value_metrics.width / 2, baseline,
+    wind_canvas_draw_text(canvas, center_x - value_metrics.width / 2, baseline,
               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, value);
 }
 
@@ -808,7 +557,7 @@ static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
     int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int error = dx + dy;
     for (;;) {
-        set_pixel(canvas, x0, y0, CANVAS_BLACK);
+        wind_canvas_set_pixel(canvas, x0, y0, CANVAS_BLACK);
         if (x0 == x1 && y0 == y1) break;
         const int doubled = 2 * error;
         if (doubled >= dy) {
@@ -837,11 +586,11 @@ static void draw_curve_segment_color(canvas_t *canvas, double x0, double y0,
             const double distance = hypot(x - x0 - t*dx, y - y0 - t*dy);
             double coverage = fmin(1.0, fmax(0.0, radius + 0.5 - distance));
             if (!canvas->antialias_text) coverage = coverage >= 0.5 ? 1.0 : 0.0;
-            const uint8_t previous = get_pixel(canvas, x, y);
+            const uint8_t previous = wind_canvas_get_pixel(canvas, x, y);
             const uint8_t gray = color == CANVAS_WHITE
                 ? (uint8_t)lround(previous + (255 - previous) * coverage)
                 : (uint8_t)lround(255 * (1.0 - coverage));
-            if (color == CANVAS_WHITE || gray < previous) set_pixel(canvas, x, y, gray);
+            if (color == CANVAS_WHITE || gray < previous) wind_canvas_set_pixel(canvas, x, y, gray);
         }
     }
 }
@@ -930,7 +679,7 @@ static void draw_tide_time_label(canvas_t *canvas,
             layout->tide_bottom + 1 - MODULE_PADDING - MODULE_TEXT_CELL / 2)
         : clamp_int(is_high ? extremum_y - 3 : extremum_y + 16,
                     layout->tide_top + 14, layout->tide_bottom - 5);
-    draw_outlined_text_center(canvas, label_center, baseline,
+    wind_canvas_draw_outlined_text_center(canvas, label_center, baseline,
                               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                               WIND_FONT_SIZE_STATUS, time);
 }
@@ -939,7 +688,7 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
                       const dashboard_layout_t *layout) {
     if (!dashboard->tide_available || dashboard->tide_sample_count < 2) {
         if (canvas->height == WIND_RENDERER_E1003_COMPOSITION_HEIGHT)
-            draw_outlined_text_center(canvas, (OUTER_X + OUTER_RIGHT) / 2,
+            wind_canvas_draw_outlined_text_center(canvas, (OUTER_X + OUTER_RIGHT) / 2,
                                       module_text_baseline((layout->tide_top + layout->tide_bottom) / 2),
                                       WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                                       WIND_FONT_SIZE_STATUS, "TIDE DATA UNAVAILABLE");
@@ -1161,7 +910,7 @@ static void draw_footer(canvas_t *canvas, const wind_renderer_dashboard_t *dashb
         FOOTER_TEXT_OFFSET_Y;
     const int footer_battery_center_y = row_top + (row_height - 1) / 2;
 
-    horizontal_line(canvas, OUTER_X, OUTER_RIGHT, footer_top, CANVAS_BLACK);
+    wind_canvas_horizontal_line(canvas, OUTER_X, OUTER_RIGHT, footer_top, CANVAS_BLACK);
 
     char status[104];
     build_footer_status(dashboard, status, sizeof(status));
@@ -1199,7 +948,7 @@ static void draw_footer(canvas_t *canvas, const wind_renderer_dashboard_t *dashb
                                       WIND_FONT_SIZE_FOOTER, label);
                 const int left = forecast_sample_center_x(canvas, day, sample) - metrics.width / 2;
                 if (left + metrics.width - 1 + FOOTER_STATUS_GAP >= status_left) break;
-                draw_text_color(canvas,
+                wind_canvas_draw_text_color(canvas,
                           left,
                           footer_text_baseline, WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                           WIND_FONT_SIZE_FOOTER, status_ink(canvas), label);
@@ -1207,7 +956,7 @@ static void draw_footer(canvas_t *canvas, const wind_renderer_dashboard_t *dashb
         }
     }
 
-    draw_text_color(canvas, status_left, footer_text_baseline,
+    wind_canvas_draw_text_color(canvas, status_left, footer_text_baseline,
                     WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_FOOTER,
                     status_ink(canvas), status);
     draw_battery(canvas, CONTENT_RIGHT, footer_battery_center_y,
@@ -1221,7 +970,7 @@ static void draw_header_status(canvas_t *canvas,
     draw_battery(canvas, CONTENT_RIGHT, 36, dashboard->battery_percent);
     const wind_text_metrics_t metrics = wind_font_measure(
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, update);
-    draw_text_color(canvas, CONTENT_RIGHT - metrics.width + 1, HEADER_TEXT_BASELINE,
+    wind_canvas_draw_text_color(canvas, CONTENT_RIGHT - metrics.width + 1, HEADER_TEXT_BASELINE,
                     WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS,
                     status_ink(canvas), update);
 }
@@ -1252,8 +1001,8 @@ static void draw_swell_height(canvas_t *canvas, int center, int baseline, int he
                 for (int dy = -2; dy <= 2; ++dy)
                     for (int dx = -2; dx <= 2; ++dx)
                         if (dx * dx + dy * dy <= 4)
-                            draw_text_color(canvas, glyph_x + dx, baseline + dy, font, size, CANVAS_WHITE, glyph);
-            } else draw_text(canvas, glyph_x, baseline, font, size, glyph);
+                            wind_canvas_draw_text_color(canvas, glyph_x + dx, baseline + dy, font, size, CANVAS_WHITE, glyph);
+            } else wind_canvas_draw_text(canvas, glyph_x, baseline, font, size, glyph);
             x += *p == '.' ? 3 : advance;
         }
     }
@@ -1287,7 +1036,7 @@ static void draw_centered_value(canvas_t *canvas, int x, int baseline, int size,
                                 const char *value, uint8_t gray) {
     const wind_text_metrics_t metrics = wind_font_measure(
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, size, value);
-    draw_text_color(canvas, x - metrics.width / 2, baseline,
+    wind_canvas_draw_text_color(canvas, x - metrics.width / 2, baseline,
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, size, gray, value);
 }
 
@@ -1350,7 +1099,7 @@ static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t 
         const int ticks[] = {0, 250, 500, 750, SWELL_SCALE_CM};
         for (size_t tick = 0; tick < sizeof(ticks) / sizeof(ticks[0]); ++tick) {
             const int y = (int)lround(swell_y(ticks[tick], plot_top, plot_bottom));
-            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) grid_dot(canvas, x, y);
+            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) wind_canvas_grid_dot(canvas, x, y);
         }
     }
     for (int day = 0; day < canvas_day_count(canvas); ++day) {
@@ -1372,8 +1121,8 @@ static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t 
                     (int)lround(swell_y(swell->height_cm, plot_top, plot_bottom));
                 draw_swell_height(canvas, x, graph_label_baseline(y, plot_top, plot_bottom), swell->height_cm);
                 if (swell->height_cm >= 0) {
-                    fill_rect(canvas, x - 4, y - 4, 9, 9, CANVAS_WHITE);
-                    fill_rect(canvas, x - 2, y - 2, 5, 5, CANVAS_BLACK);
+                    wind_canvas_fill_rect(canvas, x - 4, y - 4, 9, 9, CANVAS_WHITE);
+                    wind_canvas_fill_rect(canvas, x - 2, y - 2, 5, 5, CANVAS_BLACK);
                 }
                 if (swell->height_cm > SWELL_SCALE_CM) {
                     draw_heavy_line(canvas, x - 3, y + 5, x, y + 2);
@@ -1401,7 +1150,7 @@ static dashboard_layout_t draw_wind_module(canvas_t *canvas, const wind_renderer
         for (int knots = overview ? 0 : 5; knots <= 40; knots += 5) {
             /* The overview zero line sits inside the bottom pixel of the bars. */
             const int y = layout.wind_baseline - knots * layout.chart_scale_height / 40 - (knots == 0 ? 1 : 0);
-            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) grid_dot(canvas, x, y);
+            for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) wind_canvas_grid_dot(canvas, x, y);
         }
     }
     for (int day = 0; day < canvas_day_count(canvas); ++day)
@@ -1434,14 +1183,14 @@ static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dash
             if (sizes[module] != size) continue;
             const int height = size == 1 ? MODULE_COMPACT_HEIGHT :
                 available / large_count + (large_count == 2 && module == 1 ? available % 2 : 0);
-            if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+            if (top != DAY_HEADER_BOTTOM) wind_canvas_horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
             if (module == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, size, false);
             else draw_swell_module(canvas, dashboard, top, top + height, size, false);
             top += height;
         }
     }
     if (top > DAY_HEADER_BOTTOM && top < layout->modules_bottom)
-        horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+        wind_canvas_horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
 }
 
 /* Explicit order is independent of module size. Small rows retain their height. */
@@ -1476,7 +1225,7 @@ static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard
         if (id < 2 && sizes[id] == 2) {
             height = available / large + (--remaining == 0 ? available % large : 0);
         }
-        if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+        if (top != DAY_HEADER_BOTTOM) wind_canvas_horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
         if (id == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, sizes[id], false);
         else if (id == 1) draw_swell_module(canvas, dashboard, top, top + height, sizes[id], false);
         else if (id == 4) {
@@ -1499,7 +1248,7 @@ static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard
         }
         top += height;
     }
-    if (top > DAY_HEADER_BOTTOM && top < bottom) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
+    if (top > DAY_HEADER_BOTTOM && top < bottom) wind_canvas_horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
 }
 
 static void draw_wind_reference_lines(canvas_t *canvas,
@@ -1508,9 +1257,9 @@ static void draw_wind_reference_lines(canvas_t *canvas,
     for (int knots = 5; knots <= 40; knots += 5) {
         const int y = layout->wind_baseline - (knots * graph_height + 20) / 40;
         for (int x = OUTER_X; x <= OUTER_RIGHT; x += 7) {
-            grid_dot(canvas, x, y);
+            wind_canvas_grid_dot(canvas, x, y);
         }
-        grid_dot(canvas, OUTER_RIGHT, y);
+        wind_canvas_grid_dot(canvas, OUTER_RIGHT, y);
     }
 }
 
@@ -1520,55 +1269,23 @@ static void draw_battery(canvas_t *canvas, int right, int center_y, int percent)
     const int x = right - body_width - 2;
     const int y = center_y - body_height / 2;
     const uint8_t ink = status_ink(canvas);
-    horizontal_line(canvas, x, x + body_width - 1, y, ink);
-    horizontal_line(canvas, x, x + body_width - 1, y + body_height - 1, ink);
-    vertical_line(canvas, x, y, y + body_height - 1, ink);
-    vertical_line(canvas, x + body_width - 1, y, y + body_height - 1, ink);
-    fill_rect(canvas, right - 1, center_y - 2, 2, 5, ink);
+    wind_canvas_horizontal_line(canvas, x, x + body_width - 1, y, ink);
+    wind_canvas_horizontal_line(canvas, x, x + body_width - 1, y + body_height - 1, ink);
+    wind_canvas_vertical_line(canvas, x, y, y + body_height - 1, ink);
+    wind_canvas_vertical_line(canvas, x + body_width - 1, y, y + body_height - 1, ink);
+    wind_canvas_fill_rect(canvas, right - 1, center_y - 2, 2, 5, ink);
     if (percent >= 0) {
         const int interior_width = body_width - 4;
         const int clamped_percent = clamp_int(percent, 0, 100);
         const int fill = clamped_percent >= 99 ? interior_width
                                                : clamped_percent * interior_width / 100;
-        fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, ink);
+        wind_canvas_fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, ink);
     }
 }
 
 static int divide_rounded(int value, int divisor) {
     if (value >= 0) return (value + divisor / 2) / divisor;
     return -((-value + divisor / 2) / divisor);
-}
-
-static int dither_once(uint8_t *luma, uint8_t *palette, int height) {
-    int *current = (int *)calloc((size_t)WIND_RENDERER_WIDTH + 2u, sizeof(int));
-    int *next = (int *)calloc((size_t)WIND_RENDERER_WIDTH + 2u, sizeof(int));
-    if (!current || !next) {
-        free(current);
-        free(next);
-        return -1;
-    }
-
-    for (int y = 0; y < height; ++y) {
-        memset(next, 0, ((size_t)WIND_RENDERER_WIDTH + 2u) * sizeof(int));
-        for (int x = 0; x < WIND_RENDERER_WIDTH; ++x) {
-            const int index = y * WIND_RENDERER_WIDTH + x;
-            const int adjusted = clamp_int(
-                (int)luma[index] + divide_rounded(current[x + 1], 16), 0, 255);
-            const int target = adjusted < 128 ? 0 : 255;
-            const int error = adjusted - target;
-            palette[index] = target == 0 ? PALETTE_BLACK : PALETTE_WHITE;
-            current[x + 2] += error * 7;
-            next[x] += error * 3;
-            next[x + 1] += error * 5;
-            next[x + 2] += error;
-        }
-        int *swap = current;
-        current = next;
-        next = swap;
-    }
-    free(current);
-    free(next);
-    return 0;
 }
 
 static void set_output_pixel_raw(output_surface_t *output, int index,
@@ -1616,8 +1333,8 @@ static void set_output_pixel(output_surface_t *output, int index,
     }
     const int x = index % WIND_RENDERER_WIDTH;
     const int y = index / WIND_RENDERER_WIDTH;
-    for (int py = native_y(y); py < native_y(y + 1); ++py)
-        for (int px = native_x(x); px < native_x(x + 1); ++px)
+    for (int py = wind_canvas_native_y(y); py < wind_canvas_native_y(y + 1); ++py)
+        for (int px = wind_canvas_native_x(x); px < wind_canvas_native_x(x + 1); ++px)
             set_output_pixel_raw(output,
                                  py * WIND_RENDERER_E1003_WIDTH + px, color);
 }
@@ -1647,14 +1364,14 @@ static void draw_output_outlined_text(canvas_t *scratch, output_surface_t *outpu
     for (int dy = -2; dy <= 2; ++dy) {
         for (int dx = -2; dx <= 2; ++dx) {
             if ((dx == 0 && dy == 0) || dx * dx + dy * dy > 4) continue;
-            draw_text_mask(scratch, x + dx, baseline + dy, family, size, text);
+            wind_canvas_draw_text_mask(scratch, x + dx, baseline + dy, family, size, text);
         }
     }
     apply_mask_to_output(scratch, output, mask_left, mask_top, mask_right, mask_bottom,
                          OUTPUT_WHITE);
 
     memset(scratch->pixels, CANVAS_WHITE, scratch->size);
-    draw_text_mask(scratch, x, baseline, family, size, text);
+    wind_canvas_draw_text_mask(scratch, x, baseline, family, size, text);
     apply_mask_to_output(scratch, output, mask_left, mask_top, mask_right, mask_bottom,
                          text_color);
 }
@@ -1669,16 +1386,16 @@ static void draw_threshold_overlay(canvas_t *scratch, output_surface_t *output,
                                                     canvas_sample_count(scratch) - 1) +
                            SUSTAINED_BAR_WIDTH / 2 - 1 + 2;
     if (output->native_e1003) {
-        for (int x = native_x(line_left); x < native_x(line_right + 1); ++x)
+        for (int x = wind_canvas_native_x(line_left); x < wind_canvas_native_x(line_right + 1); ++x)
             for (int dy = 0; dy < 2; ++dy) {
                 set_output_pixel_raw(output,
-                    (native_y(y - 1) + dy) * WIND_RENDERER_E1003_WIDTH + x,
+                    (wind_canvas_native_y(y - 1) + dy) * WIND_RENDERER_E1003_WIDTH + x,
                     OUTPUT_WHITE);
                 set_output_pixel_raw(output,
-                    (native_y(y) + dy) * WIND_RENDERER_E1003_WIDTH + x,
+                    (wind_canvas_native_y(y) + dy) * WIND_RENDERER_E1003_WIDTH + x,
                     OUTPUT_BLACK);
                 set_output_pixel_raw(output,
-                    (native_y(y + 1) + dy) * WIND_RENDERER_E1003_WIDTH + x,
+                    (wind_canvas_native_y(y + 1) + dy) * WIND_RENDERER_E1003_WIDTH + x,
                     OUTPUT_WHITE);
             }
     } else for (int x = line_left; x <= line_right; ++x) {
@@ -1764,7 +1481,7 @@ int wind_renderer_render_setup(wind_renderer_display_t display,
     for (size_t i = 0; i < 2; ++i) {
         const wind_text_metrics_t metrics =
             wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, sizes[i], lines[i]);
-        draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
+        wind_canvas_draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
                         height / 2 + (i ? 32 : -8), WIND_FONT_BERKELEY_MONO_BOLD,
                         sizes[i], CANVAS_BLACK, lines[i]);
     }
@@ -1794,13 +1511,13 @@ int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t displ
     if (native && !(canvas.font_mask = malloc(WIND_RENDERER_WIDTH * 80u))) return -2;
     const int offset = (height - WIND_RENDERER_HEIGHT) / 2;
     /* 80 x 40 body, 4 px outline, centered including the 6 px terminal. */
-    fill_rect(&canvas, 357, 184 + offset, 80, 40, CANVAS_WHITE);
-    fill_rect(&canvas, 361, 188 + offset, 72, 32, CANVAS_BLACK);
-    fill_rect(&canvas, 437, 196 + offset, 6, 16, CANVAS_WHITE);
+    wind_canvas_fill_rect(&canvas, 357, 184 + offset, 80, 40, CANVAS_WHITE);
+    wind_canvas_fill_rect(&canvas, 361, 188 + offset, 72, 32, CANVAS_BLACK);
+    wind_canvas_fill_rect(&canvas, 437, 196 + offset, 6, 16, CANVAS_WHITE);
     const char *label = "Battery empty";
     const wind_text_metrics_t metrics =
         wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, 34, label);
-    draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
+    wind_canvas_draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
                     282 + offset, WIND_FONT_BERKELEY_MONO_BOLD, 34,
                     CANVAS_WHITE, label);
     const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
@@ -1890,9 +1607,9 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     const int frame_bottom = dashboard->show_dedicated_footer
                                  ? canvas_footer_top(&canvas)
                                  : canvas_outer_bottom(&canvas);
-    outline_rect(&canvas, OUTER_X, OUTER_TOP, OUTER_RIGHT - OUTER_X + 1,
+    wind_canvas_outline_rect(&canvas, OUTER_X, OUTER_TOP, OUTER_RIGHT - OUTER_X + 1,
                  frame_bottom - OUTER_TOP + 1);
-    horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, HEADER_BOTTOM, CANVAS_BLACK);
+    wind_canvas_horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, HEADER_BOTTOM, CANVAS_BLACK);
 
     if (!dashboard->custom_modules) draw_wind_reference_lines(&canvas, &layout);
 
@@ -1903,42 +1620,42 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     uppercase_spot_name(spot_name, sizeof(spot_name), dashboard->spot_name);
     const wind_text_metrics_t name_metrics =
         wind_font_measure(WIND_FONT_INTER, WIND_FONT_SIZE_SPOT, spot_name);
-    draw_text(&canvas, CONTENT_LEFT, HEADER_TEXT_BASELINE, WIND_FONT_INTER,
+    wind_canvas_draw_text(&canvas, CONTENT_LEFT, HEADER_TEXT_BASELINE, WIND_FONT_INTER,
               WIND_FONT_SIZE_SPOT, spot_name);
     if (name_metrics.width > header_width) {
         const int fade_width = 240;
         const int name_top = HEADER_TEXT_BASELINE - name_metrics.ascent;
         const int name_bottom = HEADER_TEXT_BASELINE + name_metrics.descent;
-        const int ink_right = rightmost_ink_pixel(&canvas, CONTENT_LEFT, name_top,
+        const int ink_right = wind_canvas_rightmost_ink_pixel(&canvas, CONTENT_LEFT, name_top,
                                                   header_text_right, name_bottom);
-        fade_region_to_white(
+        wind_canvas_fade_region_to_white(
             &canvas, clamp_int(ink_right - fade_width + 1, CONTENT_LEFT, ink_right),
             name_top, ink_right, name_bottom);
-        fill_rect(&canvas, header_text_right + 1, name_top,
+        wind_canvas_fill_rect(&canvas, header_text_right + 1, name_top,
                   OUTER_RIGHT - header_text_right - 1, name_bottom - name_top + 1,
                   CANVAS_WHITE);
-        fill_rect(&canvas, OUTER_RIGHT + 1, name_top,
+        wind_canvas_fill_rect(&canvas, OUTER_RIGHT + 1, name_top,
                   WIND_RENDERER_WIDTH - OUTER_RIGHT - 1, name_bottom - name_top + 1,
                   CANVAS_WHITE);
     }
     if (!dashboard->show_dedicated_footer) draw_header_status(&canvas, dashboard);
-    horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM, CANVAS_BLACK);
+    wind_canvas_horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM, CANVAS_BLACK);
     if (!dashboard->ordered_modules && (dashboard->show_weather || dashboard->show_temperature)) {
         const int conditions_top =
             dashboard->show_weather ? layout.weather_top : layout.temperature_top;
-        horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, conditions_top, CANVAS_BLACK);
+        wind_canvas_horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, conditions_top, CANVAS_BLACK);
     }
     if (!dashboard->ordered_modules && dashboard->show_tide)
-        horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.tide_top, CANVAS_BLACK);
+        wind_canvas_horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.tide_top, CANVAS_BLACK);
     for (int day = 0; day < canvas_day_count(&canvas); ++day) {
         const int column_x = day_column_x(&canvas, day);
         if (day > 0)
-            vertical_line(&canvas, column_x, HEADER_BOTTOM,
+            wind_canvas_vertical_line(&canvas, column_x, HEADER_BOTTOM,
                           dashboard->show_dedicated_footer
                               ? canvas_footer_top(&canvas)
                               : canvas_outer_bottom(&canvas),
                           CANVAS_BLACK);
-        draw_text(&canvas, column_x + 17, DAY_LABEL_BASELINE,
+        wind_canvas_draw_text(&canvas, column_x + 17, DAY_LABEL_BASELINE,
                   WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY,
                   safe_text(dashboard->days[day].day));
         for (int sample = 0; sample < canvas_sample_count(&canvas); ++sample) {
@@ -1970,36 +1687,15 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         const char *message = "FORECAST UNAVAILABLE";
         const wind_text_metrics_t metrics = wind_font_measure(
             WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, message);
-        draw_text(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
+        wind_canvas_draw_text(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
                   299 + (canvas.height - WIND_RENDERER_HEIGHT) / 2,
                   WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, message);
     }
 
     draw_footer(&canvas, dashboard);
 
-    int output_result = 0;
-    if (output_format == OUTPUT_PALETTE) {
-        output_result = dither_once(canvas.pixels, output_pixels, canvas.height);
-    } else if (output_format == OUTPUT_GRAY4) {
-        for (size_t pixel = 0; pixel < canvas.size; ++pixel) {
-            output_pixels[pixel] =
-                (uint8_t)(((unsigned)canvas.pixels[pixel] * 3u + 127u) / 255u);
-        }
-    } else if (output_format == OUTPUT_GC16) {
-        for (size_t pixel = 0; pixel < canvas.size; ++pixel) {
-            output_pixels[pixel] =
-                (uint8_t)(((unsigned)canvas.pixels[pixel] * 15u + 127u) / 255u);
-        }
-    } else {
-        for (size_t pixel = 0; pixel < canvas.size; ++pixel) {
-            const size_t offset = pixel * 4u;
-            const uint8_t luma = canvas.pixels[pixel];
-            output_pixels[offset] = luma;
-            output_pixels[offset + 1] = luma;
-            output_pixels[offset + 2] = luma;
-            output_pixels[offset + 3] = 255;
-        }
-    }
+    int output_result = wind_renderer_encode_luma(
+        canvas.pixels, canvas.size, canvas.height, output_pixels, output_format);
     output_surface_t output = {
         .pixels = output_pixels,
         .format = output_format,
@@ -2174,12 +1870,12 @@ static bool overview_spot_label(canvas_t *c, int x, int baseline, const char *na
         for (int oy = -2; oy <= 2; oy++) for (int ox = -2; ox <= 2; ox++) {
             const int yy = baseline - 34 + dy + oy;
             if (yy >= 0 && yy < c->height)
-                set_pixel(c, x + dx + ox, yy, CANVAS_WHITE);
+                wind_canvas_set_pixel(c, x + dx + ox, yy, CANVAS_WHITE);
         }
     }
     for (int dy = 0; dy < 45; dy++) for (int dx = 0; dx < width; dx++) {
         const uint8_t ink = scaled[dy * width + dx];
-        if (ink > 0) set_pixel(c, x + dx, baseline - 34 + dy, CANVAS_WHITE - ink);
+        if (ink > 0) wind_canvas_set_pixel(c, x + dx, baseline - 34 + dy, CANVAS_WHITE - ink);
     }
     free(scaled);
     free(mask);
@@ -2200,13 +1896,13 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
     c.font_mask = malloc(WIND_RENDERER_WIDTH * 80u);
     if (!c.font_mask) return -2;
     memset(c.pixels, CANVAS_WHITE, c.size);
-    outline_rect(&c, 12, 12, 776, 576);
+    wind_canvas_outline_rect(&c, 12, 12, 776, 576);
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
-        draw_text(&c, day_column_x(&c, day)+17, 35, WIND_FONT_BERKELEY_MONO_BOLD,
+        wind_canvas_draw_text(&c, day_column_x(&c, day)+17, 35, WIND_FONT_BERKELEY_MONO_BOLD,
                   15, safe_text(rows[0].days[day].day));
-    horizontal_line(&c, 12, 787, 46, CANVAS_BLACK);
+    wind_canvas_horizontal_line(&c, 12, 787, 46, CANVAS_BLACK);
     for (int day = 1; day < WIND_RENDERER_DAY_COUNT; ++day)
-        vertical_line(&c, day_column_x(&c, day), 12, 587, CANVAS_BLACK);
+        wind_canvas_vertical_line(&c, day_column_x(&c, day), 12, 587, CANVAS_BLACK);
     for (size_t row = 0; row < count; ++row) {
         int top = WIND_OVERVIEW_TOP + row * WIND_OVERVIEW_ROW_HEIGHT;
         char name[WIND_RENDERER_SPOT_NAME_CAPACITY];
@@ -2216,14 +1912,14 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
             draw_swell_module(&c, &rows[row], top, top+179, 2, true);
         else draw_wind_module(&c, &rows[row], top, top+179, 2, true);
         if (top + 179 < 587 - 1)
-            horizontal_line(&c, 12, 787, top+179, CANVAS_BLACK);
+            wind_canvas_horizontal_line(&c, 12, 787, top+179, CANVAS_BLACK);
     }
     if (total > WIND_OVERVIEW_PAGE_SIZE) {
         int x = WIND_OVERVIEW_BUTTON_X, y = WIND_OVERVIEW_BUTTON_Y;
         int side = WIND_OVERVIEW_BUTTON_SIZE;
-        fill_rect(&c, x-3, y-3, side*2+7, side+7, CANVAS_WHITE);
-        outline_rect(&c, x, y, side*2+1, side+1);
-        vertical_line(&c, x+side, y, y+side, CANVAS_BLACK);
+        wind_canvas_fill_rect(&c, x-3, y-3, side*2+7, side+7, CANVAS_WHITE);
+        wind_canvas_outline_rect(&c, x, y, side*2+1, side+1);
+        wind_canvas_vertical_line(&c, x+side, y, y+side, CANVAS_BLACK);
         for (int button = 0; button < 2; ++button) {
             int cx = x+side/2+button*side, cy = y+side/2;
             int sign = button == 0 ? 1 : -1;
@@ -2232,7 +1928,7 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
             bool enabled = button == 0 ? first+count < total : first > 0;
             if (!enabled) for (int yy=cy-5; yy<=cy+5; ++yy)
                 for (int xx=cx-7; xx<=cx+7; ++xx)
-                    if (get_pixel(&c, xx, yy) == 0) set_pixel(&c, xx, yy, 187);
+                    if (wind_canvas_get_pixel(&c, xx, yy) == 0) wind_canvas_set_pixel(&c, xx, yy, 187);
         }
     }
     for (size_t i = 0; i < c.size; ++i) output[i] = (c.pixels[i]*15u+127u)/255u;

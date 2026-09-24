@@ -35,10 +35,11 @@
     "vue-sonner": "^2.0.9"
   },
   "devDependencies": {
-    "@sentry/vite-plugin": "5.4.0",
     "@playwright/test": "^1.55.0",
+    "@sentry/vite-plugin": "5.4.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
+    "ajv": "^8.20.0",
     "happy-dom": "^20.11.6",
     "occt-import-js": "0.0.23",
     "vite": "^7.1.3",

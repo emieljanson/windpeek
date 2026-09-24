@@ -36,8 +36,6 @@ import {
 
 export { DEFAULT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
-const SPOT_SETTING_FIELDS = ['showThreshold', 'threshold', 'showWeather', 'showTemperature', 'showTide', 'showDedicatedFooter', 'timeFormat', 'temperatureUnit', 'windSize', 'swellSize', 'selectedModelId', 'selectedSwellModelId', 'moduleOrder']
-
 export const useConfiguratorStore = defineStore('configurator', {
   state: () => {
     const displayConfiguration = createDefaultDisplayConfiguration()
@@ -118,7 +116,7 @@ export const useConfiguratorStore = defineStore('configurator', {
   },
   actions: {
     captureSpotSettings() {
-      return Object.fromEntries(SPOT_SETTING_FIELDS.map(key => [key, Array.isArray(this[key]) ? [...this[key]] : this[key]]))
+      return captureSpotSettings(this)
     },
     async addConfiguredSpot(spotId, options = {}) {
       if (!this.supportsMultipleSpots || this.configuredSpotIds.length >= 10 || this.configuredSpotIds.includes(spotId) || !this.spotById(spotId)) return false

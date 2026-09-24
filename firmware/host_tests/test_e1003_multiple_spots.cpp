@@ -54,7 +54,7 @@ TEST(E1003Spots, TransfersTenSettingsPersistsAndNavigatesBothDirections) {
 }
 
 TEST(E1003Spots, RejectsTamperedNestedDuplicateAndEleventhSpots) {
-    for (int scenario = 0; scenario < 4; ++scenario) {
+    for (int scenario = 0; scenario < 10; ++scenario) {
         wind_installer_service_t service;
         wind_installer_dependencies_t dependencies = {};
         wind_installer_service_init(&service, &dependencies);
@@ -66,6 +66,12 @@ TEST(E1003Spots, RejectsTamperedNestedDuplicateAndEleventhSpots) {
         if (scenario == 1) cJSON_AddArrayToObject(first, "additionalSpots");
         if (scenario == 2) cJSON_ReplaceItemInArray(extras, 1, cJSON_Duplicate(first, true));
         if (scenario == 3) cJSON_AddItemToArray(extras, cJSON_Duplicate(first, true));
+        if (scenario == 4) cJSON_AddBoolToObject(cJSON_GetObjectItem(first, "display"), "extra", true);
+        if (scenario == 5) cJSON_AddBoolToObject(first, "extra", true);
+        if (scenario == 6) cJSON_DeleteItemFromObjectCaseSensitive(first, "digest");
+        if (scenario == 7) cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItem(first, "display"), "timeFormat");
+        if (scenario == 8) cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItem(first, "display"), "timeFormat", cJSON_CreateString("local"));
+        if (scenario == 9) cJSON_ReplaceItemInArray(cJSON_GetObjectItem(cJSON_GetObjectItem(first, "display"), "moduleOrder"), 1, cJSON_CreateString("wind"));
         char *json = cJSON_PrintUnformatted(root);
         EXPECT_EQ(stage(&service, json).find("configuration_staged"), std::string::npos);
         EXPECT_FALSE(service.candidate_staged);

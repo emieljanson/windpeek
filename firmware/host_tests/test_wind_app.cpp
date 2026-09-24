@@ -9,7 +9,28 @@
 extern "C" {
 #include "wind_app.h"
 #include "wind_app_status.h"
+#include "wind_dashboard_data.h"
 #include "wind_timezone.h"
+}
+
+TEST(WindDashboardData, OverviewUsesTheSameForecastAndSwellSamplesAsTheDashboard)
+{
+    wind_local_datetime_t date = {2026, 8, 24, 8, 0, 0, 0};
+    int64_t timestamp = 0;
+    ASSERT_EQ(wind_timezone_to_unix("Europe/Amsterdam", &date, &timestamp), ESP_OK);
+    wind_forecast_t forecast = {};
+    forecast.days[0].samples[0] = {timestamp, 8, 17, 23, 90};
+    wind_swell_t swell = {};
+    swell.sample_count = 1;
+    swell.samples[0] = {timestamp, 145, 83, 270, 55, 51, 180};
+    wind_renderer_dashboard_t row = {};
+    ASSERT_EQ(wind_dashboard_build_overview_row("Edam", "Europe/Amsterdam",
+        &forecast, &swell, true, timestamp, &row), ESP_OK);
+    EXPECT_STREQ(row.spot_name, "Edam");
+    EXPECT_EQ(row.days[0].samples[0].sustained_kt, 17);
+    EXPECT_EQ(row.days[0].samples[0].gust_kt, 23);
+    EXPECT_EQ(row.swell[0][0].height_cm, 145);
+    EXPECT_EQ(row.secondary_swell_hourly[0][8], 55);
 }
 
 static std::string read_wind_app_source()
@@ -106,7 +127,9 @@ class WindAppTest : public testing::Test {
   protected:
     void SetUp() override
     {
-        root = std::filesystem::temp_directory_path() / "einkwind-app-test";
+        root = std::filesystem::temp_directory_path() /
+            (std::string("einkwind-app-test-") +
+             testing::UnitTest::GetInstance()->current_test_info()->name());
         std::filesystem::remove_all(root);
         std::filesystem::create_directories(root);
         fake.forecast_path = (root / "forecast").string();

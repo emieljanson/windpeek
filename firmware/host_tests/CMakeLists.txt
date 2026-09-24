@@ -269,6 +269,7 @@ add_wind_test(
   ../main/wind_cache.c
   ../main/wind_schedule.c
   ../main/wind_app.c
+  ../main/wind_dashboard_data.c
   ../main/wind_app_status.c
   ../main/wind_app_cycle.c
 )
@@ -292,6 +293,8 @@ add_wind_test(
   test_wind_renderer.cpp
   ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
+  ../main/wind_renderer_canvas.c
+  ../main/wind_renderer_output.c
   ../main/wind_renderer_input.c
   ${WIND_FONT_SOURCES}
 )
@@ -311,6 +314,8 @@ add_executable(
   render_wind_fixture.cpp
   ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
+  ../main/wind_renderer_canvas.c
+  ../main/wind_renderer_output.c
   ../main/wind_renderer_input.c
   ${WIND_FONT_SOURCES}
 )
@@ -327,7 +332,7 @@ target_compile_definitions(
 )
 target_link_libraries(render_wind_fixture m)
 
-add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ../main/wind_renderer_input.c ${WIND_FONT_SOURCES})
+add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ../main/wind_renderer_canvas.c ../main/wind_renderer_output.c ../main/wind_renderer_input.c ${WIND_FONT_SOURCES})
 target_include_directories(render_battery_empty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../main)
 target_link_libraries(render_battery_empty m)
 add_test(NAME BatteryEmptyPreviewExport
