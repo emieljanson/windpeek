@@ -21,7 +21,8 @@ int wind_canvas_native_y(int y) {
 
 void wind_canvas_native_rect(canvas_t *canvas, int left, int top, int width,
                         int height, uint8_t gray) {
-    if (width <= 0 || height <= 0 || left < 0 || top < 0 ||
+    if (width == 0 || height == 0) return;
+    if (width < 0 || height < 0 || left < 0 || top < 0 ||
         left + width > WIND_RENDERER_E1003_WIDTH ||
         top + height > WIND_RENDERER_E1003_HEIGHT) {
         canvas->clipped++;

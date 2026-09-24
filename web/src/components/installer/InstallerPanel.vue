@@ -23,6 +23,7 @@ const networks = ref([])
 const wifiBusy = ref(false)
 const scanBusy = ref(false)
 const wifiReady = ref(false)
+const scanDisplayPhase = ref('wifi')
 const reTerminalHelpOpen = ref(false)
 let scanPromise = null
 const support = getSerialSupport()
@@ -42,7 +43,7 @@ const deviceLabel = computed(() => ({
 const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windpeek over USB.')
 const displayPhase = computed(() => {
   if (unsupportedReason.value && state.value.phase === 'ready') return 'error'
-  if (state.value.phase === 'wifi' && !wifiReady.value) return 'wifi-scanning'
+  if (state.value.phase === 'wifi' && !wifiReady.value) return scanDisplayPhase.value
   return state.value.phase
 })
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
@@ -57,20 +58,26 @@ watch(
 )
 
 const critical = computed(() => !state.value.safeToDisconnect)
-const progressCopy = computed(() => ({
-  ready: ['Install Windpeek', `Ready to connect a ${deviceLabel.value}.`],
-  'checking-device': ['Checking device', 'Keep the USB cable connected.'],
-  downloading: ['Preparing firmware', 'Downloading the latest firmware.'],
-  'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
-  reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
-  'wifi-scanning': ['Finding Wi-Fi networks', 'Windpeek is checking which networks are nearby.'],
-  configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
-  error: [unsupportedReason.value && state.value.phase === 'ready' ? 'Use a supported browser' : 'Setup interrupted', ''],
-  reconnect: ['Reconnect your device', ''],
-  'verification-issue': ['Setup didn’t finish', ''],
-  wifi: ['Connect to Wi-Fi', ''],
-  verifying: ['Checking the forecast', 'Keep the USB cable connected.'],
-}[displayPhase.value] ?? ['Working…', 'Windpeek is continuing setup.']))
+const progressCopy = computed(() => {
+  if (state.value.phase === 'wifi' && !wifiReady.value && scanDisplayPhase.value !== 'wifi') {
+    return scanDisplayPhase.value === 'checking-device'
+      ? ['Checking device', 'Checking nearby Wi-Fi networks.']
+      : ['Finding Windpeek', 'Checking nearby Wi-Fi networks.']
+  }
+  return ({
+    ready: ['Install Windpeek', `Ready to connect a ${deviceLabel.value}.`],
+    'checking-device': ['Checking device', 'Keep the USB cable connected.'],
+    downloading: ['Preparing firmware', 'Downloading the latest firmware.'],
+    'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
+    reconnecting: ['Finding Windpeek', 'Waiting for the device to restart over USB.'],
+    configuring: ['Applying setup', 'Your spot and display options are being transferred.'],
+    error: [unsupportedReason.value && state.value.phase === 'ready' ? 'Use a supported browser' : 'Setup interrupted', ''],
+    reconnect: ['Reconnect your device', ''],
+    'verification-issue': ['Setup didn’t finish', ''],
+    wifi: ['Connect to Wi-Fi', ''],
+    verifying: ['Checking the forecast', 'Keep the USB cable connected.'],
+  }[displayPhase.value] ?? ['Working…', 'Windpeek is continuing setup.'])
+})
 
 async function focusStep() {
   await nextTick()
@@ -89,6 +96,7 @@ function hideLeavingStep(element) {
 
 watch(() => state.value.phase, async (phase, previous) => {
   if (phase === 'wifi' && previous !== 'wifi') {
+    scanDisplayPhase.value = previous === 'checking-device' ? 'checking-device' : 'reconnecting'
     wifiReady.value = false
     // Keep the actual Wi-Fi rejection visible when returning from a test.
     // The previous network choices are still available for another attempt.
@@ -179,7 +187,7 @@ onBeforeUnmount(() => { unsubscribe(); document.removeEventListener('keydown', h
             </div>
           </div>
 
-          <div v-else-if="state.phase === 'checking-device'" class="installer-step" aria-busy="true">
+          <div v-else-if="displayPhase === 'checking-device'" class="installer-step" aria-busy="true">
             <div class="installer-step__copy">
               <h2 id="installer-title">{{ progressCopy[0] }}</h2>
               <p>{{ progressCopy[1] }}</p>
@@ -206,7 +214,7 @@ onBeforeUnmount(() => { unsubscribe(); document.removeEventListener('keydown', h
             </div>
           </div>
 
-          <InstallerWifi v-else-if="state.phase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" :diagnostic-report="state.diagnosticReport" @submit="submitWifi" @rescan="scanNetworks" />
+          <InstallerWifi v-else-if="displayPhase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" :diagnostic-report="state.diagnosticReport" @submit="submitWifi" @rescan="scanNetworks" />
           <InstallerComplete v-else-if="state.phase === 'complete'" @done="close" />
 
           <div v-else-if="state.phase === 'verification-issue'" class="installer-step installer-step--error">

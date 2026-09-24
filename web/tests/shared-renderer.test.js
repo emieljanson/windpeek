@@ -393,6 +393,18 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
     expect(invalidPixel).toBe(-1)
   })
 
+  it('renders a calm-wind sample in the native E1003 graph', async () => {
+    const renderer = await loadRealRenderer()
+    const input = fixtureInput(2, 17, 0)
+    input.windSize = 2
+    input.swellSize = 0
+    input.moduleOrder = [0, 1, 2, 3, 4]
+    input.days[3].samples[4].sustainedKt = 0
+    input.days[3].samples[4].gustKt = 5
+
+    expect(() => renderer.renderPreviewForDisplay(input, 3)).not.toThrow()
+  })
+
   it('crosses the flat setter bridge without depending on native struct layout', async () => {
     const renderer = await loadRealRenderer()
     const expected = new Uint8Array(await readFile(join(fixtureDirectory, 'solid-17.bin')))

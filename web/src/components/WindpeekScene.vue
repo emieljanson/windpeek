@@ -276,6 +276,14 @@ function scheduleViewportResize() {
 
 function renderFrame(timestamp) {
   animationFrame = undefined
+  try {
+    drawFrame(timestamp)
+  } catch (error) {
+    reportSceneFailure(error)
+  }
+}
+
+function drawFrame(timestamp) {
   const heroEntranceAnimating = heroEntranceActive
     ? (heroEntranceAnimation?.update(timestamp) ?? false)
     : false
@@ -297,8 +305,16 @@ function renderFrame(timestamp) {
   if (active) requestRender()
 }
 
+function reportSceneFailure(error) {
+  if (!lifetime.active || status.value === 'error') return
+  stopLoadingStatus()
+  status.value = 'error'
+  console.error('Windpeek 3D preview failed', error)
+  emit('error')
+}
+
 function requestRender() {
-  if (!lifetime.active || document.hidden || animationFrame !== undefined) return
+  if (!lifetime.active || status.value === 'error' || document.hidden || animationFrame !== undefined) return
   animationFrame = requestAnimationFrame(renderFrame)
 }
 
@@ -446,7 +462,7 @@ function handleReducedMotionChange(event) {
 async function initialize() {
   if (!host.value || !isWebGLAvailable()) {
     status.value = 'error'
-    emit('error', 'This browser cannot show the 3D model.')
+    emit('error')
     return
   }
 
@@ -621,10 +637,7 @@ async function initialize() {
     emit('ready')
     requestRender()
   } catch (error) {
-    if (!lifetime.active) return
-    stopLoadingStatus()
-    status.value = 'error'
-    emit('error', error instanceof Error ? error.message : 'The 3D model could not be loaded.')
+    reportSceneFailure(error)
   }
 }
 
