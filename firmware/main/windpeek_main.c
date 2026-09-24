@@ -63,6 +63,7 @@ static bool s_input_initial_overview_open;
 static size_t s_input_initial_overview_page;
 static _Atomic(TaskHandle_t) s_setup_forecasts_task;
 static atomic_bool s_setup_forecasts_pending;
+static atomic_uint s_quick_frames_state;
 #endif
 
 static void configuration_installed(void) {
@@ -491,6 +492,8 @@ static bool dashboard_wait_notified(void *context, int seconds)
 }
 
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static void start_quick_frames_task(void);
+
 static void setup_forecasts_task(void *argument) {
     (void)argument;
     TickType_t retry_delay = portMAX_DELAY;
@@ -502,14 +505,86 @@ static void setup_forecasts_task(void *argument) {
         esp_err_t result = ESP_ERR_INVALID_STATE;
         if (battery_allows_work()) {
             power_manager_work_begin();
-            if (wifi_manager_is_connected() || connect_installed_wifi())
+            if (wifi_manager_is_connected() || connect_installed_wifi()) {
                 result = wind_app_prefetch_other_spots();
+                start_quick_frames_task();
+            }
             power_manager_work_end();
         }
         retry_delay = result == ESP_OK ? portMAX_DELAY : pdMS_TO_TICKS(5 * 60 * 1000);
         if (result != ESP_OK)
             ESP_LOGW(TAG, "Setup forecasts incomplete: %s; retrying in five minutes",
                      esp_err_to_name(result));
+    }
+}
+
+static bool quick_frames_may_continue(void) {
+    while (atomic_load(&s_pending_input_actions) > 0) {
+        if (power_manager_is_installer_active()) return false;
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    return !power_manager_is_installer_active() && battery_allows_work();
+}
+
+static void quick_frames_sweep(void) {
+    const size_t count = wind_spots_count();
+    if (!count) return;
+    size_t selected = 0;
+    if (wind_spots_load_selected(&selected) != ESP_OK || selected >= count) selected = 0;
+    for (size_t rank = 0; rank < count; ++rank) {
+        const int offset = rank == 0 ? 0 : (rank & 1u)
+            ? (int)((rank + 1) / 2) : -(int)(rank / 2);
+        if (!quick_frames_may_continue()) return;
+        power_manager_work_begin();
+        (void)wind_app_prepare_quick_frame(wind_spots_offset(selected, offset), 0);
+        power_manager_work_end();
+        vTaskDelay(1);
+    }
+    const size_t last_page = wind_overview_last_page(count);
+    for (size_t rank = 0; rank <= last_page; ++rank) {
+        if (!quick_frames_may_continue()) return;
+        const size_t page = (selected / WIND_OVERVIEW_PAGE_SIZE + rank) % (last_page + 1);
+        power_manager_work_begin();
+        (void)wind_app_prepare_quick_overview(page);
+        power_manager_work_end();
+        vTaskDelay(1);
+    }
+    for (int variant = 1; variant <= 3; ++variant) {
+        for (size_t rank = 0; rank < count; ++rank) {
+            const int offset = rank == 0 ? 0 : (rank & 1u)
+                ? (int)((rank + 1) / 2) : -(int)(rank / 2);
+            if (!quick_frames_may_continue()) return;
+            power_manager_work_begin();
+            (void)wind_app_prepare_quick_frame(wind_spots_offset(selected, offset), variant);
+            power_manager_work_end();
+            vTaskDelay(1);
+        }
+    }
+}
+
+static void quick_frames_task(void *argument) {
+    (void)argument;
+    for (;;) {
+        quick_frames_sweep();
+        unsigned expected = 1;
+        if (atomic_compare_exchange_strong(&s_quick_frames_state, &expected, 0)) break;
+        expected = 2;
+        if (!atomic_compare_exchange_strong(&s_quick_frames_state, &expected, 1)) break;
+    }
+    vTaskDelete(NULL);
+}
+
+static void start_quick_frames_task(void) {
+    for (;;) {
+        unsigned expected = 0;
+        if (atomic_compare_exchange_strong(&s_quick_frames_state, &expected, 1)) break;
+        if (expected == 2) return;
+        expected = 1;
+        if (atomic_compare_exchange_strong(&s_quick_frames_state, &expected, 2)) return;
+    }
+    if (xTaskCreate(quick_frames_task, "wind_quick", 16384, NULL, 2, NULL) != pdPASS) {
+        atomic_store(&s_quick_frames_state, 0);
+        ESP_LOGW(TAG, "Could not prepare quick screen images");
     }
 }
 #endif
@@ -553,6 +628,9 @@ static void dashboard_task(void *argument)
                 ESP_LOGW(TAG, "Scheduled forecast refresh failed: %s", esp_err_to_name(result));
             }
             power_manager_work_end();
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+            if (result == ESP_OK) start_quick_frames_task();
+#endif
         }
     }
 }
@@ -760,6 +838,7 @@ void app_main(void)
     if (s_input_commands &&
         xTaskCreate(e1003_input_task,"wind_input",24576,NULL,6,NULL)!=pdPASS)
         ESP_LOGE(TAG,"Failed to start input sampling");
+    if (s_input_commands && !first_setup) start_quick_frames_task();
     TaskHandle_t setup_task = NULL;
     if (xTaskCreate(setup_forecasts_task, "wind_setup_forecasts", 16384,
                     NULL, 2, &setup_task) != pdPASS)

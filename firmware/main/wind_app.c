@@ -1377,6 +1377,96 @@ esp_err_t wind_app_show_cached_start(void) {
     return wind_app_start();
 }
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static esp_err_t prepare_quick_frame_unlocked(size_t index, int variant,
+    wind_forecast_t *forecast, uint8_t *bitmap, time_t now) {
+    wind_spot_runtime_t *runtime = &s_spots[index];
+    if (wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
+                        forecast) != ESP_OK) return ESP_OK;
+    s_focused_date[0] = 0;
+    if (variant)
+        snprintf(s_focused_date, sizeof(s_focused_date), "%s",
+                 forecast->days[variant - 1].local_date);
+    if (wind_quick_spot_cached(runtime, s_focused_date,
+                               s_overview_configuration)) return ESP_OK;
+    esp_err_t result = render_dashboard(runtime, forecast,
+        wind_app_forecast_freshness(forecast, now), false, now,
+        bitmap, WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    if (result == ESP_OK)
+        wind_quick_spot_save(runtime, s_focused_date,
+            s_overview_configuration, bitmap,
+            WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    return result;
+}
+#endif
+
+esp_err_t wind_app_prepare_quick_frame(size_t index, int variant) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (variant < 0 || variant > 3) return ESP_ERR_INVALID_ARG;
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = ensure_ready();
+    if (result == ESP_OK && (s_preview_configuration || index >= wind_spots_count()))
+        result = ESP_ERR_INVALID_STATE;
+    wind_forecast_t *forecast = NULL;
+    uint8_t *bitmap = NULL;
+    char previous_focus[sizeof(s_focused_date)];
+    memcpy(previous_focus, s_focused_date, sizeof(previous_focus));
+    if (result == ESP_OK) {
+        forecast = malloc(sizeof(*forecast));
+        bitmap = heap_caps_malloc(WIND_RENDERER_E1003_COMPOSITION_BYTES,
+                                  MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!forecast || !bitmap) result = ESP_ERR_NO_MEM;
+        else {
+            time_t now;
+            time(&now);
+            wind_spot_runtime_t *runtime = &s_spots[index];
+            apply_spot_display(index);
+            load_or_refresh_swell(runtime, false, false, now);
+            load_or_refresh_tide(runtime, false, false, now);
+            refresh_render_signatures();
+            result = prepare_quick_frame_unlocked(index, variant, forecast, bitmap, now);
+        }
+    }
+    memcpy(s_focused_date, previous_focus, sizeof(s_focused_date));
+    if (s_ready) {
+        apply_spot_display(s_selected_index);
+        refresh_render_signatures();
+    }
+    free(bitmap);
+    free(forecast);
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+#else
+    (void)index; (void)variant;
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+esp_err_t wind_app_prepare_quick_overview(size_t page) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = ensure_ready();
+    if (result == ESP_OK && s_preview_configuration)
+        result = ESP_ERR_INVALID_STATE;
+    if (result == ESP_OK && page > wind_overview_last_page(wind_spots_count()))
+        result = ESP_ERR_INVALID_ARG;
+    if (result == ESP_OK) {
+        time_t now;
+        time(&now);
+        if (!wind_quick_overview_cached(s_spots, wind_spots_count(),
+                                        quick_overview_configuration(), page, now))
+            result = render_overview_unlocked(page, OVERVIEW_PREPARE, false);
+    }
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+#else
+    (void)page;
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
 esp_err_t wind_app_prepare_quick_frames(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
@@ -1414,23 +1504,10 @@ esp_err_t wind_app_prepare_quick_frames(void) {
             load_or_refresh_swell(runtime, false, false, now);
             load_or_refresh_tide(runtime, false, false, now);
             refresh_render_signatures();
-            if (wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
-                                forecast) != ESP_OK) continue;
             for (int variant = 0; variant <= 3; ++variant) {
-                s_focused_date[0] = 0;
-                if (variant)
-                    snprintf(s_focused_date, sizeof(s_focused_date), "%s",
-                             forecast->days[variant - 1].local_date);
-                if (wind_quick_spot_cached(runtime, s_focused_date,
-                                           s_overview_configuration)) continue;
-                result = render_dashboard(runtime, forecast,
-                    wind_app_forecast_freshness(forecast, now), false, now,
-                    bitmap, WIND_RENDERER_E1003_COMPOSITION_BYTES);
-                if (result == ESP_OK)
-                    wind_quick_spot_save(runtime, s_focused_date,
-                        s_overview_configuration, bitmap,
-                        WIND_RENDERER_E1003_COMPOSITION_BYTES);
-                else break;
+                result = prepare_quick_frame_unlocked(index, variant,
+                    forecast, bitmap, now);
+                if (result != ESP_OK) break;
             }
             if (result != ESP_OK) break;
         }
