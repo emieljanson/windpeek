@@ -264,9 +264,7 @@ bool wind_quick_overview_show(const wind_spot_runtime_t *spots, size_t spot_coun
     const bool same_screen = actual.magic == expected.magic &&
         actual.version == expected.version && actual.page == expected.page &&
         actual.screen_hash == expected.screen_hash;
-    const bool recent = actual.generated_at <= now && now - actual.generated_at <= 6 * 3600;
-    const bool shown = same_screen &&
-        (actual.source_hash == expected.source_hash || recent) &&
+    const bool shown = same_screen && actual.source_hash == expected.source_hash &&
         epaper_display(packed) == ESP_OK;
     free(packed);
     if (shown) {

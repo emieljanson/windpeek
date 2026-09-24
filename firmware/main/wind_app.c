@@ -386,7 +386,6 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
 
         if (display.show_tide && runtime->have_tide &&
             runtime->tide.capability == WIND_TIDE_AVAILABLE) {
-            dashboard->tide_available = 1;
             for (size_t tide_index = 0;
                  tide_index < runtime->tide.sample_count &&
                  dashboard->tide_sample_count < WIND_RENDERER_MAX_TIDE_SAMPLES;
@@ -428,6 +427,7 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                     break;
                 }
             }
+            dashboard->tide_available = dashboard->tide_sample_count >= 2;
         }
     }
 
@@ -778,7 +778,9 @@ display_from_installed(const installed_display_configuration_t *installed) {
     display.wind_size = installed->wind_size;
     display.swell_size = installed->swell_size;
     memcpy(display.module_order, installed->module_order, sizeof(display.module_order));
-    display.threshold_kt = installed->threshold_kt;
+    display.threshold_kt = installed->threshold_kt >= WIND_RENDERER_MIN_THRESHOLD_KT &&
+        installed->threshold_kt <= WIND_RENDERER_MAX_THRESHOLD_KT
+        ? installed->threshold_kt : WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     display.show_weather = installed->show_weather;
     display.show_temperature = installed->show_temperature;
     display.show_tide = installed->show_tide;

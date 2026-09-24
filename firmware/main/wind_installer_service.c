@@ -8,6 +8,7 @@
 
 #include "cJSON.h"
 #include "wind_clock.h"
+#include "wind_renderer.h"
 #include "wind_usb_protocol.h"
 
 #ifndef FIRMWARE_VERSION
@@ -186,7 +187,8 @@ static bool parse_single_configuration(const cJSON *json, installed_configuratio
         (strcmp(time_format, "24-hour") != 0 && strcmp(time_format, "12-hour") != 0) ||
         (strcmp(temperature_unit, "celsius") != 0 &&
          strcmp(temperature_unit, "fahrenheit") != 0) ||
-        threshold->valuedouble < 0 || threshold->valuedouble > 99 ||
+        threshold->valuedouble < WIND_RENDERER_MIN_THRESHOLD_KT ||
+        threshold->valuedouble > WIND_RENDERER_MAX_THRESHOLD_KT ||
         threshold->valuedouble != (double) (uint8_t) threshold->valuedouble) return false;
     configuration->version = (uint32_t) version->valuedouble;
     configuration->generation = 1;

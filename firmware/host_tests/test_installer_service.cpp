@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cstdio>
 #include <cstring>
 #include <string>
 
@@ -549,6 +550,26 @@ TEST(InstallerServiceTest, StagesIndependentSwellModelAndModuleOrder) {
     EXPECT_EQ(service.candidate.display.module_order[0], 1);
     EXPECT_EQ(service.candidate.display.module_order[1], 4);
     EXPECT_STREQ(service.candidate.display.swell_model, "meteofrance_wave");
+}
+
+TEST(InstallerServiceTest, RejectsThresholdBeyondRendererRange) {
+    const auto stage = [](int threshold) {
+        installed_configuration_t configuration;
+        installed_configuration_default(&configuration);
+        configuration.display.threshold_kt = threshold;
+        const uint64_t digest = installed_configuration_digest(&configuration);
+        char json[1400];
+        std::snprintf(json, sizeof(json),
+            R"({"command":"stage_configuration","configuration":{"version":5,"boardId":"%s","deviceTimezone":"Europe/Amsterdam","spot":{"id":"brouwersdam","name":"Brouwersdam","latitude":51.7506,"longitude":3.8577,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":%d,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius","windSize":"large","swellSize":"off","moduleOrder":["wind","swell","weather","temperature","tide"],"swellModel":"best_match"},"digest":"%016llx"}})",
+            WINDPEEK_BOARD_ID, threshold, static_cast<unsigned long long>(digest));
+        FakeDevice fake;
+        auto service = make_service(&fake);
+        request(&service, R"({"command":"begin","unixTime":1787932800})");
+        return request(&service, json);
+    };
+
+    EXPECT_NE(stage(35).find("configuration_staged"), std::string::npos);
+    EXPECT_NE(stage(36).find("configuration_rejected"), std::string::npos);
 }
 
 TEST(InstallerServiceTest, UsbSetupCanWaitFiveHoursBeforeProvidingWifi)

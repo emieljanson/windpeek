@@ -194,6 +194,70 @@ TEST_F(WindAppTest, PrefetchUpdatesCacheWithoutRenderingOrDisplaying)
     EXPECT_EQ(fake.displays, 0);
 }
 
+TEST_F(WindAppTest, MissingCacheRefetchesEvenWhenOldScheduleWasSatisfied)
+{
+    wind_app_outcome_t outcome;
+    const int64_t now = 1787544000;
+    ASSERT_EQ(wind_app_prefetch(&app, true, now, &outcome), ESP_OK);
+    ASSERT_EQ(fake.fetches, 1);
+    ASSERT_TRUE(std::filesystem::remove(fake.forecast_path + ".a"));
+    std::filesystem::remove(fake.forecast_path + ".b");
+    initialize_app(1); // Reinstall/restart reloads the previously satisfied schedule.
+
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 60, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 2);
+    EXPECT_TRUE(outcome.published_forecast);
+}
+
+TEST_F(WindAppTest, MissingCacheRefetchesWithoutRestart)
+{
+    const int64_t now = 1787544000;
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_prefetch(&app, true, now, &outcome), ESP_OK);
+    ASSERT_TRUE(std::filesystem::remove(fake.forecast_path + ".a"));
+    std::filesystem::remove(fake.forecast_path + ".b");
+
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 60, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.published_forecast);
+    EXPECT_EQ(fake.fetches, 2);
+}
+
+TEST_F(WindAppTest, MissingCacheFailureWaitsForScheduledRetry)
+{
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome;
+    const int64_t now = 1787544000;
+    ASSERT_EQ(wind_app_prefetch(&app, false, now, &outcome), ESP_OK);
+    ASSERT_EQ(fake.fetches, 1);
+
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 60, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 1);
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 300, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 2);
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 360, &outcome), ESP_OK);
+    EXPECT_EQ(fake.fetches, 2);
+}
+
+TEST_F(WindAppTest, MissingCacheWithOldScheduleRetriesAfterFetchFailure)
+{
+    const int64_t now = 1787544000;
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_prefetch(&app, true, now, &outcome), ESP_OK);
+    ASSERT_TRUE(std::filesystem::remove(fake.forecast_path + ".a"));
+    std::filesystem::remove(fake.forecast_path + ".b");
+    initialize_app(1);
+
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 60, &outcome), ESP_OK);
+    ASSERT_TRUE(outcome.attempted_fetch);
+    ASSERT_EQ(fake.fetches, 2);
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 4 * 60, &outcome), ESP_OK);
+    EXPECT_FALSE(outcome.attempted_fetch);
+    ASSERT_EQ(wind_app_prefetch(&app, false, now + 6 * 60, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_EQ(fake.fetches, 3);
+}
+
 TEST_F(WindAppTest, ShowCachedNeverFetches)
 {
     auto forecast = app_forecast(1787544000);

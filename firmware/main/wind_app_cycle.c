@@ -79,6 +79,11 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     bool have_active = wind_cache_load(app->config.forecast_cache_path,
                                        &app->config.identity, &active) == ESP_OK;
     local.used_cache = have_active;
+    if ((mode == REFRESH_DISPLAY || mode == PREFETCH_ONLY) && !have_active &&
+        app->schedule.last_satisfied_boundary > 0 &&
+        wind_schedule_state_set_scope(&app->schedule, app->config.identity.spot_id,
+                                      app->config.identity.timezone) != ESP_OK)
+        return ESP_ERR_INVALID_STATE;
 
     bool cache_has_coverage =
         have_active &&
@@ -242,4 +247,3 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
                                wind_app_outcome_t *outcome) {
     return run_internal(app, DISPLAY_CACHED, false, now, outcome);
 }
-

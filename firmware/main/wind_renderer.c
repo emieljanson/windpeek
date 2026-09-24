@@ -1945,21 +1945,39 @@ int wind_renderer_render_preview_rgba_for_display(
 static bool overview_spot_label(canvas_t *c, int x, int baseline, const char *name) {
     if (c->native_e1003) {
         const int left = wind_canvas_native_x(x);
-        const wind_text_metrics_t metrics = wind_font_measure(
-            WIND_FONT_INTER, WIND_FONT_SIZE_OVERVIEW_NATIVE, name);
-        const int clear_top = clamp_int(wind_canvas_native_y(baseline) - metrics.ascent - 4,
-                                        0, WIND_RENDERER_E1003_HEIGHT - 1);
-        const int clear_bottom = clamp_int(wind_canvas_native_y(baseline) + metrics.descent + 4,
-                                           0, WIND_RENDERER_E1003_HEIGHT);
-        const int clear_left = clamp_int(left - 5, 0, WIND_RENDERER_E1003_WIDTH - 1);
-        const int clear_right = clamp_int(left + metrics.width + 7, 0,
-                                          WIND_RENDERER_E1003_WIDTH);
-        wind_canvas_native_rect(c, clear_left, clear_top, clear_right - clear_left,
-                    clear_bottom - clear_top, CANVAS_WHITE);
-        wind_font_draw(c->pixels, WIND_RENDERER_E1003_WIDTH,
-                       WIND_RENDERER_E1003_HEIGHT, WIND_RENDERER_E1003_WIDTH,
-                       left, wind_canvas_native_y(baseline), WIND_FONT_INTER,
-                       WIND_FONT_SIZE_OVERVIEW_NATIVE, CANVAS_BLACK, name);
+        enum { MASK_HEIGHT = 106, MASK_BASELINE = 80, OUTLINE_RADIUS = 4 };
+        const int width = clamp_int(wind_font_measure(WIND_FONT_INTER,
+            WIND_FONT_SIZE_OVERVIEW_NATIVE, name).width + 2,
+            1, WIND_RENDERER_E1003_WIDTH - left);
+        uint8_t *mask = malloc((size_t)width * MASK_HEIGHT);
+        if (!mask) return false;
+        memset(mask, CANVAS_WHITE, (size_t)width * MASK_HEIGHT);
+        wind_font_draw(mask, width, MASK_HEIGHT, width, 0, MASK_BASELINE,
+                       WIND_FONT_INTER, WIND_FONT_SIZE_OVERVIEW_NATIVE,
+                       CANVAS_BLACK, name);
+        const int top = wind_canvas_native_y(baseline) - MASK_BASELINE;
+        for (int dy = 0; dy < MASK_HEIGHT; ++dy)
+            for (int dx = 0; dx < width; ++dx) {
+                if (mask[(size_t)dy * width + dx] != CANVAS_BLACK) continue;
+                for (int oy = -OUTLINE_RADIUS; oy <= OUTLINE_RADIUS; ++oy)
+                    for (int ox = -OUTLINE_RADIUS; ox <= OUTLINE_RADIUS; ++ox) {
+                        if (ox * ox + oy * oy > OUTLINE_RADIUS * OUTLINE_RADIUS) continue;
+                        const int px = left + dx + ox, py = top + dy + oy;
+                        if (px >= 0 && px < WIND_RENDERER_E1003_WIDTH &&
+                            py >= 0 && py < WIND_RENDERER_E1003_HEIGHT)
+                            c->pixels[(size_t)py * WIND_RENDERER_E1003_WIDTH + px] =
+                                CANVAS_WHITE;
+                    }
+            }
+        for (int dy = 0; dy < MASK_HEIGHT; ++dy)
+            for (int dx = 0; dx < width; ++dx) {
+                const int py = top + dy;
+                if (py >= 0 && py < WIND_RENDERER_E1003_HEIGHT &&
+                    mask[(size_t)dy * width + dx] == CANVAS_BLACK)
+                    c->pixels[(size_t)py * WIND_RENDERER_E1003_WIDTH + left + dx] =
+                        CANVAS_BLACK;
+            }
+        free(mask);
         return true;
     }
     uint8_t *mask = malloc(800 * 64);

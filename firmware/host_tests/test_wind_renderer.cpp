@@ -1437,6 +1437,14 @@ TEST(SpotOverviewRenderer, E1003SpotNameUsesIndividualPanelPixels) {
         }
     EXPECT_GT(native_edges, 500);
     EXPECT_EQ(gray_name_pixels, 0);
+    int visible_divider_pixels = 0;
+    for (int y = 150; y < 195; ++y)
+        visible_divider_pixels +=
+            pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + 390] == 15 &&
+            pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + 391] == 0 &&
+            pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + 392] == 0 &&
+            pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + 393] == 15;
+    EXPECT_GT(visible_divider_pixels, 0);
 }
 
 TEST(WindRenderer, E1003TextUsesIndividualPanelPixels) {
