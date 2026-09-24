@@ -50,7 +50,7 @@ set(WINDPEEK_SOURCES
 )
 
 if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003)
-    list(APPEND WINDPEEK_SOURCES "wind_quick_cache.c")
+    list(APPEND WINDPEEK_SOURCES "wind_quick_cache.c" "wind_app_prefetch.c")
 endif()
 
 set(WINDPEEK_PRIV_REQUIRES

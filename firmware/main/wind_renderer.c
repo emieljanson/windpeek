@@ -352,6 +352,14 @@ int wind_renderer_dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
             return 0;
     }
     if (dashboard->tide_available && dashboard->tide_sample_count < 2) return 0;
+    if (dashboard->ordered_modules) {
+        unsigned seen = 0;
+        for (int index = 0; index < 5; ++index) {
+            const int id = dashboard->module_order[index];
+            if (id < 0 || id >= 5 || (seen & (1u << id))) return 0;
+            seen |= 1u << id;
+        }
+    }
     return 1;
 }
 
@@ -986,14 +994,20 @@ static void draw_footer(canvas_t *canvas, const wind_renderer_dashboard_t *dashb
                  dashboard->battery_percent);
 }
 
+static int header_status_left(const wind_renderer_dashboard_t *dashboard) {
+    char update[48];
+    build_header_update(dashboard, update, sizeof(update));
+    const wind_text_metrics_t metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, update);
+    return CONTENT_RIGHT - metrics.width + 1;
+}
+
 static void draw_header_status(canvas_t *canvas,
                                const wind_renderer_dashboard_t *dashboard) {
     char update[48];
     build_header_update(dashboard, update, sizeof(update));
     draw_battery(canvas, CONTENT_RIGHT, 36, dashboard->battery_percent);
-    const wind_text_metrics_t metrics = wind_font_measure(
-        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, update);
-    wind_canvas_draw_text_color(canvas, CONTENT_RIGHT - metrics.width + 1, HEADER_TEXT_BASELINE,
+    wind_canvas_draw_text_color(canvas, header_status_left(dashboard), HEADER_TEXT_BASELINE,
                     WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS,
                     status_ink(canvas), update);
 }
@@ -1675,15 +1689,6 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
             : canvas_size;
     if (!dashboard || !output_pixels || output_size < required_size) return -1;
     if (!wind_renderer_dashboard_valid(dashboard)) return -3;
-    if (dashboard->ordered_modules) {
-        unsigned seen = 0;
-        for (int i = 0; i < 5; ++i) {
-            int id = dashboard->module_order[i];
-            if (id < 0 || id >= 5 || (seen & (1u << id))) return -3;
-            seen |= 1u << id;
-        }
-    }
-
     canvas_t canvas = {0};
     canvas.pixels = output_format == OUTPUT_GC16
         ? output_pixels : (uint8_t *)malloc(canvas_size);
@@ -1715,8 +1720,8 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
 
     if (!dashboard->custom_modules) draw_wind_reference_lines(&canvas, &layout);
 
-    const int header_text_right =
-        dashboard->show_dedicated_footer ? CONTENT_RIGHT : 630;
+    const int header_text_right = dashboard->show_dedicated_footer
+        ? CONTENT_RIGHT : header_status_left(dashboard) - 9;
     const int header_width = header_text_right - CONTENT_LEFT + 1;
     char spot_name[WIND_RENDERER_SPOT_NAME_CAPACITY];
     uppercase_spot_name(spot_name, sizeof(spot_name), dashboard->spot_name);

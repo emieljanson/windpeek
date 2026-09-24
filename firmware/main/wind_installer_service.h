@@ -100,7 +100,7 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
     wind_installer_service_t *service, bool response_transmitted);
 
 #ifdef ESP_PLATFORM
-esp_err_t wind_installer_service_start(void);
+esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void));
 #endif
 
 #ifdef __cplusplus

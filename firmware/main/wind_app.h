@@ -76,6 +76,7 @@ esp_err_t wind_app_start(void);
 bool wind_app_has_cached_start(void);
 esp_err_t wind_app_show_cached_start(void);
 esp_err_t wind_app_prepare_quick_frames(void);
+esp_err_t wind_app_prefetch_other_spots(void);
 esp_err_t wind_app_refresh(bool force_refresh);
 esp_err_t wind_app_show_overview(void);
 esp_err_t wind_app_toggle_day(size_t day_index);

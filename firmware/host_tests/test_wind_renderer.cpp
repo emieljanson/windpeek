@@ -14,6 +14,7 @@
 
 extern "C" {
 #include "wind_renderer.h"
+#include "wind_renderer_internal.h"
 #include "wind_renderer_fixture.h"
 }
 
@@ -983,6 +984,29 @@ TEST(WindRenderer, KeepsStatusRightAlignedWhenFadingLongTitle) {
     (void)Render(dashboard, &long_stats);
     EXPECT_EQ(long_stats.status_right, normal_stats.status_right);
     EXPECT_EQ(long_stats.clipped_primitives, 0);
+}
+
+TEST(WindRenderer, UsesAvailableHeaderSpaceBesideStatus) {
+    auto dashboard = Dashboard();
+    dashboard.spot_name = "Edam Noord - Galgenveld";
+    dashboard.show_dedicated_footer = 0;
+    const Frame without_footer = Render(dashboard);
+    dashboard.show_dedicated_footer = 1;
+    const Frame with_footer = Render(dashboard);
+    for (int y = 25; y <= 70; ++y)
+        for (int x = 30; x <= 650; ++x)
+            EXPECT_EQ(without_footer[(size_t)y * WIND_RENDERER_WIDTH + x],
+                      with_footer[(size_t)y * WIND_RENDERER_WIDTH + x])
+                << "at " << x << ", " << y;
+}
+
+TEST(WindRenderer, RejectsDuplicateOrderedModulesDuringValidation) {
+    auto dashboard = Dashboard();
+    dashboard.ordered_modules = 1;
+    for (int index = 0; index < 5; ++index) dashboard.module_order[index] = index;
+    EXPECT_EQ(wind_renderer_dashboard_valid(&dashboard), 1);
+    dashboard.module_order[4] = 0;
+    EXPECT_EQ(wind_renderer_dashboard_valid(&dashboard), 0);
 }
 
 TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {

@@ -60,6 +60,7 @@ typedef struct {
     char apply_ssid[WIND_INSTALLER_SSID_MAX + 1];
     char apply_password[WIND_INSTALLER_PASSWORD_MAX + 1];
     bool apply_has_wifi;
+    void (*on_configuration_installed)(void);
     int64_t last_activity_us;
 } physical_installer_t;
 
@@ -231,6 +232,8 @@ static void physical_apply_task(void *argument)
         // Publish completion only after cleanup, so the next attempt cannot have
         // its configuration or credentials erased by the previous worker.
         atomic_store(&installer->apply_state, final_state);
+        if (final_state == PHYSICAL_APPLY_COMPLETE && installer->on_configuration_installed)
+            installer->on_configuration_installed();
     }
 }
 
@@ -447,7 +450,7 @@ static void installer_usb_task(void *argument)
     }
 }
 
-esp_err_t wind_installer_service_start(void)
+esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void))
 {
     if (s_apply_task) return ESP_ERR_INVALID_STATE;
     esp_err_t result = ESP_OK;
@@ -460,6 +463,7 @@ esp_err_t wind_installer_service_start(void)
     s_physical_installer = heap_caps_calloc(1, sizeof(*s_physical_installer),
                                            MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!s_physical_installer) return ESP_ERR_NO_MEM;
+    s_physical_installer->on_configuration_installed = on_configuration_installed;
     atomic_init(&s_physical_installer->apply_state, PHYSICAL_APPLY_IDLE);
     atomic_init(&s_physical_installer->apply_error, ESP_OK);
     atomic_init(&s_physical_installer->diagnostic_stage, DIAG_READY);

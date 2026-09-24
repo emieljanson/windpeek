@@ -13,6 +13,7 @@
 #ifdef ESP_PLATFORM
 #include "wind_app_runtime.h"
 #include "wind_quick_cache.h"
+#include "wind_app_prefetch.h"
 #include <stdatomic.h>
 #include "board_hal.h"
 #include "config.h"
@@ -30,6 +31,7 @@
 #include "wind_config.h"
 #include "wind_analytics.h"
 #include "wind_renderer.h"
+#include "wind_renderer_internal.h"
 #include "wind_overview.h"
 #include "wifi_manager.h"
 #include "esp_attr.h"
@@ -39,7 +41,7 @@
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics
 // change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000011)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000015)
 
 static const char *TAG = "wind_app";
 static wind_spot_runtime_t *s_spots;
@@ -507,6 +509,21 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
             }
             dashboard->tide_extremum_count = count;
         }
+    }
+    if (!s_preview_configuration && !wind_renderer_dashboard_valid(dashboard)) {
+        ESP_LOGE(TAG, "Invalid dashboard for %s (tide=%d/%d, wind=%d, swell=%d, threshold=%d)",
+                 spot->id, dashboard->tide_available, dashboard->tide_sample_count,
+                 dashboard->wind_size, dashboard->swell_size, dashboard->threshold_kt);
+        memset(dashboard, 0, sizeof(*dashboard));
+        dashboard->spot_name = spot->display_name;
+        dashboard->provider = "";
+        dashboard->updated_time = "";
+        dashboard->state = WIND_RENDERER_UNAVAILABLE;
+        dashboard->refresh_failed = 1;
+        dashboard->battery_percent = -1;
+        dashboard->display_mode = WIND_RENDERER_MODE_SOLID;
+        dashboard->threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+        dashboard->show_dedicated_footer = 1;
     }
     wind_renderer_stats_t stats;
     int render_result = wind_renderer_render_for_display(
@@ -1437,6 +1454,75 @@ esp_err_t wind_app_prepare_quick_frames(void) {
     free(forecast);
     xSemaphoreGive(s_runtime_lock);
     return result;
+#else
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+esp_err_t wind_app_prefetch_other_spots(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = ensure_ready();
+    const size_t count = result == ESP_OK ? wind_spots_count() : 0;
+    const size_t selected = s_selected_index;
+    const uint64_t configuration = s_overview_configuration;
+    xSemaphoreGive(s_runtime_lock);
+    if (result != ESP_OK) return result;
+
+    bool incomplete = false;
+    for (size_t rank = 1; rank < count; ++rank) {
+        if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+            return ESP_ERR_INVALID_STATE;
+        result = ensure_ready();
+        if (result != ESP_OK || s_preview_configuration ||
+            power_manager_is_installer_active() || !wifi_manager_is_connected() ||
+            wind_spots_count() != count || s_overview_configuration != configuration) {
+            xSemaphoreGive(s_runtime_lock);
+            return result != ESP_OK ? result : ESP_ERR_INVALID_STATE;
+        }
+        const int offset = (rank & 1u) ? (int)((rank + 1) / 2) : -(int)(rank / 2);
+        const size_t index = wind_spots_offset(selected, offset);
+        wind_app_prefetch_spot_t spot;
+        wind_app_prefetch_spot_capture(&spot, &s_spots[index],
+            index == 0 ? &s_installed_configuration.display
+                       : &s_installed_configuration.additional_spots[index - 1].display);
+        time_t now;
+        time(&now);
+        xSemaphoreGive(s_runtime_lock);
+
+        if (!wind_app_prefetch_spot_fetch(&spot, now)) incomplete = true;
+
+        if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+            return ESP_ERR_INVALID_STATE;
+        result = ensure_ready();
+        if (result != ESP_OK || wind_spots_count() != count ||
+            s_overview_configuration != configuration) {
+            xSemaphoreGive(s_runtime_lock);
+            return result != ESP_OK ? result : ESP_ERR_INVALID_STATE;
+        }
+        wind_spot_runtime_t *runtime = &s_spots[index];
+        if (memcmp(&runtime->app.schedule, &spot.original_schedule,
+                   sizeof(spot.original_schedule)) == 0) {
+            runtime->app.schedule = spot.app.schedule;
+            runtime->app.coverage_refresh_attempted = spot.app.coverage_refresh_attempted;
+            runtime->app.coverage_refresh_cache_retrieved_at =
+                spot.app.coverage_refresh_cache_retrieved_at;
+        }
+        apply_spot_display(index);
+        load_or_refresh_swell(runtime, false, false, now);
+        load_or_refresh_tide(runtime, false, false, now);
+        apply_spot_display(s_selected_index);
+        refresh_render_signatures();
+        xSemaphoreGive(s_runtime_lock);
+    }
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    if (!s_preview_configuration && s_overview_open &&
+        s_overview_configuration == configuration)
+        (void)render_overview_unlocked(s_overview_page, OVERVIEW_INTERACTIVE, false);
+    xSemaphoreGive(s_runtime_lock);
+    return incomplete ? ESP_ERR_NOT_FOUND : ESP_OK;
 #else
     return ESP_ERR_NOT_SUPPORTED;
 #endif

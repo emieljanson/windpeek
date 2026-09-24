@@ -61,7 +61,17 @@ static atomic_bool s_interactive_refresh_requested;
 static atomic_int_fast64_t s_last_input_action_us;
 static bool s_input_initial_overview_open;
 static size_t s_input_initial_overview_page;
+static _Atomic(TaskHandle_t) s_setup_forecasts_task;
+static atomic_bool s_setup_forecasts_pending;
 #endif
+
+static void configuration_installed(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    atomic_store(&s_setup_forecasts_pending, true);
+    TaskHandle_t task = atomic_load(&s_setup_forecasts_task);
+    if (task) xTaskNotifyGive(task);
+#endif
+}
 
 static esp_err_t store_battery_latch(bool empty)
 {
@@ -480,6 +490,30 @@ static bool dashboard_wait_notified(void *context, int seconds)
     return ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(seconds * 1000)) != 0;
 }
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static void setup_forecasts_task(void *argument) {
+    (void)argument;
+    TickType_t retry_delay = portMAX_DELAY;
+    for (;;) {
+        (void)ulTaskNotifyTake(pdTRUE, retry_delay);
+        const bool newly_installed = atomic_exchange(&s_setup_forecasts_pending, false);
+        if (!newly_installed && retry_delay == portMAX_DELAY) continue;
+        while (power_manager_is_installer_active()) vTaskDelay(pdMS_TO_TICKS(100));
+        esp_err_t result = ESP_ERR_INVALID_STATE;
+        if (battery_allows_work()) {
+            power_manager_work_begin();
+            if (wifi_manager_is_connected() || connect_installed_wifi())
+                result = wind_app_prefetch_other_spots();
+            power_manager_work_end();
+        }
+        retry_delay = result == ESP_OK ? portMAX_DELAY : pdMS_TO_TICKS(5 * 60 * 1000);
+        if (result != ESP_OK)
+            ESP_LOGW(TAG, "Setup forecasts incomplete: %s; retrying in five minutes",
+                     esp_err_to_name(result));
+    }
+}
+#endif
+
 static void dashboard_task(void *argument)
 {
     (void) argument;
@@ -545,7 +579,7 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_manager_init());
 
     if (!hardware_profile_allows_panel()) {
-        ESP_ERROR_CHECK(wind_installer_service_start());
+        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
         } else if (profile.driver_failure_latched) {
@@ -576,7 +610,7 @@ void app_main(void)
         // USB recovery must remain available even when the panel or its
         // controller is missing. A fatal check here would reboot forever
         // before the browser installer can reconnect.
-        ESP_ERROR_CHECK(wind_installer_service_start());
+        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
@@ -597,10 +631,11 @@ void app_main(void)
     s_battery_lock = xSemaphoreCreateMutex();
     ESP_ERROR_CHECK(s_battery_lock ? ESP_OK : ESP_ERR_NO_MEM);
     while (!battery_allows_work()) vTaskDelay(pdMS_TO_TICKS(100));
-    ESP_ERROR_CHECK(wind_installer_service_start());
+    ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
 
     power_manager_work_begin();
-    if (!installed_configuration_has_setup()) {
+    const bool first_setup = !installed_configuration_has_setup();
+    if (first_setup) {
         ESP_LOGI(TAG, "Waiting for USB setup before starting the forecast");
         power_manager_work_end();
         bool setup_drawn = false;
@@ -676,6 +711,7 @@ void app_main(void)
         run_touch_action(action, true);
         result=ESP_OK;
     } else result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() :
+        first_setup && wind_app_last_render_succeeded() ? ESP_OK :
         cached_start ? wind_app_show_cached_start() : wind_app_start();
 #else
     result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() : wind_app_start();
@@ -724,6 +760,14 @@ void app_main(void)
     if (s_input_commands &&
         xTaskCreate(e1003_input_task,"wind_input",24576,NULL,6,NULL)!=pdPASS)
         ESP_LOGE(TAG,"Failed to start input sampling");
+    TaskHandle_t setup_task = NULL;
+    if (xTaskCreate(setup_forecasts_task, "wind_setup_forecasts", 16384,
+                    NULL, 2, &setup_task) != pdPASS)
+        ESP_LOGE(TAG, "Failed to start setup forecast loading");
+    else {
+        atomic_store(&s_setup_forecasts_task, setup_task);
+        if (atomic_load(&s_setup_forecasts_pending)) xTaskNotifyGive(setup_task);
+    }
 #else
     xTaskCreate(dashboard_task, "wind_dashboard", 16384, NULL, 5, &s_dashboard_task);
     xTaskCreate(spot_buttons_task, "wind_buttons", 16384, NULL, 5, NULL);
