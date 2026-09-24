@@ -177,6 +177,7 @@
             "$ref": "#"
           },
           {
+            "type": "object",
             "properties": {
               "version": {
                 "const": 5

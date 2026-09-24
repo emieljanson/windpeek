@@ -1,5 +1,42 @@
 import * as THREE from 'three'
 
+export function createLitFloor(stage) {
+  const material = new THREE.MeshStandardMaterial({ color: 0x505052, roughness: 0.92, metalness: 0, envMapIntensity: 0.12, transparent: true, depthWrite: false })
+  material.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFloorPosition = position.xy;')
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= 1.0 - smoothstep(0.08, 0.38, length(vFloorPosition));')
+      .replace('#include <opaque_fragment>', 'outgoingLight *= 0.8;\n#include <opaque_fragment>')
+  }
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), material)
+  floor.name = 'STUDIO_LIT_FLOOR'
+  floor.renderOrder = -2
+  floor.rotation.x = -Math.PI / 2
+  floor.position.y = stage.surfaceY - 0.0001
+  floor.receiveShadow = true
+  return floor
+}
+
+export function applyStudioSurfaceTheme(scene, dark) {
+  const floor = scene.getObjectByName('STUDIO_LIT_FLOOR')
+  if (floor) floor.visible = dark
+  const shadow = scene.getObjectByName('PHYSICAL_SHADOW_LAYER')
+  if (shadow) shadow.visible = !dark
+  const contact = scene.getObjectByName('CONTACT_OCCLUSION')
+  if (contact) contact.material.uniforms.contactColor.value.setRGB(...(dark ? [0, 0, 0] : [0.075, 0.082, 0.078]))
+  const grid = scene.getObjectByName('SURFACE_GRID')
+  if (grid) {
+    grid.visible = true
+    grid.material.uniforms.lineColor.value.set(dark ? 0x7f7f81 : 0x6f7784)
+    grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 1.4 : 0.24
+    grid.material.uniforms.stageFadeStart.value = dark ? 0.055 : 0.28
+    grid.material.uniforms.stageFadeEnd.value = dark ? 0.22 : 0.82
+  }
+}
+
 export function createPerspectiveSurface(stage) {
   const gridMaterial = new THREE.ShaderMaterial({
     name: 'perspective-line-surface',

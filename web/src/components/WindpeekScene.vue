@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
@@ -34,12 +33,12 @@ import {
 import { createResourceLifetime, disposeSceneObject, disposeSceneResources } from '../configurator/sceneLifetime'
 import { loadSceneResources } from '../configurator/sceneResources'
 import { createScreenTexture } from '../configurator/screenTexture'
-import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
-import { createPerspectiveSurface, createPhysicalShadowLayer, createContactOcclusion } from '../configurator/studioSurface'
+import { createStudioLighting } from '../configurator/studioLighting'
+import { createPerspectiveSurface, createPhysicalShadowLayer, createContactOcclusion, createLitFloor, applyStudioSurfaceTheme } from '../configurator/studioSurface'
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { createSceneComposer } from '../configurator/sceneComposer'
 import { createSceneQuality, SCENE_QUALITY, scenePixelRatio } from '../configurator/sceneQuality'
-import { PRODUCT_LIGHTING, DARK_PRODUCT_LIGHTING } from '../configurator/productLighting'
+import { PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
 import SceneDebugLabs from './SceneDebugLabs.vue'
 import { markingGroupForSourceMesh } from '../configurator/markingDebug'
@@ -150,78 +149,18 @@ defineExpose({
     return screenSource.exportPng()
   },
 })
-let keyLight
-let softbox
-let accent
-let rimLight
-let oppositePortFill
-let hemisphereLight
+let studioLighting
 let themeQuery
-let environmentPalette
 
 function applyStudioTheme() {
-  if (!scene || !renderer || !keyLight) return
+  if (!studioLighting) return
   const dark = themeQuery.matches && !props.captureMode
-  const lighting = dark ? DARK_PRODUCT_LIGHTING : PRODUCT_LIGHTING
-  renderer.toneMappingExposure = dark ? 1.4 : 1.0
-  scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
-  scene.fog = dark ? new THREE.FogExp2(lighting.background, 1.5) : null
-  if (environmentPalette !== lighting.environment) {
-    const previousEnvironment = environmentTarget
-    environmentTarget = createProductStudioEnvironment(renderer, lighting.environment)
-    environmentPalette = lighting.environment
-    scene.environment = environmentTarget.texture
-    previousEnvironment?.dispose()
-  }
-  hemisphereLight.color.set(lighting.hemisphere.sky)
-  hemisphereLight.groundColor.set(lighting.hemisphere.ground)
-  hemisphereLight.intensity = lighting.hemisphere.intensity
-  if (oppositePortFill) {
-    oppositePortFill.intensity = dark ? lighting.rim.intensity : 0
-    oppositePortFill.color.set(lighting.rim.color)
-    oppositePortFill.position.set(-lighting.rim.position[0], lighting.rim.position[1], lighting.rim.position[2])
-  }
-  for (const [light, settings] of [[keyLight, lighting.key], [softbox, lighting.softbox], [accent, lighting.accent], [rimLight, lighting.rim]]) {
-    light.color.set(settings.color)
-    light.intensity = settings.intensity
-    light.position.set(...settings.position)
-    if (light.isRectAreaLight) {
-      light.width = settings.width
-      light.height = settings.height
-    }
-  }
-  softbox.lookAt(0, 0, 0)
-  accent.lookAt(0, 0, 0)
-  keyLight.angle = lighting.key.angle
-  keyLight.penumbra = lighting.key.penumbra
-  keyLight.target.position.set(...(lighting.key.target ?? [0, -0.02, 0]))
-  if (dark && props.boardId === BOARD_IDS.E1003) {
-    // Cover the larger face evenly instead of leaving its edges in shadow.
-    keyLight.angle = 0.75
-    keyLight.intensity *= 1.4
-    softbox.width = 0.32
-    softbox.height = 0.28
-    softbox.intensity *= 2
-    hemisphereLight.intensity *= 2
-  }
-  const floor = scene.getObjectByName('STUDIO_LIT_FLOOR')
-  if (floor) floor.visible = dark
+  studioLighting.apply({ dark, captureMode: props.captureMode })
+  applyStudioSurfaceTheme(scene, dark)
   usbCable?.setDistanceFade(
     dark ? 0.055 : USB_CABLE_DISTANCE_FADE_START,
     dark ? 0.22 : USB_CABLE_DISTANCE_FADE_END,
   )
-  const shadow = scene.getObjectByName('PHYSICAL_SHADOW_LAYER')
-  if (shadow) shadow.visible = !dark // The dark floor already receives real shadows.
-  const contact = scene.getObjectByName('CONTACT_OCCLUSION')
-  if (contact) contact.material.uniforms.contactColor.value.setRGB(...(dark ? [0, 0, 0] : [0.075, 0.082, 0.078]))
-  const grid = scene.getObjectByName('SURFACE_GRID')
-  if (grid) {
-    grid.visible = true
-    grid.material.uniforms.lineColor.value.set(dark ? 0x7f7f81 : 0x6f7784)
-    grid.material.uniforms.lineOpacity.value = dark ? 0.20 / 1.4 : 0.24
-    grid.material.uniforms.stageFadeStart.value = dark ? 0.055 : 0.28
-    grid.material.uniforms.stageFadeEnd.value = dark ? 0.22 : 0.82
-  }
   // These artistic reflection overlays describe the light studio's softboxes.
   // The dark studio uses the physical material and its own reflected lights.
   model?.traverse((child) => {
@@ -267,7 +206,6 @@ function currentDisplayConfig() {
   }
 }
 let model
-let environmentTarget
 let disposeSurface
 let disposeRearMarkings
 let markingBasePositions = new Map()
@@ -338,6 +276,14 @@ function scheduleViewportResize() {
 
 function renderFrame(timestamp) {
   animationFrame = undefined
+  try {
+    drawFrame(timestamp)
+  } catch (error) {
+    reportSceneFailure(error)
+  }
+}
+
+function drawFrame(timestamp) {
   const heroEntranceAnimating = heroEntranceActive
     ? (heroEntranceAnimation?.update(timestamp) ?? false)
     : false
@@ -359,8 +305,16 @@ function renderFrame(timestamp) {
   if (active) requestRender()
 }
 
+function reportSceneFailure(error) {
+  if (!lifetime.active || status.value === 'error') return
+  stopLoadingStatus()
+  status.value = 'error'
+  console.error('Windpeek 3D preview failed', error)
+  emit('error')
+}
+
 function requestRender() {
-  if (!lifetime.active || document.hidden || animationFrame !== undefined) return
+  if (!lifetime.active || status.value === 'error' || document.hidden || animationFrame !== undefined) return
   animationFrame = requestAnimationFrame(renderFrame)
 }
 
@@ -508,22 +462,20 @@ function handleReducedMotionChange(event) {
 async function initialize() {
   if (!host.value || !isWebGLAvailable()) {
     status.value = 'error'
-    emit('error', 'This browser cannot show the 3D model.')
+    emit('error')
     return
   }
 
   startLoadingStatus()
 
   try {
-    const lighting = PRODUCT_LIGHTING
-    RectAreaLightUniformsLib.init()
     scene = new THREE.Scene()
     const studioBackground = getComputedStyle(document.documentElement)
       .getPropertyValue('--studio-background')
       .trim()
     scene.background = props.captureMode
       ? null
-      : new THREE.Color(studioBackground || lighting.background)
+      : new THREE.Color(studioBackground || PRODUCT_LIGHTING.background)
     camera = new THREE.PerspectiveCamera(29, 1, 0.01, 10)
     renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -584,75 +536,10 @@ async function initialize() {
     })
     updateSceneFocus()
 
-    hemisphereLight = new THREE.HemisphereLight(
-      lighting.hemisphere.sky,
-      lighting.hemisphere.ground,
-      lighting.hemisphere.intensity,
-    )
-    scene.add(hemisphereLight)
-    keyLight = new THREE.SpotLight(lighting.key.color, lighting.key.intensity)
-    keyLight.position.set(...lighting.key.position)
-    keyLight.angle = lighting.key.angle
-    keyLight.penumbra = lighting.key.penumbra
-    keyLight.decay = lighting.key.decay
-    keyLight.distance = lighting.key.distance
-    keyLight.castShadow = true
-    keyLight.shadow.mapSize.set(1024, 1024)
-    keyLight.shadow.camera.near = 0.08
-    keyLight.shadow.camera.far = lighting.key.distance
-    keyLight.shadow.bias = -0.00002
-    keyLight.shadow.normalBias = 0.00012
-    keyLight.shadow.radius = 5
-    keyLight.target.position.set(0, -0.02, 0)
-    scene.add(keyLight, keyLight.target)
-    softbox = new THREE.RectAreaLight(
-      lighting.softbox.color,
-      lighting.softbox.intensity,
-      lighting.softbox.width,
-      lighting.softbox.height,
-    )
-    // Mirror the hero camera across the front plane so the satin insert catches
-    // one broad, believable highlight instead of only becoming diffusely brighter.
-    softbox.position.set(...lighting.softbox.position)
-    softbox.lookAt(0, 0, 0)
-    scene.add(softbox)
-    accent = new THREE.RectAreaLight(
-      lighting.accent.color,
-      lighting.accent.intensity,
-      lighting.accent.width,
-      lighting.accent.height,
-    )
-    accent.position.set(...lighting.accent.position)
-    accent.lookAt(0, 0, 0)
-    scene.add(accent)
-    rimLight = new THREE.DirectionalLight(lighting.rim.color, lighting.rim.intensity)
-    rimLight.position.set(...lighting.rim.position)
-    scene.add(rimLight)
-    oppositePortFill = new THREE.DirectionalLight(lighting.rim.color, 0)
-    scene.add(oppositePortFill)
+    studioLighting = createStudioLighting(scene, renderer, props.boardId)
     const deviceStage = deviceStageForBoard(props.boardId)
     if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
-    if (!props.captureMode) {
-      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x505052, roughness: 0.92, metalness: 0, envMapIntensity: 0.12, transparent: true, depthWrite: false })
-      // Fade the lit floor into the studio background, leaving a soft pool
-      // around the product. Local XY is the floor's horizontal plane.
-      floorMaterial.onBeforeCompile = (shader) => {
-        shader.vertexShader = shader.vertexShader
-          .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
-          .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFloorPosition = position.xy;')
-        shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nvarying vec2 vFloorPosition;')
-          .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= 1.0 - smoothstep(0.08, 0.38, length(vFloorPosition));')
-          .replace('#include <opaque_fragment>', 'outgoingLight *= 0.8;\n#include <opaque_fragment>')
-      }
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMaterial)
-      floor.name = 'STUDIO_LIT_FLOOR'
-      floor.renderOrder = -2
-      floor.rotation.x = -Math.PI / 2
-      floor.position.y = deviceStage.surfaceY - 0.0001
-      floor.receiveShadow = true
-      scene.add(floor)
-    }
+    if (!props.captureMode) scene.add(createLitFloor(deviceStage))
     applyStudioTheme()
 
     const initialConfig = currentDisplayConfig()
@@ -750,10 +637,7 @@ async function initialize() {
     emit('ready')
     requestRender()
   } catch (error) {
-    if (!lifetime.active) return
-    stopLoadingStatus()
-    status.value = 'error'
-    emit('error', error instanceof Error ? error.message : 'The 3D model could not be loaded.')
+    reportSceneFailure(error)
   }
 }
 
@@ -823,7 +707,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', handleSceneVisibility)
   disposeSceneResources({
     orbitRendering, controls, screenSource, disposeSurface, disposeRearMarkings,
-    environmentTarget, keyLight, gtaoPass, smaaPass, outputPass, composer,
+    environmentTarget: studioLighting?.environmentTarget, keyLight: studioLighting?.keyLight, gtaoPass, smaaPass, outputPass, composer,
     model, scene, usbCable, renderer,
   })
 })

@@ -32,7 +32,7 @@ if (captureMode) {
   }
 }
 const sceneFailed = ref(false)
-const sceneError = ref('')
+const sceneAttempt = ref(0)
 const installerOpen = ref(false)
 const showUsbConnection = ref(false)
 const showInstaller = computed(() => (
@@ -55,10 +55,18 @@ function scheduleVisualViewportUpdate() {
   visualViewportFrame = requestAnimationFrame(updateVisualViewportInset)
 }
 
-function handleSceneError(reason) {
+function handleSceneError() {
   sceneFailed.value = true
-  sceneError.value = reason || 'The 3D model could not be loaded.'
 }
+
+function retryScene() {
+  sceneAttempt.value += 1
+  sceneFailed.value = false
+}
+
+watch(() => previewBoardId || store.selectedBoardId, () => {
+  sceneFailed.value = false
+})
 
 function closeInstaller() {
   installerOpen.value = false
@@ -109,7 +117,7 @@ onBeforeUnmount(() => {
       <section class="product-stage" aria-label="Windpeek 3D preview">
         <WindpeekScene
           v-if="!sceneFailed"
-          :key="previewBoardId || store.selectedBoardId"
+          :key="`${previewBoardId || store.selectedBoardId}-${sceneAttempt}`"
           class="device-scene"
           :board-id="previewBoardId || store.selectedBoardId"
           :capture-mode="captureMode"
@@ -119,8 +127,9 @@ onBeforeUnmount(() => {
         />
 
         <div v-else class="scene-error" data-testid="scene-error" role="alert">
-          <h2>The virtual Windpeek could not start.</h2>
-          <p>{{ sceneError }} Refresh the page to try again.</p>
+          <h2>Preview unavailable</h2>
+          <p>We couldn’t load the 3D preview.</p>
+          <button type="button" @click="retryScene">Try again</button>
         </div>
       </section>
 

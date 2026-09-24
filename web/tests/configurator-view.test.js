@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import InstallerPanel from '../src/components/installer/InstallerPanel.vue'
+import { BOARD_IDS } from '../src/config/configuration'
 import { useConfiguratorStore } from '../src/stores/configurator'
 
 const { fetchForecast, fetchTide } = vi.hoisted(() => ({
@@ -92,22 +93,60 @@ describe('configurator experience', () => {
     await vi.waitFor(() => expect(wrapper.get('[role="status"]').text()).toContain('demo data'))
   })
 
-  it('shows an honest error instead of replacing a failed 3D scene', async () => {
+  it('shows a calm error and lets the visitor retry the 3D scene', async () => {
+    let mounts = 0
     const wrapper = mount(ConfiguratorView, {
       global: {
         plugins: [createPinia()],
         stubs: {
           WindpeekScene: {
             emits: ['error'],
-            mounted() { this.$emit('error', 'The model is unavailable.') },
-            template: '<div></div>',
+            mounted() {
+              mounts += 1
+              if (mounts === 1) this.$emit('error', 'disposeObject is not defined')
+            },
+            template: '<div data-testid="3d-scene"></div>',
           },
         },
       },
     })
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[data-testid="scene-error"]').text()).toContain('The model is unavailable.')
+    expect(wrapper.get('[data-testid="scene-error"]').text()).toContain('Preview unavailable')
+    expect(wrapper.text()).not.toContain('disposeObject')
     expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="scene-error"] button').trigger('click')
+    expect(mounts).toBe(2)
+    expect(wrapper.find('[data-testid="scene-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('tries a newly selected device after a scene failure', async () => {
+    const pinia = createPinia()
+    const store = useConfiguratorStore(pinia)
+    let mounts = 0
+    const wrapper = mount(ConfiguratorView, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          WindpeekScene: {
+            emits: ['error'],
+            mounted() {
+              mounts += 1
+              if (mounts === 1) this.$emit('error', 'Failed to render')
+            },
+            template: '<div data-testid="3d-scene"></div>',
+          },
+        },
+      },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="scene-error"]').exists()).toBe(true)
+    store.setSelectedBoardId(BOARD_IDS.E1002)
+    await wrapper.vm.$nextTick()
+    expect(mounts).toBe(2)
+    expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
+    wrapper.unmount()
   })
 
   it('opens the guided installer inside the inspector before requesting a device', async () => {

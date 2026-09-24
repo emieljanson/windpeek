@@ -130,19 +130,15 @@ export function applyConfigurationUrl(store, search, storage) {
   const imported = result.spot.personal
     ? [...result.personalSpots.filter(spot => spot.id !== result.spot.id), result.spot]
     : result.personalSpots
-  if (imported.length) {
-    const spots = new Map(store.personalSpots.map(spot => [spot.id, spot]))
-    for (const spot of imported) {
-      spots.delete(spot.id)
-      spots.set(spot.id, spot)
-    }
-    store.personalSpots = [...spots.values()]
-    writePersonalSpots(imported, storage)
-  }
-  // Pinia merges plain objects inside $patch; assigning first removes settings
-  // from the setup that was open before this link.
-  store.spotSettings = {}
-  store.$patch({ ...result.patch, swellFocus: result.patch.swellSize !== 'off' })
+  const spots = new Map(store.personalSpots.map(spot => [spot.id, spot]))
+  for (const spot of imported) spots.set(spot.id, spot)
+  store.$patch(state => {
+    Object.assign(state, result.patch)
+    state.spotSettings = result.patch.spotSettings ?? {}
+    state.personalSpots = [...spots.values()]
+    state.swellFocus = result.patch.swellSize !== 'off'
+  })
+  if (imported.length) writePersonalSpots(imported, storage)
   return true
 }
 

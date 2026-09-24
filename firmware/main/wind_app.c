@@ -1,6 +1,7 @@
 #include "wind_app.h"
 #include "wind_app_internal.h"
 #include "wind_app_status.h"
+#include "wind_dashboard_data.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -165,12 +166,6 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool force_refres
         ESP_LOGW(TAG, "Tide unavailable for %s", runtime->spot->id);
     }
     free(fetched);
-}
-
-static const char *day_name(int weekday) {
-    static const char *names[] = {"SUNDAY",   "MONDAY", "TUESDAY", "WEDNESDAY",
-                                  "THURSDAY", "FRIDAY", "SATURDAY"};
-    return weekday >= 0 && weekday < 7 ? names[weekday] : "";
 }
 
 static const char *month_name(unsigned month) {
@@ -377,7 +372,7 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                 return ESP_ERR_INVALID_STATE;
             }
             dashboard->days[day].day =
-                day == 0 ? "TODAY" : day_name(wind_timezone_weekday(&local));
+                day == 0 ? "TODAY" : wind_dashboard_day_name(wind_timezone_weekday(&local));
             snprintf(dates[day], sizeof(dates[day]), "%02u %s", local.day,
                      month_name(local.month));
             dashboard->days[day].date = dates[day];
@@ -392,17 +387,9 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                     snprintf(times[day][sample], sizeof(times[day][sample]), "%u%s",
                              hour_12, hour < 12 ? "AM" : "PM");
                 }
-                dashboard->days[day].samples[sample] = (wind_renderer_sample_t){
-                    .time = times[day][sample],
-                    .sustained_kt = source->wind_knots,
-                    .gust_kt = source->gust_knots,
-                    .destination_degrees = source->destination_degrees,
-                    .available = !weather_missing && source->timestamp > 0 && (!calendar_used || calendar_weather[day][sample]),
-                    .weather =
-                        (wind_renderer_weather_t)wind_forecast_weather_state(source),
-                    .temperature_tenths_c = source->temperature_tenths_c,
-                    .temperature_available = source->temperature_available,
-                };
+                dashboard->days[day].samples[sample] = wind_dashboard_forecast_sample(
+                    source, times[day][sample], !weather_missing && source->timestamp > 0 &&
+                    (!calendar_used || calendar_weather[day][sample]));
             }
         }
 
@@ -466,8 +453,8 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                 dashboard->secondary_swell_hourly[day][date.hour] = source->secondary_height_cm;
                 for (int slot = 0; slot < 5; ++slot) {
                     if (forecast->days[day].samples[slot].local_hour == date.hour) {
-                        dashboard->swell[day][slot] = (wind_renderer_swell_sample_t){ source->height_cm, source->period_tenths, source->destination_degrees };
-                        dashboard->secondary_swell[day][slot] = (wind_renderer_swell_sample_t){ source->secondary_height_cm, source->secondary_period_tenths, source->secondary_destination_degrees };
+                        dashboard->swell[day][slot] = wind_dashboard_swell_sample(source, false);
+                        dashboard->secondary_swell[day][slot] = wind_dashboard_swell_sample(source, true);
                     }
                 }
             }
@@ -501,12 +488,7 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                 if (display.use_24_hour) snprintf(times[0][i], sizeof(times[0][i]), "%02d", hour);
                 else snprintf(times[0][i], sizeof(times[0][i]), "%d%s", hour%12 ? hour%12 : 12, hour<12 ? "AM" : "PM");
                 dashboard->days[0].samples[i] = (wind_renderer_sample_t){.time=times[0][i]};
-                if (source) dashboard->days[0].samples[i] = (wind_renderer_sample_t){
-                    .time=times[0][i], .available=1, .sustained_kt=source->wind_knots,
-                    .gust_kt=source->gust_knots, .destination_degrees=source->destination_degrees,
-                    .weather=(wind_renderer_weather_t)wind_forecast_weather_state(source),
-                    .temperature_available=source->temperature_available,
-                    .temperature_tenths_c=source->temperature_tenths_c};
+                if (source) dashboard->days[0].samples[i] = wind_dashboard_forecast_sample(source, times[0][i], true);
                 dashboard->swell[0][i] = dashboard->secondary_swell[0][i] = (wind_renderer_swell_sample_t){-1,-1,-1};
                 if (runtime->have_swell) for (size_t j = 0; j < runtime->swell.sample_count; ++j) {
                     const wind_swell_sample_t *swell = &runtime->swell.samples[j];
@@ -515,8 +497,8 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
                     if (wind_timezone_from_unix(spot->timezone, swell->timestamp, &date) != ESP_OK || date.hour != hour) continue;
                     wind_timezone_format_date(&date, local_date, sizeof(local_date));
                     if (strcmp(local_date, forecast->days[focused].local_date)) continue;
-                    dashboard->swell[0][i] = (wind_renderer_swell_sample_t){swell->height_cm,swell->period_tenths,swell->destination_degrees};
-                    dashboard->secondary_swell[0][i] = (wind_renderer_swell_sample_t){swell->secondary_height_cm,swell->secondary_period_tenths,swell->secondary_destination_degrees};
+                    dashboard->swell[0][i] = wind_dashboard_swell_sample(swell, false);
+                    dashboard->secondary_swell[0][i] = wind_dashboard_swell_sample(swell, true);
                     break;
                 }
             }
@@ -878,42 +860,12 @@ static esp_err_t show_overview_unlocked(size_t page, bool force) {
             runtime->have_swell = wind_swell_cache_load(path,&identity,&runtime->swell) == ESP_OK;
         }
         bool have_wind = wind_cache_load(runtime->forecast_path,&runtime->app.config.identity,cached) == ESP_OK;
-        wind_renderer_dashboard_t *out = &rows[row];
-        out->spot_name = runtime->spot->display_name;
-        out->swell_size = swell ? 2 : 0;
-        out->wind_size = swell ? 0 : 2;
-        out->display_mode = WIND_RENDERER_MODE_SOLID;
-        for (int d=0; d<5; ++d) {
-            for (int h=0; h<24; ++h) out->swell_hourly[d][h] = out->secondary_swell_hourly[d][h] = -1;
-            for (int j=0; j<5; ++j) out->swell[d][j] = (wind_renderer_swell_sample_t){-1,-1,-1};
-        }
-        wind_local_datetime_t date;
-        if (wind_timezone_from_unix(runtime->spot->timezone,now,&date) != ESP_OK) { result=ESP_ERR_INVALID_STATE; break; }
-        const int hours[] = {8,11,14,17,20};
-        for (int day=0; day<5; ++day) {
-            out->days[day].day = day == 0 ? "TODAY" : day_name(wind_timezone_weekday(&date));
-            for (int h=0; h<24; ++h) {
-                date.hour=h; date.minute=date.second=0;
-                int64_t timestamp;
-                if (wind_timezone_to_unix(runtime->spot->timezone,&date,&timestamp) != ESP_OK) continue;
-                int slot=-1;
-                for (int j=0;j<5;++j) if (hours[j]==h) slot=j;
-                if (slot >= 0 && have_wind) for (int d=0;d<5;++d) for (int j=0;j<5;++j) {
-                    const wind_forecast_sample_t *sample=&cached->days[d].samples[j];
-                    if (sample->timestamp==timestamp) out->days[day].samples[slot]=(wind_renderer_sample_t){
-                        .sustained_kt=sample->wind_knots,.gust_kt=sample->gust_knots,
-                        .destination_degrees=sample->destination_degrees,.available=1};
-                }
-                if (swell && runtime->have_swell) for (size_t k=0;k<runtime->swell.sample_count;++k) {
-                    const wind_swell_sample_t *sample=&runtime->swell.samples[k];
-                    if (sample->timestamp != timestamp) continue;
-                    out->swell_hourly[day][h]=sample->height_cm;
-                    out->secondary_swell_hourly[day][h]=sample->secondary_height_cm;
-                    if (slot>=0) out->swell[day][slot]=(wind_renderer_swell_sample_t){sample->height_cm,sample->period_tenths,sample->destination_degrees};
-                }
-            }
-            wind_timezone_shift_date(&date,1);
-        }
+        result = wind_dashboard_build_overview_row(
+            runtime->spot->display_name, runtime->spot->timezone,
+            have_wind ? cached : NULL,
+            swell && runtime->have_swell ? &runtime->swell : NULL,
+            swell, now, &rows[row]);
+        if (result != ESP_OK) break;
     }
     apply_spot_display(s_selected_index);
     refresh_render_signatures();

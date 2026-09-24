@@ -14,6 +14,8 @@ const checkOnly = process.argv.includes('--check')
 const sources = [
   'web/wasm/wind_renderer_bridge.c',
   'firmware/main/wind_renderer.c',
+  'firmware/main/wind_renderer_canvas.c',
+  'firmware/main/wind_renderer_output.c',
   'firmware/main/wind_renderer_input.c',
   'firmware/main/wind_font.c',
   'firmware/main/fonts/berkeley_mono_bold_15.c',

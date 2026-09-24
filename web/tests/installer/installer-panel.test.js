@@ -255,6 +255,29 @@ describe('installer inspector panel', () => {
     })
   })
 
+  it.each([
+    ['reconnecting', 'Finding Windpeek'],
+    ['checking-device', 'Checking device'],
+  ])('keeps the %s step visible while Wi-Fi networks load', async (previousPhase, heading) => {
+    let finishScan
+    const session = fakeSession()
+    session.scanNetworks.mockImplementation(() => new Promise((resolve) => { finishScan = resolve }))
+    mountPanel(session)
+
+    session.emit({ phase: previousPhase, progress: 0.8, safeToDisconnect: true, error: null })
+    await wrapper.vm.$nextTick()
+    session.emit({ phase: 'wifi', progress: 0.8, safeToDisconnect: true, error: null })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('.installer-layer').attributes('data-phase')).toBe(previousPhase)
+    expect(wrapper.text()).toContain(heading)
+    expect(wrapper.find('.installer-wifi').exists()).toBe(false)
+
+    finishScan([{ ssid: 'Windpeek Studio', secured: true }])
+    await vi.waitFor(() => expect(wrapper.find('.installer-wifi').exists()).toBe(true))
+    expect(wrapper.get('.installer-layer').attributes('data-phase')).toBe('wifi')
+  })
+
   it('allows an open network without weakening password checks for secured networks', async () => {
     const session = fakeSession()
     session.scanNetworks.mockResolvedValue([

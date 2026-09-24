@@ -5,6 +5,7 @@ import { DEFAULT_THRESHOLD } from '../renderer/contract'
 import { validTimezone } from '../timezone'
 import { settingsForSpot } from './spotSettings'
 import { readCachedTide } from '../forecast/tideCache'
+import installationSchema from '../../../contracts/windpeek-config.schema.json'
 
 export const CONFIGURATION_VERSION = 5
 export const MULTI_CONFIGURATION_VERSION = 6
@@ -24,6 +25,8 @@ export const DEVICE_OPTIONS = Object.freeze([
 const SPOT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/
 const TIMEZONE_PATTERN = /^[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+$|^Etc\/UTC$/
 const TEXT_ENCODER = new TextEncoder()
+const hasOnlyFields = (value, properties) =>
+  Object.keys(value).every(key => Object.hasOwn(properties, key))
 
 export const TIME_FORMATS = Object.freeze(['24-hour', '12-hour'])
 export const TEMPERATURE_UNITS = Object.freeze(['celsius', 'fahrenheit'])
@@ -109,10 +112,12 @@ export function installedConfigurationDigest(configuration) {
 
 export function validateInstalledConfiguration(configuration) {
   if (!configuration || ![CONFIGURATION_VERSION, MULTI_CONFIGURATION_VERSION].includes(configuration.version) ||
+      !hasOnlyFields(configuration, installationSchema.properties) ||
       !SUPPORTED_BOARD_IDS.includes(configuration.boardId) ||
       !validTimezone(configuration.deviceTimezone) || configuration.deviceTimezone.length > 63) return false
   const { spot, display } = configuration
-  if (!spot || typeof spot.id !== 'string' || !SPOT_ID_PATTERN.test(spot.id) ||
+  if (!spot || !hasOnlyFields(spot, installationSchema.properties.spot.properties) ||
+      typeof spot.id !== 'string' || !SPOT_ID_PATTERN.test(spot.id) ||
       typeof spot.name !== 'string' || spot.name.length < 1 || spot.name.length > 64 ||
       !Number.isFinite(spot.latitude) || spot.latitude < -90 || spot.latitude > 90 ||
       !Number.isFinite(spot.longitude) || spot.longitude < -180 || spot.longitude > 180 ||
@@ -120,7 +125,8 @@ export function validateInstalledConfiguration(configuration) {
       !TIMEZONE_PATTERN.test(spot.timezone)) return false
   if (typeof configuration.forecastModel !== 'string' ||
       configuration.forecastModel.length < 1 || configuration.forecastModel.length > 31) return false
-  if (!display || !MODULE_SIZES.includes(display.windSize) || !MODULE_SIZES.includes(display.swellSize) ||
+  if (!display || !hasOnlyFields(display, installationSchema.properties.display.properties) ||
+      !MODULE_SIZES.includes(display.windSize) || !MODULE_SIZES.includes(display.swellSize) ||
       !validModuleOrder(display.moduleOrder) || !SWELL_MODELS.some(model => model.value === display.swellModel) || typeof display.showThreshold !== 'boolean' ||
       !Number.isInteger(display.threshold) || display.threshold < 0 || display.threshold > 99 ||
       typeof display.showWeather !== 'boolean' ||
@@ -136,7 +142,7 @@ export function validateInstalledConfiguration(configuration) {
           entry.deviceTimezone !== configuration.deviceTimezone || !validateInstalledConfiguration(entry)) ||
         new Set([spot.id, ...entries.map(entry => entry.spot.id)]).size !== entries.length + 1) return false
   } else if (configuration.additionalSpots !== undefined) return false
-  return typeof configuration.digest !== 'string' ||
+  return typeof configuration.digest === 'string' && /^[0-9a-f]{16}$/.test(configuration.digest) &&
     configuration.digest === installedConfigurationDigest(configuration)
 }
 
