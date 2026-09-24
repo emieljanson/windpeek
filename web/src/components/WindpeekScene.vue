@@ -666,7 +666,7 @@ async function initialize() {
         config: initialConfig,
         boardId: props.boardId,
       }),
-      disposeModel: disposeObject,
+      disposeModel: disposeSceneObject,
     })
     if (!resources) return
     if (!lifetime.active) {
