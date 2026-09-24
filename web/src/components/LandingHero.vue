@@ -24,6 +24,7 @@ const heroMediaStyle = Object.freeze({
 })
 
 const variant = siteVariant()
+const fallbackScreen = publicAssetUrl(`marketing/hero-screen-${variant.id}.webp`)
 const configureHref = configuratorLink()
 const photo = ref(null)
 const LiveForecast = shallowRef(null)
@@ -58,7 +59,7 @@ onBeforeUnmount(() => {
 
 <template>
   <figure class="landing-hero">
-    <a class="hero-link" :href="configureHref" aria-label="Open the forecast configurator">
+    <div class="hero-link">
       <div class="hero-scene">
         <div class="hero-media" :style="heroMediaStyle">
           <picture>
@@ -74,9 +75,11 @@ onBeforeUnmount(() => {
               @error="scheduleLiveForecast"
             >
           </picture>
+          <img class="hero-screen-fallback" :src="fallbackScreen" alt="" aria-hidden="true" fetchpriority="high">
           <component :is="LiveForecast" v-if="LiveForecast" />
         </div>
       </div>
-    </a>
+    </div>
+    <a class="hero-hit-target" :href="configureHref" aria-label="Open the forecast configurator" />
   </figure>
 </template>

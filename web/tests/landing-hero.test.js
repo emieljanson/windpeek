@@ -20,10 +20,11 @@ describe('lightweight landing hero', () => {
     vi.useRealTimers()
   })
 
-  it('shows the responsive photo and working link before loading live data', async () => {
+  it('shows a forecast fallback and a desktop-only link before loading live data', async () => {
     window.history.replaceState({}, '', '/?site=swell')
     const wrapper = mount(LandingHero)
-    expect(wrapper.get('.hero-link').attributes('href')).toContain('site=swell')
+    expect(wrapper.get('.hero-hit-target').attributes('href')).toContain('site=swell')
+    expect(wrapper.get('.hero-screen-fallback').attributes('src')).toContain('hero-screen-swell.webp')
     expect(wrapper.get('img').attributes('src')).toContain('windpeek-hero-yellow-v21-1672w.jpg')
     expect(wrapper.get('source').attributes('srcset')).toContain('windpeek-hero-yellow-v21-960w.webp 960w')
     expect(wrapper.get('source').attributes('sizes')).toBe('(max-width: 666px) calc(120vw - 28.8px), 770.4px')

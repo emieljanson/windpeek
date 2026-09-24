@@ -67,12 +67,14 @@
 .landing-page .button-secondary:hover { background: var(--landing-secondary-hover); }
 
 .landing-page figure {
+  position: relative;
   width: min(calc(100vw - 24px), 642px);
   margin: 24px 0 0 50%;
   transform: translateX(-50%);
 }
 
 .landing-page .hero-link { display: block; }
+.landing-page .hero-hit-target { position: absolute; inset: 0; }
 
 .hero-scene {
   position: relative;
@@ -102,6 +104,8 @@
 /* Map every encoding to the same calibrated plane; rounded bitmap dimensions
    must not introduce letterboxing between the photo and the UI. */
 .hero-media img { object-fit: fill; }
+.hero-media .hero-screen-fallback { pointer-events: none; }
+.hero-media:has(canvas.is-ready) .hero-screen-fallback { opacity: 0; }
 .hero-media canvas {
   mix-blend-mode: multiply;
   opacity: 0;
@@ -234,6 +238,7 @@
   .landing-page h1 { font-size: 43px; }
   .landing-page .intro { font-size: 15px; }
   .landing-page figure { margin-top: 24px; }
+  .landing-page .hero-hit-target { display: none; }
   .landing-page .story { margin-top: 24px; }
   .landing-page .configure-action--desktop { display: none; }
   .landing-page .configure-action--mobile:disabled {
