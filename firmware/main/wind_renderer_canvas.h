@@ -14,7 +14,6 @@ typedef struct {
     size_t size;
     bool native_e1003;
     bool muted_status;
-    uint8_t *font_mask;
     int clipped;
     bool antialias_text;
     bool smooth_curves;

@@ -284,6 +284,12 @@ set(WIND_FONT_SOURCES
   ../main/fonts/berkeley_mono_bold_condensed_12.c
   ../main/fonts/berkeley_mono_bold_condensed_15.c
   ../main/fonts/inter_43.c
+  ../main/fonts/berkeley_mono_bold_35.c
+  ../main/fonts/berkeley_mono_bold_80.c
+  ../main/fonts/berkeley_mono_bold_condensed_28.c
+  ../main/fonts/berkeley_mono_bold_condensed_35.c
+  ../main/fonts/inter_101.c
+  ../main/fonts/inter_70.c
 )
 
 add_wind_test(wind_font_test test_wind_font.cpp ${WIND_FONT_SOURCES})
@@ -293,6 +299,7 @@ add_wind_test(
   test_wind_renderer.cpp
   ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
+  ../main/wind_renderer_native.c
   ../main/wind_renderer_canvas.c
   ../main/wind_renderer_output.c
   ../main/wind_renderer_input.c
@@ -314,6 +321,7 @@ add_executable(
   render_wind_fixture.cpp
   ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
+  ../main/wind_renderer_native.c
   ../main/wind_renderer_canvas.c
   ../main/wind_renderer_output.c
   ../main/wind_renderer_input.c
@@ -332,7 +340,7 @@ target_compile_definitions(
 )
 target_link_libraries(render_wind_fixture m)
 
-add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ../main/wind_renderer_canvas.c ../main/wind_renderer_output.c ../main/wind_renderer_input.c ${WIND_FONT_SOURCES})
+add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ../main/wind_renderer_native.c ../main/wind_renderer_canvas.c ../main/wind_renderer_output.c ../main/wind_renderer_input.c ${WIND_FONT_SOURCES})
 target_include_directories(render_battery_empty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../main)
 target_link_libraries(render_battery_empty m)
 add_test(NAME BatteryEmptyPreviewExport

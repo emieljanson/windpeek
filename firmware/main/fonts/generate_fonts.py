@@ -24,6 +24,15 @@ SPECS = (
     ("inter", 43, "Black"),
 )
 
+NATIVE_E1003_SPECS = (
+    ("berkeley_mono_bold", 35, "Bold"),
+    ("berkeley_mono_bold", 80, "Bold"),
+    ("berkeley_mono_bold_condensed", 28, "Bold Condensed"),
+    ("berkeley_mono_bold_condensed", 35, "Bold Condensed"),
+    ("inter", 101, "Black"),
+    ("inter", 70, "Black"),
+)
+
 
 def source_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -75,8 +84,9 @@ def emit_asset(output_dir, family, pixel_size, variation, source, source_name):
     ascent, descent = font.getmetrics()
     glyphs = []
     bitmap = bytearray()
-    # The large face serves the shutdown and setup messages.
-    characters = "? Battery emptyFinish setup" if family == "berkeley_mono_bold" and pixel_size == 34 else GLYPHS
+    characters = ("? Battery emptyFinish setup" if pixel_size == 80 else
+                  "? Battery emptyFinish setup" if family == "berkeley_mono_bold" and pixel_size == 34
+                  else GLYPHS)
     for character in sorted(set(characters), key=ord):
         mask, offset = font.getmask2(character, mode="L", anchor="ls")
         glyphs.append(
@@ -123,11 +133,14 @@ def main():
     parser.add_argument("--berkeley", type=Path, required=True)
     parser.add_argument("--inter", type=Path)
     parser.add_argument("--output", type=Path, default=Path(__file__).parent)
+    parser.add_argument("--native-e1003-only", action="store_true")
     args = parser.parse_args()
     inter = args.inter if args.inter and args.inter.is_file() else args.berkeley
     inter_name = "InterVariable.ttf" if inter != args.berkeley else "Berkeley Mono deterministic Inter fallback"
     args.output.mkdir(parents=True, exist_ok=True)
-    for family, pixel_size, variation in SPECS:
+    for family, pixel_size, variation in (
+        NATIVE_E1003_SPECS if args.native_e1003_only else SPECS
+    ):
         is_berkeley = family.startswith("berkeley_mono")
         source = args.berkeley if is_berkeley else inter
         source_name = "Berkeley Mono Variable.ttf" if is_berkeley else inter_name

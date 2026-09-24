@@ -37,7 +37,7 @@
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics
 // change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000010)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000011)
 
 static const char *TAG = "wind_app";
 typedef struct {

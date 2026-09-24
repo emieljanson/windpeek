@@ -146,3 +146,17 @@ TEST(WindFont, UnsupportedSizeIsAStableNoOp) {
     wind_font_draw(&pixel, 1, 1, 1, 0, 0, WIND_FONT_INTER, 17, 0, "x");
     EXPECT_EQ(pixel, 123);
 }
+
+TEST(WindFont, EveryNativeDashboardSizeHasAnAsset) {
+    const struct { wind_font_family_t family; int logical_size; int native_size; } cases[] = {
+        {WIND_FONT_INTER, WIND_FONT_SIZE_SPOT, 101},
+        {WIND_FONT_BERKELEY_MONO_BOLD, 34, 80},
+        {WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, 35},
+        {WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_FOOTER, 28},
+        {WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, 35},
+    };
+    for (const auto &item : cases) {
+        EXPECT_EQ(wind_font_native_size(item.family, item.logical_size), item.native_size);
+        EXPECT_GT(wind_font_measure(item.family, item.native_size, "17KTS").width, 0);
+    }
+}
