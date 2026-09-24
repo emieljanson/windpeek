@@ -28,5 +28,11 @@ extern const wind_font_asset_t wind_font_berkeley_mono_bold_15;
 extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_12;
 extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_15;
 extern const wind_font_asset_t wind_font_inter_43;
+extern const wind_font_asset_t wind_font_berkeley_mono_bold_35;
+extern const wind_font_asset_t wind_font_berkeley_mono_bold_80;
+extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_28;
+extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_35;
+extern const wind_font_asset_t wind_font_inter_101;
+extern const wind_font_asset_t wind_font_inter_70;
 
 #endif

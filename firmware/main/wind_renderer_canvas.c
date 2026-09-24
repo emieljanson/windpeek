@@ -136,6 +136,23 @@ void wind_canvas_fade_region_to_white(canvas_t *canvas, int left, int top, int r
     bottom = clamp_int(bottom, 0, canvas->height - 1);
     if (right <= left || bottom < top) return;
 
+    if (canvas->native_e1003) {
+        const int native_left = wind_canvas_native_x(left);
+        const int native_right = wind_canvas_native_x(right + 1);
+        const int span = native_right - native_left;
+        for (int y = wind_canvas_native_y(top); y < wind_canvas_native_y(bottom + 1); ++y)
+            for (int x = native_left; x < native_right; ++x) {
+                const int linear = span > 1
+                    ? clamp_int((x - native_left) * 255 / (span - 1), 0, 255)
+                    : 255;
+                const int fade = (linear * linear * (765 - 2 * linear) + 32512) / 65025;
+                uint8_t *pixel = canvas->pixels + (size_t)y * WIND_RENDERER_E1003_WIDTH + x;
+                *pixel = (uint8_t)((int)*pixel +
+                    ((CANVAS_WHITE - (int)*pixel) * fade + 127) / 255);
+            }
+        return;
+    }
+
     const int span = right - left;
     for (int y = top; y <= bottom; ++y) {
         for (int x = left; x <= right; ++x) {
@@ -165,56 +182,21 @@ int wind_canvas_rightmost_ink_pixel(const canvas_t *canvas, int left, int top, i
 void wind_canvas_draw_text_color(canvas_t *canvas, int x, int baseline,
                             wind_font_family_t family, int size, uint8_t gray,
                             const char *text) {
-    if (canvas->native_e1003) {
-        if (!canvas->font_mask) return;
-        enum { MASK_HEIGHT = 80, MASK_BASELINE = 60 };
-        memset(canvas->font_mask, CANVAS_WHITE,
-               WIND_RENDERER_WIDTH * MASK_HEIGHT);
-        if (canvas->antialias_text)
-            wind_font_draw_antialiased(canvas->font_mask, WIND_RENDERER_WIDTH,
-                                       MASK_HEIGHT, WIND_RENDERER_WIDTH, 0,
-                                       MASK_BASELINE, family, size, CANVAS_BLACK,
-                                       safe_text(text));
-        else
-            wind_font_draw(canvas->font_mask, WIND_RENDERER_WIDTH,
-                           MASK_HEIGHT, WIND_RENDERER_WIDTH, 0,
-                           MASK_BASELINE, family, size, CANVAS_BLACK,
-                           safe_text(text));
-        const int right = clamp_int(wind_font_measure(family, size,
-                                                      safe_text(text)).width + 2,
-                                    0, WIND_RENDERER_WIDTH);
-        for (int sy = 0; sy < MASK_HEIGHT; ++sy) {
-            const int logical_y = baseline - MASK_BASELINE + sy;
-            if (logical_y < 0 || logical_y >= canvas->height) continue;
-            const int top = wind_canvas_native_y(logical_y);
-            const int bottom = wind_canvas_native_y(logical_y + 1);
-            for (int sx = 0; sx < right; ++sx) {
-                const int logical_x = x + sx;
-                if (logical_x < 0 || logical_x >= WIND_RENDERER_WIDTH) continue;
-                const unsigned alpha = 255u - canvas->font_mask[sy * WIND_RENDERER_WIDTH + sx];
-                if (!alpha) continue;
-                const int left = wind_canvas_native_x(logical_x);
-                const int pixel_right = wind_canvas_native_x(logical_x + 1);
-                for (int py = top; py < bottom; ++py) {
-                    uint8_t *pixel = canvas->pixels +
-                        (size_t)py * WIND_RENDERER_E1003_WIDTH + left;
-                    for (int px = left; px < pixel_right; ++px, ++pixel)
-                        *pixel = (uint8_t)((gray * alpha +
-                            *pixel * (255u - alpha) + 127u) / 255u);
-                }
-            }
-        }
-        return;
-    }
-    if (canvas->antialias_text) {
-        wind_font_draw_antialiased(canvas->pixels, WIND_RENDERER_WIDTH, canvas->height,
-                                   WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
-                                   safe_text(text));
-    } else {
-        wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, canvas->height,
-                       WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
-                       safe_text(text));
-    }
+    const bool native = canvas->native_e1003;
+    const int width = native ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+    const int height = native ? WIND_RENDERER_E1003_HEIGHT : canvas->height;
+    const int font_size = native ? wind_font_native_size(family, size) : size;
+    const int text_x = native ? wind_canvas_native_x(x) : x;
+    const int text_baseline = native ? wind_canvas_native_y(baseline) : baseline;
+    const bool antialias = native ? size > WIND_FONT_SIZE_STATUS : canvas->antialias_text;
+    if (antialias)
+        wind_font_draw_antialiased(canvas->pixels, width, height, width,
+                                   text_x, text_baseline, family, font_size,
+                                   gray, safe_text(text));
+    else
+        wind_font_draw(canvas->pixels, width, height, width,
+                       text_x, text_baseline, family, font_size,
+                       gray, safe_text(text));
 }
 
 void wind_canvas_draw_outlined_text_center(canvas_t *canvas, int center_x, int baseline,

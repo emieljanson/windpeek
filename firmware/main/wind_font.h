@@ -25,7 +25,11 @@ enum {
     WIND_FONT_SIZE_STATUS = 15,
     WIND_FONT_SIZE_DAY = 15,
     WIND_FONT_SIZE_SPOT = 43,
+    WIND_FONT_SIZE_OVERVIEW_NATIVE = 70,
 };
+
+/* Match a logical dashboard font to the E1003's native font asset. */
+int wind_font_native_size(wind_font_family_t family, int logical_size);
 
 wind_text_metrics_t wind_font_measure(wind_font_family_t family, int pixel_size,
                                       const char *utf8);

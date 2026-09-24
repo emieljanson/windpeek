@@ -59,6 +59,28 @@ The default build targets the universal E1001/E1002 firmware. E1002 and E1003
 remain selectable with `--board`. The old photo-frame application and its
 boards are no longer build targets.
 
+### Regenerate E1003 raster assets
+
+The committed font files and weather icon header are generated. Use the font
+sources named by the SHA-256 comments in the generated files; the licensed
+Berkeley Mono font is supplied separately. From the repository root:
+
+```sh
+brew install cairo # macOS; Linux needs libcairo2
+python3 -m venv .venv-assets
+. .venv-assets/bin/activate
+python -m pip install pillow fonttools cairosvg
+export DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix cairo)/lib" # macOS
+python firmware/main/fonts/generate_fonts.py --berkeley /path/to/BerkeleyMonoVariable.ttf --inter /path/to/InterVariable.ttf
+python firmware/main/fonts/generate_native_weather_icons.py
+python firmware/main/fonts/generate_native_weather_icons.py --check
+cd web && npm run renderer:build && npm run renderer:check
+```
+
+The regular font command regenerates both shared and E1003 sizes.
+`--native-e1003-only` regenerates only the added panel-size fonts. The icon
+header records a hash of the bundled SVGs and render size.
+
 ### Local E1003 USB update
 
 From `web/`, run `npm run device:e1003`, then open

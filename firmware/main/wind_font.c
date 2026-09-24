@@ -6,16 +6,34 @@
 
 #include "fonts/wind_font_internal.h"
 #include "fonts/berkeley_mono_bold_34.inc"
+int wind_font_native_size(wind_font_family_t family, int logical_size) {
+    if (family == WIND_FONT_INTER && logical_size == WIND_FONT_SIZE_SPOT) return 101;
+    if (family == WIND_FONT_BERKELEY_MONO_BOLD && logical_size == 34) return 80;
+    if (family == WIND_FONT_BERKELEY_MONO_BOLD && logical_size == WIND_FONT_SIZE_DAY)
+        return 35;
+    if (family == WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED) {
+        if (logical_size == WIND_FONT_SIZE_FOOTER) return 28;
+        if (logical_size == WIND_FONT_SIZE_STATUS) return 35;
+    }
+    return 0;
+}
+
 static const wind_font_asset_t *find_asset(wind_font_family_t family,
                                            int pixel_size) {
     if (family == WIND_FONT_BERKELEY_MONO_BOLD) {
         if (pixel_size == 15) return &wind_font_berkeley_mono_bold_15;
         if (pixel_size == 34) return &wind_font_berkeley_mono_bold_34;
+        if (pixel_size == 35) return &wind_font_berkeley_mono_bold_35;
+        if (pixel_size == 80) return &wind_font_berkeley_mono_bold_80;
     } else if (family == WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED) {
         if (pixel_size == 12) return &wind_font_berkeley_mono_bold_condensed_12;
         if (pixel_size == 15) return &wind_font_berkeley_mono_bold_condensed_15;
+        if (pixel_size == 28) return &wind_font_berkeley_mono_bold_condensed_28;
+        if (pixel_size == 35) return &wind_font_berkeley_mono_bold_condensed_35;
     } else if (family == WIND_FONT_INTER) {
         if (pixel_size == 43) return &wind_font_inter_43;
+        if (pixel_size == 101) return &wind_font_inter_101;
+        if (pixel_size == 70) return &wind_font_inter_70;
     }
     return NULL;
 }

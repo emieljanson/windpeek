@@ -10,6 +10,8 @@
 #include <string.h>
 
 #include "bootstrap_weather_icons.h"
+#include "bootstrap_weather_icons_native.h"
+#include "wind_renderer_native.h"
 #include "wind_font.h"
 #include "wind_overview.h"
 
@@ -145,7 +147,7 @@ static void uppercase_spot_name(char *output, size_t output_size, const char *in
 static int divide_rounded(int value, int divisor);
 static void draw_battery(canvas_t *canvas, int right, int center_y, int percent);
 static uint8_t status_ink(const canvas_t *canvas) {
-    return canvas->muted_status ? CANVAS_SECONDARY : CANVAS_BLACK;
+    return canvas->muted_status && !canvas->native_e1003 ? CANVAS_SECONDARY : CANVAS_BLACK;
 }
 
 static int canvas_outer_bottom(const canvas_t *canvas) {
@@ -395,6 +397,20 @@ static void draw_arrow(canvas_t *canvas, int center_x, int center_y,
     const float radians = (float)degrees * 0.01745329252f;
     const float sine = sinf(radians);
     const float cosine = cosf(radians);
+    if (canvas->native_e1003) {
+        double points[4][2];
+        for (int point = 0; point < 4; ++point) {
+            points[point][0] = center_x + source[point][0] * cosine -
+                               source[point][1] * sine;
+            points[point][1] = center_y + source[point][0] * sine +
+                               source[point][1] * cosine;
+        }
+        wind_renderer_native_triangle(canvas->pixels, points[0][0], points[0][1],
+                             points[1][0], points[1][1], points[2][0], points[2][1]);
+        wind_renderer_native_triangle(canvas->pixels, points[0][0], points[0][1],
+                             points[2][0], points[2][1], points[3][0], points[3][1]);
+        return;
+    }
     int points[4][2];
     for (int point = 0; point < 4; ++point) {
         points[point][0] = center_x + (int)lroundf(source[point][0] * cosine -
@@ -410,55 +426,45 @@ static void draw_arrow(canvas_t *canvas, int center_x, int center_y,
 
 static void draw_alpha_icon(canvas_t *canvas, int center_x, int center_y, int width,
                             int height, const uint8_t *alpha) {
-    const int left = center_x - width / 2;
-    const int top = center_y - height / 2;
+    const bool native = canvas->native_e1003;
+    const int surface_width = native ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+    const int surface_height = native ? WIND_RENDERER_E1003_HEIGHT : canvas->height;
+    const int left = (native ? wind_canvas_native_x(center_x) : center_x) - width / 2;
+    const int top = (native ? wind_canvas_native_y(center_y) : center_y) - height / 2;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             const uint8_t opacity = alpha[y * width + x];
             if (!opacity) continue;
-            const int pixel_x = left + x;
-            const int pixel_y = top + y;
-            const uint8_t background = wind_canvas_get_pixel(canvas, pixel_x, pixel_y);
-            wind_canvas_set_pixel(canvas, pixel_x, pixel_y,
-                      (uint8_t)((background * (255 - opacity) + 127) / 255));
+            const int px = left + x, py = top + y;
+            if (px < 0 || px >= surface_width || py < 0 || py >= surface_height) {
+                canvas->clipped++;
+                continue;
+            }
+            uint8_t *pixel = canvas->pixels + (size_t)py * surface_width + px;
+            *pixel = (uint8_t)((*pixel * (255u - opacity) + 127u) / 255u);
         }
     }
 }
 
 static void draw_weather(canvas_t *canvas, int center_x, int center_y,
                          wind_renderer_weather_t weather) {
-    switch (weather) {
-        case WIND_RENDERER_WEATHER_CLEAR_DAY:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18, BOOTSTRAP_SUN_18);
-            break;
-        case WIND_RENDERER_WEATHER_CLEAR_NIGHT:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18, BOOTSTRAP_MOON_18);
-            break;
-        case WIND_RENDERER_WEATHER_PARTLY_CLOUDY_DAY:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18, BOOTSTRAP_CLOUD_SUN_18);
-            break;
-        case WIND_RENDERER_WEATHER_PARTLY_CLOUDY_NIGHT:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18,
-                            BOOTSTRAP_CLOUD_MOON_18);
-            break;
-        case WIND_RENDERER_WEATHER_CLOUDY:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18, BOOTSTRAP_CLOUD_18);
-            break;
-        case WIND_RENDERER_WEATHER_LIGHT_RAIN:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18,
-                            BOOTSTRAP_CLOUD_DRIZZLE_18);
-            break;
-        case WIND_RENDERER_WEATHER_RAIN:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18,
-                            BOOTSTRAP_CLOUD_RAIN_18);
-            break;
-        case WIND_RENDERER_WEATHER_HEAVY_RAIN:
-            draw_alpha_icon(canvas, center_x, center_y, 18, 18,
-                            BOOTSTRAP_CLOUD_RAIN_HEAVY_18);
-            break;
-        default:
-            break;
-    }
+    typedef struct { const uint8_t *small; const uint8_t *native; } weather_icon_t;
+    static const weather_icon_t icons[] = {
+        [WIND_RENDERER_WEATHER_CLEAR_DAY] = {BOOTSTRAP_SUN_18, BOOTSTRAP_SUN_42},
+        [WIND_RENDERER_WEATHER_CLEAR_NIGHT] = {BOOTSTRAP_MOON_18, BOOTSTRAP_MOON_42},
+        [WIND_RENDERER_WEATHER_PARTLY_CLOUDY_DAY] = {BOOTSTRAP_CLOUD_SUN_18, BOOTSTRAP_CLOUD_SUN_42},
+        [WIND_RENDERER_WEATHER_PARTLY_CLOUDY_NIGHT] = {BOOTSTRAP_CLOUD_MOON_18, BOOTSTRAP_CLOUD_MOON_42},
+        [WIND_RENDERER_WEATHER_CLOUDY] = {BOOTSTRAP_CLOUD_18, BOOTSTRAP_CLOUD_42},
+        [WIND_RENDERER_WEATHER_LIGHT_RAIN] = {BOOTSTRAP_CLOUD_DRIZZLE_18, BOOTSTRAP_CLOUD_DRIZZLE_42},
+        [WIND_RENDERER_WEATHER_RAIN] = {BOOTSTRAP_CLOUD_RAIN_18, BOOTSTRAP_CLOUD_RAIN_42},
+        [WIND_RENDERER_WEATHER_HEAVY_RAIN] = {BOOTSTRAP_CLOUD_RAIN_HEAVY_18, BOOTSTRAP_CLOUD_RAIN_HEAVY_42},
+    };
+    if (weather <= WIND_RENDERER_WEATHER_UNAVAILABLE ||
+        (unsigned)weather >= sizeof(icons) / sizeof(icons[0])) return;
+    const int size = canvas->native_e1003 ? 42 : 18;
+    const weather_icon_t *icon = &icons[weather];
+    draw_alpha_icon(canvas, center_x, center_y, size, size,
+                    canvas->native_e1003 ? icon->native : icon->small);
 }
 
 static int graph_label_baseline(int y, int plot_top, int plot_bottom) {
@@ -575,6 +581,11 @@ static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
  * Both marine graphs use the same stroke rasterizer and round joins. */
 static void draw_curve_segment_color(canvas_t *canvas, double x0, double y0,
                                       double x1, double y1, int width, uint8_t color, int clip_left, int clip_right) {
+    if (canvas->native_e1003) {
+        wind_renderer_native_curve(canvas->pixels, x0, y0, x1, y1, width, color,
+                                   wind_canvas_native_x(clip_left), wind_canvas_native_x(clip_right));
+        return;
+    }
     const double dx = x1 - x0, dy = y1 - y0;
     const double length_squared = dx * dx + dy * dy;
     const double radius = width / 2.0;
@@ -600,6 +611,13 @@ static void draw_curve_segment(canvas_t *canvas, double x0, double y0,
     draw_curve_segment_color(canvas, x0, y0, x1, y1, width, CANVAS_BLACK, OUTER_X + 1, OUTER_RIGHT - 1);
 }
 
+static int curve_steps(const canvas_t *canvas, int logical_span) {
+    return canvas->native_e1003
+        ? (int)ceil(logical_span * (double)WIND_RENDERER_E1003_WIDTH /
+                    WIND_RENDERER_WIDTH)
+        : logical_span;
+}
+
 static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *point_y,
                             int point_count, int clip_left, int clip_right,
                             int curve_top, int curve_bottom) {
@@ -622,10 +640,13 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *poi
                 : (float)(point_y[segment + 2] - point_y[segment]) /
                       (float)(point_x[segment + 2] - point_x[segment]);
 
-        int previous_x = first_x;
+        double previous_x = first_x;
         double previous_y = point_y[segment];
-        for (int x = first_x; x <= last_x; ++x) {
-            const float t = (float)(x - x0) / segment_width;
+        const int steps = curve_steps(canvas, last_x - first_x);
+        for (int sample = 0; sample <= steps; ++sample) {
+            const double x = steps ? first_x + (last_x - first_x) *
+                (double)sample / steps : first_x;
+            const float t = (float)((x - x0) / segment_width);
             const float t2 = t * t;
             const float t3 = t2 * t;
             const float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
@@ -636,12 +657,14 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x, const int *poi
                                                  h10 * segment_width * start_slope +
                                                  h01 * point_y[segment + 1] +
                                                  h11 * segment_width * end_slope;
-            const double y = canvas->smooth_curves ? fmin(curve_bottom, fmax(curve_top, curve_y)) :
+            const double y = (canvas->native_e1003 || canvas->smooth_curves)
+                ? fmin(curve_bottom, fmax(curve_top, curve_y)) :
                 clamp_int((int)lroundf(curve_y), curve_top, curve_bottom);
-            if (x == first_x) {
+            if (sample == 0) {
                 previous_y = y;
             } else {
-                if (canvas->smooth_curves) draw_curve_segment(canvas, previous_x, previous_y, x, y, 1);
+                if (canvas->native_e1003 || canvas->smooth_curves)
+                    draw_curve_segment(canvas, previous_x, previous_y, x, y, 1);
                 else draw_line(canvas, previous_x, previous_y, x, y);
             }
             previous_x = x;
@@ -1009,27 +1032,69 @@ static void draw_swell_height(canvas_t *canvas, int center, int baseline, int he
 }
 
 static void draw_heavy_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
+    if (canvas->native_e1003) {
+        draw_curve_segment(canvas, x0, y0 + 0.5, x1, y1 + 0.5, 2);
+        return;
+    }
     draw_line(canvas, x0, y0, x1, y1);
     draw_line(canvas, x0, y0 + 1, x1, y1 + 1);
 }
 
+static bool swell_arrow_contains(const double points[7][2], double x, double y) {
+    bool inside = false;
+    for (int i = 0, previous = 6; i < 7; previous = i++) {
+        const double *a = points[i], *b = points[previous];
+        if ((a[1] > y) != (b[1] > y) &&
+            x < a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]))
+            inside = !inside;
+    }
+    return inside;
+}
+
 static void draw_swell_arrow_scaled(canvas_t *canvas, int x, int y, int degrees, double scale) {
-    /* Filled head and shaft match the optical weight of the wind arrow,
-     * inside the same 20px icon slot. */
+    /* One closed silhouette keeps the head and shaft joined at every angle.
+     * Its filled-area center is the rotation origin. */
+    static const double source[7][2] = {
+        {0, -7.25}, {5, -0.25}, {1.5, -0.25}, {1.5, 7.75},
+        {-1.5, 7.75}, {-1.5, -0.25}, {-5, -0.25},
+    };
     const double angle = degrees * 3.14159265358979323846 / 180.0;
     const double sine = sin(angle), cosine = cos(angle);
-    static const double source[7][2] = {
-        {-1.5, 7}, {1.5, 7}, {-1.5, -1}, {1.5, -1},
-        {-5, -1}, {0, -8}, {5, -1},
-    };
-    int points[7][2];
+    const double scale_x = canvas->native_e1003
+        ? (double)WIND_RENDERER_E1003_WIDTH / WIND_RENDERER_WIDTH : 1.0;
+    const double scale_y = canvas->native_e1003
+        ? (double)WIND_RENDERER_E1003_HEIGHT / WIND_RENDERER_E1003_COMPOSITION_HEIGHT : 1.0;
+    const int width = canvas->native_e1003 ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+    const int height = canvas->native_e1003 ? WIND_RENDERER_E1003_HEIGHT : canvas->height;
+    double points[7][2];
+    double min_x = width, max_x = 0, min_y = height, max_y = 0;
     for (int i = 0; i < 7; ++i) {
-        points[i][0] = x + (int)lround(scale * (source[i][0] * cosine - source[i][1] * sine));
-        points[i][1] = y + (int)lround(scale * (source[i][0] * sine + source[i][1] * cosine));
+        points[i][0] = (x + scale * (source[i][0] * cosine - source[i][1] * sine)) * scale_x;
+        points[i][1] = (y + scale * (source[i][0] * sine + source[i][1] * cosine)) * scale_y;
+        min_x = fmin(min_x, points[i][0]);
+        max_x = fmax(max_x, points[i][0]);
+        min_y = fmin(min_y, points[i][1]);
+        max_y = fmax(max_y, points[i][1]);
     }
-    fill_triangle(canvas, points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1]);
-    fill_triangle(canvas, points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
-    fill_triangle(canvas, points[4][0], points[4][1], points[5][0], points[5][1], points[6][0], points[6][1]);
+    const int left = clamp_int((int)floor(min_x) - 1, 0, width - 1);
+    const int right = clamp_int((int)ceil(max_x) + 1, 0, width - 1);
+    const int top = clamp_int((int)floor(min_y) - 1, 0, height - 1);
+    const int bottom = clamp_int((int)ceil(max_y) + 1, 0, height - 1);
+    const int samples_per_axis = canvas->native_e1003 ? 2 : 1;
+    const int sample_count = samples_per_axis * samples_per_axis;
+    for (int py = top; py <= bottom; ++py)
+        for (int px = left; px <= right; ++px) {
+            uint8_t *pixel = &canvas->pixels[(size_t)py * width + px];
+            int covered = 0;
+            for (int sy = 0; sy < samples_per_axis; ++sy)
+                for (int sx = 0; sx < samples_per_axis; ++sx)
+                    covered += swell_arrow_contains(points,
+                        px + (sx + 0.5) / samples_per_axis,
+                        py + (sy + 0.5) / samples_per_axis);
+            if (covered)
+                *pixel = (uint8_t)((*pixel * (sample_count - covered) +
+                                     sample_count / 2) / sample_count);
+        }
 }
 
 static void draw_centered_value(canvas_t *canvas, int x, int baseline, int size,
@@ -1072,11 +1137,19 @@ static void draw_swell_trace(canvas_t *canvas, const int *hours, int day,
         const int left = clamp_int(x0, day_column_x(canvas, day) + 1, day_column_x(canvas, day + 1) - 1);
         const int right = clamp_int(x1, day_column_x(canvas, day) + 1, day_column_x(canvas, day + 1) - 1);
         double previous_y = 0;
-        for (int x = left; x <= right; ++x) {
+        double previous_x = left;
+        const int steps = curve_steps(canvas, right - left);
+        for (int sample = 0; sample <= steps; ++sample) {
+            const double x = steps ? left + (right - left) *
+                (double)sample / steps : left;
             const double height = swell_interpolate(hours, hour, (double)(x - x0) / (x1 - x0));
             const double y = swell_y(height, plot_top, plot_bottom);
-            if (x > left && (!dashed || (x - day_column_x(canvas, day)) % 7 < 3))
-                draw_curve_segment_color(canvas, x - 1, previous_y, x, y, width, color, day_column_x(canvas, day) + 1, day_column_x(canvas, day + 1) - 1);
+            if (sample > 0 && (!dashed ||
+                ((int)floor(x - day_column_x(canvas, day))) % 7 < 3))
+                draw_curve_segment_color(canvas, previous_x, previous_y, x, y,
+                    width, color, day_column_x(canvas, day) + 1,
+                    day_column_x(canvas, day + 1) - 1);
+            previous_x = x;
             previous_y = y;
         }
     }
@@ -1354,6 +1427,42 @@ static void draw_output_outlined_text(canvas_t *scratch, output_surface_t *outpu
                                       int x, int baseline, wind_font_family_t family,
                                       int size, const char *text,
                                       output_color_t text_color) {
+    if (output->native_e1003) {
+        enum { MASK_HEIGHT = 70, MASK_BASELINE = 50 };
+        const int native_size = wind_font_native_size(family, size);
+        const wind_text_metrics_t native_metrics =
+            wind_font_measure(family, native_size, text);
+        const int width = clamp_int(native_metrics.width + 12,
+                                    1, WIND_RENDERER_E1003_WIDTH);
+        uint8_t *mask = scratch->pixels;
+        memset(mask, CANVAS_WHITE, (size_t)width * MASK_HEIGHT);
+        wind_font_draw(mask, width, MASK_HEIGHT, width, 6,
+                       MASK_BASELINE, family, native_size, CANVAS_BLACK, text);
+        const int left = wind_canvas_native_x(x) - 6;
+        const int top = wind_canvas_native_y(baseline) - MASK_BASELINE;
+        const int clear_left = clamp_int(wind_canvas_native_x(x) - 4, 0,
+                                         WIND_RENDERER_E1003_WIDTH - 1);
+        const int clear_right = clamp_int(wind_canvas_native_x(x) + native_metrics.width + 4,
+                                          0, WIND_RENDERER_E1003_WIDTH);
+        const int clear_top = clamp_int(wind_canvas_native_y(baseline) - native_metrics.ascent - 4,
+                                        0, WIND_RENDERER_E1003_HEIGHT - 1);
+        const int clear_bottom = clamp_int(wind_canvas_native_y(baseline) + native_metrics.descent + 4,
+                                           0, WIND_RENDERER_E1003_HEIGHT);
+        for (int py = clear_top; py < clear_bottom; ++py)
+            for (int px = clear_left; px < clear_right; ++px)
+                set_output_pixel_raw(output,
+                    py * WIND_RENDERER_E1003_WIDTH + px, OUTPUT_WHITE);
+        for (int dy = 0; dy < MASK_HEIGHT; ++dy)
+            for (int dx = 0; dx < width; ++dx) {
+                const int px = left + dx, py = top + dy;
+                if (px < 0 || px >= WIND_RENDERER_E1003_WIDTH ||
+                    py < 0 || py >= WIND_RENDERER_E1003_HEIGHT) continue;
+                if (mask[(size_t)dy * width + dx] != CANVAS_BLACK) continue;
+                const int index = py * WIND_RENDERER_E1003_WIDTH + px;
+                set_output_pixel_raw(output, index, text_color);
+            }
+        return;
+    }
     const wind_text_metrics_t metrics = wind_font_measure(family, size, text);
     const int mask_left = x - 3;
     const int mask_top = baseline - 24;
@@ -1475,7 +1584,7 @@ int wind_renderer_render_setup(wind_renderer_display_t display,
     memset(palette_out, CANVAS_WHITE, size);
     canvas_t canvas = {.pixels = palette_out, .height = height, .size = size,
                        .native_e1003 = native, .antialias_text = native};
-    if (native && !(canvas.font_mask = malloc(WIND_RENDERER_WIDTH * 80u))) return -2;
+
     const char *lines[] = {"Finish setup", "Continue in your browser"};
     const int sizes[] = {34, 15};
     for (size_t i = 0; i < 2; ++i) {
@@ -1490,7 +1599,7 @@ int wind_renderer_render_setup(wind_renderer_display_t display,
     for (size_t i = 0; i < size; ++i)
         palette_out[i] = native ? (uint8_t)((palette_out[i] * 15u + 127u) / 255u)
                                 : palette_out[i] == CANVAS_BLACK ? PALETTE_BLACK : white;
-    free(canvas.font_mask);
+
     return 0;
 }
 
@@ -1508,7 +1617,7 @@ int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t displ
     memset(palette_out, CANVAS_BLACK, size);
     canvas_t canvas = {.pixels = palette_out, .height = height, .size = size,
                        .native_e1003 = native, .antialias_text = native};
-    if (native && !(canvas.font_mask = malloc(WIND_RENDERER_WIDTH * 80u))) return -2;
+
     const int offset = (height - WIND_RENDERER_HEIGHT) / 2;
     /* 80 x 40 body, 4 px outline, centered including the 6 px terminal. */
     wind_canvas_fill_rect(&canvas, 357, 184 + offset, 80, 40, CANVAS_WHITE);
@@ -1525,7 +1634,7 @@ int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t displ
     for (size_t i = 0; i < size; ++i)
         palette_out[i] = native ? (uint8_t)((palette_out[i] * 15u + 127u) / 255u)
                                 : palette_out[i] == CANVAS_BLACK ? PALETTE_BLACK : white;
-    free(canvas.font_mask);
+
     return 0;
 }
 
@@ -1584,13 +1693,6 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                           output_format == OUTPUT_GC16 ||
                           output_format == OUTPUT_RGBA_GRAY4 ||
                           output_format == OUTPUT_RGBA_GC16;
-    if (native_e1003) {
-        canvas.font_mask = (uint8_t *)malloc(WIND_RENDERER_WIDTH * 80u);
-        if (!canvas.font_mask) {
-            if (canvas.pixels != output_pixels) free(canvas.pixels);
-            return -2;
-        }
-    }
     canvas.height = canvas_height;
     canvas.day_count = dashboard->visible_day_count;
     canvas.sample_count = dashboard->visible_sample_count;
@@ -1710,7 +1812,6 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         else {
             scratch.size = WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT;
             scratch.native_e1003 = false;
-            scratch.font_mask = NULL;
         }
     }
     if (output_result == 0 && dashboard->display_mode == WIND_RENDERER_MODE_THRESHOLD &&
@@ -1734,7 +1835,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         stats->tide_row_top = layout.tide_top;
     }
     if (scratch.pixels != canvas.pixels) free(scratch.pixels);
-    free(canvas.font_mask);
+
     if (canvas.pixels != output_pixels) free(canvas.pixels);
     return output_result == 0 ? 0 : -2;
 }
@@ -1842,6 +1943,25 @@ int wind_renderer_render_preview_rgba_for_display(
 
 /* Render with the production font, then reduce its mask from 43 to 30 px. */
 static bool overview_spot_label(canvas_t *c, int x, int baseline, const char *name) {
+    if (c->native_e1003) {
+        const int left = wind_canvas_native_x(x);
+        const wind_text_metrics_t metrics = wind_font_measure(
+            WIND_FONT_INTER, WIND_FONT_SIZE_OVERVIEW_NATIVE, name);
+        const int clear_top = clamp_int(wind_canvas_native_y(baseline) - metrics.ascent - 4,
+                                        0, WIND_RENDERER_E1003_HEIGHT - 1);
+        const int clear_bottom = clamp_int(wind_canvas_native_y(baseline) + metrics.descent + 4,
+                                           0, WIND_RENDERER_E1003_HEIGHT);
+        const int clear_left = clamp_int(left - 5, 0, WIND_RENDERER_E1003_WIDTH - 1);
+        const int clear_right = clamp_int(left + metrics.width + 7, 0,
+                                          WIND_RENDERER_E1003_WIDTH);
+        wind_canvas_native_rect(c, clear_left, clear_top, clear_right - clear_left,
+                    clear_bottom - clear_top, CANVAS_WHITE);
+        wind_font_draw(c->pixels, WIND_RENDERER_E1003_WIDTH,
+                       WIND_RENDERER_E1003_HEIGHT, WIND_RENDERER_E1003_WIDTH,
+                       left, wind_canvas_native_y(baseline), WIND_FONT_INTER,
+                       WIND_FONT_SIZE_OVERVIEW_NATIVE, CANVAS_BLACK, name);
+        return true;
+    }
     uint8_t *mask = malloc(800 * 64);
     if (!mask) return false;
     memset(mask, 255, 800 * 64);
@@ -1893,8 +2013,6 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
         .size=WIND_RENDERER_E1003_COMPOSITION_BYTES, .antialias_text=true,
         .smooth_curves=true, .native_e1003=true};
     c.pixels = output;
-    c.font_mask = malloc(WIND_RENDERER_WIDTH * 80u);
-    if (!c.font_mask) return -2;
     memset(c.pixels, CANVAS_WHITE, c.size);
     wind_canvas_outline_rect(&c, 12, 12, 776, 576);
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
@@ -1907,7 +2025,7 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
         int top = WIND_OVERVIEW_TOP + row * WIND_OVERVIEW_ROW_HEIGHT;
         char name[WIND_RENDERER_SPOT_NAME_CAPACITY];
         uppercase_spot_name(name, sizeof(name), rows[row].spot_name);
-        if (!overview_spot_label(&c, 30, top+41, name)) { free(c.font_mask); return -2; }
+        if (!overview_spot_label(&c, 30, top+41, name)) return -2;
         if (rows[row].swell_size == 2)
             draw_swell_module(&c, &rows[row], top, top+179, 2, true);
         else draw_wind_module(&c, &rows[row], top, top+179, 2, true);
@@ -1933,6 +2051,5 @@ int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
     }
     for (size_t i = 0; i < c.size; ++i) output[i] = (c.pixels[i]*15u+127u)/255u;
     if (stats) { memset(stats, 0, sizeof(*stats)); stats->clipped_primitives=c.clipped; }
-    free(c.font_mask);
     return 0;
 }

@@ -260,7 +260,7 @@ TEST(WindRenderer, MutedFooterStatusIsModelSpecific) {
     EXPECT_EQ(CountColor(e1001, 30, 450, 770, 479, 0), 0);
     EXPECT_GT(CountColor(e1002, 30, 450, 770, 479, 0), 0);
     EXPECT_GT(std::count(e1003.begin() + 1334 * WIND_RENDERER_E1003_WIDTH,
-                         e1003.end(), 5), 0);
+                         e1003.end(), 0), 0);
 }
 
 TEST(WindRenderer, WarningRemainsDistinctAndRenderSignatureCannotCrossModels) {
@@ -1262,4 +1262,246 @@ TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
     EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
     d.visible_sample_count=5; d.visible_day_count=3;
     EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
+}
+
+TEST(WindRenderer, E1003ThresholdValueIsSolidNativePixelText) {
+    wind_renderer_input_v2_t input{};
+    wind_renderer_dashboard_t threshold{};
+    ASSERT_EQ(wind_renderer_fixture_build(WIND_RENDERER_FIXTURE_THRESHOLD_DEFAULT,
+                                          &input), 0);
+    ASSERT_EQ(wind_renderer_input_v2_to_dashboard(&input, &threshold), 0);
+    auto solid = threshold;
+    solid.display_mode = WIND_RENDERER_MODE_SOLID;
+    Frame with_value(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    Frame without_value(with_value.size());
+    ASSERT_EQ(wind_renderer_render_for_display(&threshold,
+        WIND_RENDERER_DISPLAY_E1003_GC16, with_value.data(), with_value.size(), nullptr), 0);
+    ASSERT_EQ(wind_renderer_render_for_display(&solid,
+        WIND_RENDERER_DISPLAY_E1003_GC16, without_value.data(), without_value.size(), nullptr), 0);
+    int changed = 0;
+    int native_edges = 0;
+    for (int y = 780; y < 920; ++y)
+        for (int x = 1570; x < 1850; ++x) {
+            const size_t index = (size_t)y * WIND_RENDERER_E1003_WIDTH + x;
+            if (with_value[index] == without_value[index]) continue;
+            ++changed;
+            EXPECT_TRUE(with_value[index] == 0 || with_value[index] == 15);
+            if (x > 1570 && with_value[index] != with_value[index - 1])
+                ++native_edges;
+        }
+    EXPECT_GT(changed, 200);
+    EXPECT_GT(native_edges, 30);
+}
+
+TEST(WindRenderer, E1003SetupAndBatteryHeadlinesUseFullSizeType) {
+    Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    ASSERT_EQ(wind_renderer_render_setup(WIND_RENDERER_DISPLAY_E1003_GC16,
+        pixels.data(), pixels.size()), 0);
+    int setup_ink_rows = 0;
+    for (int y = 610; y < 710; ++y) {
+        bool has_ink = false;
+        for (int x = 600; x < 1300; ++x)
+            has_ink |= pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x] < 4;
+        setup_ink_rows += has_ink;
+    }
+    EXPECT_GT(setup_ink_rows, 55);
+
+    ASSERT_EQ(wind_renderer_render_battery_empty_for_display(
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
+    int battery_ink_rows = 0;
+    for (int y = 735; y < 830; ++y) {
+        bool has_ink = false;
+        for (int x = 600; x < 1300; ++x)
+            has_ink |= pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x] > 11;
+        battery_ink_rows += has_ink;
+    }
+    EXPECT_GT(battery_ink_rows, 55);
+}
+
+TEST(WindRenderer, E1003TideCurveUsesNativeSubpixelHeights) {
+    wind_renderer_input_v2_t input{};
+    wind_renderer_dashboard_t dashboard{};
+    ASSERT_EQ(wind_renderer_fixture_build(WIND_RENDERER_FIXTURE_ROWS_TIDE,
+                                          &input), 0);
+    ASSERT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
+    Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size(), nullptr), 0);
+    int subpixel_ink = 0;
+    for (int y = 1200; y < 1268; ++y)
+        for (int x = 50; x < 350; ++x) {
+            const uint8_t pixel = pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x];
+            subpixel_ink += pixel > 0 && pixel < 15;
+        }
+    EXPECT_GT(subpixel_ink, 100);
+}
+
+TEST(WindRenderer, SwellArrowStaysConnectedWhileRotating) {
+    auto dashboard = Dashboard();
+    dashboard.custom_modules = 1;
+    dashboard.ordered_modules = 1;
+    dashboard.wind_size = 0;
+    dashboard.swell_size = 1;
+    dashboard.show_weather = 0;
+    for (int module = 0; module < 5; ++module) dashboard.module_order[module] = module;
+    for (auto &day : dashboard.swell)
+        for (auto &sample : day)
+            sample = {-1, -1, -1};
+
+    for (const auto display : {WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
+                               WIND_RENDERER_DISPLAY_E1003_GC16}) {
+        const int width = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_WIDTH : WIND_RENDERER_WIDTH;
+        const size_t size = display == WIND_RENDERER_DISPLAY_E1003_GC16
+            ? WIND_RENDERER_E1003_COMPOSITION_BYTES : WIND_RENDERER_PALETTE_BYTES;
+        Frame empty(size), frame(size);
+        ASSERT_EQ(wind_renderer_render_for_display(&dashboard, display,
+            empty.data(), empty.size(), nullptr), 0);
+        std::vector<double> centers_x, centers_y;
+        for (int degrees = 0; degrees < 360; degrees += 15) {
+            dashboard.swell[0][0].destination_degrees = degrees;
+            ASSERT_EQ(wind_renderer_render_for_display(&dashboard, display,
+                frame.data(), frame.size(), nullptr), 0);
+            std::vector<uint8_t> added(size, 0), visited(size, 0);
+            std::vector<int> ink;
+            for (size_t pixel = 0; pixel < size; ++pixel)
+                if (frame[pixel] < empty[pixel]) {
+                    added[pixel] = 1;
+                    ink.push_back(static_cast<int>(pixel));
+                }
+            ASSERT_GT(ink.size(), 20u) << degrees;
+            double x_total = 0, y_total = 0, weight_total = 0;
+            for (const int pixel : ink) {
+                const double weight = empty[pixel] - frame[pixel];
+                x_total += (pixel % width + 0.5) * weight;
+                y_total += (pixel / width + 0.5) * weight;
+                weight_total += weight;
+            }
+            centers_x.push_back(x_total / weight_total);
+            centers_y.push_back(y_total / weight_total);
+            int components = 0;
+            for (const int first : ink) {
+                if (visited[first]) continue;
+                ++components;
+                std::vector<int> pending = {first};
+                visited[first] = 1;
+                while (!pending.empty()) {
+                    const int current = pending.back();
+                    pending.pop_back();
+                    const int x = current % width, y = current / width;
+                    for (int dy = -1; dy <= 1; ++dy)
+                        for (int dx = -1; dx <= 1; ++dx) {
+                            if (abs(dx) + abs(dy) != 1) continue;
+                            const int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || nx >= width || ny < 0 ||
+                                static_cast<size_t>(ny) * width + nx >= size) continue;
+                            const int next = ny * width + nx;
+                            if (added[next] && !visited[next]) {
+                                visited[next] = 1;
+                                pending.push_back(next);
+                            }
+                        }
+                }
+            }
+            EXPECT_EQ(components, 1) << "display " << display << ", " << degrees << "°";
+        }
+        const double max_drift = display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 2.1 : 0.9;
+        const auto x_extent = std::minmax_element(centers_x.begin(), centers_x.end());
+        const auto y_extent = std::minmax_element(centers_y.begin(), centers_y.end());
+        EXPECT_LE(*x_extent.second - *x_extent.first, max_drift);
+        EXPECT_LE(*y_extent.second - *y_extent.first, max_drift);
+        dashboard.swell[0][0].destination_degrees = -1;
+    }
+}
+
+TEST(SpotOverviewRenderer, E1003SpotNameUsesIndividualPanelPixels) {
+    auto row = Dashboard();
+    row.spot_name = "WIJK AAN ZEE";
+    Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    ASSERT_EQ(wind_renderer_render_overview(&row, 1, 0, 1,
+        pixels.data(), pixels.size(), nullptr), 0);
+    std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
+        logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
+                           WIND_RENDERER_WIDTH] = true;
+    int native_edges = 0;
+    int gray_name_pixels = 0;
+    for (int y = 150; y < 220; ++y)
+        for (int x = 80; x < 650; ++x) {
+            const uint8_t pixel = pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x];
+            gray_name_pixels += pixel != 0 && pixel != 15;
+            if (!logical_boundaries[x] &&
+                pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x] !=
+                    pixels[(size_t)y * WIND_RENDERER_E1003_WIDTH + x - 1])
+                ++native_edges;
+        }
+    EXPECT_GT(native_edges, 500);
+    EXPECT_EQ(gray_name_pixels, 0);
+}
+
+TEST(WindRenderer, E1003TextUsesIndividualPanelPixels) {
+    const auto dashboard = Dashboard();
+    Frame frame(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+        WIND_RENDERER_DISPLAY_E1003_GC16, frame.data(), frame.size(), nullptr), 0);
+    std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
+        logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
+                           WIND_RENDERER_WIDTH] = true;
+    int native_edges = 0;
+    for (int y = 50; y < 165; ++y)
+        for (int x = 75; x < 700; ++x)
+            if (!logical_boundaries[x] &&
+                frame[y * WIND_RENDERER_E1003_WIDTH + x] !=
+                    frame[y * WIND_RENDERER_E1003_WIDTH + x - 1])
+                ++native_edges;
+    EXPECT_GT(native_edges, 100);
+}
+
+TEST(WindRenderer, E1003SmallLabelsUseSolidPanelPixels) {
+    auto first = Dashboard();
+    auto second = first;
+    second.days[0].day = "SUN";
+    Frame before(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    Frame after(before.size());
+    ASSERT_EQ(wind_renderer_render_for_display(&first,
+        WIND_RENDERER_DISPLAY_E1003_GC16, before.data(), before.size(), nullptr), 0);
+    ASSERT_EQ(wind_renderer_render_for_display(&second,
+        WIND_RENDERER_DISPLAY_E1003_GC16, after.data(), after.size(), nullptr), 0);
+    int changed = 0;
+    for (int y = 190; y < 250; ++y)
+        for (int x = 40; x < 300; ++x) {
+            const size_t index = (size_t)y * WIND_RENDERER_E1003_WIDTH + x;
+            if (before[index] == after[index]) continue;
+            ++changed;
+            EXPECT_TRUE(after[index] == 0 || after[index] == 15);
+        }
+    EXPECT_GT(changed, 50);
+}
+
+TEST(WindRenderer, E1003WeatherIconsUseIndividualPanelPixels) {
+    auto dashboard = Dashboard();
+    auto without_weather = dashboard;
+    for (auto &day : without_weather.days)
+        for (auto &sample : day.samples)
+            sample.weather = WIND_RENDERER_WEATHER_UNAVAILABLE;
+    Frame with_icon(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+    Frame without_icon(with_icon.size());
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+        WIND_RENDERER_DISPLAY_E1003_GC16, with_icon.data(), with_icon.size(), nullptr), 0);
+    ASSERT_EQ(wind_renderer_render_for_display(&without_weather,
+        WIND_RENDERER_DISPLAY_E1003_GC16, without_icon.data(), without_icon.size(), nullptr), 0);
+    std::vector<bool> logical_boundaries(WIND_RENDERER_E1003_WIDTH, false);
+    for (int x = 0; x < WIND_RENDERER_WIDTH; ++x)
+        logical_boundaries[(x * WIND_RENDERER_E1003_WIDTH + WIND_RENDERER_WIDTH / 2) /
+                           WIND_RENDERER_WIDTH] = true;
+    int native_edges = 0;
+    for (int y = 0; y < WIND_RENDERER_E1003_HEIGHT; ++y)
+        for (int x = 1; x < WIND_RENDERER_E1003_WIDTH; ++x) {
+            const size_t index = (size_t)y * WIND_RENDERER_E1003_WIDTH + x;
+            const bool changed = with_icon[index] != without_icon[index];
+            const bool previous_changed = with_icon[index - 1] != without_icon[index - 1];
+            if (changed != previous_changed && !logical_boundaries[x]) ++native_edges;
+        }
+    EXPECT_GT(native_edges, 100);
 }
