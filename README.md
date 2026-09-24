@@ -133,5 +133,5 @@ again to finish setup. With current firmware, setup keeps Wi-Fi and actively
 fetches, renders and saves a forecast before reporting success, even when the
 settings already match.
 
-The Windpeek runtime excludes the upstream photo-frame HTTP and OTA services;
-the retained OTA upload script applies to legacy photo-frame builds.
+The upstream photo-frame application has been removed. Firmware builds only
+Windpeek for E1001/E1002 and E1003.

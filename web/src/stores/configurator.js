@@ -136,18 +136,19 @@ export const useConfiguratorStore = defineStore('configurator', {
       this.markUserSpotIntent()
       const previousId = this.selectedSpotId
       this.configuredSpotIds.splice(index, 1, spotId)
+      const selected = await this.selectSpot(spotId, options)
       delete this.spotSettings[previousId]
-      return this.selectSpot(spotId, options)
+      return selected
     },
     async removeConfiguredSpot(spotId, options = {}) {
       const index = this.configuredSpotIds.indexOf(spotId)
       if (index < 0) return false
       this.markUserSpotIntent()
       this.configuredSpotIds.splice(index, 1)
-      delete this.spotSettings[spotId]
       if (spotId === this.selectedSpotId && this.configuredSpotIds.length) {
         await this.selectSpot(this.configuredSpotIds[Math.min(index, this.configuredSpotIds.length - 1)], options)
       }
+      delete this.spotSettings[spotId]
       return true
     },
     markUserSpotIntent() {
@@ -470,6 +471,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       }
       const saved = this.spotSettings[spotId]
       this.$patch({ selectedSpotId: spotId, ...(saved ?? {}) })
+      delete this.spotSettings[spotId]
       this.swellFocus = this.swellSize !== 'off'
       this.swellRequestId += 1
       this.swell = null

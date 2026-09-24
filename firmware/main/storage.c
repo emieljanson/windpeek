@@ -1,10 +1,6 @@
 #include "storage.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include "config.h"
-#include "config_manager.h"
 #include "esp_err.h"
 #include "esp_log.h"
 
@@ -16,12 +12,7 @@
 #include "esp_littlefs.h"
 #endif
 
-#include <sys/stat.h>
-
 #include "memfs.h"
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-#include "album_manager.h"
-#endif
 
 static const char *TAG = "storage";
 static storage_type_t current_storage_type = STORAGE_TYPE_NONE;
@@ -118,121 +109,5 @@ void storage_unmount(void)
         ESP_LOGI(TAG, "Unmounting LittleFS before deep sleep");
         esp_vfs_littlefs_unregister(LITTLEFS_PARTITION_LABEL);
     }
-#endif
-}
-
-esp_err_t storage_format(void)
-{
-    esp_err_t ret = ESP_ERR_NOT_SUPPORTED;
-
-    switch (current_storage_type) {
-#ifdef CONFIG_USE_INTERNAL_FLASH_STORAGE
-    case STORAGE_TYPE_LITTLEFS:
-        ESP_LOGW(TAG, "Formatting LittleFS partition...");
-        // Unmount, format, and remount
-        esp_vfs_littlefs_unregister(LITTLEFS_PARTITION_LABEL);
-        ret = esp_littlefs_format(LITTLEFS_PARTITION_LABEL);
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to format LittleFS: %s", esp_err_to_name(ret));
-            // Try to remount anyway
-            mount_littlefs();
-            return ret;
-        }
-        ESP_LOGI(TAG, "LittleFS formatted successfully, remounting...");
-        ret = mount_littlefs();
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to remount LittleFS after format");
-            return ret;
-        }
-        break;
-#endif
-#ifdef CONFIG_HAS_SDCARD
-    case STORAGE_TYPE_SDCARD:
-        // SD card stays mounted across format; only the filesystem is
-        // reinitialised as fresh FAT32.
-        ret = sdcard_format();
-        if (ret != ESP_OK) {
-            return ret;
-        }
-        break;
-#endif
-    default:
-        ESP_LOGE(TAG, "Format not supported for current storage type (%d)", current_storage_type);
-        return ESP_ERR_NOT_SUPPORTED;
-    }
-
-    // Recreate the images directory and default album regardless of backend
-    mkdir(IMAGE_DIRECTORY, 0775);
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-    album_manager_ensure_default_album();
-#endif
-
-    ESP_LOGI(TAG, "Storage format complete");
-    return ESP_OK;
-}
-
-esp_err_t storage_read_wifi_credentials(char *ssid, char *password)
-{
-#ifdef CONFIG_HAS_SDCARD
-    if (!sdcard_is_mounted()) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    // Try multiple possible locations, starting with the safest (config folder)
-    const char *paths[] = {FS_MOUNT_POINT "/config/wifi.txt", FS_MOUNT_POINT "/wifi.txt", NULL};
-
-    FILE *f = NULL;
-    for (int i = 0; paths[i] != NULL; i++) {
-        f = fopen(paths[i], "r");
-        if (f) {
-            ESP_LOGI(TAG, "Found WiFi credentials file at: %s", paths[i]);
-            break;
-        }
-    }
-
-    if (!f) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    char line[128];
-    int line_num = 0;
-
-    // Read file line by line
-    while (fgets(line, sizeof(line), f) != NULL && line_num < 3) {
-        // Remove trailing newline and carriage return
-        line[strcspn(line, "\r\n")] = 0;
-
-        // Skip empty lines and comments
-        if (strlen(line) == 0 || line[0] == '#') {
-            continue;
-        }
-
-        switch (line_num) {
-        case 0:  // SSID
-            strncpy(ssid, line, WIFI_SSID_MAX_LEN - 1);
-            ssid[WIFI_SSID_MAX_LEN - 1] = '\0';
-            break;
-        case 1:  // Password
-            strncpy(password, line, WIFI_PASS_MAX_LEN - 1);
-            password[WIFI_PASS_MAX_LEN - 1] = '\0';
-            break;
-        case 2:  // Device Name (Optional)
-            config_manager_set_device_name(line);
-            ESP_LOGI(TAG, "Loaded Device Name from SD: %s", line);
-            break;
-        }
-        line_num++;
-    }
-    fclose(f);
-
-    if (line_num >= 2) {
-        ESP_LOGI(TAG, "Successfully read WiFi credentials from SD card");
-        return ESP_OK;
-    } else {
-        ESP_LOGE(TAG, "Invalid wifi.txt format on SD card");
-        return ESP_ERR_INVALID_ARG;
-    }
-#else
-    return ESP_ERR_NOT_SUPPORTED;
 #endif
 }

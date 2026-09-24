@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -36,7 +37,7 @@
 #include "esp_timer.h"
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
 #include "board_touch.h"
-#include "driver/ledc.h"
+#include "freertos/queue.h"
 #include "wind_overview.h"
 #endif
 
@@ -47,6 +48,17 @@ static TaskHandle_t s_dashboard_task;
 RTC_DATA_ATTR static bool s_empty_latched;
 static bool s_battery_state_loaded;
 static SemaphoreHandle_t s_battery_lock;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+typedef struct {
+    wind_touch_action_t touch;
+    int direction;
+    bool white_button;
+} input_command_t;
+static QueueHandle_t s_input_commands;
+static atomic_uint s_pending_input_actions;
+static bool s_input_initial_overview_open;
+static size_t s_input_initial_overview_page;
+#endif
 
 static esp_err_t store_battery_latch(bool empty)
 {
@@ -267,10 +279,10 @@ static void capture_boot_touch(void) {
     }
 }
 
-static void run_touch_action(wind_touch_action_t action) {
+static void run_touch_action(wind_touch_action_t action, bool click) {
     if (action.kind==WIND_TOUCH_NONE || power_manager_is_installer_active()) return;
+    if (click) play_navigation_click();
     if (!battery_allows_work()) return;
-    play_navigation_click();
     power_manager_work_begin();
     power_manager_reset_sleep_timer();
     /* Fetching is lazy, and overview rendering reads only its visible three spots. */
@@ -294,41 +306,85 @@ static void run_touch_action(wind_touch_action_t action) {
     power_manager_work_end();
 }
 
+static void navigate_spot_button(int direction) {
+    if (!battery_allows_work()) return;
+    power_manager_work_begin();
+    power_manager_reset_sleep_timer();
+    if (wind_app_navigation_requires_network(direction) && !wifi_manager_is_connected())
+        (void)connect_installed_wifi();
+    esp_err_t result=direction<0?wind_app_select_previous():wind_app_select_next();
+    if (result!=ESP_OK) ESP_LOGW(TAG,"Spot navigation failed: %s",esp_err_to_name(result));
+    else if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
+    power_manager_reset_sleep_timer();
+    power_manager_work_end();
+}
+
+static bool queue_input_command(input_command_t command) {
+    if (!s_input_commands) return false;
+    atomic_fetch_add(&s_pending_input_actions, 1);
+    if (xQueueSend(s_input_commands, &command, 0) == pdTRUE) return true;
+    atomic_fetch_sub(&s_pending_input_actions, 1);
+    return false;
+}
+
+static void e1003_action_task(void *argument) {
+    (void)argument;
+    input_command_t command;
+    while (true) {
+        if (xQueueReceive(s_input_commands, &command, portMAX_DELAY) != pdTRUE) continue;
+        if (command.white_button) {
+            bool overview_open=false;
+            size_t page=0;
+            wind_app_overview_state(&overview_open,&page);
+            if (overview_open && wind_spots_count()>1) navigate_spot_button(1);
+            else run_touch_action((wind_touch_action_t){WIND_TOUCH_OPEN,0}, false);
+        } else if (command.direction) navigate_spot_button(command.direction);
+        else run_touch_action(command.touch, false);
+        atomic_fetch_sub(&s_pending_input_actions, 1);
+    }
+}
+
 static void e1003_input_task(void *argument) {
     (void)argument;
     const gpio_num_t pins[]={BOARD_HAL_ROTATE_KEY,BOARD_HAL_CLEAR_KEY,BOARD_HAL_WAKEUP_KEY};
     bool down[3]={false}, armed[3]={false};
+    bool click_played[3]={false};
     TickType_t pressed_at[3]={0};
     wind_touch_gesture_t gesture={0};
     /* The second wake tap may still be held after the controller resets. */
     bool discard_until_release=board_hal_touch_gesture_wake();
     uint32_t last_frame=(uint32_t)(esp_timer_get_time()/1000);
+    bool last_overview_open=s_input_initial_overview_open;
+    size_t last_overview_page=s_input_initial_overview_page;
     while (true) {
         uint32_t now=(uint32_t)(esp_timer_get_time()/1000);
-        bool navigation_ran=false;
         bool held[3];
         for (int i=0;i<3;++i) held[i]=gpio_get_level(pins[i])==0;
-        bool blocked=power_manager_is_installer_active() || power_manager_work_active() || (held[0]&&held[1]);
+        bool blocked=power_manager_is_installer_active() || (held[0]&&held[1]);
         if (blocked) { gesture=(wind_touch_gesture_t){0}; discard_until_release=true; }
         for (int i=0;i<3;++i) {
             if (blocked) armed[i]=false;
-            if (held[i]&&!down[i]) pressed_at[i]=xTaskGetTickCount();
+            if (held[i]&&!down[i]) {
+                pressed_at[i]=xTaskGetTickCount();
+                click_played[i]=false;
+            }
+            if (held[i] && armed[i] && !blocked && !click_played[i] &&
+                xTaskGetTickCount()-pressed_at[i]>=pdMS_TO_TICKS(50) &&
+                (i==2 || wind_spots_count()>1)) {
+                if (i==2 || queue_input_command((input_command_t){.direction=i==0?-1:1})) {
+                    play_navigation_click();
+                    click_played[i]=true;
+                }
+            }
             if (!held[i]&&down[i]&&armed[i]&&!blocked) {
                 TickType_t duration=xTaskGetTickCount()-pressed_at[i];
                 if (duration>=pdMS_TO_TICKS(50)&&duration<pdMS_TO_TICKS(3000)) {
-                    navigation_ran=true;
-                    if (i==2) run_touch_action((wind_touch_action_t){WIND_TOUCH_OPEN,0});
-                    else if (wind_spots_count()>1 && battery_allows_work()) {
+                    if (i==2) {
+                        if (queue_input_command((input_command_t){.white_button=true}) &&
+                            !click_played[i]) play_navigation_click();
+                    } else if (!click_played[i] && wind_spots_count()>1 &&
+                               queue_input_command((input_command_t){.direction=i==0?-1:1})) {
                         play_navigation_click();
-                        power_manager_work_begin();
-                        int direction=i==0?-1:1;
-                        if (wind_app_navigation_requires_network(direction)&&!wifi_manager_is_connected())
-                            (void)connect_installed_wifi();
-                        esp_err_t result=direction<0?wind_app_select_previous():wind_app_select_next();
-                        if (result!=ESP_OK) ESP_LOGW(TAG,"Spot navigation failed: %s",esp_err_to_name(result));
-                        else if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
-                        power_manager_reset_sleep_timer();
-                        power_manager_work_end();
                     }
                     gesture=(wind_touch_gesture_t){0}; discard_until_release=true;
                 }
@@ -336,31 +392,24 @@ static void e1003_input_task(void *argument) {
             if (!held[i]&&!blocked) armed[i]=true;
             down[i]=held[i];
         }
-        if (navigation_ran) {
-            /* Ignore presses made while the e-ink refresh was blocking this task. */
-            for (int i=0;i<3;++i) {
-                down[i]=gpio_get_level(pins[i])==0;
-                armed[i]=!down[i];
-            }
-        }
         board_touch_sample_t sample;
         esp_err_t result=board_hal_touch_read(&sample);
         now=(uint32_t)(esp_timer_get_time()/1000);
         if (result==ESP_OK) {
             last_frame=now;
             if (sample.contacts) power_manager_reset_sleep_timer();
-            if (!sample.contacts && discard_until_release) discard_until_release=false;
+            if (atomic_load(&s_pending_input_actions)>0) {
+                gesture=(wind_touch_gesture_t){0};
+                discard_until_release=true;
+            } else if (!sample.contacts && discard_until_release) discard_until_release=false;
             else if (!blocked&&!discard_until_release) {
-                bool open; size_t page; wind_app_overview_state(&open,&page);
+                (void)wind_app_overview_state_if_ready(&last_overview_open,&last_overview_page);
                 wind_touch_action_t action=wind_touch_update(&gesture,sample.contacts,
-                    (uint32_t)sample.x*800/1872,(uint32_t)sample.y*600/1404,now,open,page,wind_spots_count());
+                    (uint32_t)sample.x*800/1872,(uint32_t)sample.y*600/1404,now,
+                    last_overview_open,last_overview_page,wind_spots_count());
                 if (action.kind!=WIND_TOUCH_NONE) {
-                    run_touch_action(action);
+                    if (queue_input_command((input_command_t){.touch=action})) play_navigation_click();
                     discard_until_release=true;
-                    for (int i=0;i<3;++i) {
-                        down[i]=gpio_get_level(pins[i])==0;
-                        armed[i]=!down[i];
-                    }
                 }
             }
         } else if (result!=ESP_ERR_NOT_FINISHED && result!=ESP_ERR_NOT_SUPPORTED) {
@@ -577,7 +626,7 @@ void app_main(void)
         else if (s_have_boot_gesture)
             action=wind_touch_update(&s_boot_gesture,0,0,0,
                 s_boot_release_ms,open,page,wind_spots_count());
-        run_touch_action(action);
+        run_touch_action(action, true);
         result=ESP_OK;
     } else result = previous_spot ? wind_app_select_previous() : next_spot ? wind_app_select_next() : wind_app_start();
 #else
@@ -599,10 +648,21 @@ void app_main(void)
         power_manager_enter_sleep();
     }
 
-    xTaskCreate(dashboard_task, "wind_dashboard", 16384, NULL, 5, &s_dashboard_task);
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    xTaskCreate(e1003_input_task, "wind_input", 24576, NULL, 5, NULL);
+    wind_app_overview_state(&s_input_initial_overview_open,&s_input_initial_overview_page);
+    s_input_commands=xQueueCreate(8,sizeof(input_command_t));
+    if (!s_input_commands) ESP_LOGE(TAG,"Failed to allocate input queue");
+    else if (xTaskCreate(e1003_action_task,"wind_actions",24576,NULL,5,NULL)!=pdPASS) {
+        vQueueDelete(s_input_commands);
+        s_input_commands=NULL;
+        ESP_LOGE(TAG,"Failed to start input actions");
+    }
+    xTaskCreate(dashboard_task, "wind_dashboard", 16384, NULL, 5, &s_dashboard_task);
+    if (s_input_commands &&
+        xTaskCreate(e1003_input_task,"wind_input",24576,NULL,6,NULL)!=pdPASS)
+        ESP_LOGE(TAG,"Failed to start input sampling");
 #else
+    xTaskCreate(dashboard_task, "wind_dashboard", 16384, NULL, 5, &s_dashboard_task);
     xTaskCreate(spot_buttons_task, "wind_buttons", 16384, NULL, 5, NULL);
 #endif
     ESP_LOGI(TAG, "Windpeek ready%s", connected ? "" : " (offline)");

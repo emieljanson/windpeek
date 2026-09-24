@@ -79,6 +79,7 @@ esp_err_t wind_app_toggle_day(size_t day_index);
 esp_err_t wind_app_overview_page(int direction);
 esp_err_t wind_app_select_spot(size_t index);
 void wind_app_overview_state(bool *open, size_t *page);
+bool wind_app_overview_state_if_ready(bool *open, size_t *page);
 esp_err_t wind_app_select_previous(void);
 esp_err_t wind_app_select_next(void);
 esp_err_t wind_app_select_next_display_mode(void);

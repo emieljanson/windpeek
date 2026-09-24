@@ -4,7 +4,7 @@ import { BOARD_IDS, TIME_FORMATS, TEMPERATURE_UNITS } from './configuration'
 import { validModuleOrder } from './modules'
 import { forecastModelsForSpot } from '../forecast/models'
 import { SWELL_MODELS } from '../forecast/openMeteoSwell'
-import { createPersonalSpot, writePersonalSpot, writePersonalSpots } from '../spots/personalSpots'
+import { createPersonalSpot, writePersonalSpots } from '../spots/personalSpots'
 import { settingsForSpot } from './spotSettings'
 
 const sizes = { hide: 'off', numbers: 'small', graph: 'large' }
@@ -34,9 +34,19 @@ export function configurationUrl(store, href, { includeSpots = true } = {}) {
   url.searchParams.set('unit', store.temperatureUnit)
   for (const [param, field] of Object.entries(flags)) url.searchParams.set(param, store[field] ? '1' : '0')
   if (includeSpots && Array.isArray(store.configuredSpotIds)) {
+    const shared = new URLSearchParams(url.search)
     const entries = store.configuredSpotIds.map(id => {
-      const draft = id === store.selectedSpotId ? store : { ...store, ...store.spotSettings[id], selectedSpotId: id, spotById: store.spotById }
-      return configurationUrl(draft, href, { includeSpots: false })?.search
+      const draft = {
+        ...settingsForSpot(store, id), selectedSpotId: id,
+        selectedBoardId: store.selectedBoardId, spotById: store.spotById,
+      }
+      const spotUrl = configurationUrl(draft, href, { includeSpots: false })
+      if (!spotUrl) return null
+      const entry = new URLSearchParams(spotUrl.search)
+      for (const [key, value] of [...entry]) {
+        if (key !== 'spot' && key !== 'custom' && shared.get(key) === value) entry.delete(key)
+      }
+      return entry.toString()
     })
     if (entries.some(entry => !entry)) return null
     url.searchParams.set('spots', JSON.stringify(entries))
@@ -87,7 +97,19 @@ export function readConfigurationUrl(search, spots, { allowSpots = true } = {}) 
         patch.configuredSpotIds = []
         for (const entry of entries) {
           if (typeof entry !== 'string') return null
-          const result = readConfigurationUrl(entry, spots, { allowSpots: false })
+          let spotSearch = entry
+          if (!entry.startsWith('?')) {
+            const delta = new URLSearchParams(entry)
+            if ((!delta.has('spot') && !delta.has('custom')) ||
+                [...delta.keys()].some(key => !keys.includes(key) || delta.getAll(key).length !== 1)) return null
+            const merged = new URLSearchParams(params)
+            merged.delete('spots')
+            merged.delete('spot')
+            merged.delete('custom')
+            for (const [key, value] of delta) merged.set(key, value)
+            spotSearch = `?${merged}`
+          }
+          const result = readConfigurationUrl(spotSearch, spots, { allowSpots: false })
           if (!result || patch.configuredSpotIds.includes(result.spot.id)) return null
           patch.configuredSpotIds.push(result.spot.id)
           const { selectedSpotId, selectedBoardId, hasUserSpotIntent, ...settings } = result.patch
@@ -95,6 +117,7 @@ export function readConfigurationUrl(search, spots, { allowSpots = true } = {}) 
           if (result.spot.personal) personalSpots.push(result.spot)
         }
         if (patch.selectedBoardId === BOARD_IDS.E1003 && entries.length && !patch.configuredSpotIds.includes(spot.id)) return null
+        delete patch.spotSettings[spot.id]
       }
     }
     return { patch, spot, personalSpots }
@@ -104,10 +127,21 @@ export function readConfigurationUrl(search, spots, { allowSpots = true } = {}) 
 export function applyConfigurationUrl(store, search, storage) {
   const result = readConfigurationUrl(search, store.spots)
   if (!result) return false
-  for (const spot of [...result.personalSpots, ...(result.spot.personal ? [result.spot] : [])]) {
-    store.personalSpots = [...store.personalSpots.filter(candidate => candidate.id !== spot.id), spot]
-    writePersonalSpot(spot, storage)
+  const imported = result.spot.personal
+    ? [...result.personalSpots.filter(spot => spot.id !== result.spot.id), result.spot]
+    : result.personalSpots
+  if (imported.length) {
+    const spots = new Map(store.personalSpots.map(spot => [spot.id, spot]))
+    for (const spot of imported) {
+      spots.delete(spot.id)
+      spots.set(spot.id, spot)
+    }
+    store.personalSpots = [...spots.values()]
+    writePersonalSpots(imported, storage)
   }
+  // Pinia merges plain objects inside $patch; assigning first removes settings
+  // from the setup that was open before this link.
+  store.spotSettings = {}
   store.$patch({ ...result.patch, swellFocus: result.patch.swellSize !== 'off' })
   return true
 }

@@ -28,11 +28,6 @@
 #include "wifi_manager.h"
 #include "wind_app.h"
 
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-#include "ha_integration.h"
-#include "periodic_tasks.h"
-#include "utils.h"
-#endif
 
 // RTC memory to store expected wakeup time (persists across deep sleep)
 RTC_DATA_ATTR static time_t expected_wakeup_time = 0;
@@ -46,16 +41,10 @@ static time_t wake_target_boundary = 0;
 static const char *TAG = "power_manager";
 
 static TaskHandle_t sleep_timer_task_handle = NULL;
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-static TaskHandle_t rotation_timer_task_handle = NULL;
-#endif
 static int64_t next_sleep_time = 0;  // Use absolute time for sleep timer
 static uint32_t auto_sleep_timeout_sec = AUTO_SLEEP_TIMEOUT_SEC;
 static volatile bool installer_active;
 static wakeup_source_t wakeup_source = WAKEUP_SOURCE_NONE;
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-static int64_t next_rotation_time = 0;  // Use absolute time for rotation
-#endif
 static uint64_t ext1_wakeup_pin_mask = 0;
 static uint32_t requested_sleep_seconds;
 static volatile bool battery_empty;
@@ -67,59 +56,11 @@ void power_manager_set_battery_empty(bool empty)
 
 static bool scheduled_wake_enabled(void)
 {
-#ifdef CONFIG_BOARD_CAP_WINDPEEK
     // Windpeek is a forecast appliance. Its refresh schedule is product
     // behavior, not the legacy photo-frame auto-rotation preference.
     return true;
-#else
-    return config_manager_get_auto_rotate();
-#endif
 }
 
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-static void rotation_timer_task(void *arg)
-{
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-
-        // USB power is the only supported always-awake state. On battery, the
-        // deep-sleep timer owns scheduled forecast wakes.
-        if (!board_hal_is_usb_connected()) {
-            // Device will auto-sleep after 120 seconds, no need to reset timer
-            continue;
-        }
-
-        // Handle active rotation when device stays awake and auto-rotate enabled
-        if (config_manager_get_auto_rotate()) {
-            int64_t now = esp_timer_get_time();  // Get absolute time in microseconds
-
-            if (next_rotation_time == 0) {
-                // Initialize next rotation time
-                int seconds_until_next = get_seconds_until_next_wakeup();
-
-                next_rotation_time = now + (seconds_until_next * 1000000LL);
-                ESP_LOGI(TAG, "Active rotation scheduled in %d seconds (%s, USB powered)",
-                         seconds_until_next, "cron");
-            } else if (now >= next_rotation_time) {
-                // Time to rotate
-                ESP_LOGI(TAG, "Active rotation triggered (USB powered)");
-
-                trigger_image_rotation();
-                ha_notify_update();
-
-                // Schedule next rotation
-                int seconds_until_next = get_seconds_until_next_wakeup();
-
-                next_rotation_time = now + (seconds_until_next * 1000000LL);
-                ESP_LOGI(TAG, "Next rotation scheduled in %d seconds (%s)", seconds_until_next,
-                         "cron");
-            }
-        } else {
-            next_rotation_time = 0;  // Reset if auto-rotate disabled
-        }
-    }
-}
-#endif
 
 static void sleep_timer_task(void *arg)
 {
@@ -261,9 +202,6 @@ esp_err_t power_manager_init(void)
             // If drift exceeds 30 seconds, force NTP sync
             if (drift > 30 || drift < -30) {
                 ESP_LOGW(TAG, "Time drift exceeds 30s, will force NTP sync");
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-                periodic_tasks_force_run(SNTP_TASK_NAME);
-#endif
             }
             expected_wakeup_time = 0;  // Reset after checking
         }
@@ -347,9 +285,6 @@ esp_err_t power_manager_init(void)
     {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-    xTaskCreate(rotation_timer_task, "rotation_timer", 16384, NULL, 5, &rotation_timer_task_handle);
-#endif
 
     power_manager_enable_auto_light_sleep();
 
@@ -406,11 +341,6 @@ void power_manager_enter_sleep(void)
     // uninitialized network stack, resetting the device into normal-init with no
     // rotation (#105). wifi_manager_is_connected() reads a static bool, so it is
     // safe to call before WiFi init.
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-    if (wifi_manager_is_connected()) {
-        ha_notify_offline();
-    }
-#endif
 
     // Turn off LEDs before sleep
     board_hal_led_set(BOARD_HAL_LED_POWER, false);
@@ -523,17 +453,9 @@ void power_manager_set_auto_sleep_timeout(uint32_t seconds)
 
 void power_manager_reset_rotate_timer(void)
 {
-#ifndef CONFIG_BOARD_CAP_WINDPEEK
-    int seconds_until_next = get_seconds_until_next_wakeup();
-
-    next_rotation_time = esp_timer_get_time() + (seconds_until_next * 1000000LL);
-    ESP_LOGI(TAG, "Rotation timer reset, next rotation in %d seconds (%s)", seconds_until_next,
-             "cron");
-#else
     // Windpeek recalculates its forecast wake from the persisted schedule;
     // it does not run the legacy in-process photo rotation timer.
     ESP_LOGD(TAG, "Forecast schedule owns the next E1002 wake");
-#endif
 }
 
 int power_manager_get_seconds_until_wake_target(void)

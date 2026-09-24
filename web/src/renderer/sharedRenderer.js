@@ -163,7 +163,7 @@ class SharedRenderer {
   #call(name, ...args) {
     this.#assertActive()
     const result = this.#exports[name](...args)
-    if (result !== 0) fail('INVALID_INPUT', `The canonical renderer rejected ${name}`)
+    if (result !== 0) fail('INVALID_INPUT', `The canonical renderer rejected ${name} (${result})`)
   }
 
   #writeString(value, name) {

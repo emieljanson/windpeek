@@ -15,7 +15,7 @@
 //                      "5-7" = Fri-Sun and "0-7" = every day)
 //
 // Per-field syntax: '*', 'a', 'a-b', '*/n', 'a-b/n', and comma lists of those.
-// (Day-of-month and month are intentionally omitted — a photo frame never needs
+// (Day-of-month and month are intentionally omitted — a dashboard never needs
 // monthly/seasonal scheduling, and dropping them removes the Vixie dom/dow rule.)
 // ============================================================================
 

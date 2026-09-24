@@ -26,9 +26,11 @@ export function persistConfigurator({ store }, storage = availableStorage(), { s
           delete settings.selectedBoardId
           return [id, settings]
         }))
+        delete patch.spotSettings[patch.selectedSpotId]
         if (patch.configuredSpotIds.length && !patch.configuredSpotIds.includes(patch.selectedSpotId) && (patch.selectedBoardId ?? store.selectedBoardId) === BOARD_IDS.E1003) {
           patch.selectedSpotId = patch.configuredSpotIds[0]
           Object.assign(patch, patch.spotSettings[patch.selectedSpotId])
+          delete patch.spotSettings[patch.selectedSpotId]
         }
       } else if (patch.selectedSpotId) patch.configuredSpotIds = [patch.selectedSpotId]
       store.$patch(patch)

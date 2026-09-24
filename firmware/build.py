@@ -14,12 +14,6 @@ from boards import SUPPORTED_BOARDS
 
 BOARDS = list(SUPPORTED_BOARDS.keys())
 
-STEPS = ["webapp", "splash", "firmware"]
-WINDPEEK_BOARDS = {
-    "seeedstudio_reterminal_e1002",
-    "seeedstudio_reterminal_e100x",
-    "seeedstudio_reterminal_e1003",
-}
 PINNED_IDF_VERSION = "v6.0.2"
 DEFAULT_IDF_PATH = os.path.expanduser(
     f"~/.espressif/frameworks/esp-idf-{PINNED_IDF_VERSION}"
@@ -74,49 +68,6 @@ def run_idf(args):
         f"ESP-IDF {PINNED_IDF_VERSION} is not installed at {idf_path}. "
         "Install it there or set EINKWIND_IDF_PATH."
     )
-
-
-def build_webapp():
-    """Build the webapp (npm install + npm run build)."""
-    print("\n=== Building webapp ===")
-    try:
-        subprocess.run("npm install", shell=True, check=True, cwd="webapp")
-        subprocess.run("npm run build", shell=True, check=True, cwd="webapp")
-    except subprocess.CalledProcessError as e:
-        print(f"  ✗ Webapp build failed with exit code {e.returncode}")
-        sys.exit(e.returncode)
-    except FileNotFoundError:
-        print(
-            "  ✗ 'npm' not found. Please ensure Node.js is installed and in your PATH."
-        )
-        sys.exit(1)
-
-
-def generate_splash(board):
-    """Generate splash screen EPDGZ for the target board."""
-    print(f"\n=== Generating splash screen for {board} ===", flush=True)
-    output_dir = os.path.join(os.path.dirname(__file__), "main", "splash_data")
-    script = os.path.join(os.path.dirname(__file__), "scripts", "generate_splash.py")
-    process_cli_dir = os.path.join(os.path.dirname(__file__), "process-cli")
-
-    # Ensure process-cli dependencies are installed
-    node_modules = os.path.join(process_cli_dir, "node_modules")
-    if not os.path.isdir(node_modules):
-        print("  Installing process-cli dependencies...")
-        try:
-            subprocess.run("npm ci", shell=True, check=True, cwd=process_cli_dir)
-        except subprocess.CalledProcessError as e:
-            print(f"  ✗ npm ci failed in process-cli with exit code {e.returncode}")
-            sys.exit(e.returncode)
-
-    try:
-        subprocess.run(
-            [sys.executable, script, "--board", board, "--output-dir", output_dir],
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"  ✗ Splash generation failed with exit code {e.returncode}")
-        sys.exit(e.returncode)
 
 
 def validate_board_config(board, config_path=Path("sdkconfig")):
@@ -182,7 +133,7 @@ def main():
     parser.add_argument(
         "--board",
         choices=BOARDS,
-        default="waveshare_photopainter_73",
+        default="seeedstudio_reterminal_e100x",
         help="Board type to build",
     )
     parser.add_argument(
@@ -205,18 +156,8 @@ def main():
         "--installer-version",
         help="Immutable version used by --installer-output.",
     )
-    parser.add_argument(
-        "--step",
-        choices=STEPS,
-        action="append",
-        help="Run only specific step(s). Can be specified multiple times. "
-        "If omitted, Windpeek boards build firmware only; photo-frame boards run all steps.",
-    )
     # Allow passing extra arguments to idf.py
     args, extra_args = parser.parse_known_args()
-
-    # Windpeek does not embed the photo-frame webapp or generated setup screens.
-    steps = args.step or (["firmware"] if args.board in WINDPEEK_BOARDS else STEPS)
 
     installer_version = None
     if args.installer_output:
@@ -239,33 +180,26 @@ def main():
             shutil.rmtree("build")
             print("  ✓ Removed build/")
 
-    if "webapp" in steps:
-        build_webapp()
-
-    if "splash" in steps:
-        generate_splash(args.board)
-
-    if "firmware" in steps:
-        build_firmware(args.board, extra_args, debug=args.debug)
-        if args.installer_output:
-            subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/generate_installer_manifest.py",
-                    "--build-dir",
-                    "build",
-                    "--partitions",
-                    "partitions.csv",
-                    "--output",
-                    str(args.installer_output),
-                    "--version",
-                    installer_version,
-                    "--board-id",
-                    "seeedstudio_reterminal_e1003" if args.board == "seeedstudio_reterminal_e1003"
-                    else "seeedstudio_reterminal_e1002",
-                ],
-                check=True,
-            )
+    build_firmware(args.board, extra_args, debug=args.debug)
+    if args.installer_output:
+        subprocess.run(
+            [
+                sys.executable,
+                "scripts/generate_installer_manifest.py",
+                "--build-dir",
+                "build",
+                "--partitions",
+                "partitions.csv",
+                "--output",
+                str(args.installer_output),
+                "--version",
+                installer_version,
+                "--board-id",
+                "seeedstudio_reterminal_e1003" if args.board == "seeedstudio_reterminal_e1003"
+                else "seeedstudio_reterminal_e1002",
+            ],
+            check=True,
+        )
 
 
 if __name__ == "__main__":

@@ -55,9 +55,9 @@ make test
 idf.py -p /dev/cu.usbmodemXXXX flash monitor
 ```
 
-E1002, universal E1001/E1002 and E1003 builds run only the firmware step by
-default. Other boards still build the photo-frame webapp and setup screens.
-Use `--step` to request individual build steps explicitly.
+The default build targets the universal E1001/E1002 firmware. E1002 and E1003
+remain selectable with `--board`. The old photo-frame application and its
+boards are no longer build targets.
 
 ### Local E1003 USB update
 

@@ -27,6 +27,7 @@ watch(() => props.installerOpen, (open) => {
 
 const store = useConfiguratorStore()
 const temperatureUnits = [{ value: 'celsius', label: '°C' }, { value: 'fahrenheit', label: '°F' }]
+const timeFormats = [{ value: '12-hour', label: '12h' }, { value: '24-hour', label: '24h' }]
 const weatherModels = computed(() => {
   const bestMatchModels = store.availableForecastModels.filter((model) => model.id === 'best_match')
   const localModels = store.availableForecastModels.filter((model) => model.availability === 'regional')
@@ -87,6 +88,10 @@ const weatherModels = computed(() => {
       <SettingRow label="Temperature">
         <SettingSegments :model-value="store.temperatureUnit" :options="temperatureUnits" name="temperature-unit"
           @update:model-value="store.setTemperatureUnit" />
+      </SettingRow>
+      <SettingRow label="Time format">
+        <SettingSegments :model-value="store.timeFormat" :options="timeFormats" name="time-format"
+          @update:model-value="store.setTimeFormat" />
       </SettingRow>
       <SettingRow label="Hours">
         <SettingSwitch :model-value="store.showDedicatedFooter" name="show-hours"

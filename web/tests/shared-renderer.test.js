@@ -78,6 +78,16 @@ function fixtureInput(displayMode = 2, thresholdKt = 17, rowMask = 1, missingDat
 }
 
 describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, () => {
+  it('renders calm E1003 hours without treating a zero-height bar as clipping', async () => {
+    const renderer = await loadRealRenderer()
+    const input = fixtureInput()
+    input.days[0].samples[0].sustainedKt = 0
+    input.days[0].samples[0].gustKt = 0
+    const frame = renderer.renderPreviewForDisplay(input, 3)
+    expect(frame.width).toBe(1872)
+    expect(frame.height).toBe(1404)
+  })
+
   it('gives high- and low-tide times balanced outer padding', async () => {
     const renderer = await loadRealRenderer()
     const input = fixtureInput(2, 17, 4)

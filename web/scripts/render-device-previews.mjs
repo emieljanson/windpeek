@@ -33,13 +33,26 @@ try {
     deviceScaleFactor: 2,
     reducedMotion: 'reduce',
   })
+  const pageErrors = []
+  page.on('pageerror', error => pageErrors.push(error.message))
+  page.on('console', message => {
+    if (message.type() === 'error') pageErrors.push(message.text())
+  })
 
   for (const variant of ['wind', 'swell']) {
     for (const [filename, boardId] of devices) {
       if (targets.size && !targets.has(`${filename}-${variant}`)) continue
       await page.goto(`${baseUrl}?devicePreview=${boardId}&site=${variant}`, { waitUntil: 'networkidle' })
       const scene = page.locator('.scene-host')
-      await scene.waitFor({ state: 'visible' })
+      try {
+        await scene.waitFor({ state: 'visible' })
+      } catch (error) {
+        throw new Error(`Device preview did not mount at ${page.url()}: ${JSON.stringify({
+          title: await page.title(),
+          body: (await page.locator('body').innerText()).slice(0, 800),
+          pageErrors,
+        })}`, { cause: error })
+      }
       await page.waitForFunction(() => (
         document.querySelector('.scene-host')?.dataset.sceneStatus === 'ready'
       ))

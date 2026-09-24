@@ -60,12 +60,12 @@ TEST(ProductionPowerPolicy, UsbPowerNeverDisablesFutureBatteryWakes)
               std::string::npos);
 }
 
-TEST(ProductionPowerPolicy, E100xCapabilityBuildContainsOnlyTheWindpeekRuntime)
+TEST(ProductionPowerPolicy, FirmwareBuildContainsOnlyTheWindpeekRuntime)
 {
     const std::string cmake = read_source(WIND_CMAKE_SOURCE);
-    EXPECT_NE(cmake.find("if(CONFIG_BOARD_CAP_WINDPEEK)"), std::string::npos);
     EXPECT_NE(cmake.find("windpeek_main.c"), std::string::npos);
     EXPECT_NE(cmake.find("windpeek_display_manager.c"), std::string::npos);
+    EXPECT_EQ(cmake.find("LEGACY_SOURCES"), std::string::npos);
 
     const std::string main_source = read_source(WIND_MAIN_SOURCE);
     for (const char *legacy : {"album_manager", "ha_integration", "http_server",
