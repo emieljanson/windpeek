@@ -751,7 +751,8 @@ static void draw_sample(canvas_t *canvas, int center_x,
         if (layout->outline_bars && sustained_height > 0)
             native_rect(canvas, left - 2, top - 2, 42, bottom - top + 4,
                         CANVAS_WHITE);
-        native_rect(canvas, left, top, 38, bottom - top, CANVAS_BLACK);
+        if (bottom > top)
+            native_rect(canvas, left, top, 38, bottom - top, CANVAS_BLACK);
     } else {
         if (layout->outline_bars && sustained_height > 0)
             fill_rect(canvas, center_x - SUSTAINED_BAR_WIDTH / 2 - 1,
