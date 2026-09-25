@@ -3,7 +3,8 @@
 **Current release status: publication authorized; final corrective commit awaiting
 release gates.** The complete PR workflow passed at `bf931102`, including all
 four browser shards, both firmware targets and the full sanitizer suite.
-Follow-up review fixes add two regressions, bringing the host suite to 337 tests.
+Follow-up review fixes add three regression tests, bringing the host suite to
+337 tests.
 The sections below are a chronological test log; earlier pending checks and
 “nothing published” statements describe their stage, not the current status.
 Battery-only sleep/wake was confirmed by the user. A physical retest of the
@@ -436,3 +437,21 @@ local sanitizer run was interrupted by host disk exhaustion; after removing
 obsolete generated build directories, all 336 tests passed. The subsequent
 337-test run additionally uses `UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`.
 The CI run remains the publication gate for that final change.
+
+
+### Final source validation (`00938e8`)
+
+All 337 host tests pass normally and under ASan/UBSan with fatal UBSan reports.
+The E1003 build succeeds. The connected device was flashed with
+`dev-final2-tests-20260925`; application read-back hash and unchanged OTA selector
+were verified, and configuration digest remained unchanged.
+
+Physical USB checks passed: a truncated header followed immediately by hello;
+partial-frame recovery after gaps of 3.01, 3.06, 3.13, 3.19 and 3.26 seconds;
+replay rejection after an oversized header; a fragmented 16,384-byte request;
+and a bad-CRC frame followed by a valid request. The final sample reported
+62,559 bytes free heap, a 31,744-byte largest internal block and no current
+refresh/transport/parse/allocation errors. No forecast fetch occurred in that
+sample, so it is not HTTP-recovery evidence. The final source's automated code
+review completed successfully. Only documentation changed after this source
+validation; the full release workflow still runs for the final commit.

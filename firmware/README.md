@@ -128,9 +128,10 @@ mixed wind/swell rendering. `output/spot-overview/render-production.c` exports
 the production renderer at 1872×1404. Physical touch orientation, tap/swipe
 response and wake behavior still require verification on an attached E1003.
 
-Host tests require CMake, a C/C++ compiler and zlib development headers
-(`sudo apt install build-essential cmake zlib1g-dev` on Debian/Ubuntu;
-Xcode Command Line Tools and CMake on macOS).
+Host tests require CMake, a C/C++ compiler, Git and zlib development headers
+(`sudo apt install build-essential cmake git zlib1g-dev` on Debian/Ubuntu;
+Xcode Command Line Tools and CMake on macOS). The first configure downloads
+GoogleTest and cJSON using CMake FetchContent and requires network access.
 
 `make test` also runs the embedded E1003 application path on the host, including
 the real renderer, forecast files, compressed screen caches, navigation and
