@@ -22,6 +22,18 @@ class BuildInstallerVersionTest(unittest.TestCase):
             config.write_text("CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X=y\n")
             build.validate_board_config("seeedstudio_reterminal_e100x", config)
 
+    def test_e1003_rejects_retained_internal_tls_allocation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "sdkconfig"
+            board = "CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=y\n"
+            for allocation in ("", "CONFIG_MBEDTLS_INTERNAL_MEM_ALLOC=y\n"):
+                with self.subTest(allocation=allocation):
+                    config.write_text(board + allocation)
+                    with self.assertRaisesRegex(ValueError, "PSRAM.*--fullclean"):
+                        build.validate_board_config("seeedstudio_reterminal_e1003", config)
+            config.write_text(board + "CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y\n")
+            build.validate_board_config("seeedstudio_reterminal_e1003", config)
+
     def test_generates_a_unique_local_version_and_embeds_it_in_the_firmware(self):
         version = local_installer_version(
             None, now=datetime(2026, 8, 30, 18, 55, 42, tzinfo=timezone.utc)

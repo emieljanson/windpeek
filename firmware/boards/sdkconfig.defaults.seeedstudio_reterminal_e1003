@@ -11,3 +11,7 @@ CONFIG_USE_INTERNAL_FLASH_STORAGE=y
 
 # Note: OPI PSRAM (needed for the IT8951 1872x1404 4bpp framebuffer, ~1.3 MB)
 # is enabled globally in sdkconfig.defaults.
+
+# Display/navigation tasks and Wi-Fi leave too little contiguous internal RAM
+# for the 16 KiB TLS receive buffer. Use the E1003's PSRAM for TLS allocations.
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
