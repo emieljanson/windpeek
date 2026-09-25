@@ -178,6 +178,10 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const panel = page.getByRole('complementary', { name: 'Windpeek settings' })
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
   await expect(panel).toHaveCSS('transition-duration', '0.18s')
+  await page.evaluate(() => document.fonts.ready)
+  await expect.poll(() => panel.evaluate(element =>
+    element.getAnimations().filter(animation => animation.playState === 'running').length,
+  )).toBe(0)
   const regularHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()

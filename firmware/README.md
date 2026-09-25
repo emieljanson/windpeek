@@ -127,3 +127,15 @@ Host tests cover gesture cancellation, page boundaries, hidden targets and
 mixed wind/swell rendering. `output/spot-overview/render-production.c` exports
 the production renderer at 1872×1404. Physical touch orientation, tap/swipe
 response and wake behavior still require verification on an attached E1003.
+
+`make test` also runs the embedded E1003 application path on the host, including
+the real renderer, forecast files, compressed screen caches, navigation and
+refresh scheduler. The runtime harness replaces time, HTTP, panel writes and
+hardware services. It covers ten-spot installation and offline navigation,
+hourly detail, retained state across simulated sleep, failed downloads and
+display writes, cache corruption, date rollover, reinstall and 72 module/row
+combinations, touch hit-test state during background fetches, prepared fifth-day
+screens and 100 repeated offline navigation
+rounds. USB protocol tests cover truncated-frame expiry and recovery when bad
+and valid frames share a read. These sequential simulations do not replace physical sleep/wake,
+power-loss or concurrent FreeRTOS testing.

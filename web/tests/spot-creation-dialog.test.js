@@ -5,6 +5,11 @@ import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
 
 const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }))
 vi.mock('vue-sonner', () => ({ toast: { error: toastError } }))
+// Component tests inject the map boundary: happy-dom has no WebGL context.
+// Tests that exercise map interactions supply their own createMap prop below.
+vi.mock('../src/map/geoapifyMap', () => ({
+  createGeoapifyMap: vi.fn(async () => ({ setCenter: vi.fn(), destroy: vi.fn() })),
+}))
 
 const edam = {
   id: 'edam-id',

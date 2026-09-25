@@ -278,6 +278,12 @@ target_compile_definitions(
   PRIVATE WIND_APP_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wind_app.c"
 )
 
+add_wind_test(
+  wind_app_prefetch_test
+  test_wind_app_prefetch.cpp
+  ../main/wind_app_prefetch.c
+)
+
 set(WIND_FONT_SOURCES
   ../main/wind_font.c
   ../main/fonts/berkeley_mono_bold_15.c
@@ -315,6 +321,43 @@ target_compile_definitions(
   WIND_RENDERER_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/goldens"
   WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
 )
+
+find_package(ZLIB REQUIRED)
+add_wind_test(
+  e1003_runtime_test
+  test_e1003_runtime.cpp
+  runtime_app.c
+  runtime_swell.c
+  ../main/wind_app_cycle.c
+  ../main/wind_app_status.c
+  ../main/wind_app_prefetch.c
+  runtime_quick_cache.c
+  ../main/wind_spots.c
+  ../main/installed_configuration.c
+  ../main/wind_display_config.c
+  ../main/wind_dashboard_data.c
+  ../main/wind_forecast.c
+  ../main/wind_cache.c
+  ../main/wind_schedule.c
+  ../main/wind_tide.c
+  ../main/wind_tide_cache.c
+  ../main/wind_swell_cache.c
+  ../main/wind_overview.c
+  ../main/wind_renderer.c
+  ../main/wind_renderer_native.c
+  ../main/wind_renderer_canvas.c
+  ../main/wind_renderer_output.c
+  ../main/wind_renderer_input.c
+  ${WIND_FONT_SOURCES}
+)
+target_include_directories(e1003_runtime_test PRIVATE ../components/epaper/include)
+target_compile_definitions(e1003_runtime_test PRIVATE
+  CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=1
+  CONFIG_BOARD_CAP_WINDPEEK=1
+  FS_MOUNT_POINT="."
+)
+target_link_libraries(e1003_runtime_test cjson ZLIB::ZLIB)
+target_include_directories(e1003_runtime_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
 
 add_executable(
   render_wind_fixture

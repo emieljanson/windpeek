@@ -7,15 +7,29 @@
 #include <zlib.h>
 
 #include "epaper.h"
+#include "config.h"
+#include "board_hal.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "wind_cache.h"
+#include "wind_app_internal.h"
 #include "wind_overview.h"
 #include "wind_timezone.h"
 
 static const char *TAG = "wind_quick_cache";
 static atomic_uint s_temporary_sequence;
+
+static gzFile open_packed(const char *path, const char *mode) {
+    gzFile file = gzopen(path, mode);
+    // zlib allocates three I/O buffers' worth of memory. Its 8 KiB default
+    // consumes 24 KiB of preferred internal RAM alongside Wi-Fi/TLS.
+    if (file && gzbuffer(file, 1024) != 0) {
+        gzclose(file);
+        return NULL;
+    }
+    return file;
+}
 
 static bool write_packed(const char *path, const void *header, size_t header_size,
                          const uint8_t *bitmap, size_t bitmap_size,
@@ -25,7 +39,7 @@ static bool write_packed(const char *path, const void *header, size_t header_siz
         snprintf(temporary, temporary_capacity, "%s.tmp.%08x", path,
                  atomic_fetch_add(&s_temporary_sequence, 1)) >= (int)temporary_capacity)
         return false;
-    gzFile file = gzopen(temporary, "wb1");
+    gzFile file = open_packed(temporary, "wb1");
     bool saved = file && gzwrite(file, header, (unsigned)header_size) == (int)header_size;
     uint8_t row[WIND_RENDERER_E1003_WIDTH / 2];
     for (int y = 0; saved && y < WIND_RENDERER_E1003_HEIGHT; ++y) {
@@ -54,7 +68,7 @@ static bool save_packed(const char *path, const void *header, size_t header_size
 }
 
 static uint8_t *read_packed(const char *path, void *header, size_t header_size) {
-    gzFile file = gzopen(path, "rb");
+    gzFile file = open_packed(path, "rb");
     if (!file) return NULL;
     uint8_t *packed = heap_caps_malloc(WIND_QUICK_FRAME_BYTES,
                                       MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -68,11 +82,50 @@ static uint8_t *read_packed(const char *path, void *header, size_t header_size) 
 }
 
 static bool read_header(const char *path, void *header, size_t header_size) {
-    gzFile file = gzopen(path, "rb");
+    gzFile file = open_packed(path, "rb");
     if (!file) return false;
     const bool valid = gzread(file, header, (unsigned)header_size) == (int)header_size;
     gzclose(file);
     return valid;
+}
+
+bool wind_quick_spot_capture(const wind_spot_runtime_t *runtime,
+                             const wind_forecast_t *forecast, const char *focused_date,
+                             uint64_t configuration_digest, time_t now, int battery_percent,
+                             wind_quick_spot_header_t *header) {
+    if (!runtime || !forecast || !focused_date || !header) return false;
+    memset(header, 0, sizeof(*header));
+    header->magic = UINT32_C(0x57514631);
+    header->version = 9;
+    header->render_signature = runtime->app.config.render_signature;
+    header->configuration_digest = configuration_digest;
+    header->forecast_at = forecast->retrieved_at;
+    header->swell_at = runtime->have_swell ? runtime->swell.retrieved_at : 0;
+    header->tide_at = runtime->have_tide ? runtime->tide.retrieved_at : 0;
+    header->forecast_hash = wind_cache_bitmap_hash((const uint8_t *)forecast,
+                                                    sizeof(*forecast));
+    header->swell_hash = runtime->have_swell
+        ? wind_cache_bitmap_hash((const uint8_t *)&runtime->swell,
+                                 sizeof(runtime->swell)) : 0;
+    header->tide_hash = runtime->have_tide
+        ? wind_cache_bitmap_hash((const uint8_t *)&runtime->tide,
+                                 sizeof(runtime->tide)) : 0;
+    snprintf(header->spot_id, sizeof(header->spot_id), "%s", runtime->spot->id);
+    snprintf(header->focused_date, sizeof(header->focused_date), "%s", focused_date);
+    snprintf(header->first_date, sizeof(header->first_date), "%s",
+             forecast->days[0].local_date);
+    header->freshness = wind_app_forecast_freshness(forecast, now);
+    header->age_hours = now > forecast->retrieved_at ? (now - forecast->retrieved_at) / 3600 : 0;
+    header->swell_age_hours = runtime->have_swell && now > runtime->swell.retrieved_at
+        ? (now - runtime->swell.retrieved_at) / 3600 : 0;
+    header->swell_from_future = runtime->have_swell && runtime->swell.retrieved_at > now + 300;
+    header->battery_percent = battery_percent;
+    wind_local_datetime_t local;
+    if (wind_timezone_from_unix(runtime->spot->timezone, now, &local) != ESP_OK ||
+        wind_timezone_format_date(&local, header->local_date, sizeof(header->local_date)) != ESP_OK) {
+        return false;
+    }
+    return true;
 }
 
 bool wind_quick_spot_identity(const wind_spot_runtime_t *runtime,
@@ -81,30 +134,12 @@ bool wind_quick_spot_identity(const wind_spot_runtime_t *runtime,
     if (!runtime || !focused_date || !header) return false;
     wind_forecast_t *forecast = malloc(sizeof(*forecast));
     if (!forecast) return false;
+    time_t now;
+    time(&now);
     const bool available = wind_cache_load(runtime->forecast_path,
-        &runtime->app.config.identity, forecast) == ESP_OK;
-    if (available) {
-        memset(header, 0, sizeof(*header));
-        header->magic = UINT32_C(0x57514631);
-        header->version = 7;
-        header->render_signature = runtime->app.config.render_signature;
-        header->configuration_digest = configuration_digest;
-        header->forecast_at = forecast->retrieved_at;
-        header->swell_at = runtime->have_swell ? runtime->swell.retrieved_at : 0;
-        header->tide_at = runtime->have_tide ? runtime->tide.retrieved_at : 0;
-        header->forecast_hash = wind_cache_bitmap_hash((const uint8_t *)forecast,
-                                                        sizeof(*forecast));
-        header->swell_hash = runtime->have_swell
-            ? wind_cache_bitmap_hash((const uint8_t *)&runtime->swell,
-                                     sizeof(runtime->swell)) : 0;
-        header->tide_hash = runtime->have_tide
-            ? wind_cache_bitmap_hash((const uint8_t *)&runtime->tide,
-                                     sizeof(runtime->tide)) : 0;
-        snprintf(header->spot_id, sizeof(header->spot_id), "%s", runtime->spot->id);
-        snprintf(header->focused_date, sizeof(header->focused_date), "%s", focused_date);
-        snprintf(header->first_date, sizeof(header->first_date), "%s",
-                 forecast->days[0].local_date);
-    }
+        &runtime->app.config.identity, forecast) == ESP_OK &&
+        wind_quick_spot_capture(runtime, forecast, focused_date, configuration_digest,
+                                now, board_hal_get_battery_percent(), header);
     free(forecast);
     return available;
 }
@@ -140,19 +175,7 @@ bool wind_quick_spot_show(const wind_spot_runtime_t *runtime,
     uint8_t *packed = read_packed(path, &stored, sizeof(stored));
     if (!packed) return false;
     const bool exact = memcmp(&stored, &expected, sizeof(stored)) == 0;
-    const bool same_screen = stored.magic == expected.magic &&
-        stored.version == expected.version &&
-        stored.render_signature == expected.render_signature &&
-        stored.configuration_digest == expected.configuration_digest &&
-        memcmp(stored.spot_id, expected.spot_id, sizeof(stored.spot_id)) == 0 &&
-        memcmp(stored.focused_date, expected.focused_date,
-               sizeof(stored.focused_date)) == 0 &&
-        memcmp(stored.first_date, expected.first_date,
-               sizeof(stored.first_date)) == 0;
-    const bool recent_previous_data = stored.forecast_at <= expected.forecast_at &&
-        expected.forecast_at - stored.forecast_at <= 6 * 3600;
-    const bool shown = (exact || (same_screen && recent_previous_data)) &&
-        epaper_display(packed) == ESP_OK;
+    const bool shown = exact && epaper_display(packed) == ESP_OK;
     free(packed);
     if (shown) {
         ESP_LOGI(TAG, "Quick frame for %s including cache read: %lld ms", runtime->spot->id,
@@ -162,14 +185,14 @@ bool wind_quick_spot_show(const wind_spot_runtime_t *runtime,
 }
 
 void wind_quick_spot_save(const wind_spot_runtime_t *runtime,
-                          const char *focused_date, uint64_t configuration_digest,
+                          const wind_quick_spot_header_t *header,
                           const uint8_t *bitmap, size_t bitmap_size) {
-    if (wind_quick_spot_cached(runtime, focused_date, configuration_digest)) return;
-    wind_quick_spot_header_t header;
+    if (!header) return;
     char path[128];
-    if (!wind_quick_spot_identity(runtime, focused_date, configuration_digest, &header) ||
-        !wind_quick_spot_path(runtime, focused_date, path, sizeof(path))) return;
-    (void)save_packed(path, &header, sizeof(header), bitmap, bitmap_size);
+    if (!wind_quick_spot_path(runtime, header->focused_date, path, sizeof(path))) return;
+    // The caller already rendered. Replace even a matching header: the old
+    // compressed payload may be truncated or may contain a previous failure.
+    (void)save_packed(path, header, sizeof(*header), bitmap, bitmap_size);
 }
 
 bool wind_quick_spot_stage(const char *path, const wind_quick_spot_header_t *header,
@@ -205,7 +228,7 @@ wind_quick_overview_header_t wind_quick_overview_identity(
     const wind_spot_runtime_t *spots, size_t spot_count,
     uint64_t configuration_digest, size_t page, time_t now) {
     wind_quick_overview_header_t header = {
-        .magic = UINT32_C(0x57514F31), .version = 5, .page = (uint32_t)page,
+        .magic = UINT32_C(0x57514F31), .version = 7, .page = (uint32_t)page,
     };
     uint64_t hash = configuration_digest;
     const size_t first = page * WIND_OVERVIEW_PAGE_SIZE;
@@ -219,7 +242,6 @@ wind_quick_overview_header_t wind_quick_overview_identity(
             hash = (hash ^ (uint64_t)local.day) * UINT64_C(1099511628211);
         }
     }
-    header.screen_hash = hash;
     for (size_t index = first; index < spot_count &&
                                  index < first + WIND_OVERVIEW_PAGE_SIZE; ++index) {
         const wind_spot_runtime_t *runtime = &spots[index];
@@ -234,8 +256,14 @@ wind_quick_overview_header_t wind_quick_overview_identity(
 }
 
 static bool overview_path(size_t page, char *path, size_t capacity) {
-    const int length = snprintf(path, capacity, "/storage/overview-%u.quick", (unsigned)page);
+    const int length = snprintf(path, capacity, FS_MOUNT_POINT "/overview-%u.quick", (unsigned)page);
     return length >= 0 && length < (int)capacity;
+}
+
+static bool overview_matches(const wind_quick_overview_header_t *actual,
+                             const wind_quick_overview_header_t *expected) {
+    return actual->magic == expected->magic && actual->version == expected->version &&
+        actual->page == expected->page && actual->source_hash == expected->source_hash;
 }
 
 bool wind_quick_overview_cached(const wind_spot_runtime_t *spots, size_t spot_count,
@@ -246,9 +274,7 @@ bool wind_quick_overview_cached(const wind_spot_runtime_t *spots, size_t spot_co
         !read_header(path, &actual, sizeof(actual))) return false;
     const wind_quick_overview_header_t expected = wind_quick_overview_identity(
         spots, spot_count, configuration_digest, page, now);
-    return actual.magic == expected.magic && actual.version == expected.version &&
-        actual.page == expected.page && actual.screen_hash == expected.screen_hash &&
-        actual.source_hash == expected.source_hash;
+    return overview_matches(&actual, &expected);
 }
 
 bool wind_quick_overview_show(const wind_spot_runtime_t *spots, size_t spot_count,
@@ -261,11 +287,7 @@ bool wind_quick_overview_show(const wind_spot_runtime_t *spots, size_t spot_coun
     if (!packed) return false;
     const wind_quick_overview_header_t expected = wind_quick_overview_identity(
         spots, spot_count, configuration_digest, page, now);
-    const bool same_screen = actual.magic == expected.magic &&
-        actual.version == expected.version && actual.page == expected.page &&
-        actual.screen_hash == expected.screen_hash;
-    const bool shown = same_screen && actual.source_hash == expected.source_hash &&
-        epaper_display(packed) == ESP_OK;
+    const bool shown = overview_matches(&actual, &expected) && epaper_display(packed) == ESP_OK;
     free(packed);
     if (shown) {
         ESP_LOGI(TAG, "Quick overview %u including cache read: %lld ms",
@@ -274,14 +296,10 @@ bool wind_quick_overview_show(const wind_spot_runtime_t *spots, size_t spot_coun
     return shown;
 }
 
-void wind_quick_overview_save(const wind_spot_runtime_t *spots, size_t spot_count,
-                              uint64_t configuration_digest, size_t page, time_t now,
+void wind_quick_overview_save(const wind_quick_overview_header_t *header,
                               const uint8_t *bitmap) {
     char path[64];
-    if (!overview_path(page, path, sizeof(path))) return;
-    wind_quick_overview_header_t header = wind_quick_overview_identity(
-        spots, spot_count, configuration_digest, page, now);
-    header.generated_at = now;
-    (void)save_packed(path, &header, sizeof(header), bitmap,
+    if (!header || !overview_path(header->page, path, sizeof(path))) return;
+    (void)save_packed(path, header, sizeof(*header), bitmap,
                       WIND_RENDERER_E1003_COMPOSITION_BYTES);
 }

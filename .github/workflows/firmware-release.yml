@@ -192,10 +192,19 @@ jobs:
           # libpng comes from Ubuntu; an inconsistent Chrome apt feed must not block it.
           sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources
           sudo apt-get update
-          sudo apt-get install --yes libpng-dev
+          sudo apt-get install --yes libpng-dev zlib1g-dev
 
       - name: Run firmware host tests
         run: make -C firmware test
+
+      - name: Run firmware tests with memory and undefined-behavior checks
+        run: |
+          cmake -S firmware/host_tests -B firmware/host_tests/build-sanitizers \
+            -DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined'
+          cmake --build firmware/host_tests/build-sanitizers --parallel 2
+          ctest --test-dir firmware/host_tests/build-sanitizers --output-on-failure
 
       - name: Test installer bundle generator
         run: python3 firmware/scripts/test_generate_installer_manifest.py

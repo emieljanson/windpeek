@@ -3,6 +3,44 @@
 #include <string.h>
 #include "wind_timezone.h"
 
+const wind_forecast_sample_t *wind_dashboard_find_sample(const wind_forecast_t *forecast,
+                                                        int64_t timestamp) {
+    if (!forecast) return NULL;
+    for (size_t day = 0; day < WIND_FORECAST_DAY_COUNT; ++day)
+        for (size_t slot = 0; slot < WIND_FORECAST_SAMPLES_PER_DAY; ++slot)
+            if (forecast->days[day].samples[slot].timestamp == timestamp)
+                return &forecast->days[day].samples[slot];
+    return NULL;
+}
+
+esp_err_t wind_dashboard_build_calendar(const wind_forecast_t *forecast,
+    const char *timezone, time_t now, wind_forecast_t *calendar,
+    bool available[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_SAMPLES_PER_DAY]) {
+    if (!timezone || !calendar || !available) return ESP_ERR_INVALID_ARG;
+    if (forecast) *calendar = *forecast;
+    else memset(calendar, 0, sizeof(*calendar));
+    wind_local_datetime_t date;
+    if (wind_timezone_from_unix(timezone, now, &date) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    const int hours[] = {8, 11, 14, 17, 20};
+    for (size_t day = 0; day < WIND_FORECAST_DAY_COUNT; ++day) {
+        if (wind_timezone_format_date(&date, calendar->days[day].local_date,
+                                     sizeof(calendar->days[day].local_date)) != ESP_OK)
+            return ESP_ERR_INVALID_STATE;
+        for (size_t slot = 0; slot < WIND_FORECAST_SAMPLES_PER_DAY; ++slot) {
+            date.hour = hours[slot]; date.minute = date.second = 0;
+            int64_t timestamp;
+            if (wind_timezone_to_unix(timezone, &date, &timestamp) != ESP_OK)
+                return ESP_ERR_INVALID_STATE;
+            const wind_forecast_sample_t *source = wind_dashboard_find_sample(forecast, timestamp);
+            available[day][slot] = source != NULL;
+            calendar->days[day].samples[slot] = source ? *source :
+                (wind_forecast_sample_t){.timestamp = timestamp, .local_hour = hours[slot]};
+        }
+        wind_timezone_shift_date(&date, 1);
+    }
+    return ESP_OK;
+}
+
 const char *wind_dashboard_day_name(int weekday) {
     static const char *names[] = {"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
                                   "THURSDAY", "FRIDAY", "SATURDAY"};
@@ -63,13 +101,10 @@ esp_err_t wind_dashboard_build_overview_row(const char *spot_name, const char *t
             int slot = -1;
             for (int index = 0; index < 5; ++index)
                 if (hours[index] == hour) slot = index;
-            if (slot >= 0 && forecast)
-                for (int forecast_day = 0; forecast_day < 5; ++forecast_day)
-                    for (int sample_index = 0; sample_index < 5; ++sample_index) {
-                        const wind_forecast_sample_t *sample = &forecast->days[forecast_day].samples[sample_index];
-                        if (sample->timestamp == timestamp)
-                            out->days[day].samples[slot] = wind_dashboard_forecast_sample(sample, NULL, true);
-                    }
+            if (slot >= 0) {
+                const wind_forecast_sample_t *sample = wind_dashboard_find_sample(forecast, timestamp);
+                if (sample) out->days[day].samples[slot] = wind_dashboard_forecast_sample(sample, NULL, true);
+            }
             if (!swell_primary || !swell) continue;
             for (size_t index = 0; index < swell->sample_count; ++index) {
                 const wind_swell_sample_t *sample = &swell->samples[index];

@@ -1288,6 +1288,30 @@ TEST(WindRenderer, DayFocusKeepsRowHeightsShowsHourlySamplesAndFitsFooter) {
     EXPECT_NE(wind_renderer_render_for_display(&d,WIND_RENDERER_DISPLAY_E1003_GC16,invalid.data(),invalid.size(),nullptr),0);
 }
 
+TEST(WindRenderer, E1003FiveDayDashboardPreservesForecastAndBattery) {
+    auto dashboard = Dashboard();
+    dashboard.visible_day_count = 5;
+    dashboard.battery_percent = 75;
+    const auto render = [](const wind_renderer_dashboard_t &value) {
+        Frame pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES);
+        wind_renderer_stats_t stats{};
+        EXPECT_EQ(wind_renderer_render_for_display(&value,
+            WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size(), &stats), 0);
+        EXPECT_EQ(stats.clipped_primitives, 0u);
+        return pixels;
+    };
+    const auto original = render(dashboard);
+    dashboard.days[4].samples[2].sustained_kt = 39;
+    EXPECT_NE(original, render(dashboard));
+    dashboard = Dashboard();
+    dashboard.visible_day_count = 5;
+    dashboard.battery_percent = 0;
+    EXPECT_NE(original, render(dashboard));
+    dashboard.battery_percent = 75;
+    dashboard.state = WIND_RENDERER_UNAVAILABLE;
+    EXPECT_NE(original, render(dashboard));
+}
+
 TEST(WindRenderer, E1003ThresholdValueIsSolidNativePixelText) {
     wind_renderer_input_v2_t input{};
     wind_renderer_dashboard_t threshold{};

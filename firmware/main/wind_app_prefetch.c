@@ -44,44 +44,52 @@ void wind_app_prefetch_spot_capture(wind_app_prefetch_spot_t *snapshot,
     snapshot->show_tide = display->show_tide;
 }
 
-static void prefetch_swell(const wind_app_prefetch_spot_t *spot, time_t now) {
+static bool prefetch_swell(const wind_app_prefetch_spot_t *spot, time_t now) {
     char path[128];
     snprintf(path, sizeof(path), "%s.swell", spot->forecast_path);
     const wind_swell_cache_identity_t identity = {
         spot->spot_id, spot->timezone, spot->swell_model};
     wind_swell_t *swell = malloc(sizeof(*swell));
-    if (!swell) return;
+    if (!swell) return false;
     const bool fresh = wind_swell_cache_load(path, &identity, swell) == ESP_OK &&
         swell->retrieved_at <= now && now - swell->retrieved_at < 6 * 3600;
-    if (!fresh && wind_swell_fetch(&spot->marine, now, swell) == ESP_OK &&
-        wind_swell_validate(swell))
-        (void)wind_swell_cache_store(path, swell);
+    const bool ready = fresh ||
+        (wind_swell_fetch(&spot->marine, now, swell) == ESP_OK &&
+         wind_swell_validate(swell) && wind_swell_cache_store(path, swell) == ESP_OK);
     free(swell);
+    return ready;
 }
 
-static void prefetch_tide(wind_app_prefetch_spot_t *spot, time_t now) {
+static bool prefetch_tide(wind_app_prefetch_spot_t *spot, time_t now) {
     const wind_tide_cache_identity_t identity = {spot->spot_id, spot->timezone};
     wind_tide_t *tide = malloc(sizeof(*tide));
-    if (!tide) return;
+    if (!tide) return false;
     const bool fresh = wind_tide_cache_load(spot->tide_path, &identity, tide) == ESP_OK &&
         tide->retrieved_at <= now && now - tide->retrieved_at < 6 * 3600;
+    bool ready = fresh;
     if (!fresh) {
         wind_tide_provider_t provider;
         open_meteo_marine_provider_init(&provider, &spot->marine);
-        if (provider.fetch && provider.fetch(provider.context, now, tide) == ESP_OK &&
-            wind_tide_validate(tide))
-            (void)wind_tide_cache_store(spot->tide_path, tide);
+        ready = provider.fetch && provider.fetch(provider.context, now, tide) == ESP_OK &&
+            wind_tide_validate(tide) && wind_tide_cache_store(spot->tide_path, tide) == ESP_OK;
     }
     free(tide);
+    return ready;
 }
 
 bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *spot, time_t now) {
     wind_app_outcome_t outcome = {0};
-    const esp_err_t result = wind_app_prefetch(&spot->app, false, now, &outcome);
+    esp_err_t result = wind_app_prefetch(&spot->app, false, now, &outcome);
+    // The background worker retries every five minutes. Once the ordinary
+    // schedule's single retry is spent, a missing cache still needs recovery.
+    if (result == ESP_OK && !outcome.attempted_fetch && !outcome.used_cache &&
+        !outcome.published_forecast)
+        result = wind_app_prefetch(&spot->app, true, now, &outcome);
     if (result != ESP_OK || (outcome.attempted_fetch && outcome.fetch_result != ESP_OK))
         ESP_LOGW(TAG, "Background forecast for %s failed: %s", spot->spot_id,
                  esp_err_to_name(result != ESP_OK ? result : outcome.fetch_result));
-    if (spot->show_swell) prefetch_swell(spot, now);
-    if (spot->show_tide) prefetch_tide(spot, now);
-    return result == ESP_OK && (outcome.used_cache || outcome.published_forecast);
+    const bool swell_ready = !spot->show_swell || prefetch_swell(spot, now);
+    const bool tide_ready = !spot->show_tide || prefetch_tide(spot, now);
+    return result == ESP_OK && (outcome.used_cache || outcome.published_forecast) &&
+        swell_ready && tide_ready;
 }

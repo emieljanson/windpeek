@@ -1,4 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 
 export async function createGeoapifyMap(container, {
   apiKey,
@@ -9,7 +10,10 @@ export async function createGeoapifyMap(container, {
 }) {
   if (!container) throw new Error('The map container is unavailable.')
   if (!apiKey) throw new Error('Geoapify is not configured for this site.')
-  const { Map, NavigationControl } = await import('maplibre-gl')
+  const { Map, NavigationControl, setWorkerUrl } = await import('maplibre-gl')
+  // Bundle the worker and its imports; its default sibling URL is lost when
+  // Vite optimizes dependencies or names production chunks.
+  setWorkerUrl(workerUrl)
   const map = new Map({
     container,
     style: `https://maps.geoapify.com/v1/styles/positron/style.json?apiKey=${encodeURIComponent(apiKey)}`,

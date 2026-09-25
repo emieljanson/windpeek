@@ -77,7 +77,19 @@ async function mockGeoapify(page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ version: 8, sources: {}, layers: [] }),
+      body: JSON.stringify({
+        version: 8,
+        // An empty style can load even with a broken worker URL. GeoJSON must
+        // actually reach the map worker before the Add spot action is enabled.
+        sources: { test: { type: 'geojson', data: {
+          type: 'FeatureCollection',
+          features: [{ type: 'Feature', properties: {}, geometry: {
+            type: 'Point', coordinates: [5.4007, 52.9432],
+          } }],
+        } } },
+        layers: [{ id: 'test', type: 'circle', source: 'test',
+          paint: { 'circle-radius': 8 } }],
+      }),
     }))
   return { autocompleteRequests, reverseRequests }
 }
@@ -564,12 +576,14 @@ for (const viewport of [
     expect(spotPopupBox.x).toBeGreaterThanOrEqual(0)
     expect(spotPopupBox.x + spotPopupBox.width).toBeLessThanOrEqual(viewport.width)
     expect(Math.abs(spotPopupBox.width - spotTriggerWidth)).toBeLessThanOrEqual(1)
-    const spotBox = await spot.boundingBox()
-    const popupGaps = [
-      Math.abs(spotPopupBox.y - (spotBox.y + spotBox.height + 4)),
-      Math.abs(spotBox.y - (spotPopupBox.y + spotPopupBox.height + 4)),
-    ]
-    expect(Math.min(...popupGaps)).toBeLessThanOrEqual(1)
+    // Floating positioning settles after the popup becomes visible.
+    await expect.poll(async () => {
+      const [popup, trigger] = await Promise.all([spotPopup.boundingBox(), spot.boundingBox()])
+      return Math.min(
+        Math.abs(popup.y - (trigger.y + trigger.height + 4)),
+        Math.abs(trigger.y - (popup.y + popup.height + 4)),
+      )
+    }).toBeLessThanOrEqual(1)
 
     const longQuery = 'A deliberately very long imaginary spot name beside the water'
     await spot.fill(longQuery)

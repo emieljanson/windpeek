@@ -47,6 +47,13 @@ void wind_usb_parser_init(wind_usb_parser_t *parser)
     if (parser) memset(parser, 0, sizeof(*parser));
 }
 
+bool wind_usb_parser_expire_partial(wind_usb_parser_t *parser, uint64_t idle_ms)
+{
+    if (!parser || !parser->length || idle_ms < WIND_USB_PARTIAL_TIMEOUT_MS) return false;
+    parser->length = 0;
+    return true;
+}
+
 static void discard_prefix(wind_usb_parser_t *parser, size_t count)
 {
     if (count >= parser->length) {
@@ -77,29 +84,31 @@ static bool starts_new_session(uint32_t request_id, uint16_t message_type,
     return is_hello;
 }
 
-esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, size_t length,
+wind_usb_feed_result_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, size_t length,
                                wind_usb_frame_callback_t callback, void *context)
 {
-    if (!parser || (!bytes && length > 0) || !callback) return ESP_ERR_INVALID_ARG;
-    esp_err_t final_result = ESP_OK;
+    if (!parser || (!bytes && length > 0) || !callback)
+        return (wind_usb_feed_result_t){.error = ESP_ERR_INVALID_ARG};
+    wind_usb_feed_result_t result = {.error = ESP_OK};
     for (size_t input = 0; input < length; ++input) {
         if (parser->length == sizeof(parser->buffer)) {
-            wind_usb_parser_init(parser);
-            final_result = ESP_ERR_INVALID_SIZE;
+            parser->length = 0; // Framing errors must preserve replay protection.
+            result.error = ESP_ERR_INVALID_SIZE;
         }
         parser->buffer[parser->length++] = bytes[input];
         seek_magic(parser);
         while (parser->length >= WIND_USB_HEADER_SIZE) {
             if (read_u16(parser->buffer + 8) != WIND_USB_PROTOCOL_VERSION) {
                 discard_prefix(parser, WIND_USB_MAGIC_SIZE);
-                final_result = ESP_ERR_NOT_SUPPORTED;
+                result.error = ESP_ERR_NOT_SUPPORTED;
                 seek_magic(parser);
                 continue;
             }
             const uint32_t payload_length = read_u32(parser->buffer + 16);
             if (payload_length > WIND_USB_MAX_PAYLOAD) {
-                wind_usb_parser_init(parser);
-                return ESP_ERR_INVALID_SIZE;
+                parser->length = 0;
+                result.error = ESP_ERR_INVALID_SIZE;
+                continue;
             }
             const size_t frame_size = WIND_USB_HEADER_SIZE + payload_length;
             if (parser->length < frame_size) break;
@@ -108,7 +117,7 @@ esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, 
                                                        payload_length);
             if (expected_crc != actual_crc) {
                 discard_prefix(parser, frame_size);
-                final_result = ESP_ERR_INVALID_CRC;
+                result.error = ESP_ERR_INVALID_CRC;
                 seek_magic(parser);
                 continue;
             }
@@ -126,6 +135,7 @@ esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, 
                     .payload_length = payload_length,
                 };
                 callback(&frame, context);
+                ++result.delivered_frames;
                 parser->last_request_id = request_id;
                 parser->has_last_request = true;
             }
@@ -133,7 +143,7 @@ esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, 
             seek_magic(parser);
         }
     }
-    return final_result;
+    return result;
 }
 
 size_t wind_usb_encode_frame(uint32_t request_id, uint16_t message_type, const uint8_t *payload,
