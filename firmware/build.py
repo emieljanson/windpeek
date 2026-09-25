@@ -80,7 +80,10 @@ def validate_board_config(board, config_path=Path("sdkconfig")):
     expected = f"CONFIG_BOARD_DRIVER_{board.upper()}=y"
     if selected != [expected]:
         raise ValueError(f"sdkconfig does not select {board}. Rebuild with --fullclean.")
-    if board == "seeedstudio_reterminal_e1003" and "CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y" not in settings:
+    if (
+        board == "seeedstudio_reterminal_e1003"
+        and "CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y" not in settings
+    ):
         raise ValueError("E1003 requires PSRAM for TLS. Rebuild with --fullclean.")
 
 
