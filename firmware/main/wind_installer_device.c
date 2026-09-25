@@ -437,10 +437,15 @@ static void installer_usb_task(void *argument)
     int64_t last_received_us = esp_timer_get_time();
     ESP_LOGI("wind_installer", "Installer UART task ready");
     while (true) {
+        size_t queued = 0;
+        const bool waiting_for_bytes =
+            uart_get_buffered_data_len(UART_NUM_0, &queued) == ESP_OK && queued == 0;
         int read = uart_read_bytes(UART_NUM_0, input, sizeof(input), pdMS_TO_TICKS(250));
         const int64_t now_us = esp_timer_get_time();
-        // Expire only when the UART is empty, not while processing queued chunks.
-        if (read == 0)
+        // Expire before feeding bytes that resumed after the idle gap, including
+        // a gap that crossed the threshold during this poll. Already queued
+        // chunks are contiguous even if processing the previous command was slow.
+        if (waiting_for_bytes)
             wind_usb_parser_expire_partial(&installer->parser,
                                            (uint64_t)(now_us - last_received_us) / 1000);
         if (read > 0) {

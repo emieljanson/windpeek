@@ -3,7 +3,7 @@
 **Current release status: publication authorized; final corrective commit awaiting
 release gates.** The complete PR workflow passed at `bf931102`, including all
 four browser shards, both firmware targets and the full sanitizer suite.
-Follow-up review fixes add two regressions, bringing the host suite to 336 tests.
+Follow-up review fixes add two regressions, bringing the host suite to 337 tests.
 The sections below are a chronological test log; earlier pending checks and
 “nothing published” statements describe their stage, not the current status.
 Battery-only sleep/wake was confirmed by the user. A physical retest of the
@@ -427,3 +427,12 @@ published” statements describe the preceding test stages, not this new request
   successful network recovery. Forced refreshes with a usable cache do not earn
   an extra five-minute retry; scheduled/coverage/initial failures do. The existing
   retry tests cover that policy.
+
+
+The final review pass makes recoverable UBSan reports fatal in CI, preserves
+five-minute prefetch retry deadlines, handles USB bytes resuming during the
+expiry poll, and pins touch-column tests to literal display coordinates. A
+local sanitizer run was interrupted by host disk exhaustion; after removing
+obsolete generated build directories, all 336 tests passed. The subsequent
+337-test run additionally uses `UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`.
+The CI run remains the publication gate for that final change.

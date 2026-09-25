@@ -198,6 +198,8 @@ jobs:
         run: make -C firmware test
 
       - name: Run firmware tests with memory and undefined-behavior checks
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: |
           cmake -S firmware/host_tests -B firmware/host_tests/build-sanitizers \
             -DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \

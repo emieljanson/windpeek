@@ -124,3 +124,14 @@ TEST_F(BackgroundForecast, SwellFailureDoesNotPreventTideFetch) {
     EXPECT_EQ(state.swell_calls, 1);
     EXPECT_EQ(state.tide_calls, 1);
 }
+
+TEST_F(BackgroundForecast, MissingCacheRespectsPendingRetryDeadline) {
+    state.wind_cached = false;
+    spot.app.schedule.retry_at = now + 300;
+    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_FALSE(state.forced);
+    EXPECT_EQ(state.wind_calls, 1);
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now + 300));
+    EXPECT_TRUE(state.forced);
+    EXPECT_EQ(state.wind_calls, 3);
+}

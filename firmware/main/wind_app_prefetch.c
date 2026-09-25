@@ -83,7 +83,7 @@ bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *spot, time_t now) {
     // The background worker retries every five minutes. Once the ordinary
     // schedule's single retry is spent, a missing cache still needs recovery.
     if (result == ESP_OK && !outcome.attempted_fetch && !outcome.used_cache &&
-        !outcome.published_forecast)
+        !outcome.published_forecast && spot->app.schedule.retry_at <= now)
         result = wind_app_prefetch(&spot->app, true, now, &outcome);
     if (result != ESP_OK || (outcome.attempted_fetch && outcome.fetch_result != ESP_OK))
         ESP_LOGW(TAG, "Background forecast for %s failed: %s", spot->spot_id,
