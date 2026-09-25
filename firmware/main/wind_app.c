@@ -41,7 +41,7 @@
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics
 // change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000015)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E4400000018)
 
 static const char *TAG = "wind_app";
 static wind_spot_runtime_t *s_spots;
@@ -54,11 +54,14 @@ static SemaphoreHandle_t s_app_lock;
 // no other task may observe that preview state.
 static SemaphoreHandle_t s_runtime_lock;
 static bool s_ready;
+// One retained, atomic value is shared by navigation and touch hit testing.
+// Background fetches may hold the runtime mutex without hiding the shown view.
+enum { VIEW_UNINITIALIZED, VIEW_DETAIL, VIEW_OVERVIEW_FIRST };
+RTC_DATA_ATTR static atomic_uint s_displayed_view;
+
 static atomic_bool s_last_render_succeeded;
 static bool s_force_next_display;
-RTC_DATA_ATTR static bool s_overview_open;
 RTC_DATA_ATTR static char s_focused_date[WIND_FORECAST_DATE_LENGTH];
-RTC_DATA_ATTR static size_t s_overview_page;
 RTC_DATA_ATTR static uint64_t s_overview_configuration;
 typedef enum {
     OVERVIEW_INTERACTIVE,
@@ -67,6 +70,20 @@ typedef enum {
 } overview_render_mode_t;
 static esp_err_t render_overview_unlocked(size_t page,
     overview_render_mode_t mode, bool force);
+
+static bool overview_open(void) {
+    return atomic_load(&s_displayed_view) >= VIEW_OVERVIEW_FIRST;
+}
+
+static size_t overview_page(void) {
+    const unsigned view = atomic_load(&s_displayed_view);
+    return view >= VIEW_OVERVIEW_FIRST ? view - VIEW_OVERVIEW_FIRST : 0;
+}
+
+static void set_displayed_view(bool overview, size_t page) {
+    if (!s_preview_configuration)
+        atomic_store(&s_displayed_view, overview ? VIEW_OVERVIEW_FIRST + (unsigned)page : VIEW_DETAIL);
+}
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_t *outcome);
 static void apply_spot_display(size_t index);
@@ -281,32 +298,21 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
     const bool weather_required = display.wind_size || display.show_weather || display.show_temperature;
     const bool weather_missing = !forecast;
     bool calendar_used = false;
-    bool calendar_weather[5][5] = {{false}};
-    if (display.swell_size && runtime->have_swell) {
+    bool calendar_weather[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_SAMPLES_PER_DAY] = {{false}};
+    const bool show_swell = display.swell_size && runtime->have_swell;
+    if (show_swell || (forecast &&
+        !wind_app_forecast_covers_window(forecast, spot->timezone, now))) {
         calendar_used = true;
-        if (forecast) *calendar = *forecast;
+        const esp_err_t calendar_result = wind_dashboard_build_calendar(
+            forecast, spot->timezone, now, calendar, calendar_weather);
+        if (calendar_result != ESP_OK) return calendar_result;
         snprintf(calendar->spot_name, sizeof(calendar->spot_name), "%s", spot->display_name);
-        calendar->retrieved_at = weather_required && forecast && forecast->retrieved_at < runtime->swell.retrieved_at
-            ? forecast->retrieved_at : runtime->swell.retrieved_at;
-        wind_local_datetime_t date;
-        if (wind_timezone_from_unix(spot->timezone, now, &date) != ESP_OK) return ESP_ERR_INVALID_STATE;
-        const int hours[] = {8,11,14,17,20};
-        for (int day = 0; day < 5; ++day) {
-            wind_timezone_format_date(&date, calendar->days[day].local_date, sizeof(calendar->days[day].local_date));
-            for (int i = 0; i < 5; ++i) {
-                date.hour = hours[i]; date.minute = date.second = 0;
-                int64_t timestamp;
-                if (wind_timezone_to_unix(spot->timezone, &date, &timestamp) != ESP_OK) return ESP_ERR_INVALID_STATE;
-                wind_forecast_sample_t sample = { .timestamp = timestamp, .local_hour = hours[i] };
-                if (forecast) for (int d = 0; d < 5; ++d) for (int j = 0; j < 5; ++j)
-                    if (forecast->days[d].samples[j].timestamp == timestamp) { sample = forecast->days[d].samples[j]; calendar_weather[day][i] = true; }
-                calendar->days[day].samples[i] = sample;
-            }
-            wind_timezone_shift_date(&date, 1);
-        }
+        if (show_swell)
+            calendar->retrieved_at = weather_required && forecast && forecast->retrieved_at < runtime->swell.retrieved_at
+                ? forecast->retrieved_at : runtime->swell.retrieved_at;
         forecast = calendar;
     }
-    dashboard->spot_name = forecast ? forecast->spot_name : spot->display_name;
+    dashboard->spot_name = spot->display_name;
     dashboard->provider =
         wind_forecast_model_screen_name(forecast ? forecast->model : WIND_MODEL);
     dashboard->updated_time = updated;
@@ -454,10 +460,10 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
         }
     }
     if (active_renderer_display() == WIND_RENDERER_DISPLAY_E1003_GC16 && !s_preview_configuration) {
-        dashboard->visible_day_count = 3;
+        dashboard->visible_day_count = WIND_RENDERER_DAY_COUNT;
         int focused = -1;
         if (forecast && s_focused_date[0]) {
-            for (int day = 0; day < 3; ++day)
+            for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
                 if (!strcmp(s_focused_date, forecast->days[day].local_date)) focused = day;
         }
         if (focused < 0 && forecast) s_focused_date[0] = 0;
@@ -514,16 +520,9 @@ static esp_err_t render_dashboard_with_workspace(void *context, const wind_forec
         ESP_LOGE(TAG, "Invalid dashboard for %s (tide=%d/%d, wind=%d, swell=%d, threshold=%d)",
                  spot->id, dashboard->tide_available, dashboard->tide_sample_count,
                  dashboard->wind_size, dashboard->swell_size, dashboard->threshold_kt);
-        memset(dashboard, 0, sizeof(*dashboard));
-        dashboard->spot_name = spot->display_name;
-        dashboard->provider = "";
-        dashboard->updated_time = "";
-        dashboard->state = WIND_RENDERER_UNAVAILABLE;
-        dashboard->refresh_failed = 1;
-        dashboard->battery_percent = -1;
-        dashboard->display_mode = WIND_RENDERER_MODE_SOLID;
-        dashboard->threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
-        dashboard->show_dedicated_footer = 1;
+        // Invalid render input is a programming error, not absent forecast
+        // data. Preserve the panel and never cache a fabricated empty screen.
+        return ESP_ERR_INVALID_STATE;
     }
     wind_renderer_stats_t stats;
     int render_result = wind_renderer_render_for_display(
@@ -546,6 +545,15 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     if (!workspace) return ESP_ERR_NO_MEM;
     esp_err_t result = render_dashboard_with_workspace(context, forecast, freshness,
         refresh_failed, now, bitmap, bitmap_size, &workspace->dashboard, &workspace->calendar);
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Prepared images are independent of panel confirmation. Capture the exact
+    // render input, never a cache file a background fetch may have replaced.
+    wind_quick_spot_header_t header;
+    if (result == ESP_OK && !refresh_failed && !s_preview_configuration &&
+        wind_quick_spot_capture(context, forecast, s_focused_date, s_overview_configuration,
+                                now, workspace->dashboard.battery_percent, &header))
+        wind_quick_spot_save(context, &header, bitmap, bitmap_size);
+#endif
     free(workspace);
     return result;
 }
@@ -580,11 +588,7 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
     free(row);
     if (result != ESP_OK || end_result != ESP_OK)
         return result != ESP_OK ? result : end_result;
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    if (context && !s_preview_configuration)
-        wind_quick_spot_save(context, s_focused_date, s_overview_configuration,
-                             bitmap, bitmap_size);
-#endif
+    (void)context;
     // The preview is useful over USB, but its SD write must not delay the panel.
     if (write_dashboard_preview(bitmap, bitmap_size, display) != ESP_OK)
         ESP_LOGW(TAG, "Could not publish dashboard preview");
@@ -673,7 +677,7 @@ static esp_err_t ensure_ready(void) {
     }
     uint64_t digest = installed_configuration_digest(&s_installed_configuration);
     if (!s_preview_configuration && s_overview_configuration != digest) {
-        s_overview_open=false; s_overview_page=0; s_overview_configuration=digest;
+        set_displayed_view(false, 0); s_overview_configuration=digest;
         s_focused_date[0]=0;
     }
     if (wind_spots_load_selected(&s_selected_index) != ESP_OK ||
@@ -689,18 +693,18 @@ static esp_err_t ensure_ready(void) {
                 ? snprintf(runtime->forecast_path, sizeof(runtime->forecast_path), "%s",
                            WIND_FORECAST_CACHE_PATH)
                 : snprintf(runtime->forecast_path, sizeof(runtime->forecast_path),
-                           "/storage/wind-%s.cache", runtime->spot->id);
+                           FS_MOUNT_POINT "/wind-%s.cache", runtime->spot->id);
         int schedule_length =
             index == 0
                 ? snprintf(runtime->schedule_path, sizeof(runtime->schedule_path), "%s",
                            WIND_SCHEDULE_CACHE_PATH)
                 : snprintf(runtime->schedule_path, sizeof(runtime->schedule_path),
-                           "/storage/wind-%s.schedule", runtime->spot->id);
+                           FS_MOUNT_POINT "/wind-%s.schedule", runtime->spot->id);
         int tide_length = index == 0
                               ? snprintf(runtime->tide_path, sizeof(runtime->tide_path),
                                          "%s", WIND_TIDE_CACHE_PATH)
                               : snprintf(runtime->tide_path, sizeof(runtime->tide_path),
-                                         "/storage/wind-%s.tide", runtime->spot->id);
+                                         FS_MOUNT_POINT "/wind-%s.tide", runtime->spot->id);
         if (forecast_length < 0 ||
             forecast_length >= (int)sizeof(runtime->forecast_path) ||
             schedule_length < 0 ||
@@ -761,6 +765,7 @@ static esp_err_t ensure_ready(void) {
     }
     apply_spot_display(s_selected_index);
     s_ready = true;
+    if (atomic_load(&s_displayed_view) == VIEW_UNINITIALIZED) set_displayed_view(false, 0);
     return ESP_OK;
 }
 
@@ -836,8 +841,7 @@ static bool show_quick_overview(size_t page) {
         return false;
     (void)clear_panel_confirmation_unlocked();
     s_last_render_succeeded = true;
-    s_overview_open = true;
-    s_overview_page = page;
+    set_displayed_view(true, page);
     s_focused_date[0] = 0;
     return true;
 }
@@ -874,6 +878,7 @@ static esp_err_t render_overview_unlocked(size_t page,
     }
     bool reported_failure = false;
     time_t now; time(&now);
+    bool use_swell[WIND_OVERVIEW_PAGE_SIZE] = {0};
     for (size_t row = 0; row < count; ++row) {
         size_t index = first+row;
         wind_spot_runtime_t *runtime = &s_spots[index];
@@ -886,6 +891,7 @@ static esp_err_t render_overview_unlocked(size_t page,
                 if (display.module_order[m] == 0) { swell=false; break; }
                 if (display.module_order[m] == 1) { swell=true; break; }
             }
+        use_swell[row] = swell;
         /* Advance attempts even when offline or displaying swell. Otherwise an
            overdue wind retry can keep waking the overview every second. This
            also prepares the wind cache for opening the full spot dashboard. */
@@ -907,6 +913,16 @@ static esp_err_t render_overview_unlocked(size_t page,
             const wind_swell_cache_identity_t identity = {runtime->spot->id,runtime->spot->timezone,runtime->marine_config.swell_model};
             runtime->have_swell = wind_swell_cache_load(path,&identity,&runtime->swell) == ESP_OK;
         }
+    }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Snapshot after our downloads, before reading the pixels' source data.
+    // A later concurrent publication must invalidate this image, not relabel it.
+    wind_quick_overview_header_t quick_header = wind_quick_overview_identity(
+        s_spots, total, quick_overview_configuration(), page, now);
+#endif
+    for (size_t row = 0; row < count; ++row) {
+        wind_spot_runtime_t *runtime = &s_spots[first + row];
+        const bool swell = use_swell[row];
         bool have_wind = wind_cache_load(runtime->forecast_path,&runtime->app.config.identity,cached) == ESP_OK;
         result = wind_dashboard_build_overview_row(
             runtime->spot->display_name, runtime->spot->timezone,
@@ -927,13 +943,13 @@ static esp_err_t render_overview_unlocked(size_t page,
         (void)clear_panel_confirmation_unlocked();
         result = display_dashboard(NULL,bitmap,WIND_RENDERER_E1003_COMPOSITION_BYTES);
         if (result == ESP_OK) {
-            s_overview_open=true; s_overview_page=page; s_focused_date[0]=0;
+            set_displayed_view(true, page);
+            s_focused_date[0]=0;
         }
     }
     if (result == ESP_OK) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-        wind_quick_overview_save(s_spots, total, quick_overview_configuration(),
-                                 page, now, bitmap);
+        wind_quick_overview_save(&quick_header, bitmap);
 #endif
     }
     free(rows); free(cached); free(bitmap);
@@ -948,7 +964,7 @@ esp_err_t wind_app_show_overview(void) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return ESP_ERR_INVALID_STATE;
     esp_err_t result=ensure_ready();
     if (result==ESP_OK) {
-        const size_t page = s_overview_open ? s_overview_page : s_selected_index/3;
+        const size_t page = overview_open() ? overview_page() : s_selected_index/3;
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
         if (!show_quick_overview(page))
 #endif
@@ -960,9 +976,9 @@ esp_err_t wind_app_show_overview(void) {
 
 esp_err_t wind_app_overview_page(int direction) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return ESP_ERR_INVALID_STATE;
-    int page=(int)s_overview_page+direction;
+    int page=(int)overview_page()+direction;
     esp_err_t result=ESP_OK;
-    if (s_overview_open && page>=0 && (size_t)page<=wind_overview_last_page(wind_spots_count())) {
+    if (overview_open() && page>=0 && (size_t)page<=wind_overview_last_page(wind_spots_count())) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
         if (!show_quick_overview((size_t)page))
 #endif
@@ -976,16 +992,17 @@ void wind_app_overview_state(bool *open,size_t *page) {
     if (!open || !page) return;
     *open=false; *page=0;
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return;
-    if (ensure_ready()==ESP_OK) { *open=s_overview_open; *page=s_overview_page; }
+    if (ensure_ready()==ESP_OK) { *open=overview_open(); *page=overview_page(); }
     xSemaphoreGive(s_runtime_lock);
 }
 
 bool wind_app_overview_state_if_ready(bool *open,size_t *page) {
-    if (!open || !page || !s_runtime_lock ||
-        xSemaphoreTake(s_runtime_lock, 0) != pdTRUE) return false;
-    if (s_ready) { *open=s_overview_open; *page=s_overview_page; }
-    xSemaphoreGive(s_runtime_lock);
-    return s_ready;
+    if (!open || !page) return false;
+    const unsigned view = atomic_load(&s_displayed_view);
+    if (view == VIEW_UNINITIALIZED) return false;
+    *open = view >= VIEW_OVERVIEW_FIRST;
+    *page = *open ? view - VIEW_OVERVIEW_FIRST : 0;
+    return true;
 }
 
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
@@ -1039,6 +1056,7 @@ wind_app_activate_configuration(const installed_configuration_t *configuration) 
         return ESP_ERR_INVALID_ARG;
     }
     s_ready = false;
+    atomic_store(&s_displayed_view, VIEW_UNINITIALIZED);
     xSemaphoreGive(s_runtime_lock);
     return ESP_OK;
 }
@@ -1052,8 +1070,8 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_
         if (report_status) wind_app_status_finish(result, ESP_OK, false, false, NULL);
         return result;
     }
-    if (s_overview_open && !s_preview_configuration) {
-        return render_overview_unlocked(s_overview_page, OVERVIEW_REFRESH, force_refresh);
+    if (overview_open() && !s_preview_configuration) {
+        return render_overview_unlocked(overview_page(), OVERVIEW_REFRESH, force_refresh);
     }
     if (report_status) wind_app_status_begin();
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
@@ -1144,7 +1162,7 @@ static esp_err_t navigate(int direction, bool absolute) {
 #endif
     if (outcome.displayed) s_force_next_display = false;
     if (result == ESP_OK) {
-        s_overview_open = false;
+        set_displayed_view(false, 0);
         s_selected_index = target;
         esp_err_t store_result = wind_spots_store_selected(target);
         if (store_result != ESP_OK) {
@@ -1171,12 +1189,12 @@ static esp_err_t navigate(int direction, bool absolute) {
 }
 
 esp_err_t wind_app_toggle_day(size_t day_index) {
-    if (day_index >= 3 || active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16)
+    if (day_index >= WIND_RENDERER_DAY_COUNT || active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16)
         return ESP_ERR_INVALID_ARG;
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
     esp_err_t result = ensure_ready();
-    if (result != ESP_OK || s_overview_open || s_preview_configuration) {
+    if (result != ESP_OK || overview_open() || s_preview_configuration) {
         xSemaphoreGive(s_runtime_lock);
         return result != ESP_OK ? result : ESP_ERR_INVALID_STATE;
     }
@@ -1187,22 +1205,11 @@ esp_err_t wind_app_toggle_day(size_t day_index) {
     wind_spot_runtime_t *runtime = &s_spots[s_selected_index];
     if (s_focused_date[0]) s_focused_date[0] = 0;
     else {
-        wind_forecast_t *cached = malloc(sizeof(*cached));
-        if (!cached) result = ESP_ERR_NO_MEM;
-        else {
-            const wind_display_config_t display = config_manager_get_wind_display_config();
-            if (display.swell_size && runtime->have_swell) {
-                wind_local_datetime_t date;
-                result = wind_timezone_from_unix(runtime->spot->timezone, now, &date);
-                if (result == ESP_OK) {
-                    wind_timezone_shift_date(&date, (int)day_index);
-                    result = wind_timezone_format_date(&date, s_focused_date, sizeof(s_focused_date));
-                }
-            } else {
-                result = wind_cache_load(runtime->forecast_path, &runtime->app.config.identity, cached);
-                if (result == ESP_OK) memcpy(s_focused_date, cached->days[day_index].local_date, sizeof(s_focused_date));
-            }
-            free(cached);
+        wind_local_datetime_t date;
+        result = wind_timezone_from_unix(runtime->spot->timezone, now, &date);
+        if (result == ESP_OK) {
+            wind_timezone_shift_date(&date, (int)day_index);
+            result = wind_timezone_format_date(&date, s_focused_date, sizeof(s_focused_date));
         }
     }
     if (result == ESP_OK) {
@@ -1288,12 +1295,8 @@ static bool navigation_requires_network(int direction, bool absolute) {
     bool requires_network =
         wind_cache_load(s_spots[target].forecast_path,
                         &s_spots[target].app.config.identity, &cached) != ESP_OK;
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    // Interactive navigation shows cached data first; the scheduled refresh
-    // fetches due data after the user can see the selected screen.
-    xSemaphoreGive(s_runtime_lock);
-    return requires_network;
-#endif
+    // E1003 navigation displays its cache first, but must still request a
+    // background refresh for expired wind data or missing marine modules.
     time_t now;
     time(&now);
     const wind_display_config_t display = display_from_installed(target == 0
@@ -1331,7 +1334,7 @@ bool wind_app_spot_requires_network(size_t index) { return navigation_requires_n
 bool wind_app_overview_requires_network(int direction) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock,portMAX_DELAY)!=pdTRUE) return false;
     if (ensure_ready()!=ESP_OK) { xSemaphoreGive(s_runtime_lock); return false; }
-    int page=(int)(s_overview_open ? s_overview_page : s_selected_index/3)+direction;
+    int page=(int)(overview_open() ? overview_page() : s_selected_index/3)+direction;
     size_t count=wind_spots_count();
     xSemaphoreGive(s_runtime_lock);
     if (page<0 || (size_t)page>wind_overview_last_page(count)) return false;
@@ -1384,25 +1387,26 @@ static esp_err_t prepare_quick_frame_unlocked(size_t index, int variant,
     if (wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
                         forecast) != ESP_OK) return ESP_OK;
     s_focused_date[0] = 0;
-    if (variant)
-        snprintf(s_focused_date, sizeof(s_focused_date), "%s",
-                 forecast->days[variant - 1].local_date);
+    if (variant) {
+        wind_local_datetime_t date;
+        if (wind_timezone_from_unix(runtime->spot->timezone, now, &date) != ESP_OK)
+            return ESP_ERR_INVALID_STATE;
+        wind_timezone_shift_date(&date, variant - 1);
+        if (wind_timezone_format_date(&date, s_focused_date, sizeof(s_focused_date)) != ESP_OK)
+            return ESP_ERR_INVALID_STATE;
+    }
     if (wind_quick_spot_cached(runtime, s_focused_date,
                                s_overview_configuration)) return ESP_OK;
     esp_err_t result = render_dashboard(runtime, forecast,
         wind_app_forecast_freshness(forecast, now), false, now,
         bitmap, WIND_RENDERER_E1003_COMPOSITION_BYTES);
-    if (result == ESP_OK)
-        wind_quick_spot_save(runtime, s_focused_date,
-            s_overview_configuration, bitmap,
-            WIND_RENDERER_E1003_COMPOSITION_BYTES);
     return result;
 }
 #endif
 
 esp_err_t wind_app_prepare_quick_frame(size_t index, int variant) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    if (variant < 0 || variant > 3) return ESP_ERR_INVALID_ARG;
+    if (variant < 0 || variant > WIND_RENDERER_DAY_COUNT) return ESP_ERR_INVALID_ARG;
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
     esp_err_t result = ensure_ready();
@@ -1504,7 +1508,7 @@ esp_err_t wind_app_prepare_quick_frames(void) {
             load_or_refresh_swell(runtime, false, false, now);
             load_or_refresh_tide(runtime, false, false, now);
             refresh_render_signatures();
-            for (int variant = 0; variant <= 3; ++variant) {
+            for (int variant = 0; variant <= WIND_RENDERER_DAY_COUNT; ++variant) {
                 result = prepare_quick_frame_unlocked(index, variant,
                     forecast, bitmap, now);
                 if (result != ESP_OK) break;
@@ -1595,9 +1599,9 @@ esp_err_t wind_app_prefetch_other_spots(void) {
     }
     if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
-    if (!s_preview_configuration && s_overview_open &&
+    if (!s_preview_configuration && overview_open() &&
         s_overview_configuration == configuration)
-        (void)render_overview_unlocked(s_overview_page, OVERVIEW_INTERACTIVE, false);
+        (void)render_overview_unlocked(overview_page(), OVERVIEW_INTERACTIVE, false);
     xSemaphoreGive(s_runtime_lock);
     return incomplete ? ESP_ERR_NOT_FOUND : ESP_OK;
 #else
@@ -1643,7 +1647,7 @@ int wind_app_seconds_until_next_wake(void) {
         for (size_t index=0; index<count; ++index)
             deadlines[index]=wind_schedule_next_attempt(&s_spots[index].app.schedule, now);
         next=wind_overview_next_wake(deadlines,count,s_selected_index,
-                                     s_overview_open,s_overview_page,next);
+                                     overview_open(),overview_page(),next);
     }
     if (locked) xSemaphoreGive(s_runtime_lock);
     return next > now ? (int)(next - now) : 1;

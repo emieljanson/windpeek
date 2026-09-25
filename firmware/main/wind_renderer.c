@@ -279,7 +279,8 @@ static int copy_bounded_text(char *destination, size_t capacity, const char *sou
 }
 
 int wind_renderer_dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
-    if (!dashboard || (dashboard->visible_day_count != 0 && dashboard->visible_day_count != 1 && dashboard->visible_day_count != 5) ||
+    if (!dashboard || (dashboard->visible_day_count != 0 && dashboard->visible_day_count != 1 &&
+                       dashboard->visible_day_count != 5) ||
         (dashboard->visible_sample_count != 0 && dashboard->visible_sample_count != 5 && dashboard->visible_sample_count != 13) ||
         (dashboard->visible_sample_count == 13 && dashboard->visible_day_count != 1)) return 0;
     if (!dashboard || dashboard->state < WIND_RENDERER_FRESH ||

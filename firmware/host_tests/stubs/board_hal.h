@@ -12,6 +12,7 @@ extern "C" {
 extern int test_board_display_width;
 extern int test_board_display_height;
 extern const char *test_board_display_type;  // "spectra6" or "gc16"
+int board_hal_get_battery_percent(void);
 
 #define BOARD_HAL_DISPLAY_WIDTH test_board_display_width
 #define BOARD_HAL_DISPLAY_HEIGHT test_board_display_height

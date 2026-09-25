@@ -1,5 +1,6 @@
 #include "wind_overview.h"
 #include <stdlib.h>
+#include "wind_renderer.h"
 
 size_t wind_overview_last_page(size_t count) {
     return count ? (count - 1) / WIND_OVERVIEW_PAGE_SIZE : 0;
@@ -15,8 +16,8 @@ wind_touch_action_t wind_overview_hit_test(int x, int y, bool overview,
             if (count) action.kind = WIND_TOUCH_OPEN;
         } else {
             action.kind = WIND_TOUCH_TOGGLE_DAY;
-            while (action.day_index < 2 &&
-                   x >= 12 + 775 * (int)(action.day_index + 1) / 3) ++action.day_index;
+            while (action.day_index < WIND_RENDERER_DAY_COUNT - 1 &&
+                   x >= 12 + 775 * (int)(action.day_index + 1) / WIND_RENDERER_DAY_COUNT) ++action.day_index;
         }
         return action;
     }

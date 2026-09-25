@@ -8,6 +8,13 @@
 #include "wind_renderer.h"
 #include "wind_swell.h"
 
+// Match by timestamp so an old cache cannot relabel yesterday as today.
+const wind_forecast_sample_t *wind_dashboard_find_sample(const wind_forecast_t *forecast,
+                                                        int64_t timestamp);
+esp_err_t wind_dashboard_build_calendar(const wind_forecast_t *forecast,
+    const char *timezone, time_t now, wind_forecast_t *calendar,
+    bool available[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_SAMPLES_PER_DAY]);
+
 const char *wind_dashboard_day_name(int weekday);
 wind_renderer_sample_t wind_dashboard_forecast_sample(const wind_forecast_sample_t *source,
                                                        const char *time, bool available);

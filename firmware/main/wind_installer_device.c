@@ -434,13 +434,27 @@ static void installer_usb_task(void *argument)
 {
     physical_installer_t *installer = (physical_installer_t *) argument;
     uint8_t input[256];
+    int64_t last_received_us = esp_timer_get_time();
     ESP_LOGI("wind_installer", "Installer UART task ready");
     while (true) {
+        size_t queued = 0;
+        const bool waiting_for_bytes =
+            uart_get_buffered_data_len(UART_NUM_0, &queued) == ESP_OK && queued == 0;
         int read = uart_read_bytes(UART_NUM_0, input, sizeof(input), pdMS_TO_TICKS(250));
+        const int64_t now_us = esp_timer_get_time();
+        // Expire before feeding bytes that resumed after the idle gap, including
+        // a gap that crossed the threshold during this poll. Already queued
+        // chunks are contiguous even if processing the previous command was slow.
+        if (waiting_for_bytes)
+            wind_usb_parser_expire_partial(&installer->parser,
+                                           (uint64_t)(now_us - last_received_us) / 1000);
         if (read > 0) {
-            esp_err_t result = wind_usb_parser_feed(&installer->parser, input, (size_t) read,
+            last_received_us = now_us;
+            const wind_usb_feed_result_t result = wind_usb_parser_feed(&installer->parser, input, (size_t) read,
                                                     physical_frame, installer);
-            if (result != ESP_OK && installer->service.wake_lock_held) {
+            // A recovered valid frame may have opened a new session in this read.
+            if (result.error != ESP_OK && result.delivered_frames == 0 &&
+                installer->service.wake_lock_held) {
                 wind_installer_service_disconnect(&installer->service);
             }
         }

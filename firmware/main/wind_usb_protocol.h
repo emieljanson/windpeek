@@ -16,6 +16,7 @@ extern "C" {
 #define WIND_USB_HEADER_SIZE 24u
 #define WIND_USB_MAX_PAYLOAD 16384u
 #define WIND_USB_MAX_FRAME_SIZE (WIND_USB_HEADER_SIZE + WIND_USB_MAX_PAYLOAD)
+#define WIND_USB_PARTIAL_TIMEOUT_MS 3000u
 
 typedef enum {
     WIND_USB_MESSAGE_REQUEST = 1,
@@ -40,7 +41,15 @@ typedef struct {
 } wind_usb_parser_t;
 
 void wind_usb_parser_init(wind_usb_parser_t *parser);
-esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, size_t length,
+// Drop only unfinished bytes after a transport idle gap; retain replay protection.
+bool wind_usb_parser_expire_partial(wind_usb_parser_t *parser, uint64_t idle_ms);
+// Framing errors and delivered frames may coexist within the same UART read.
+typedef struct {
+    esp_err_t error;
+    size_t delivered_frames;
+} wind_usb_feed_result_t;
+
+wind_usb_feed_result_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, size_t length,
                                wind_usb_frame_callback_t callback, void *context);
 size_t wind_usb_encode_frame(uint32_t request_id, uint16_t message_type, const uint8_t *payload,
                              size_t payload_length, uint8_t *output, size_t output_size);

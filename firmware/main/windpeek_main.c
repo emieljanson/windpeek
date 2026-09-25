@@ -549,7 +549,7 @@ static void quick_frames_sweep(void) {
         power_manager_work_end();
         vTaskDelay(1);
     }
-    for (int variant = 1; variant <= 3; ++variant) {
+    for (int variant = 1; variant <= WIND_FORECAST_DAY_COUNT; ++variant) {
         for (size_t rank = 0; rank < count; ++rank) {
             const int offset = rank == 0 ? 0 : (rank & 1u)
                 ? (int)((rank + 1) / 2) : -(int)(rank / 2);
@@ -845,6 +845,20 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to start setup forecast loading");
     else {
         atomic_store(&s_setup_forecasts_task, setup_task);
+        // A reset or deep sleep can interrupt the initial background sweep.
+        // Resume missing spots instead of depending on a volatile setup flag.
+        if (!atomic_load(&s_setup_forecasts_pending)) {
+            size_t selected = 0;
+            if (wind_spots_load_selected(&selected) != ESP_OK || selected >= wind_spots_count())
+                selected = 0;
+            for (size_t index = 0; index < wind_spots_count(); ++index) {
+                // The dashboard task owns refreshes for the selected spot.
+                if (index != selected && wind_app_spot_requires_network(index)) {
+                    atomic_store(&s_setup_forecasts_pending, true);
+                    break;
+                }
+            }
+        }
         if (atomic_load(&s_setup_forecasts_pending)) xTaskNotifyGive(setup_task);
     }
 #else

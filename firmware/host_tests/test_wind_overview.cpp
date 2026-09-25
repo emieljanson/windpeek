@@ -82,9 +82,12 @@ TEST(WindOverview, EntireTitleOpensSpotsAndForecastTapsIdentifyDay) {
             EXPECT_NE(wind_overview_hit_test(x, y, false, 0, 3).kind, WIND_TOUCH_NONE);
         }
     }
-    EXPECT_EQ(wind_overview_hit_test(269, 200, false, 0, 3).day_index, 0u);
-    EXPECT_EQ(wind_overview_hit_test(270, 200, false, 0, 3).day_index, 1u);
-    EXPECT_EQ(wind_overview_hit_test(527, 420, false, 0, 3).day_index, 1u);
-    EXPECT_EQ(wind_overview_hit_test(528, 420, false, 0, 3).day_index, 2u);
+    const int edges[][2] = {{12, 166}, {167, 321}, {322, 476}, {477, 631}, {632, 786}};
+    for (size_t day = 0; day < 5; ++day) {
+        const int left = edges[day][0];
+        const int right = edges[day][1];
+        EXPECT_EQ(wind_overview_hit_test(left, 200, false, 0, 3).day_index, day);
+        EXPECT_EQ(wind_overview_hit_test(right, 420, false, 0, 3).day_index, day);
+    }
     EXPECT_EQ(wind_overview_hit_test(800, 200, false, 0, 3).kind, WIND_TOUCH_NONE);
 }
