@@ -10,6 +10,7 @@ namespace {
 struct FetchState {
     bool wind_cached = true;
     bool wind_attempted = false;
+    esp_err_t wind_fetch = ESP_OK;
     bool forced = false;
     int wind_calls = 0;
     bool marine_cached = false;
@@ -30,7 +31,8 @@ esp_err_t wind_app_prefetch(wind_app_t *, bool force, int64_t, wind_app_outcome_
     *out = {};
     out->used_cache = state.wind_cached;
     out->attempted_fetch = force || state.wind_attempted;
-    out->published_forecast = force;
+    out->fetch_result = out->attempted_fetch ? state.wind_fetch : ESP_OK;
+    out->published_forecast = out->attempted_fetch && out->fetch_result == ESP_OK;
     return ESP_OK;
 }
 void open_meteo_knmi_provider_init(wind_provider_t *, open_meteo_knmi_config_t *) {}
@@ -75,6 +77,7 @@ TEST_F(BackgroundForecast, MissingCacheRecoversAfterScheduledRetriesAreExhausted
 TEST_F(BackgroundForecast, FailedAttemptIsNotImmediatelyRepeated) {
     state.wind_cached = false;
     state.wind_attempted = true;
+    state.wind_fetch = ESP_ERR_TIMEOUT;
     EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
     EXPECT_FALSE(state.forced);
     EXPECT_EQ(state.wind_calls, 1);

@@ -1,10 +1,14 @@
 # E1003 production test report — 25 September 2026
 
-**Release decision: not yet cleared for production.** Automated firmware and
-web checks pass; physical-device verification and a final complete browser run
-remain open. Battery-only sleep/wake was confirmed by the user; the new touch
-fix still awaits a physical retest. The connected E1003 was updated to a verified test build while preserving
-its installed configuration. Nothing was published.
+**Current release status: publication authorized; final corrective commit awaiting
+release gates.** The complete PR workflow passed at `bf931102`, including all
+four browser shards, both firmware targets and the full sanitizer suite.
+Follow-up review fixes add two regressions, bringing the host suite to 336 tests.
+The sections below are a chronological test log; earlier pending checks and
+“nothing published” statements describe their stage, not the current status.
+Battery-only sleep/wake was confirmed by the user. A physical retest of the
+navigation fix and worst-case concurrent heap headroom remain unverified;
+automated success does not establish zero defects.
 
 ## Confirmed defects fixed
 
@@ -108,7 +112,7 @@ one outstanding 1 KiB read packet and verifies each read digest. The complete or
 writing; SHA-256 is `f1449ae8c2bcb9b74bb34dd351dcaf1972f1b3291c596ae89e063f744928f699`.
 Only `ota_0` was written, and the resulting firmware hash was verified. The OTA
 selector was unchanged. Backup files and the test binary are retained at
-`/Users/emieljanson/.codex/backups/windpeek/e1003-20260925/`.
+the maintainer-retained E1003 backup bundle dated 2026-09-25.
 After restart, the device reported firmware `dev-state-tests-20260925`, the
 unchanged configuration digest `f37b352216b66932`, connected Wi-Fi and a valid
 render at approximately 33 seconds uptime. Refresh, fetch, transport and parse
@@ -130,7 +134,7 @@ restarted request IDs at one with `get_state`, whereas the protocol requires
 consecutive close/reopen cycles passed without resetting the device or changing
 the configuration. This is distinct from physical cable removal and battery wake.
 
-Still required:
+Outstanding at this stage (later verification is recorded below):
 
 - Verify actual panel content, battery display, touch coordinates and every
   spot/day on the flashed test build.
@@ -223,10 +227,10 @@ instantaneous minimum or resolve worst-case concurrency headroom.
 
 Physical touch actions were requested during monitoring but no confirmation
 was received; these measurements must not be described as a verified physical
-navigation stress test. Battery-only sleep/wake, cable removal, interrupted
-initial setup, peak concurrent heap usage, and the final browser suite remain
-open. Logs, the summary and temporary direct-USB test scripts are retained in
-`/Users/emieljanson/.codex/backups/windpeek/e1003-20260925/`.
+navigation stress test. At this stage, battery-only sleep/wake, cable removal, interrupted
+initial setup, peak concurrent heap usage, and the final browser suite had not
+yet been verified. Logs, the summary and temporary direct-USB test scripts are retained in
+the maintainer-retained E1003 backup bundle dated 2026-09-25.
 
 
 ## Follow-up: physical wake, touch-state race and cache memory
@@ -403,3 +407,23 @@ succeeds. The release workflow now retains the full sanitizer run as a gate.
 The release branch will use the existing pull-request and main deployment
 pipeline, including the complete four-shard browser suite. Earlier “nothing
 published” statements describe the preceding test stages, not this new request.
+
+
+### Follow-up PR review
+
+- Preserved a new USB frame's magic bytes when an incomplete preceding header
+  is rejected for an impossible length. Added an executable regression.
+- Separated overview download and rendering phases. Cache identity is captured
+  after this refresh's downloads but before reading row data, preserving the
+  concurrent-publication protection. Added immediate prepared-frame reuse coverage.
+- The boot background sweep ignores the selected spot, whose refresh belongs
+  to the dashboard task. Its completion now describes the same set of spots.
+- The failed-prefetch fixture now returns an actual timeout. Documented host
+  zlib dependencies, synchronized lockfiles and removed machine-specific paths.
+- On the connected quality-test build, the initial HTTP connection failed while
+  cached rendering remained valid. A later sample at 714 seconds had monotonically
+  increasing uptime, unchanged configuration, 58,359 bytes free heap and no
+  current reported errors, but no fetch in that sample. This does not prove a
+  successful network recovery. Forced refreshes with a usable cache do not earn
+  an extra five-minute retry; scheduled/coverage/initial failures do. The existing
+  retry tests cover that policy.

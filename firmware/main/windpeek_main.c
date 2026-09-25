@@ -848,8 +848,12 @@ void app_main(void)
         // A reset or deep sleep can interrupt the initial background sweep.
         // Resume missing spots instead of depending on a volatile setup flag.
         if (!atomic_load(&s_setup_forecasts_pending)) {
+            size_t selected = 0;
+            if (wind_spots_load_selected(&selected) != ESP_OK || selected >= wind_spots_count())
+                selected = 0;
             for (size_t index = 0; index < wind_spots_count(); ++index) {
-                if (wind_app_spot_requires_network(index)) {
+                // The dashboard task owns refreshes for the selected spot.
+                if (index != selected && wind_app_spot_requires_network(index)) {
                     atomic_store(&s_setup_forecasts_pending, true);
                     break;
                 }

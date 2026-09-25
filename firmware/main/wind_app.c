@@ -878,11 +878,7 @@ static esp_err_t render_overview_unlocked(size_t page,
     }
     bool reported_failure = false;
     time_t now; time(&now);
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    // A concurrent publication must invalidate this image, not relabel it.
-    wind_quick_overview_header_t quick_header = wind_quick_overview_identity(
-        s_spots, total, quick_overview_configuration(), page, now);
-#endif
+    bool use_swell[WIND_OVERVIEW_PAGE_SIZE] = {0};
     for (size_t row = 0; row < count; ++row) {
         size_t index = first+row;
         wind_spot_runtime_t *runtime = &s_spots[index];
@@ -895,6 +891,7 @@ static esp_err_t render_overview_unlocked(size_t page,
                 if (display.module_order[m] == 0) { swell=false; break; }
                 if (display.module_order[m] == 1) { swell=true; break; }
             }
+        use_swell[row] = swell;
         /* Advance attempts even when offline or displaying swell. Otherwise an
            overdue wind retry can keep waking the overview every second. This
            also prepares the wind cache for opening the full spot dashboard. */
@@ -916,6 +913,16 @@ static esp_err_t render_overview_unlocked(size_t page,
             const wind_swell_cache_identity_t identity = {runtime->spot->id,runtime->spot->timezone,runtime->marine_config.swell_model};
             runtime->have_swell = wind_swell_cache_load(path,&identity,&runtime->swell) == ESP_OK;
         }
+    }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Snapshot after our downloads, before reading the pixels' source data.
+    // A later concurrent publication must invalidate this image, not relabel it.
+    wind_quick_overview_header_t quick_header = wind_quick_overview_identity(
+        s_spots, total, quick_overview_configuration(), page, now);
+#endif
+    for (size_t row = 0; row < count; ++row) {
+        wind_spot_runtime_t *runtime = &s_spots[first + row];
+        const bool swell = use_swell[row];
         bool have_wind = wind_cache_load(runtime->forecast_path,&runtime->app.config.identity,cached) == ESP_OK;
         result = wind_dashboard_build_overview_row(
             runtime->spot->display_name, runtime->spot->timezone,

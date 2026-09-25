@@ -225,3 +225,19 @@ TEST(WindUsbProtocolTest, MaximumPayloadSurvivesRandomChunkBoundariesAndFollowin
     EXPECT_EQ(frames.payloads[0], payload);
     EXPECT_EQ(frames.payloads[1], next);
 }
+
+TEST(WindUsbProtocolTest, TruncatedHeaderPreservesFollowingSessionMagic) {
+    wind_usb_parser_t parser;
+    wind_usb_parser_init(&parser);
+    Frames frames;
+    std::array<uint8_t, WIND_USB_MAX_FRAME_SIZE> encoded{};
+    const char hello[] = R"({"command":"hello"})";
+    const auto size = wind_usb_encode_frame(1, WIND_USB_MESSAGE_REQUEST,
+        reinterpret_cast<const uint8_t *>(hello), strlen(hello), encoded.data(), encoded.size());
+    std::vector<uint8_t> stream(encoded.begin(), encoded.begin() + 16);
+    stream.insert(stream.end(), encoded.begin(), encoded.begin() + size);
+    const auto result = wind_usb_parser_feed(&parser, stream.data(), stream.size(), collect, &frames);
+    EXPECT_EQ(result.error, ESP_ERR_INVALID_SIZE);
+    EXPECT_EQ(result.delivered_frames, 1u);
+    ASSERT_EQ(frames.payloads, (std::vector<std::string>{hello}));
+}

@@ -653,3 +653,15 @@ TEST_F(E1003Runtime, TouchSeesDisplayedOverviewDuringBackgroundFetch) {
     ASSERT_TRUE(wind_app_overview_state_if_ready(&open, &page));
     EXPECT_FALSE(open);
 }
+
+TEST_F(E1003Runtime, RefreshedOverviewImmediatelyReusesItsPreparedImage) {
+    install();
+    ASSERT_EQ(wind_app_show_overview(), ESP_OK);
+    clock_now += 3600;
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+    const auto refreshed = panel;
+    const int previous_quick = quick_displays;
+    ASSERT_EQ(wind_app_show_overview(), ESP_OK);
+    EXPECT_EQ(quick_displays, previous_quick + 1);
+    EXPECT_EQ(panel, refreshed);
+}

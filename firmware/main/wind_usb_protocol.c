@@ -106,7 +106,8 @@ wind_usb_feed_result_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uin
             }
             const uint32_t payload_length = read_u32(parser->buffer + 16);
             if (payload_length > WIND_USB_MAX_PAYLOAD) {
-                parser->length = 0;
+                discard_prefix(parser, WIND_USB_MAGIC_SIZE);
+                seek_magic(parser);
                 result.error = ESP_ERR_INVALID_SIZE;
                 continue;
             }
