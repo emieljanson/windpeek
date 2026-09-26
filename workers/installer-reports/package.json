@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "wrangler deploy --dry-run --outdir .wrangler/test-build && node --test tests/*.test.mjs",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
+    "miniflare": "5.20260903.0-alpha",
     "wrangler": "4.129.0"
   }
 }

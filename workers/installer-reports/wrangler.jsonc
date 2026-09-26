@@ -3,5 +3,24 @@
   "main": "src/index.js",
   "compatibility_date": "2026-09-06",
   "observability": { "enabled": false, "logs": { "invocation_logs": false } },
-  "logpush": false
+  "logpush": false,
+  "durable_objects": {
+    "bindings": [
+      { "name": "INSTALLATION_NOTIFICATIONS", "class_name": "InstallationNotification" },
+      { "name": "PROJECT_ACTIVITY", "class_name": "ProjectActivity" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["InstallationNotification"] },
+    { "tag": "v2", "new_sqlite_classes": ["ProjectActivity"] }
+  ],
+  "triggers": { "crons": ["0 8 * * MON"] },
+  "ratelimits": [{
+    "name": "SUCCESS_RATE_LIMITER",
+    "namespace_id": "1002",
+    "simple": { "limit": 10, "period": 60 }
+  }, {
+    "name": "VISIT_RATE_LIMITER", "namespace_id": "1003",
+    "simple": { "limit": 60, "period": 60 }
+  }]
 }

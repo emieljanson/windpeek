@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
-import worker, { DSN as dsn, MAX_BYTES } from '../../workers/installer-reports/src/index.js'
+import worker from '../../workers/installer-reports/src/index.js'
+import { DSN as dsn, MAX_BYTES } from '../../workers/installer-reports/src/constants.js'
 
 const body = JSON.stringify({ dsn, event_id: 'a'.repeat(32) }) + '\n{"type":"event"}\n{}'
 const request = (options = {}) => new Request('https://reports.example/report', {
@@ -9,6 +10,13 @@ const request = (options = {}) => new Request('https://reports.example/report', 
 })
 
 describe('installer report relay', () => {
+  it('keeps Sentry delivery successful when the activity binding fails synchronously', async () => {
+    const pending = []
+    const env = { PROJECT_ACTIVITY: { idFromName() { throw new Error('unavailable') } } }
+    const response = await worker.fetch(request(), env, { waitUntil: task => pending.push(task) }, async () => new Response(null, { status: 200 }))
+    expect(response.status).toBe(200)
+    await Promise.all(pending)
+  })
   it('disables invocation logs and observability', () => {
     const config = JSON.parse(readFileSync(new URL('../../workers/installer-reports/wrangler.jsonc', import.meta.url), 'utf8'))
     expect(config.observability).toEqual({ enabled: false, logs: { invocation_logs: false } })

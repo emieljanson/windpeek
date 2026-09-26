@@ -17,6 +17,7 @@ import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { installerSentryReporter } from './sentryReporter'
 import { createInstallerFailureReporting } from './installerFailureReporting'
+import { reportInstallerSuccess } from './installerSuccessReporting'
 import { createSerialProtocol, findGrantedInstallerPort, installerTransports, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
@@ -50,6 +51,7 @@ export function createInstallerSession({
   partsLoader = loadFirmwareParts,
   diagnostics = createInstallerDiagnostics(),
   reporter = installerSentryReporter,
+  successReporter = reportInstallerSuccess,
   protocolFactory = createSerialProtocol,
   esptool = createEsptoolAdapter({ diagnostics }),
   requestPort = (transport) => requestInstallerPort(navigatorApi, { transport }),
@@ -65,6 +67,7 @@ export function createInstallerSession({
   let action = null
   let attempt = 0
   let confirmed = false
+  let flashedAction = null
   let operationController = null
   // One post-flash stage replaces two booleans that could disagree.
   let postFlashStage = 'none'
@@ -112,6 +115,8 @@ export function createInstallerSession({
   })
 
   function completeAttempt(patch = {}) {
+    const completedAction = flashedAction
+    flashedAction = null
     postFlashStage = 'none'
     failureReporting.complete()
     update({
@@ -119,6 +124,11 @@ export function createInstallerSession({
       diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null, ...patch,
     })
     try { diagnostics.destroy?.() } catch {}
+    if (completedAction) {
+      try {
+        Promise.resolve(successReporter({ action: completedAction, boardId: expectedHardwareModel })).catch(() => {})
+      } catch {}
+    }
   }
 
   async function releaseConnections({ clearDevice = false } = {}) {
@@ -275,6 +285,7 @@ export function createInstallerSession({
   async function connect(selectedTransport = transport) {
     transport = selectedTransport
     const currentAttempt = ++attempt
+    flashedAction = null
     confirmed = false
     postFlashStage = 'none'
     operationController?.abort()
@@ -483,6 +494,8 @@ export function createInstallerSession({
             }
           },
         })
+        if (!isCurrent(currentAttempt)) return state
+        flashedAction = action.action
         postFlashStage = 'awaiting-app'
         protocol = null
         await reconnectGrantedPort(currentAttempt)
@@ -758,6 +771,7 @@ export function createInstallerSession({
   async function performCancellation() {
     if (!state.safeToDisconnect) return state
     attempt += 1
+    flashedAction = null
     confirmed = false
     postFlashStage = 'none'
     operationController?.abort()

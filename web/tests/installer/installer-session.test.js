@@ -29,6 +29,59 @@ function e1001Configuration() {
 
 
 describe('installer session', () => {
+  it.each(['install', 'reinstall', 'update-firmware'])('notifies once after verified %s, including reconnection', async (kind) => {
+    const before = kind === 'install'
+      ? { open: vi.fn().mockRejectedValue(new Error('no app')), close: vi.fn() }
+      : appProtocol(kind === 'reinstall' ? { firmwareLayoutVersion: 2 } : { firmwareVersion: '1.0.0' })
+    const after = appProtocol()
+    const successReporter = vi.fn()
+    const session = createInstallerSession({
+      configuration, successReporter, requestPort: async () => ({}),
+      navigatorApi: {}, releaseLoader: async () => release,
+      protocolFactory: vi.fn().mockReturnValueOnce(before).mockReturnValue(after),
+      partsLoader: async () => ({ eraseFlash: true, parts: [] }),
+      esptool: { identify: async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} }), flash: vi.fn() },
+    })
+    await session.connect()
+    if (kind === 'install') await session.confirmDevice()
+    expect(successReporter).not.toHaveBeenCalled()
+    await session.reconnect()
+    expect(session.getState().phase).toBe('complete')
+    expect(successReporter).toHaveBeenCalledExactlyOnceWith({ action: kind, boardId: BOARD_IDS.E1002 })
+    await session.retrySetup()
+    await session.reconnect()
+    expect(successReporter).toHaveBeenCalledOnce()
+  })
+
+  it.each(['wanted', 'old'])('does not notify on a settings-only visit (%s)', async (digest) => {
+    const successReporter = vi.fn()
+    const session = createInstallerSession({ configuration, successReporter,
+      requestPort: async () => ({}), releaseLoader: async () => release,
+      protocolFactory: () => appProtocol({ digest }),
+    })
+    await session.connect()
+    expect(session.getState().phase).toBe('complete')
+    expect(successReporter).not.toHaveBeenCalled()
+  })
+
+  it.each(['throw', 'reject'])('notification failure never changes successful installation (%s)', async (failure) => {
+    const successReporter = vi.fn(() => {
+      if (failure === 'throw') throw new Error('notification unavailable')
+      return Promise.reject(new Error('notification unavailable'))
+    })
+    const session = createInstallerSession({ configuration, successReporter, navigatorApi: {},
+      requestPort: async () => ({}), releaseLoader: async () => release,
+      protocolFactory: vi.fn().mockReturnValueOnce(appProtocol({ firmwareVersion: '1.0.0' })).mockReturnValue(appProtocol()),
+      partsLoader: async () => ({ parts: [] }),
+      esptool: { identify: async () => ({ chipFamily: 'ESP32-S3', transport: {} }), flash: vi.fn() },
+    })
+    await session.connect()
+    await session.reconnect()
+    expect(successReporter).toHaveBeenCalledOnce()
+    expect(session.getState().phase).toBe('complete')
+    expect(session.getState().error).toBeNull()
+  })
+
   it.each([BOARD_IDS.E1001, BOARD_IDS.E1002, BOARD_IDS.E1003])(
     'uses the current clock after five hours at Wi-Fi on %s', async (boardId) => {
     let clock = 1787932800000
