@@ -10,16 +10,18 @@ const request = (options = {}) => new Request('https://reports.example/report', 
 })
 
 describe('installer report relay', () => {
-  it.each([true, false])('limits failure counting independently of Sentry delivery (%s)', async success => {
+  it.each([[true, 200], [false, 200], [true, 429], [true, 500]])('limits failure counting independently of Sentry delivery (%s, %s)', async (success, status) => {
     const pending = []
     const receive = vi.fn(async () => new Response(null, { status: 204 }))
     const limit = vi.fn(async () => ({ success }))
     const env = { SUCCESS_RATE_LIMITER: { limit }, PROJECT_ACTIVITY: { idFromName: id => id, get: () => ({ fetch: receive }) } }
-    const response = await worker.fetch(request(), env, { waitUntil: task => pending.push(task) }, async () => new Response(null, { status: 200 }))
+    const response = await worker.fetch(request(), env, { waitUntil: task => pending.push(task) }, async () => new Response(null, { status }))
     await Promise.all(pending)
-    expect(response.status).toBe(200)
-    expect(limit).toHaveBeenCalledWith({ key: 'failure-reports' })
-    expect(receive).toHaveBeenCalledTimes(success ? 1 : 0)
+    expect(response.status).toBe(status)
+    expect(pending).toHaveLength(status === 200 ? 1 : 0)
+    if (status === 200) expect(limit).toHaveBeenCalledWith({ key: 'failure-reports' })
+    else expect(limit).not.toHaveBeenCalled()
+    expect(receive).toHaveBeenCalledTimes(success && status === 200 ? 1 : 0)
   })
   it('keeps Sentry delivery successful when the activity binding fails synchronously', async () => {
     const pending = []
