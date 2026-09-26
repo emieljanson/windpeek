@@ -61,7 +61,7 @@ jobs:
         working-directory: workers/installer-reports
         run: |
           npm ci
-          npm run deploy -- --dry-run
+          npm test
 
       - name: Install browser test runtime
         if: steps.previews.outputs.cache-hit != 'true'
@@ -380,7 +380,7 @@ jobs:
             exit 1
           }
 
-          node --input-type=module -e "import { DSN } from './workers/installer-reports/src/index.js'; if (process.env.VITE_SENTRY_DSN !== DSN) throw new Error('Installer relay DSN does not match the website');"
+          node --input-type=module -e "import { DSN } from './workers/installer-reports/src/constants.js'; if (process.env.VITE_SENTRY_DSN !== DSN) throw new Error('Installer relay DSN does not match the website');"
 
       - name: Build website with bundled firmware
         working-directory: web
