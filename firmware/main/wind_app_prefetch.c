@@ -44,14 +44,14 @@ void wind_app_prefetch_spot_capture(wind_app_prefetch_spot_t *snapshot,
     snapshot->show_tide = display->show_tide;
 }
 
-static bool prefetch_swell(const wind_app_prefetch_spot_t *spot, time_t now) {
+static bool prefetch_swell(const wind_app_prefetch_spot_t *spot, time_t now, bool force) {
     char path[128];
     snprintf(path, sizeof(path), "%s.swell", spot->forecast_path);
     const wind_swell_cache_identity_t identity = {
         spot->spot_id, spot->timezone, spot->swell_model};
     wind_swell_t *swell = malloc(sizeof(*swell));
     if (!swell) return false;
-    const bool fresh = wind_swell_cache_load(path, &identity, swell) == ESP_OK &&
+    const bool fresh = !force && wind_swell_cache_load(path, &identity, swell) == ESP_OK &&
         swell->retrieved_at <= now && now - swell->retrieved_at < 6 * 3600;
     const bool ready = fresh ||
         (wind_swell_fetch(&spot->marine, now, swell) == ESP_OK &&
@@ -60,11 +60,11 @@ static bool prefetch_swell(const wind_app_prefetch_spot_t *spot, time_t now) {
     return ready;
 }
 
-static bool prefetch_tide(wind_app_prefetch_spot_t *spot, time_t now) {
+static bool prefetch_tide(wind_app_prefetch_spot_t *spot, time_t now, bool force) {
     const wind_tide_cache_identity_t identity = {spot->spot_id, spot->timezone};
     wind_tide_t *tide = malloc(sizeof(*tide));
     if (!tide) return false;
-    const bool fresh = wind_tide_cache_load(spot->tide_path, &identity, tide) == ESP_OK &&
+    const bool fresh = !force && wind_tide_cache_load(spot->tide_path, &identity, tide) == ESP_OK &&
         tide->retrieved_at <= now && now - tide->retrieved_at < 6 * 3600;
     bool ready = fresh;
     if (!fresh) {
@@ -77,9 +77,11 @@ static bool prefetch_tide(wind_app_prefetch_spot_t *spot, time_t now) {
     return ready;
 }
 
-bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *spot, time_t now) {
+bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *spot, time_t now,
+                                  bool force_refresh) {
     wind_app_outcome_t outcome = {0};
-    esp_err_t result = wind_app_prefetch(&spot->app, false, now, &outcome);
+    const bool retry_due = wind_schedule_retry_is_due(&spot->app.schedule, now, NULL);
+    esp_err_t result = wind_app_prefetch(&spot->app, force_refresh, now, &outcome);
     // The background worker retries every five minutes. Once the ordinary
     // schedule's single retry is spent, a missing cache still needs recovery.
     if (result == ESP_OK && !outcome.attempted_fetch && !outcome.used_cache &&
@@ -88,8 +90,24 @@ bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *spot, time_t now) {
     if (result != ESP_OK || (outcome.attempted_fetch && outcome.fetch_result != ESP_OK))
         ESP_LOGW(TAG, "Background forecast for %s failed: %s", spot->spot_id,
                  esp_err_to_name(result != ESP_OK ? result : outcome.fetch_result));
-    const bool swell_ready = !spot->show_swell || prefetch_swell(spot, now);
-    const bool tide_ready = !spot->show_tide || prefetch_tide(spot, now);
-    return result == ESP_OK && (outcome.used_cache || outcome.published_forecast) &&
+    // A new forecast window needs matching marine data, even just after midnight.
+    const bool refresh_marine = force_refresh || outcome.published_forecast;
+    const bool swell_ready = !spot->show_swell || prefetch_swell(spot, now, refresh_marine);
+    const bool tide_ready = !spot->show_tide || prefetch_tide(spot, now, refresh_marine);
+    const bool ready = result == ESP_OK && outcome.fetch_result == ESP_OK &&
+        (outcome.used_cache || outcome.published_forecast) &&
         swell_ready && tide_ready;
+    // A forced round can fail before a spot's own schedule is due. Marine
+    // failures also deserve the same single retry as a failed wind request.
+    if (!ready && !retry_due && spot->app.schedule.retry_at == 0) {
+        const int64_t boundary = wind_schedule_latest_boundary(spot->timezone, now);
+        wind_schedule_schedule_retry(&spot->app.schedule, boundary, now + 5 * 60);
+        wind_schedule_state_store(spot->schedule_path, &spot->app.schedule);
+    }
+    if ((!swell_ready || !tide_ready) && outcome.fetch_result == ESP_OK) {
+        outcome.attempted_fetch = true;
+        outcome.fetch_result = ESP_FAIL;
+    }
+    spot->outcome = outcome;
+    return ready;
 }

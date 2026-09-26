@@ -65,6 +65,7 @@ typedef enum {
     REFRESH_DISPLAY,
     PREFETCH_ONLY,
     DISPLAY_CACHED,
+    DISPLAY_PREFETCHED,
     VERIFY_SETUP,
 } refresh_mode_t;
 
@@ -74,7 +75,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     if (!app || !app->initialized || now <= 0) {
         return ESP_ERR_INVALID_ARG;
     }
-    wind_app_outcome_t local = {.fetch_result = ESP_OK};
+    wind_app_outcome_t local = mode == DISPLAY_PREFETCHED && outcome
+        ? *outcome : (wind_app_outcome_t){.fetch_result = ESP_OK};
     wind_forecast_t active;
     bool have_active = wind_cache_load(app->config.forecast_cache_path,
                                        &app->config.identity, &active) == ESP_OK;
@@ -101,8 +103,9 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     // scheduled attempt so a transient failure still earns its own one retry.
     bool retry_due = pending_retry_due && !due;
     bool initial_fetch_due = !have_active && app->schedule.last_attempted_boundary == 0;
-    if (mode != DISPLAY_CACHED && (force_refresh || due || coverage_refresh_due || retry_due ||
-                        initial_fetch_due)) {
+    const bool may_fetch = mode != DISPLAY_CACHED && mode != DISPLAY_PREFETCHED;
+    if (may_fetch && (force_refresh || due || coverage_refresh_due || retry_due ||
+                     initial_fetch_due)) {
         if (coverage_refresh_due) {
             app->coverage_refresh_attempted = true;
             app->coverage_refresh_cache_retrieved_at = active.retrieved_at;
@@ -246,4 +249,9 @@ esp_err_t wind_app_run_setup(wind_app_t *app, int64_t now, wind_app_outcome_t *o
 esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
                                wind_app_outcome_t *outcome) {
     return run_internal(app, DISPLAY_CACHED, false, now, outcome);
+}
+
+esp_err_t wind_app_show_prefetched(wind_app_t *app, int64_t now,
+                                  wind_app_outcome_t *outcome) {
+    return run_internal(app, DISPLAY_PREFETCHED, false, now, outcome);
 }

@@ -71,6 +71,9 @@ esp_err_t wind_app_run_setup(wind_app_t *app, int64_t now, wind_app_outcome_t *o
 esp_err_t wind_app_prefetch(wind_app_t *app, bool force_refresh, int64_t now,
                             wind_app_outcome_t *outcome);
 esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t *outcome);
+// Present a completed fetch without another request; preserve its failure state.
+esp_err_t wind_app_show_prefetched(wind_app_t *app, int64_t now,
+                                  wind_app_outcome_t *outcome);
 esp_err_t wind_app_configure_runtime(void);
 esp_err_t wind_app_start(void);
 bool wind_app_has_cached_start(void);

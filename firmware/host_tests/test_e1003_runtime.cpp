@@ -10,6 +10,7 @@
 
 extern "C" {
 #include "wind_app.h"
+#include "wind_app_status.h"
 #include "wind_overview.h"
 #include "wind_app_runtime.h"
 #include "wind_quick_cache.h"
@@ -33,7 +34,10 @@ int quick_displays = 0;
 wind_renderer_dashboard_t last_dashboard{};
 std::string last_spot;
 std::map<std::string, int> fetches;
+std::map<std::string, int> tide_fetches, swell_fetches;
 std::string failed_spot;
+std::string failed_tide_spot;
+bool supported_tide = false;
 std::vector<uint8_t> panel;
 std::vector<uint8_t> pending_panel;
 wind_display_config_t display_config{};
@@ -142,18 +146,42 @@ void open_meteo_knmi_provider_init(wind_provider_t *provider, open_meteo_knmi_co
     *provider = {fetch_wind, config};
 }
 static esp_err_t fetch_tide(void *context, int64_t now, wind_tide_t *out) {
-    if (!online) return ESP_ERR_TIMEOUT;
     const auto *config = static_cast<open_meteo_marine_config_t *>(context);
+    ++tide_fetches[config->spot_id];
+    if (!online || failed_tide_spot == config->spot_id) return ESP_ERR_TIMEOUT;
     wind_tide_clear(out);
     strcpy(out->spot_id, config->spot_id); strcpy(out->timezone, config->timezone);
     strcpy(out->provider, "open-meteo"); out->retrieved_at = now;
     out->capability = WIND_TIDE_UNSUPPORTED;
+    if (supported_tide) {
+        out->capability = WIND_TIDE_AVAILABLE;
+        wind_local_datetime_t local{};
+        wind_timezone_from_unix(config->timezone, now, &local);
+        local.hour = local.minute = local.second = 0;
+        int64_t start;
+        wind_timezone_to_unix(config->timezone, &local, &start);
+        out->sample_count = 120;
+        for (size_t i = 0; i < out->sample_count; ++i) {
+            auto &sample = out->samples[i];
+            sample.timestamp = start + i * 3600;
+            wind_timezone_from_unix(config->timezone, sample.timestamp, &local);
+            wind_timezone_format_date(&local, sample.local_date, sizeof(sample.local_date));
+            sample.local_hour = local.hour;
+            sample.sea_level_mm = (i % 12 < 6) ? 500 : -500;
+        }
+        out->extremum_count = 1;
+        out->extrema[0].timestamp = start;
+        strcpy(out->extrema[0].local_date, out->samples[0].local_date);
+        out->extrema[0].is_high = 1;
+        out->extrema[0].sea_level_mm = 500;
+    }
     return ESP_OK;
 }
 void open_meteo_marine_provider_init(wind_tide_provider_t *provider, open_meteo_marine_config_t *config) {
     *provider = {fetch_tide, config};
 }
 esp_err_t wind_swell_fetch(const open_meteo_marine_config_t *config, int64_t now, wind_swell_t *out) {
+    ++swell_fetches[config->spot_id];
     if (!online) return ESP_ERR_TIMEOUT;
     *out = {};
     strcpy(out->spot_id, config->spot_id); strcpy(out->timezone, config->timezone);
@@ -180,6 +208,8 @@ protected:
         installed_configuration_reset_host_storage();
         clock_now = 1787544000; online = true; fail_display = false; battery = 75;
         displays = renders = quick_displays = 0; fetches.clear(); failed_spot.clear(); panel.clear();
+        tide_fetches.clear(); swell_fetches.clear();
+        failed_tide_spot.clear(); supported_tide = false;
         during_render = nullptr;
         during_display = nullptr;
         during_fetch = nullptr;
@@ -264,8 +294,8 @@ TEST_F(E1003Runtime, InstallationOverviewEverySpotAndEveryDayRemainAvailableOffl
 }
 
 TEST_F(E1003Runtime, FailedSpotRecoversWithoutBlockingOtherSpotsAndSurvivesRestart) {
-    ASSERT_EQ(wind_app_start(), ESP_OK);
     failed_spot = "spot-3";
+    ASSERT_EQ(wind_app_start(), ESP_OK);
     EXPECT_EQ(wind_app_prefetch_other_spots(), ESP_ERR_NOT_FOUND);
     EXPECT_EQ(fetches.size(), 10u);
     EXPECT_TRUE(wind_app_spot_requires_network(2));
@@ -452,6 +482,8 @@ TEST_F(E1003Runtime, SwellAgeInvalidatesQuickFrameEvenWhenWindIsStillFresh) {
     ASSERT_EQ(wind_swell_fetch(&marine, clock_now - 6 * 3600 + 60, &swell), ESP_OK);
     ASSERT_EQ(wind_swell_cache_store(WIND_FORECAST_CACHE_PATH ".swell", &swell), ESP_OK);
     ASSERT_EQ(wind_app_start(), ESP_OK);
+    ASSERT_EQ(wind_swell_cache_store(WIND_FORECAST_CACHE_PATH ".swell", &swell), ESP_OK);
+    ASSERT_EQ(wind_app_select_spot(0), ESP_OK);
     EXPECT_EQ(last_dashboard.state, WIND_RENDERER_FRESH);
     ASSERT_EQ(wind_app_show_overview(), ESP_OK);
     online = false;
@@ -488,6 +520,7 @@ TEST_F(E1003Runtime, ForecastPublishedDuringOverviewDisplayInvalidatesItsPrepare
 
 TEST_F(E1003Runtime, NavigationDuringBackgroundFetchKeepsTheNewSelection) {
     ASSERT_EQ(wind_app_start(), ESP_OK);
+    clock_now += 86400;
     int navigated_displays = 0;
     during_fetch = [&] {
         ASSERT_EQ(wind_app_select_spot(4), ESP_OK);
@@ -532,11 +565,15 @@ TEST_F(E1003Runtime, PreparedFifthDaySurvivesOfflineNavigationAndReboot) {
         ASSERT_EQ(wind_app_toggle_day(4), ESP_OK);
         EXPECT_GT(quick_displays, before_focus);
         const auto fifth_day = panel;
+        const auto fifth_day_wind = last_dashboard.days[0].samples[0].sustained_kt;
         EXPECT_NE(fifth_day, five_days);
         online = false;
         reboot();
         ASSERT_EQ(wind_app_start(), ESP_OK);
-        EXPECT_EQ(panel, fifth_day);
+        // The refreshed screen now includes the failed-download indicator.
+        EXPECT_EQ(last_dashboard.visible_day_count, 1);
+        EXPECT_EQ(last_dashboard.days[0].samples[0].sustained_kt, fifth_day_wind);
+        EXPECT_TRUE(last_dashboard.refresh_failed);
         ASSERT_EQ(wind_app_toggle_day(4), ESP_OK);
         EXPECT_EQ(panel, five_days);
     }
@@ -664,4 +701,125 @@ TEST_F(E1003Runtime, RefreshedOverviewImmediatelyReusesItsPreparedImage) {
     ASSERT_EQ(wind_app_show_overview(), ESP_OK);
     EXPECT_EQ(quick_displays, previous_quick + 1);
     EXPECT_EQ(panel, refreshed);
+}
+
+TEST_F(E1003Runtime, RefreshUpdatesAllTenSpotsAndMarineDataFromEitherView) {
+    supported_tide = true;
+    config.display.show_tide = true;
+    config.display.swell_size = 1;
+    for (auto &spot : config.additional_spots) spot.display = config.display;
+    ASSERT_EQ(installed_configuration_promote_setup(&config, "test", "test-only"), ESP_OK);
+    install();
+    for (bool overview : {false, true}) {
+        if (overview) ASSERT_EQ(wind_app_show_overview(), ESP_OK);
+        clock_now += 86400;
+        fetches.clear(); tide_fetches.clear(); swell_fetches.clear();
+        ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+        EXPECT_EQ(fetches.size(), 10u);
+        EXPECT_EQ(tide_fetches.size(), 10u);
+        EXPECT_EQ(swell_fetches.size(), 10u);
+        for (size_t index = 0; index < 10; ++index) {
+            const auto &spot = index ? config.additional_spots[index - 1].spot : config.spot;
+            SCOPED_TRACE(spot.id);
+            EXPECT_EQ(fetches[spot.id], 1);
+            EXPECT_EQ(tide_fetches[spot.id], 1);
+            EXPECT_EQ(swell_fetches[spot.id], 1);
+            EXPECT_FALSE(wind_app_spot_requires_network(index));
+        }
+        ASSERT_EQ(wind_app_select_spot(9), ESP_OK);
+        ASSERT_EQ(wind_app_toggle_day(4), ESP_OK);
+        EXPECT_TRUE(last_dashboard.tide_available);
+        EXPECT_GT(last_dashboard.tide_sample_count, 0);
+        ASSERT_EQ(wind_app_toggle_day(4), ESP_OK);
+    }
+}
+
+TEST_F(E1003Runtime, RefreshContinuesAfterFailedSpotAndRecoversItsCache) {
+    install();
+    clock_now += 86400;
+    failed_spot = "spot-2";
+    fetches.clear();
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+    EXPECT_EQ(fetches.size(), 10u);
+    wind_app_status_t status{};
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.stage, WIND_REFRESH_FAILED);
+    EXPECT_EQ(status.fetch_result, ESP_ERR_TIMEOUT);
+    EXPECT_TRUE(wind_app_spot_requires_network(1));
+    for (size_t index = 2; index < 10; ++index)
+        EXPECT_FALSE(wind_app_spot_requires_network(index));
+    failed_spot.clear();
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+    EXPECT_FALSE(wind_app_spot_requires_network(1));
+}
+
+TEST_F(E1003Runtime, RefreshKeepsNavigationAvailableAndRendersLatestSelection) {
+    install();
+    during_fetch = [&] { ASSERT_EQ(wind_app_select_spot(5), ESP_OK); };
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+    size_t selected = 0;
+    ASSERT_EQ(wind_spots_load_selected(&selected), ESP_OK);
+    EXPECT_EQ(selected, 5u);
+    EXPECT_EQ(last_spot, "Spot 6");
+}
+
+TEST_F(E1003Runtime, ScheduledRefreshUpdatesAllSpotsEvenWhenTheirCachesAreFresh) {
+    install();
+    clock_now += 60;
+    fetches.clear();
+    ASSERT_EQ(wind_app_refresh(false), ESP_OK);
+    ASSERT_EQ(fetches.size(), 10u);
+    for (const auto &[spot, count] : fetches) EXPECT_EQ(count, 1) << spot;
+}
+
+TEST_F(E1003Runtime, HiddenTideFailureRetriesWithoutWaitingForSelectedSpotSchedule) {
+    for (auto &spot : config.additional_spots) spot.display.show_tide = true;
+    ASSERT_EQ(installed_configuration_promote_setup(&config, "test", "test-only"), ESP_OK);
+    install();
+    clock_now += 60;
+    failed_tide_spot = "spot-10";
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
+    EXPECT_EQ(wind_app_seconds_until_next_wake(), 300);
+    clock_now += 300;
+    failed_tide_spot.clear();
+    tide_fetches.clear();
+    ASSERT_EQ(wind_app_refresh(false), ESP_OK);
+    EXPECT_EQ(tide_fetches["spot-10"], 1);
+    EXPECT_GT(wind_app_seconds_until_next_wake(), 300);
+}
+
+TEST_F(E1003Runtime, NavigationDoesNotDownloadHalfOfANewDayBeforeTheRefreshRound) {
+    install();
+    clock_now += 86400;
+    fetches.clear(); tide_fetches.clear(); swell_fetches.clear();
+    ASSERT_EQ(wind_app_select_spot(9), ESP_OK);
+    EXPECT_TRUE(fetches.empty());
+    EXPECT_TRUE(tide_fetches.empty());
+    EXPECT_TRUE(swell_fetches.empty());
+    ASSERT_EQ(wind_app_refresh(false), ESP_OK);
+    EXPECT_EQ(fetches.size(), 10u);
+}
+
+TEST_F(E1003Runtime, SingleSpotRefreshDoesNotDuplicateDownloads) {
+    config.additional_spot_count = 0;
+    config.version = INSTALLED_CONFIGURATION_VERSION;
+    ASSERT_EQ(installed_configuration_promote_setup(&config, "test", "test-only"), ESP_OK);
+    ASSERT_EQ(wind_app_activate_configuration(&config), ESP_OK);
+    ASSERT_EQ(wind_app_refresh(false), ESP_OK);
+    EXPECT_EQ(fetches.size(), 1u);
+    EXPECT_EQ(fetches[config.spot.id], 1);
+}
+
+TEST_F(E1003Runtime, ChangedConfigurationCancelsTheOldRefreshBeforeDisplayingIt) {
+    install();
+    const int before = displays;
+    during_fetch = [&] {
+        config.additional_spot_count = 0;
+        config.version = INSTALLED_CONFIGURATION_VERSION;
+        ASSERT_EQ(installed_configuration_promote_setup(&config, "test", "test-only"), ESP_OK);
+        ASSERT_EQ(wind_app_activate_configuration(&config), ESP_OK);
+    };
+    EXPECT_EQ(wind_app_refresh(true), ESP_ERR_INVALID_STATE);
+    EXPECT_EQ(displays, before);
+    ASSERT_EQ(wind_app_refresh(true), ESP_OK);
 }

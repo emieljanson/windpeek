@@ -69,7 +69,7 @@ protected:
 
 TEST_F(BackgroundForecast, MissingCacheRecoversAfterScheduledRetriesAreExhausted) {
     state.wind_cached = false;
-    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_TRUE(state.forced);
     EXPECT_EQ(state.wind_calls, 2);
 }
@@ -78,7 +78,7 @@ TEST_F(BackgroundForecast, FailedAttemptIsNotImmediatelyRepeated) {
     state.wind_cached = false;
     state.wind_attempted = true;
     state.wind_fetch = ESP_ERR_TIMEOUT;
-    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_FALSE(state.forced);
     EXPECT_EQ(state.wind_calls, 1);
 }
@@ -88,15 +88,15 @@ TEST_F(BackgroundForecast, MarineFailuresKeepSetupIncompleteUntilTheyRecover) {
         spot.show_swell = swell;
         spot.show_tide = !swell;
         state.marine_fetch = ESP_ERR_TIMEOUT;
-        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
         state.marine_fetch = ESP_OK;
         state.marine_store = ESP_FAIL;
-        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
         state.marine_store = ESP_OK;
         state.marine_valid = false;
-        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+        EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
         state.marine_valid = true;
-        EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now));
+        EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, false));
     }
 }
 
@@ -104,7 +104,7 @@ TEST_F(BackgroundForecast, FreshMarineCachesDoNotFetchAgain) {
     spot.show_swell = spot.show_tide = true;
     state.marine_cached = true;
     state.marine_fetch = ESP_ERR_TIMEOUT;
-    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_EQ(state.swell_calls, 0);
     EXPECT_EQ(state.tide_calls, 0);
     EXPECT_FALSE(state.forced);
@@ -112,7 +112,7 @@ TEST_F(BackgroundForecast, FreshMarineCachesDoNotFetchAgain) {
 
 TEST_F(BackgroundForecast, WindOnlySpotsDoNotRequestMarineData) {
     state.marine_fetch = ESP_ERR_TIMEOUT;
-    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_EQ(state.swell_calls, 0);
     EXPECT_EQ(state.tide_calls, 0);
 }
@@ -120,7 +120,7 @@ TEST_F(BackgroundForecast, WindOnlySpotsDoNotRequestMarineData) {
 TEST_F(BackgroundForecast, SwellFailureDoesNotPreventTideFetch) {
     spot.show_swell = spot.show_tide = true;
     state.marine_fetch = ESP_ERR_TIMEOUT;
-    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_EQ(state.swell_calls, 1);
     EXPECT_EQ(state.tide_calls, 1);
 }
@@ -128,10 +128,37 @@ TEST_F(BackgroundForecast, SwellFailureDoesNotPreventTideFetch) {
 TEST_F(BackgroundForecast, MissingCacheRespectsPendingRetryDeadline) {
     state.wind_cached = false;
     spot.app.schedule.retry_at = now + 300;
-    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now));
+    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, false));
     EXPECT_FALSE(state.forced);
     EXPECT_EQ(state.wind_calls, 1);
-    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now + 300));
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now + 300, false));
     EXPECT_TRUE(state.forced);
     EXPECT_EQ(state.wind_calls, 3);
+}
+
+TEST_F(BackgroundForecast, ForcedRefreshIncludesFreshMarineCaches) {
+    spot.show_swell = spot.show_tide = true;
+    state.marine_cached = true;
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, true));
+    EXPECT_TRUE(state.forced);
+    EXPECT_EQ(state.wind_calls, 1);
+    EXPECT_EQ(state.swell_calls, 1);
+    EXPECT_EQ(state.tide_calls, 1);
+}
+
+TEST_F(BackgroundForecast, NewWindWindowRefreshesMarineEvenWhenLessThanSixHoursOld) {
+    spot.show_swell = spot.show_tide = true;
+    state.marine_cached = true;
+    state.wind_attempted = true;
+    EXPECT_TRUE(wind_app_prefetch_spot_fetch(&spot, now, false));
+    EXPECT_EQ(state.swell_calls, 1);
+    EXPECT_EQ(state.tide_calls, 1);
+}
+
+TEST_F(BackgroundForecast, FailedWindWithUsableCacheIsStillAnIncompleteRefresh) {
+    state.wind_attempted = true;
+    state.wind_fetch = ESP_ERR_TIMEOUT;
+    EXPECT_FALSE(wind_app_prefetch_spot_fetch(&spot, now, true));
+    EXPECT_TRUE(spot.outcome.used_cache);
+    EXPECT_EQ(spot.outcome.fetch_result, ESP_ERR_TIMEOUT);
 }

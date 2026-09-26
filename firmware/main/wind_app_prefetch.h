@@ -21,9 +21,11 @@ typedef struct {
     char tide_path[96];
     bool show_swell;
     bool show_tide;
+    wind_app_outcome_t outcome;
 } wind_app_prefetch_spot_t;
 
 void wind_app_prefetch_spot_capture(wind_app_prefetch_spot_t *snapshot,
                                     const wind_spot_runtime_t *runtime,
                                     const installed_display_configuration_t *display);
-bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *snapshot, time_t now);
+bool wind_app_prefetch_spot_fetch(wind_app_prefetch_spot_t *snapshot, time_t now,
+                                  bool force_refresh);

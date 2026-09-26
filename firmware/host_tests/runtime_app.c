@@ -11,6 +11,8 @@ time_t runtime_test_time(time_t *out);
 #include "../main/wind_app.c"
 
 void runtime_test_reset(bool preserve_rtc) {
+    free(s_fetch_lock);
+    s_fetch_lock = NULL;
     free(s_spots);
     s_spots = NULL;
     free(s_app_lock);
