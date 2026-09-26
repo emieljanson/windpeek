@@ -58,7 +58,6 @@ typedef struct {
 static QueueHandle_t s_input_commands;
 static atomic_uint s_pending_input_actions;
 static atomic_bool s_interactive_refresh_requested;
-static atomic_int_fast64_t s_last_input_action_us;
 static bool s_input_initial_overview_open;
 static size_t s_input_initial_overview_page;
 static _Atomic(TaskHandle_t) s_setup_forecasts_task;
@@ -316,7 +315,6 @@ static void run_touch_action(wind_touch_action_t action, bool click) {
     if (result!=ESP_OK) ESP_LOGW(TAG,"Touch action failed: %s",esp_err_to_name(result));
     else {
         if (need_network) atomic_store(&s_interactive_refresh_requested, true);
-        atomic_store(&s_last_input_action_us, esp_timer_get_time());
         if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
     }
     power_manager_reset_sleep_timer();
@@ -332,7 +330,6 @@ static void navigate_spot_button(int direction) {
     if (result!=ESP_OK) ESP_LOGW(TAG,"Spot navigation failed: %s",esp_err_to_name(result));
     else {
         if (need_network) atomic_store(&s_interactive_refresh_requested, true);
-        atomic_store(&s_last_input_action_us, esp_timer_get_time());
         if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
     }
     power_manager_reset_sleep_timer();
@@ -343,7 +340,6 @@ static bool queue_input_command(input_command_t command) {
     if (!s_input_commands) return false;
     atomic_fetch_add(&s_pending_input_actions, 1);
     if (xQueueSend(s_input_commands, &command, 0) == pdTRUE) {
-        atomic_store(&s_last_input_action_us, esp_timer_get_time());
         if (s_dashboard_task) xTaskNotifyGive(s_dashboard_task);
         return true;
     }
@@ -601,10 +597,8 @@ static void dashboard_task(void *argument)
             requested = atomic_exchange(&s_interactive_refresh_requested, false);
             if (notified && !requested) continue;
         }
-        // Leave the panel and radio available throughout a short navigation session.
-        while (atomic_load(&s_pending_input_actions) > 0 ||
-               (atomic_load(&s_last_input_action_us) > 0 &&
-                esp_timer_get_time() - atomic_load(&s_last_input_action_us) < INT64_C(30000000))) {
+        // Finish queued input, then refresh all spots without an idle delay.
+        while (atomic_load(&s_pending_input_actions) > 0) {
             (void)dashboard_wait_notified(NULL, 1);
             requested |= atomic_exchange(&s_interactive_refresh_requested, false);
         }
@@ -806,7 +800,6 @@ void app_main(void)
             : wind_app_navigation_requires_network(0);
         if (needs_network || cached_start) {
             atomic_store(&s_interactive_refresh_requested, true);
-            atomic_store(&s_last_input_action_us, esp_timer_get_time());
         }
     }
 #endif

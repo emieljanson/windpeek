@@ -88,6 +88,10 @@ static void set_displayed_view(bool overview, size_t page) {
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_t *outcome);
 static void apply_spot_display(size_t index);
 static esp_err_t clear_panel_confirmation_unlocked(void);
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static esp_err_t prefetch_spots(bool all, bool force);
+static SemaphoreHandle_t s_fetch_lock;
+#endif
 
 static wind_renderer_display_t active_renderer_display(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
@@ -144,10 +148,8 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool force_refres
     const bool tide_is_fresh =
         runtime->have_tide && runtime->tide.retrieved_at <= now &&
         now - runtime->tide.retrieved_at < WIND_TIDE_REFRESH_INTERVAL_SECONDS;
-    // A new spot may already have wind cached but no tide yet. Fetch that
-    // missing row on first visit; otherwise cached-first navigation leaves an
-    // unexplained empty strip until a later scheduled refresh.
-    if ((!allow_fetch && (runtime->have_tide || !wifi_manager_is_connected())) ||
+    // Cached navigation must leave every download to the shared refresh round.
+    if (!allow_fetch ||
         (tide_is_fresh && !force_refresh)) {
         return;
     }
@@ -774,6 +776,12 @@ esp_err_t wind_app_configure_runtime(void) {
         s_runtime_lock = xSemaphoreCreateMutex();
         if (!s_runtime_lock) return ESP_ERR_NO_MEM;
     }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!s_fetch_lock) {
+        s_fetch_lock = xSemaphoreCreateMutex();
+        if (!s_fetch_lock) return ESP_ERR_NO_MEM;
+    }
+#endif
     installed_configuration_t installed;
     if (installed_configuration_load(&installed) != ESP_OK) {
         return ESP_ERR_INVALID_STATE;
@@ -1005,8 +1013,8 @@ bool wind_app_overview_state_if_ready(bool *open,size_t *page) {
     return true;
 }
 
-esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
-                                         wind_provider_diagnostics_t *diagnostics) {
+static esp_err_t preview_configuration(const installed_configuration_t *candidate,
+                                      wind_provider_diagnostics_t *diagnostics) {
     if (diagnostics) memset(diagnostics, 0, sizeof(*diagnostics));
     if (!installed_configuration_validate(candidate)) return ESP_ERR_INVALID_ARG;
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
@@ -1036,6 +1044,20 @@ esp_err_t wind_app_preview_configuration(const installed_configuration_t *candid
     (void)config_manager_set_wind_display_config_transient(&old_display);
     s_ready = false;
     xSemaphoreGive(s_runtime_lock);
+    return result;
+}
+
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate,
+                                         wind_provider_diagnostics_t *diagnostics) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Setup verification writes the same forecast files as a refresh round.
+    if (!s_fetch_lock || xSemaphoreTake(s_fetch_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+#endif
+    const esp_err_t result = preview_configuration(candidate, diagnostics);
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    xSemaphoreGive(s_fetch_lock);
+#endif
     return result;
 }
 
@@ -1103,10 +1125,15 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, wind_app_outcome_
 }
 
 esp_err_t wind_app_refresh(bool force_refresh) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    // Every refresh is a device-wide round, including manual refreshes and wakes.
+    (void)force_refresh;
+    return prefetch_spots(true, true);
+#else
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
         return ESP_ERR_INVALID_STATE;
     }
-    wind_app_outcome_t outcome;
+    wind_app_outcome_t outcome = {0};
     esp_err_t result = wind_app_refresh_unlocked(force_refresh, &outcome);
     xSemaphoreGive(s_runtime_lock);
     if (outcome.published_forecast) {
@@ -1119,6 +1146,7 @@ esp_err_t wind_app_refresh(bool force_refresh) {
         }
     }
     return result;
+#endif
 }
 
 static esp_err_t navigate(int direction, bool absolute) {
@@ -1146,7 +1174,7 @@ static esp_err_t navigate(int direction, bool absolute) {
                         &cached) == ESP_OK;
     bool fetch_before_display = true;
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    fetch_before_display = !have_cache;
+    fetch_before_display = false;
 #endif
     time_t now;
     time(&now);
@@ -1156,7 +1184,7 @@ static esp_err_t navigate(int direction, bool absolute) {
     wind_app_outcome_t outcome = {0};
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     result = have_cache && show_quick_spot(runtime)
-        ? ESP_OK : wind_app_run(&runtime->app, !have_cache, now, &outcome);
+        ? ESP_OK : wind_app_show_cached(&runtime->app, now, &outcome);
 #else
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
 #endif
@@ -1486,19 +1514,6 @@ esp_err_t wind_app_prepare_quick_frames(void) {
     time(&now);
     if (result == ESP_OK && !s_preview_configuration) {
         const size_t count = wind_spots_count();
-        // A timer wake has no interactive input task. Refresh the remaining
-        // spots here so their prepared frames use current source data.
-        if (wifi_manager_is_connected()) {
-            for (size_t index = 0; index < count; ++index) {
-                if (index == s_selected_index) continue;
-                wind_spot_runtime_t *runtime = &s_spots[index];
-                apply_spot_display(index);
-                wind_app_outcome_t outcome = {0};
-                (void)wind_app_prefetch(&runtime->app, false, now, &outcome);
-                load_or_refresh_swell(runtime, false, true, now);
-                load_or_refresh_tide(runtime, false, true, now);
-            }
-        }
         for (size_t rank = 0; rank < count; ++rank) {
             const int offset = rank == 0 ? 0 : (rank & 1u)
                 ? (int)((rank + 1) / 2) : -(int)(rank / 2);
@@ -1540,24 +1555,29 @@ esp_err_t wind_app_prepare_quick_frames(void) {
 #endif
 }
 
-esp_err_t wind_app_prefetch_other_spots(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+static esp_err_t prefetch_spots_unlocked(bool all, bool force) {
+    wind_app_outcome_t outcomes[INSTALLED_CONFIGURATION_MAX_SPOTS] = {0};
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
     esp_err_t result = ensure_ready();
     const size_t count = result == ESP_OK ? wind_spots_count() : 0;
     const size_t selected = s_selected_index;
     const uint64_t configuration = s_overview_configuration;
+    if (all && result == ESP_OK) wind_app_status_begin();
     xSemaphoreGive(s_runtime_lock);
     if (result != ESP_OK) return result;
 
     bool incomplete = false;
-    for (size_t rank = 1; rank < count; ++rank) {
+    bool attempted = false;
+    esp_err_t fetch_result = ESP_OK;
+    wind_provider_diagnostics_t diagnostics = {0};
+    for (size_t rank = all ? 0 : 1; rank < count; ++rank) {
         if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
             return ESP_ERR_INVALID_STATE;
         result = ensure_ready();
         if (result != ESP_OK || s_preview_configuration ||
-            power_manager_is_installer_active() || !wifi_manager_is_connected() ||
+            power_manager_is_installer_active() ||
             wind_spots_count() != count || s_overview_configuration != configuration) {
             xSemaphoreGive(s_runtime_lock);
             return result != ESP_OK ? result : ESP_ERR_INVALID_STATE;
@@ -1572,7 +1592,16 @@ esp_err_t wind_app_prefetch_other_spots(void) {
         time(&now);
         xSemaphoreGive(s_runtime_lock);
 
-        if (!wind_app_prefetch_spot_fetch(&spot, now)) incomplete = true;
+        if (!wind_app_prefetch_spot_fetch(&spot, now, force)) incomplete = true;
+        if (spot.outcome.attempted_fetch) {
+            attempted = true;
+            // Keep the first failure instead of overwriting it with a later success.
+            if (fetch_result == ESP_OK) {
+                fetch_result = spot.outcome.fetch_result;
+                open_meteo_knmi_get_diagnostics(&diagnostics);
+            }
+        }
+        outcomes[index] = spot.outcome;
 
         if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
             return ESP_ERR_INVALID_STATE;
@@ -1599,11 +1628,55 @@ esp_err_t wind_app_prefetch_other_spots(void) {
     }
     if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
         return ESP_ERR_INVALID_STATE;
-    if (!s_preview_configuration && overview_open() &&
-        s_overview_configuration == configuration)
+    if (s_preview_configuration || s_overview_configuration != configuration ||
+        wind_spots_count() != count) {
+        xSemaphoreGive(s_runtime_lock);
+        return ESP_ERR_INVALID_STATE;
+    }
+    bool published = false;
+    if (all) {
+        time_t now;
+        time(&now);
+        wind_app_outcome_t *outcome = &outcomes[s_selected_index];
+        if (overview_open())
+            result = render_overview_unlocked(overview_page(), OVERVIEW_INTERACTIVE, false);
+        else {
+            apply_spot_display(s_selected_index);
+            result = wind_app_show_prefetched(&s_spots[s_selected_index].app, now, outcome);
+        }
+        s_last_render_succeeded = result == ESP_OK &&
+            (overview_open() || outcome->freshness != WIND_FRESHNESS_UNAVAILABLE);
+        wind_app_status_finish(result, incomplete && fetch_result == ESP_OK ? ESP_FAIL : fetch_result,
+                               attempted, s_last_render_succeeded && !incomplete, &diagnostics);
+        for (size_t index = 0; index < count; ++index)
+            published |= outcomes[index].published_forecast;
+    } else if (overview_open()) {
         (void)render_overview_unlocked(overview_page(), OVERVIEW_INTERACTIVE, false);
+    }
     xSemaphoreGive(s_runtime_lock);
+    if (published) {
+        time_t now;
+        time(&now);
+        (void)wind_analytics_maybe_send(now);
+    }
+    if (all) return result;
     return incomplete ? ESP_ERR_NOT_FOUND : ESP_OK;
+}
+
+static esp_err_t prefetch_spots(bool all, bool force) {
+    // Setup recovery and scheduled refreshes share cache files. Serialize their
+    // downloads, while leaving the runtime lock available to navigation.
+    if (!s_fetch_lock || xSemaphoreTake(s_fetch_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    const esp_err_t result = prefetch_spots_unlocked(all, force);
+    xSemaphoreGive(s_fetch_lock);
+    return result;
+}
+#endif
+
+esp_err_t wind_app_prefetch_other_spots(void) {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    return prefetch_spots(false, false);
 #else
     return ESP_ERR_NOT_SUPPORTED;
 #endif
@@ -1646,8 +1719,13 @@ int wind_app_seconds_until_next_wake(void) {
         size_t count=wind_spots_count();
         for (size_t index=0; index<count; ++index)
             deadlines[index]=wind_schedule_next_attempt(&s_spots[index].app.schedule, now);
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+        for (size_t index = 0; index < count; ++index)
+            if (deadlines[index] > 0 && deadlines[index] < next) next = deadlines[index];
+#else
         next=wind_overview_next_wake(deadlines,count,s_selected_index,
                                      overview_open(),overview_page(),next);
+#endif
     }
     if (locked) xSemaphoreGive(s_runtime_lock);
     return next > now ? (int)(next - now) : 1;

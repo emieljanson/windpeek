@@ -282,6 +282,7 @@ add_wind_test(
   wind_app_prefetch_test
   test_wind_app_prefetch.cpp
   ../main/wind_app_prefetch.c
+  ../main/wind_schedule.c
 )
 
 set(WIND_FONT_SOURCES
