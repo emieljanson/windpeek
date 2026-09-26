@@ -21,5 +21,6 @@ export function ownerCommand(update, ownerId) {
       String(message.from?.id) !== ownerId || message.from?.is_bot ||
       typeof message.text !== 'string') return null
   const command = message.text.trim().split(/\s+/)[0].split('@')[0].toLowerCase()
+  if (!['/stats', '/help', '/start'].includes(command)) return null
   return { updateId: update.update_id, command: command === '/stats' ? 'stats' : 'help' }
 }

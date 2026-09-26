@@ -14,9 +14,23 @@ const setup = () => {
 }
 
 describe('public activity ingestion', () => {
+  it.each([null, false, 0, '', []])('rejects invalid JSON event shapes with 400: %j', async data => {
+    for (const path of ['/success', '/visit']) {
+      const { env, receive } = setup()
+      expect((await worker.fetch(request(data, 'https://windpeek.com', path), env)).status).toBe(400)
+      expect(receive).not.toHaveBeenCalled()
+    }
+  })
+  it('reports missing webhook rate limiter as unavailable', async () => {
+    const { env } = setup()
+    delete env.SUCCESS_RATE_LIMITER
+    Object.assign(env, { TELEGRAM_WEBHOOK_SECRET: 'test', TELEGRAM_CHAT_ID: '123' })
+    expect((await worker.fetch(request({}, 'https://windpeek.com', '/telegram'), env)).status).toBe(503)
+  })
   it('forwards only validated metadata to the ledger', async () => {
     const { env, receive } = setup()
     expect((await worker.fetch(request(), env)).status).toBe(204)
+    expect(new URL(receive.mock.calls[0][0].url).pathname).toBe('/event')
     expect(await receive.mock.calls[0][0].json()).toEqual({ eventId: event.eventId, action: 'install' })
   })
   it.each([
@@ -47,15 +61,20 @@ describe('public activity ingestion', () => {
     expect(receive).not.toHaveBeenCalled()
   })
   it('allows production preflight without requiring secrets', async () => {
-    expect((await worker.fetch(new Request('https://relay.example/success', {
+    const response = await worker.fetch(new Request('https://relay.example/success', {
       method: 'OPTIONS', headers: { origin: 'https://windpeek.com' },
-    }), {})).status).toBe(204)
+    }), {})
+    expect(response.status).toBe(204)
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://windpeek.com')
+    expect(response.headers.get('Access-Control-Allow-Methods')).toBe('POST, OPTIONS')
+    expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type')
   })
   it('dispatches weekly cron and propagates delivery failures', async () => {
     const { env, receive } = setup()
     const tasks = []
     await worker.scheduled({ scheduledTime: 123 }, env, { waitUntil: p => tasks.push(p) })
     await Promise.all(tasks)
+    expect(new URL(receive.mock.calls[0][0].url).pathname).toBe('/weekly')
     expect(await receive.mock.calls[0][0].json()).toEqual({ scheduledTime: 123 })
     receive.mockResolvedValue(new Response(null, { status: 502 }))
     await worker.scheduled({ scheduledTime: 123 }, env, { waitUntil: p => tasks.push(p) })

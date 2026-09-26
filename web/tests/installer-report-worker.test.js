@@ -10,11 +10,23 @@ const request = (options = {}) => new Request('https://reports.example/report', 
 })
 
 describe('installer report relay', () => {
+  it.each([true, false])('limits failure counting independently of Sentry delivery (%s)', async success => {
+    const pending = []
+    const receive = vi.fn(async () => new Response(null, { status: 204 }))
+    const limit = vi.fn(async () => ({ success }))
+    const env = { SUCCESS_RATE_LIMITER: { limit }, PROJECT_ACTIVITY: { idFromName: id => id, get: () => ({ fetch: receive }) } }
+    const response = await worker.fetch(request(), env, { waitUntil: task => pending.push(task) }, async () => new Response(null, { status: 200 }))
+    await Promise.all(pending)
+    expect(response.status).toBe(200)
+    expect(limit).toHaveBeenCalledWith({ key: 'failure-reports' })
+    expect(receive).toHaveBeenCalledTimes(success ? 1 : 0)
+  })
   it('keeps Sentry delivery successful when the activity binding fails synchronously', async () => {
     const pending = []
-    const env = { PROJECT_ACTIVITY: { idFromName() { throw new Error('unavailable') } } }
+    const env = { SUCCESS_RATE_LIMITER: { limit: async () => ({ success: true }) }, PROJECT_ACTIVITY: { idFromName() { throw new Error('unavailable') } } }
     const response = await worker.fetch(request(), env, { waitUntil: task => pending.push(task) }, async () => new Response(null, { status: 200 }))
     expect(response.status).toBe(200)
+    expect(pending).toHaveLength(1)
     await Promise.all(pending)
   })
   it('disables invocation logs and observability', () => {

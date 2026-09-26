@@ -48,9 +48,10 @@ describe('installer session', () => {
     await session.reconnect()
     expect(session.getState().phase).toBe('complete')
     expect(successReporter).toHaveBeenCalledExactlyOnceWith({ action: kind, boardId: BOARD_IDS.E1002 })
-    await session.retrySetup()
     await session.reconnect()
     expect(successReporter).toHaveBeenCalledOnce()
+    expect(session.getState().phase).toBe('complete')
+    expect(session.getState().error).toBeNull()
   })
 
   it.each(['wanted', 'old'])('does not notify on a settings-only visit (%s)', async (digest) => {

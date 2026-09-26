@@ -10,7 +10,7 @@ describe('anonymous visits', () => {
   it('counts a tab session once, and starts a new visit after 30 minutes', async () => {
     const opts = options()
     await reportVisit(opts)
-    await reportVisit(opts)
+    await reportVisit({ ...opts, now: opts.now + 600000 })
     expect(opts.fetchImpl).toHaveBeenCalledOnce()
     expect(Object.keys(JSON.parse(opts.fetchImpl.mock.calls[0][1].body))).toEqual(['eventId'])
     await reportVisit({ ...opts, now: opts.now + 1800000 })
@@ -30,6 +30,10 @@ describe('anonymous visits', () => {
 
 describe('bot boundaries and honest summaries', () => {
   const update = { update_id: 1, message: { chat: { id: 123, type: 'private' }, from: { id: 123 }, text: '/stats' } }
+  it('welcomes /start and ignores ordinary text and unknown commands', () => {
+    expect(ownerCommand({ ...update, message: { ...update.message, text: '/start' } }, '123')?.command).toBe('help')
+    for (const text of ['hi', '/unknown']) expect(ownerCommand({ ...update, message: { ...update.message, text } }, '123')).toBeNull()
+  })
   it('accepts only the private owner chat and sender', () => {
     expect(ownerCommand(update, '123')).toEqual({ updateId: 1, command: 'stats' })
     expect(ownerCommand(update, '456')).toBeNull()

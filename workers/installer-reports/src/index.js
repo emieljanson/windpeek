@@ -44,7 +44,7 @@ export default {
       if (!env.PROJECT_ACTIVITY || !env.SUCCESS_RATE_LIMITER || !env.VISIT_RATE_LIMITER) return reply(503)
       try {
         const event = await readJson(request, 512)
-        if (!event) return reply(413)
+        if (event === undefined) return reply(413)
         const visit = path === '/visit'
         if (visit ? !validVisit(event) : !validSuccess(event)) return reply(400)
         // Rate limiting is abuse mitigation, not proof of a genuine install.
@@ -77,7 +77,11 @@ export default {
         if (response.headers.has(name)) headers[name] = response.headers.get(name)
       }
       if (response.ok && env.PROJECT_ACTIVITY && ALLOWED_ORIGINS.has(origin)) {
-        context?.waitUntil?.(Promise.resolve().then(() => recordActivity(env, { eventId, action: 'failure' })).catch(() => {}))
+        context?.waitUntil?.(Promise.resolve().then(async () => {
+          if ((await env.SUCCESS_RATE_LIMITER?.limit({ key: 'failure-reports' }))?.success) {
+            await recordActivity(env, { eventId, action: 'failure' })
+          }
+        }).catch(() => {}))
       }
       return reply(response.status)
     } catch { return reply(502) }
@@ -85,6 +89,6 @@ export default {
 }
 
 function validVisit(event) {
-  return typeof event === 'object' && Object.keys(event).length === 1 &&
+  return event !== null && typeof event === 'object' && !Array.isArray(event) && Object.keys(event).length === 1 &&
     typeof event.eventId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(event.eventId)
 }

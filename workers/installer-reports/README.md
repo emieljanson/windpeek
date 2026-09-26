@@ -65,7 +65,8 @@ Delivery is best effort and at most one attempt per event/update/week. A reserva
 is written before contacting Telegram: ambiguous responses are not retried because
 Telegram provides no idempotency key. Counts survive a failed notification. The
 public ingestion routes cannot authenticate hardware installs; Origin can be forged.
-Success requests are limited to ten/minute per Cloudflare location; visits to sixty
+Success requests and failure counting each have an independent ten/minute limit
+per Cloudflare location; visits are limited to sixty
 per IP/minute. Local QA never contributes to owner statistics. The existing Sentry
 relay remains independent of bot delivery failures.
 

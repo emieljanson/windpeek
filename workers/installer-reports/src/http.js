@@ -21,6 +21,6 @@ export async function readBody(request, maxBytes) {
 
 export async function readJson(request, maxBytes) {
   const body = await readBody(request, maxBytes)
-  if (!body) return null
+  if (!body) return undefined
   return JSON.parse(new TextDecoder().decode(body))
 }

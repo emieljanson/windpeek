@@ -48,7 +48,8 @@ test('webhook authenticates owner and coalesces retries', async () => {
     assert.equal((await s.command(1, '/stats', 123, 'wrong')).status, 403)
     assert.equal((await s.command(2, '/stats', 456)).status, 204)
     assert.equal(s.messages.length, 0)
-    await Promise.all([s.command(3), s.command(3)])
+    const responses = await Promise.all([s.command(3), s.command(3)])
+    assert.deepEqual(responses.map(r => r.status), [204, 204])
     assert.equal(s.messages.length, 1)
     await s.command(4, '/help')
     assert.match(s.messages[1], /Alleen jij/)
@@ -96,7 +97,8 @@ test('groups errors and deduplicates weekly schedule', async () => {
     for (let i = 0; i < 4; i++) await s.internal('/event', { eventId: randomUUID(), action: 'failure' })
     assert.equal(s.messages.length, 1)
     const body = { scheduledTime: Date.now() + 1 }
-    await Promise.all([s.internal('/weekly', body), s.internal('/weekly', body)])
+    const responses = await Promise.all([s.internal('/weekly', body), s.internal('/weekly', body)])
+    assert.deepEqual(responses.map(r => r.status), [204, 204])
     assert.equal(s.messages.length, 2)
     assert.match(s.messages[1], /Foutrapporten: 4/)
   } finally { await s.runtime.dispose() }
