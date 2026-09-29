@@ -33,6 +33,8 @@
 #include "wind_navigation.h"
 #include "wind_spots.h"
 #include "wind_installer_service.h"
+#include "wind_support.h"
+#include "esp_random.h"
 #include "wind_battery_policy.h"
 #include "esp_timer.h"
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
@@ -629,6 +631,17 @@ static void dashboard_task(void *argument)
     }
 }
 
+static bool initialize_support_history(void)
+{
+    if (!storage_has_persistent_storage()) return false;
+    uint8_t random[16];
+    char id[33];
+    esp_fill_random(random, sizeof(random));
+    for (size_t i = 0; i < sizeof(random); ++i)
+        snprintf(id + i * 2, 3, "%02x", random[i]);
+    return wind_support_init(FS_MOUNT_POINT, id) == ESP_OK;
+}
+
 void app_main(void)
 {
     esp_err_t result = nvs_flash_init();
@@ -651,6 +664,12 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_manager_init());
 
     if (!hardware_profile_allows_panel()) {
+        // Expose retained history without touching uninitialized panel/battery
+        // hardware. Storage failure must not prevent USB recovery.
+        if (storage_init() == ESP_OK && initialize_support_history())
+            wind_support_record_recovery_boot(
+                profile.driver_failure_latched ? profile.failure_error : ESP_OK,
+                profile.driver_failure_latched ? profile.failure_stage : 0);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
@@ -682,6 +701,8 @@ void app_main(void)
         // USB recovery must remain available even when the panel or its
         // controller is missing. A fatal check here would reboot forever
         // before the browser installer can reconnect.
+        if (storage_init() == ESP_OK && initialize_support_history())
+            wind_support_record_recovery_boot(result, HARDWARE_DRIVER_STAGE_INITIALIZE);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
@@ -697,6 +718,9 @@ void app_main(void)
         ESP_LOGW(TAG, "RTC initialization failed: %s", esp_err_to_name(result));
     }
     (void) restore_clock_from_rtc();
+
+    if (initialize_support_history())
+        wind_support_record(WIND_SUPPORT_BOOT, ESP_OK, 0, NULL, NULL);
 
     ESP_ERROR_CHECK(display_manager_init());
     ESP_ERROR_CHECK(power_manager_init());

@@ -144,6 +144,11 @@ endfunction()
 
 add_wind_test(wind_forecast_test test_wind_forecast.cpp ../main/wind_forecast.c)
 
+add_wind_test(wind_support_test test_wind_support.cpp ../main/wind_support.c ../main/installed_configuration.c)
+target_link_libraries(wind_support_test cjson)
+target_include_directories(wind_support_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+target_compile_definitions(wind_support_test PRIVATE CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=1)
+
 add_wind_test(wind_timezone_test test_wind_timezone.cpp)
 
 add_wind_test(wind_clock_test test_wind_clock.cpp ../main/wind_clock.c)

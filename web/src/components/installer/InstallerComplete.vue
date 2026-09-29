@@ -4,6 +4,7 @@ import { computed } from 'vue'
 const DEFAULT_DONATION_URL = 'https://donate.stripe.com/6oU14o3Hy1Xg5C02291wY00'
 
 const props = defineProps({
+  report: { type: String, default: '' },
   donationUrl: {
     type: String,
     default: import.meta.env.VITE_DONATION_URL || DEFAULT_DONATION_URL,
@@ -33,6 +34,7 @@ function donate() {
       <p v-if="donationUrl">Windpeek is free, so you can decide what it’s worth to you. If it’s useful, a donation can help make future features possible.</p>
       <p v-else>The selected spot and display options are live on your device.</p>
     </div>
+    <p v-if="report" class="installer-message"><a :href="`data:application/json;charset=utf-8,${encodeURIComponent(report)}`" download="windpeek-diagnostic.json">Download the report</a></p>
     <div class="installer-actions">
       <button v-if="donationUrl" class="installer-primary" type="button" @click="donate">Donate</button>
       <button data-autofocus class="installer-primary" type="button" @click="$emit('done')">Done</button>

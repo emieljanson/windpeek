@@ -26,6 +26,7 @@ defineEmits(['buy', 'connect'])
         <p>Connect your {{ deviceLabel }} with a USB data cable.</p>
       </template>
     </div>
+    <p v-if="!unsupportedReason" class="installer-message">If setup fails, Windpeek attempts to send a report with your selected locations and settings, plus recent device history when available. Wi-Fi names and passwords are excluded.</p>
     <div v-if="!unsupportedReason" class="installer-actions">
       <button
         v-if="!chooserCancelled || !alternateTransport"

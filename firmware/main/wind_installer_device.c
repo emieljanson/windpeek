@@ -27,6 +27,7 @@
 #include "wind_clock.h"
 #include "wind_spots.h"
 #include "wind_usb_protocol.h"
+#include "wind_support.h"
 
 #if defined(CONFIG_BOARD_CAP_WINDPEEK) && !defined(CONFIG_UART_ISR_IN_IRAM)
 #error "Windpeek USB reception must remain available during flash writes"
@@ -145,7 +146,11 @@ static esp_err_t physical_test_wifi(void *context, const char *ssid, const char 
     const esp_err_t result = wifi_manager_connect(ssid, password);
     physical_checkpoint(installer, DIAG_WIFI_DONE);
     installer->candidate_wifi_active = true;
-    if (result != ESP_OK) physical_abort(installer);
+    if (result != ESP_OK) {
+        wind_support_record(WIND_SUPPORT_SETUP_FAILED, result, DIAG_WIFI_DONE,
+            installer->service.candidate_staged ? &installer->service.candidate : NULL, NULL);
+        physical_abort(installer);
+    }
     return result;
 }
 
@@ -158,18 +163,32 @@ static esp_err_t physical_render(void *context, const installed_configuration_t 
     return result;
 }
 
+static void physical_record_failure(physical_installer_t *installer, esp_err_t result)
+{
+    wind_support_record(WIND_SUPPORT_SETUP_FAILED, result,
+        atomic_load(&installer->diagnostic_stage), &installer->apply_candidate,
+        &installer->forecast_diagnostics);
+}
+
 static esp_err_t physical_commit(void *context, const installed_configuration_t *candidate,
                                  const char *ssid, const char *password)
 {
     physical_installer_t *installer = (physical_installer_t *) context;
     installed_configuration_t previous;
-    if (installed_configuration_load(&previous) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    if (installed_configuration_load(&previous) != ESP_OK) {
+        physical_record_failure(installer, ESP_ERR_INVALID_STATE);
+        return ESP_ERR_INVALID_STATE;
+    }
     physical_checkpoint(installer, DIAG_ACTIVATE);
     esp_err_t result = wind_app_activate_configuration(candidate);
-    if (result != ESP_OK) return result;
+    if (result != ESP_OK) {
+        physical_record_failure(installer, result);
+        return result;
+    }
     physical_checkpoint(installer, DIAG_PERSIST);
     result = installed_configuration_promote_setup(candidate, ssid, password);
     if (result != ESP_OK) {
+        physical_record_failure(installer, result);
         (void) wind_app_activate_configuration(&previous);
         physical_abort(installer);
         return result;
@@ -177,6 +196,7 @@ static esp_err_t physical_commit(void *context, const installed_configuration_t 
     physical_checkpoint(installer, DIAG_RELOAD);
     result = wind_spots_reload_installed();
     if (result != ESP_OK) {
+        physical_record_failure(installer, result);
         (void) installed_configuration_promote_setup(
             &previous, installer->had_previous_wifi ? installer->previous_ssid : NULL,
             installer->had_previous_wifi ? installer->previous_password : NULL);
@@ -207,10 +227,14 @@ static void physical_apply_task(void *argument)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         ESP_LOGI("wind_installer", "Applying configuration (stack free: %u bytes)",
                  (unsigned) uxTaskGetStackHighWaterMark(NULL));
+        wind_support_record(WIND_SUPPORT_SETUP_STARTED, ESP_OK, DIAG_PREVIEW_BEGIN,
+                            &installer->apply_candidate, NULL);
         esp_err_t result = physical_render(installer, &installer->apply_candidate);
         atomic_store(&installer->apply_render_verified, result == ESP_OK);
         physical_apply_state_t final_state = PHYSICAL_APPLY_RENDER_FAILED;
         if (result != ESP_OK) {
+            // Preserve the original failure before rollback disconnects Wi-Fi.
+            physical_record_failure(installer, result);
             wind_installer_service_complete_apply(&installer->service, false);
         } else {
             ESP_LOGI("wind_installer", "Preview rendered (stack free: %u bytes)",
@@ -218,6 +242,9 @@ static void physical_apply_task(void *argument)
             result = physical_commit(installer, &installer->apply_candidate,
                                      installer->apply_has_wifi ? installer->apply_ssid : NULL,
                                      installer->apply_has_wifi ? installer->apply_password : NULL);
+            if (result == ESP_OK)
+                wind_support_record(WIND_SUPPORT_SETUP_COMPLETE, result, DIAG_COMPLETE,
+                    &installer->apply_candidate, &installer->forecast_diagnostics);
             wind_installer_service_complete_apply(&installer->service, result == ESP_OK);
             final_state = result == ESP_OK ? PHYSICAL_APPLY_COMPLETE
                                           : PHYSICAL_APPLY_COMMIT_FAILED;
@@ -270,6 +297,13 @@ static esp_err_t physical_start_apply(void *context)
 static esp_err_t physical_apply_error(void *context)
 {
     return atomic_load(&((physical_installer_t *)context)->apply_error);
+}
+
+static esp_err_t physical_read_diagnostics(void *context, uint32_t sequence,
+                                          char *response, size_t size)
+{
+    (void)context;
+    return wind_support_read(sequence, response, size);
 }
 
 static const char *physical_apply_state(void *context)
@@ -492,6 +526,7 @@ esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void))
         .apply_state = physical_apply_state,
         .apply_error = physical_apply_error,
         .health = physical_health,
+        .read_diagnostics = physical_read_diagnostics,
         .set_wake_lock = physical_wake_lock,
         .abort = physical_abort,
         .scan_wifi = physical_scan_wifi,

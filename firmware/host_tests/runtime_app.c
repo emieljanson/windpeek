@@ -4,6 +4,15 @@
 #define WIFI_MANAGER_H
 #include <stdbool.h>
 #include <time.h>
+#include "../main/wind_app_status.h"
+static unsigned s_status_finishes;
+static void runtime_test_status_finish(esp_err_t result, esp_err_t fetch_result,
+    bool attempted_fetch, bool render_valid, const wind_provider_diagnostics_t *forecast) {
+    ++s_status_finishes;
+    wind_app_status_finish(result, fetch_result, attempted_fetch, render_valid, forecast);
+}
+unsigned runtime_test_status_finish_count(void) { return s_status_finishes; }
+#define wind_app_status_finish runtime_test_status_finish
 bool wifi_manager_is_connected(void);
 time_t runtime_test_time(time_t *out);
 #define time runtime_test_time
@@ -11,6 +20,7 @@ time_t runtime_test_time(time_t *out);
 #include "../main/wind_app.c"
 
 void runtime_test_reset(bool preserve_rtc) {
+    s_status_finishes = 0;
     free(s_fetch_lock);
     s_fetch_lock = NULL;
     free(s_spots);

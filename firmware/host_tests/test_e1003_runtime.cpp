@@ -21,6 +21,7 @@ extern "C" {
 #include "wind_tide_cache.h"
 #include "wind_swell_cache.h"
 void runtime_test_reset(bool preserve_rtc);
+unsigned runtime_test_status_finish_count(void);
 }
 
 namespace {
@@ -619,6 +620,22 @@ TEST_F(E1003Runtime, OverviewDisplayFailureKeepsThePreviousScreenAndSelection) {
     wind_app_overview_state(&open, &page);
     EXPECT_TRUE(open);
     EXPECT_EQ(page, 3u);
+}
+
+TEST_F(E1003Runtime, FailedOverviewRefreshReportsOneAggregateFailure) {
+    install();
+    ASSERT_EQ(wind_app_show_overview(), ESP_OK);
+    const auto finishes = runtime_test_status_finish_count();
+    clock_now += 86400;
+    failed_spot = "spot-2";
+    fail_display = true;
+    EXPECT_NE(wind_app_refresh(true), ESP_OK);
+    EXPECT_EQ(runtime_test_status_finish_count(), finishes + 1);
+    wind_app_status_t status{};
+    wind_app_status_get(&status);
+    EXPECT_EQ(status.stage, WIND_REFRESH_FAILED);
+    EXPECT_EQ(status.fetch_result, ESP_ERR_TIMEOUT);
+    EXPECT_TRUE(status.attempted_fetch);
 }
 
 TEST_F(E1003Runtime, RepeatedOfflineNavigationPreservesEveryPreparedScreen) {

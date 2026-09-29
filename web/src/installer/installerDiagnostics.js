@@ -1,4 +1,5 @@
 import { sanitizeDeviceEvidence } from './deviceEvidence'
+import { sanitizeSupportReport } from './supportReport'
 
 const DEFAULT_MAX_ENTRIES = 100
 const DEFAULT_MAX_TEXT_BYTES = 50 * 1024
@@ -130,6 +131,26 @@ export function createInstallerDiagnostics({
   let credentialLocks = 0
   let destroyed = false
   let firstDeviceFailure
+  let support = { startedAt, history: [] }
+
+  function setSupport(patch) {
+    if (destroyed) return
+    // A newly attached unit must not inherit another unit's history/settings.
+    if (patch?.deviceId && support.deviceId && patch.deviceId !== support.deviceId)
+      support = { startedAt, selectedConfiguration: support.selectedConfiguration,
+        beforeFirmwareErase: support.beforeFirmwareErase, history: [] }
+    support = sanitizeSupportReport({ ...support, ...patch })
+  }
+
+  function preserveBeforeFirmwareErase() {
+    if (!destroyed) support.beforeFirmwareErase = sanitizeSupportReport({ ...support, capturedAt: now() }, true)
+  }
+
+  function startSupportCapture(metadata) {
+    if (destroyed) return
+    support = sanitizeSupportReport({ startedAt, selectedConfiguration: support.selectedConfiguration,
+      beforeFirmwareErase: support.beforeFirmwareErase, ...metadata, history: [] })
+  }
 
   function evictToBounds() {
     while (entries.length > maxEntries || textBytes > maxTextBytes) {
@@ -248,7 +269,9 @@ export function createInstallerDiagnostics({
       if (safeEntry.message) safeEntry.message = sanitizeDiagnosticText(safeEntry.message, sensitiveValues)
       return safeEntry
     })
-    return { context: safeContext, entries: safeEntries, textBytes, ...(firstDeviceFailure ? { firstDeviceFailure: { ...firstDeviceFailure } } : {}), ...(deviceEvidence.length ? { deviceEvidence: deviceEvidence.map((item) => ({ ...item })) } : {}) }
+    return { context: safeContext, entries: safeEntries, textBytes,
+      support: sanitizeSupportReport({ ...support, capturedAt: now() }),
+      ...(firstDeviceFailure ? { firstDeviceFailure: { ...firstDeviceFailure } } : {}), ...(deviceEvidence.length ? { deviceEvidence: deviceEvidence.map((item) => ({ ...item })) } : {}) }
   }
 
   function destroy() {
@@ -256,6 +279,7 @@ export function createInstallerDiagnostics({
     entries.splice(0)
     deviceEvidence.splice(0)
     firstDeviceFailure = undefined
+    support = undefined
     for (const key of Object.keys(context)) delete context[key]
     sensitiveValues.clear()
     textBytes = 0
@@ -264,6 +288,9 @@ export function createInstallerDiagnostics({
 
   return {
     registerSensitiveValues,
+    setSupport,
+    preserveBeforeFirmwareErase,
+    startSupportCapture,
     recordDeviceEvidence,
     acquireCredentialLock,
     setContext,

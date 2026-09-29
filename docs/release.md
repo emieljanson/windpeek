@@ -84,8 +84,11 @@ The Sentry project must keep these defenses enabled:
 
 - Store no visitor IP addresses and apply Sentry's default data scrubber.
 - Scrub passwords, passphrases, SSIDs, BSSIDs, authorization values, cookies,
-  tokens, API keys, secrets, coordinates, email addresses, IP addresses and
-  configuration fields.
+  tokens, API keys, secrets, email addresses and IP addresses.
+- Retain the explicitly allowlisted settings, forecast-location coordinates and
+  device history under `extra.support`. Do not blanket-scrub configuration or
+  coordinate fields: these are disclosed support-report evidence. Keep credential
+  scrubbing enabled and verify the stored event and JSON attachment after release.
 - Accept browser events only from `windpeek.com`, `www.windpeek.com` and the temporary
   `emieljanson.github.io` Pages origin.
 - Keep spike protection enabled.
@@ -222,9 +225,10 @@ failure and verify all of the following:
    the recovery screen.
 2. Searching Sentry for `windpeek.reference:<reference>` finds exactly that
    event. The phase, stable error code and filtered timeline are useful.
-3. The event payload contains none of the planted password, SSID, configuration
-   values, coordinates, email, IP address, cookies, headers, request body, full
-   user agent or URL query values.
+3. The event payload and attachment contain none of the planted password, SSID,
+   email, IP address, cookies, headers, request body, full user agent or URL query
+   values. The allowlisted selected/installed settings, forecast-location
+   coordinates and available device history remain readable in both.
 4. Blocking `ingest.de.sentry.io` changes the toast to
    `Technical details could not be sent.` without changing recovery controls or
    USB safe-to-disconnect guidance, and no reference is displayed.

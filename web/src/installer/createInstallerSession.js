@@ -1,4 +1,5 @@
 import { applyConfiguration } from './applyConfiguration'
+import { readSupportReport } from './supportReport'
 import { resolveInstallAction, INSTALL_ACTIONS } from './actionResolver'
 import {
   CHIP_FAMILY,
@@ -15,7 +16,7 @@ import {
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
-import { installerSentryReporter } from './sentryReporter'
+import { createDiagnosticReport, installerSentryReporter } from './sentryReporter'
 import { createInstallerFailureReporting } from './installerFailureReporting'
 import { reportInstallerSuccess } from './installerSuccessReporting'
 import { createSerialProtocol, findGrantedInstallerPort, installerTransports, requestInstallerPort } from './serialPortAdapter'
@@ -87,6 +88,7 @@ export function createInstallerSession({
     : configuration
 
   try {
+    diagnostics.setSupport?.({ selectedConfiguration: configuration })
     diagnostics.registerSensitiveValues?.([
       configuration?.spot?.id,
       configuration?.spot?.name,
@@ -119,9 +121,15 @@ export function createInstallerSession({
     flashedAction = null
     postFlashStage = 'none'
     failureReporting.complete()
+    let diagnosticReport = null
+    try {
+      const snapshot = diagnostics.snapshot?.()
+      if (snapshot) diagnosticReport = createDiagnosticReport(snapshot)
+    } catch {}
     update({
       phase: 'complete', progress: 1, safeToDisconnect: true, canRetrySetup: false,
-      diagnosticStatus: 'idle', diagnosticReference: null, diagnosticReport: null, ...patch,
+      diagnosticStatus: 'idle', diagnosticReference: null,
+      diagnosticReport, ...patch,
     })
     try { diagnostics.destroy?.() } catch {}
     if (completedAction) {
@@ -193,6 +201,7 @@ export function createInstallerSession({
   }
 
   async function inspectApp(candidate) {
+    const inspectingAttempt = attempt
     try {
       await candidate.open()
     } catch (error) {
@@ -217,7 +226,30 @@ export function createInstallerSession({
     // Capture the running app even if its first state request fails.
     try {
       diagnostics.setContext?.({ detectedBoardId: hello.boardId, detectedFirmwareVersion: hello.firmwareVersion })
+      diagnostics.startSupportCapture?.({ firmwareVersion: hello.firmwareVersion,
+        hardwareModel: hello.hardwareModel ?? hello.boardId,
+        historyStatus: hello.capabilities.includes('diagnostics') ? 'reading' : 'unsupported' })
     } catch {}
+    if (hello.capabilities.includes('diagnostics')) {
+      const result = await readSupportReport(candidate, diagnostics, () => isCurrent(inspectingAttempt))
+      // A serial timeout cancels its reader. Restore it without rebooting;
+      // optional diagnostics must never classify healthy settings as damaged.
+      if (result?.requestFailed && isCurrent(inspectingAttempt)) {
+        try {
+          await candidate.close()
+          await candidate.open({ resetDevice: false })
+          const resumed = await candidate.request('hello')
+          if (!validHello(resumed) || resumed.boardId !== hello.boardId ||
+              resumed.firmwareVersion !== hello.firmwareVersion || resumed.hardwareModel !== hello.hardwareModel ||
+              resumed.configurationVersion !== hello.configurationVersion)
+            throw new Error('Device changed')
+        } catch (error) {
+          try { await candidate.close() } catch {}
+          throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST,
+            'The USB connection was lost. Reconnect your device.', { cause: error })
+        }
+      }
+    }
     const usesHardwareProfile = hello.capabilities.includes('hardware-profile')
     const reportedHardwareModel = usesHardwareProfile
       ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
@@ -443,17 +475,24 @@ export function createInstallerSession({
   async function configure(credentials, expectedAttempt = attempt) {
     if (!protocol) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Select your reTerminal again to finish setup.')
     update({ action })
-    return applyConfiguration({
-      protocol, configuration: installationConfiguration, credentials,
-      applying: device?.applyState === 'applying',
-      completionAck: device?.capabilities?.includes('completion-ack'),
-      isCurrent: () => isCurrent(expectedAttempt), update, waitFor, now,
-      recordFailure: failureReporting.recordVerificationFailure,
-      recoverConnection: (error) => recoverVerificationConnection(error, expectedAttempt),
-      recordRetry: (retryCount) => {
-        try { diagnostics.record?.({ category: 'recovery', operation: 'forecast', status: 'retrying', measurements: { retryCount } }) } catch {}
-      },
-    })
+    try {
+      return await applyConfiguration({
+        protocol, configuration: installationConfiguration, credentials,
+        applying: device?.applyState === 'applying',
+        completionAck: device?.capabilities?.includes('completion-ack'),
+        isCurrent: () => isCurrent(expectedAttempt), update, waitFor, now,
+        recordFailure: failureReporting.recordVerificationFailure,
+        recoverConnection: (error) => recoverVerificationConnection(error, expectedAttempt),
+        recordRetry: (retryCount) => {
+          try { diagnostics.record?.({ category: 'recovery', operation: 'forecast', status: 'retrying', measurements: { retryCount } }) } catch {}
+        },
+      })
+    } finally {
+      // Collect the completed attempt before automatic reporting takes its
+      // snapshot. The credential lock remains held until this read finishes.
+      if (protocol && device?.capabilities?.includes('diagnostics') && isCurrent(expectedAttempt))
+        await readSupportReport(protocol, diagnostics, () => isCurrent(expectedAttempt))
+    }
   }
 
   async function executeAction() {
@@ -472,6 +511,7 @@ export function createInstallerSession({
           signal: operationController?.signal,
         })
         if (currentAttempt !== attempt) return state
+        diagnostics.preserveBeforeFirmwareErase?.()
         update({ phase: 'installing-firmware', progress: 0.15, safeToDisconnect: false })
         if (!device.bootloader) {
           await protocol?.close()
