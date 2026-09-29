@@ -631,6 +631,17 @@ static void dashboard_task(void *argument)
     }
 }
 
+static bool initialize_support_history(void)
+{
+    if (!storage_has_persistent_storage()) return false;
+    uint8_t random[16];
+    char id[33];
+    esp_fill_random(random, sizeof(random));
+    for (size_t i = 0; i < sizeof(random); ++i)
+        snprintf(id + i * 2, 3, "%02x", random[i]);
+    return wind_support_init(FS_MOUNT_POINT, id) == ESP_OK;
+}
+
 void app_main(void)
 {
     esp_err_t result = nvs_flash_init();
@@ -653,6 +664,9 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_manager_init());
 
     if (!hardware_profile_allows_panel()) {
+        // Expose retained history without touching uninitialized panel/battery
+        // hardware. Storage failure must not prevent USB recovery.
+        if (storage_init() == ESP_OK) (void)initialize_support_history();
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
@@ -684,6 +698,7 @@ void app_main(void)
         // USB recovery must remain available even when the panel or its
         // controller is missing. A fatal check here would reboot forever
         // before the browser installer can reconnect.
+        if (storage_init() == ESP_OK) (void)initialize_support_history();
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
@@ -700,12 +715,7 @@ void app_main(void)
     }
     (void) restore_clock_from_rtc();
 
-    uint8_t support_random[16];
-    char support_id[33];
-    esp_fill_random(support_random, sizeof(support_random));
-    for (size_t i = 0; i < sizeof(support_random); ++i)
-        snprintf(support_id + i * 2, 3, "%02x", support_random[i]);
-    if (storage_has_persistent_storage() && wind_support_init(FS_MOUNT_POINT, support_id) == ESP_OK)
+    if (initialize_support_history())
         wind_support_record(WIND_SUPPORT_BOOT, ESP_OK, 0, NULL, NULL);
 
     ESP_ERROR_CHECK(display_manager_init());

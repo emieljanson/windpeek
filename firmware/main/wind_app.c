@@ -67,6 +67,7 @@ typedef enum {
     OVERVIEW_INTERACTIVE,
     OVERVIEW_REFRESH,
     OVERVIEW_PREPARE,
+    OVERVIEW_PREFETCHED, // The enclosing refresh reports the aggregate result.
 } overview_render_mode_t;
 static esp_err_t render_overview_unlocked(size_t page,
     overview_render_mode_t mode, bool force);
@@ -860,18 +861,19 @@ static esp_err_t render_overview_unlocked(size_t page,
     overview_render_mode_t mode, bool force) {
     const bool show = mode != OVERVIEW_PREPARE;
     const bool fetch = mode == OVERVIEW_REFRESH;
+    const bool report_status = show && mode != OVERVIEW_PREFETCHED;
     if (active_renderer_display() != WIND_RENDERER_DISPLAY_E1003_GC16) {
-        if (show) wind_app_status_finish(ESP_ERR_NOT_SUPPORTED, ESP_OK, false, false, NULL);
+        if (report_status) wind_app_status_finish(ESP_ERR_NOT_SUPPORTED, ESP_OK, false, false, NULL);
         return ESP_ERR_NOT_SUPPORTED;
     }
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
-        if (show) wind_app_status_finish(result, ESP_OK, false, false, NULL);
+        if (report_status) wind_app_status_finish(result, ESP_OK, false, false, NULL);
         return result;
     }
     size_t total = wind_spots_count();
     if (page > wind_overview_last_page(total)) {
-        if (show) wind_app_status_finish(ESP_ERR_INVALID_ARG, ESP_OK, false, false, NULL);
+        if (report_status) wind_app_status_finish(ESP_ERR_INVALID_ARG, ESP_OK, false, false, NULL);
         return ESP_ERR_INVALID_ARG;
     }
     size_t first = page * WIND_OVERVIEW_PAGE_SIZE;
@@ -881,7 +883,7 @@ static esp_err_t render_overview_unlocked(size_t page,
     uint8_t *bitmap = malloc(WIND_RENDERER_E1003_COMPOSITION_BYTES);
     if (!rows || !cached || !bitmap) {
         free(rows); free(cached); free(bitmap);
-        if (show) wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, NULL);
+        if (report_status) wind_app_status_finish(ESP_ERR_NO_MEM, ESP_OK, false, false, NULL);
         return ESP_ERR_NO_MEM;
     }
     bool reported_failure = false;
@@ -961,7 +963,7 @@ static esp_err_t render_overview_unlocked(size_t page,
 #endif
     }
     free(rows); free(cached); free(bitmap);
-    if (show && result != ESP_OK && !reported_failure)
+    if (report_status && result != ESP_OK && !reported_failure)
         wind_app_status_finish(result, ESP_OK, false, false, NULL);
     // Overview rows do not save a dashboard panel confirmation. Drawing them
     // cannot clear an earlier forecast failure, even when cached rows look valid.
@@ -1639,7 +1641,7 @@ static esp_err_t prefetch_spots_unlocked(bool all, bool force) {
         time(&now);
         wind_app_outcome_t *outcome = &outcomes[s_selected_index];
         if (overview_open())
-            result = render_overview_unlocked(overview_page(), OVERVIEW_INTERACTIVE, false);
+            result = render_overview_unlocked(overview_page(), OVERVIEW_PREFETCHED, false);
         else {
             apply_spot_display(s_selected_index);
             result = wind_app_show_prefetched(&s_spots[s_selected_index].app, now, outcome);

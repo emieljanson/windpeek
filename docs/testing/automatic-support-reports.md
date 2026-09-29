@@ -45,8 +45,8 @@ Firmware advertises optional capability `diagnostics` in `hello`.
 
 Each response fits the existing 16 KiB USB frame. The browser freezes the first
 reported range and reads at most 32 events, with a five-second timeout per
-request. A missing slot is marked `partial`; unreadable history is marked
-`unavailable`. Legacy firmware is marked `unsupported`. A history timeout must
+request. Missing or unreadable slots are marked `partial`; failed requests or
+unavailable storage are marked `unavailable`. Legacy firmware is marked `unsupported`. A history timeout must
 not classify the device as damaged or trigger a reinstall.
 
 ## Retention and interpretation
