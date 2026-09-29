@@ -136,6 +136,7 @@ export function createSerialProtocol(port, {
   let writer
   let buffered = new Uint8Array(0)
   let requestQueue = Promise.resolve()
+  let lastRequestEndedAt
   const consoleDecoder = createDeviceConsoleDecoder((evidence) => {
     try { diagnostics?.recordDeviceEvidence?.(evidence) } catch {}
   })
@@ -209,28 +210,39 @@ export function createSerialProtocol(port, {
     const measurements = {
       requestTimeoutMs: requestedTimeout, receivedBytes: 0, receivedChunks: 0,
       discardedBytes: 0, staleFrames: 0, expectedFrameBytes: 0,
+      idleMs: Math.max(0, startedAt - (lastRequestEndedAt ?? startedAt)),
     }
     record({ category: 'protocol', operation: command, status: 'started' })
-    await writer.write(encodeProtocolFrame({ requestId: id, payload: { command, ...values } }))
     let timeoutId
-    const timeout = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        void reader.cancel().catch(() => {})
-        reject(new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'The device stopped responding.'))
-      }, requestedTimeout)
-    })
-    const read = (async () => {
-      while (true) {
-        const response = takeResponse(id, measurements)
-        if (response) return response
-        const result = await reader.read()
-        if (result.done) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'The USB connection was lost.')
-        measurements.receivedBytes += result.value.length
-        measurements.receivedChunks += 1
-        append(result.value)
-      }
-    })()
+    let stage = 'encode'
+    let timedOut = false
     try {
+      const frame = encodeProtocolFrame({ requestId: id, payload: { command, ...values } })
+      stage = 'write'
+      await writer.write(frame)
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          timedOut = true
+          void reader.cancel().catch(() => {})
+          reject(new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'The device stopped responding.'))
+        }, requestedTimeout)
+      })
+      const read = (async () => {
+        while (true) {
+          stage = 'response'
+          const response = takeResponse(id, measurements)
+          if (response) return response
+          stage = 'read'
+          const result = await reader.read()
+          if (result.done) {
+            stage = 'read-ended'
+            throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'The USB connection was lost.')
+          }
+          measurements.receivedBytes += result.value.length
+          measurements.receivedChunks += 1
+          append(result.value)
+        }
+      })()
       const response = await Promise.race([read, timeout])
       if (command === 'get_state' && Number.isInteger(response.deviceStage)) {
         try {
@@ -252,10 +264,14 @@ export function createSerialProtocol(port, {
       consoleDecoder.flush()
       record({
         category: 'protocol', operation: command, status: 'failed', message: error?.message,
+        failure: { stage: timedOut ? 'timeout' : stage, name: error?.name },
         measurements: { ...measurements, bufferedBytes: buffered.length, durationMs: Date.now() - startedAt },
       })
       throw error
-    } finally { clearTimeout(timeoutId) }
+    } finally {
+      clearTimeout(timeoutId)
+      lastRequestEndedAt = Date.now()
+    }
   }
   return {
     async open({ resetDevice = true } = {}) {
@@ -291,6 +307,7 @@ export function createSerialProtocol(port, {
       reader = port.readable.getReader()
       writer = port.writable.getWriter()
       buffered = new Uint8Array(0)
+      lastRequestEndedAt = Date.now()
     },
     async request(command, values = {}, requestedTimeout = timeoutMs) {
       const result = requestQueue.then(async () => {

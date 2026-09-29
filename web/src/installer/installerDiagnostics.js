@@ -16,8 +16,19 @@ const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
   'requestTimeoutMs', 'receivedBytes', 'receivedChunks', 'discardedBytes',
-  'staleFrames', 'bufferedBytes', 'expectedFrameBytes',
+  'staleFrames', 'bufferedBytes', 'expectedFrameBytes', 'idleMs',
 ])
+
+// Fixed vocabulary only: safe to retain while Wi-Fi credentials are in memory.
+export function sanitizeProtocolFailure(input) {
+  if (!input || typeof input !== 'object') return undefined
+  const failure = {}
+  if (['encode', 'write', 'read', 'response', 'read-ended', 'timeout'].includes(input.stage)) failure.stage = input.stage
+  if (['NetworkError', 'InvalidStateError', 'NotFoundError', 'NotAllowedError', 'SecurityError',
+    'AbortError', 'TimeoutError', 'UnknownError', 'TypeError', 'RangeError', 'Error', 'InstallerError',
+    'BufferOverrunError', 'BreakError', 'FramingError', 'ParityError'].includes(input.name)) failure.name = input.name
+  return Object.keys(failure).length ? failure : undefined
+}
 
 // Deliberately exclude configuration, network names and arbitrary device text.
 export function sanitizeDeviceState(input) {
@@ -176,6 +187,8 @@ export function createInstallerDiagnostics({
       message = safeScalar(candidate.message)
     } catch {}
     if (status !== undefined) entry.status = sanitizeKey(status, sensitiveValues)
+    const failure = sanitizeProtocolFailure(candidate.failure)
+    if (failure) entry.failure = failure
     const deviceState = sanitizeDeviceState(candidate.deviceState)
     if (deviceState) {
       entry.deviceState = deviceState

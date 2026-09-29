@@ -3,9 +3,61 @@ import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGra
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 import { BOARD_IDS } from '../../src/config/configuration'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
-import { filterInstallerEvent } from '../../src/installer/sentryReporter'
+import { createDiagnosticReport, filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
+  it.each([
+    ['write', 'NetworkError'], ['read', 'NetworkError'],
+    ...['BufferOverrunError', 'BreakError', 'FramingError', 'ParityError'].map(name => ['read', name]),
+  ])('preserves a %s %s after idle without exposing credentials or changing the error', async (stage, name) => {
+    vi.useFakeTimers()
+    try {
+      const failure = new DOMException('private-password private-network', name)
+      const reader = { read: vi.fn().mockRejectedValue(failure), cancel: vi.fn(), releaseLock: vi.fn() }
+      const writer = { write: stage === 'write' ? vi.fn().mockRejectedValue(failure) : vi.fn(), releaseLock: vi.fn() }
+      const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+      const diagnostics = createInstallerDiagnostics()
+      const protocol = createSerialProtocol(port, { diagnostics })
+      await protocol.open()
+      await vi.advanceTimersByTimeAsync(40 * 60 * 1000)
+      const unlock = diagnostics.acquireCredentialLock({ ssid: 'private-network', password: 'private-password' })
+      await expect(protocol.request('begin')).rejects.toBe(failure)
+      unlock()
+      const snapshot = diagnostics.snapshot()
+      const report = JSON.parse(createDiagnosticReport(snapshot))
+      expect(report.timeline.at(-1)).toMatchObject({ operation: 'begin', status: 'failed',
+        failure: { stage, name }, measurements: { idleMs: 2400000, receivedBytes: 0 } })
+      expect(JSON.stringify(report)).not.toMatch(/private-password|private-network/)
+      expect(writer.write).toHaveBeenCalledTimes(1)
+      expect(reader.read).toHaveBeenCalledTimes(stage === 'read' ? 1 : 0)
+      await protocol.close()
+    } finally { vi.useRealTimers() }
+  })
+
+  it('filters unknown failure fields in both the collector and Sentry boundary', () => {
+    const failure = { stage: 'private-password', name: 'private-network', message: 'private-text', stack: 'private-stack' }
+    const diagnostics = createInstallerDiagnostics()
+    diagnostics.record({ category: 'protocol', operation: 'begin', status: 'failed', failure })
+    expect(diagnostics.snapshot().entries[0].failure).toBeUndefined()
+    const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' },
+      extra: { timeline: [{ failure }, { failure: { stage: 'read', name: 'NetworkError', message: 'private-text' } }] } })
+    expect(event.extra.timeline[1].failure).toEqual({ stage: 'read', name: 'NetworkError' })
+    expect(JSON.stringify(event)).not.toContain('private-')
+  })
+
+  it('distinguishes a closed read stream from a read rejection', async () => {
+    const reader = { read: vi.fn().mockResolvedValue({ done: true }), cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: vi.fn(), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
+    const diagnostics = createInstallerDiagnostics()
+    const protocol = createSerialProtocol(port, { diagnostics })
+    await protocol.open()
+    await expect(protocol.request('begin')).rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.CONNECTION_LOST })
+    expect(JSON.parse(createDiagnosticReport(diagnostics.snapshot())).timeline.at(-1).failure)
+      .toEqual({ stage: 'read-ended', name: 'InstallerError' })
+    await protocol.close()
+  })
+
   it('retries one corrupt status response without interrupting installation', async () => {
     const chunks = []
     const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })), cancel: vi.fn(), releaseLock: vi.fn() }
@@ -125,7 +177,8 @@ describe('serial port adapter', () => {
       await vi.advanceTimersByTimeAsync(10)
       await rejected
       const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { timeline: diagnostics.snapshot().entries } })
-      expect(event.extra.timeline.at(-1)).toMatchObject({ operation: 'get_state', status: 'failed', measurements: {
+      expect(event.extra.timeline.at(-1)).toMatchObject({ operation: 'get_state', status: 'failed',
+        failure: { stage: 'timeout', name: 'InstallerError' }, measurements: {
         requestTimeoutMs: 10, receivedBytes, receivedChunks: kind === 'silent' ? 0 : 1,
         bufferedBytes: kind === 'partial' ? 25 : kind === 'logs' ? 7 : 0,
         expectedFrameBytes: kind === 'partial' ? frame.length : 0,
