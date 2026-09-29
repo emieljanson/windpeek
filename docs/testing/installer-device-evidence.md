@@ -42,6 +42,28 @@ tests simulate stream failures and elapsed time, not actual device power policy.
 
 A stage marks progress, not success; inspect `apply` and `applyError` too. `freeHeap`/`minimumHeap` count internal 8-bit-capable heap, excluding PSRAM. `taskStackFree` is the responding UART task's stack high-water mark, in bytes. Console checkpoints measure the task that emits them (Wi-Fi/idle: UART; preview/commit: apply). `uptimeMs` helps distinguish a reboot from an unresponsive command and wraps after about 49 days.
 
+## Hardware idle check, 29 September 2026
+
+- E1002 on `dev-bfdc6973`, connected through Dia/Web Serial on macOS using the
+  production protocol adapter plus the local diagnostic changes. No firmware
+  flashing or stored Wi-Fi/configuration changes.
+- After `hello`, `get_state`, and a successful network scan, no protocol requests
+  or reads were made for 2,400,006 ms (40 minutes). macOS display and system sleep
+  were inhibited with `caffeinate` for this test.
+- `begin` then returned `ready` in 271 ms; `get_state` returned in 343 ms.
+  Uptime advanced from 1,648 to 2,405,457 ms, with reset reason unchanged at 1.
+  Final state reported connected Wi-Fi, valid rendering, and zero apply errors.
+  The probe sent `cancel` and closed the port afterward.
+- This is not an exact reproduction of WINDPEEK-D: the September 28 customer
+  used Windows/Chrome, `dev-0d4b02dc`, and had no configured Wi-Fi. This device
+  already had saved Wi-Fi. No new credential submission or full installation was
+  performed. Host sleep, cable disconnection, and a fresh-device 40-minute pause
+  remain untested in this run. No underlying cause or behavioral fix is claimed.
+- The diagnostic error-name allowlist includes the Web Serial specification's
+  `BufferOverrunError`, `BreakError`, `FramingError`, and `ParityError`, in addition
+  to general DOM/JavaScript errors. These are evidence categories, not diagnoses
+  of the historical incident. See https://wicg.github.io/serial/.
+
 ## Matching a crash to source
 
 Download `windpeek-firmware-debug` from the release workflow that produced the device's firmware. Select `e1002` (also E1001) or `e1003`, and match the panic's `elf` prefix to the archived ELF SHA256 before decoding addresses. The artifact contains the exact application binary, ELF, linker map, SDK configuration and checksums for both builds, including production cache reuse. It is separate from the website bundle. GitHub retains it for 90 days; archive the matching artifact before expiry for an ongoing investigation.

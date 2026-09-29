@@ -6,10 +6,13 @@ import { createInstallerDiagnostics } from '../../src/installer/installerDiagnos
 import { createDiagnosticReport, filterInstallerEvent } from '../../src/installer/sentryReporter'
 
 describe('serial port adapter', () => {
-  it.each(['write', 'read'])('preserves a %s rejection after idle without exposing credentials or changing the error', async (stage) => {
+  it.each([
+    ['write', 'NetworkError'], ['read', 'NetworkError'],
+    ...['BufferOverrunError', 'BreakError', 'FramingError', 'ParityError'].map(name => ['read', name]),
+  ])('preserves a %s %s after idle without exposing credentials or changing the error', async (stage, name) => {
     vi.useFakeTimers()
     try {
-      const failure = new DOMException('private-password private-network', 'NetworkError')
+      const failure = new DOMException('private-password private-network', name)
       const reader = { read: vi.fn().mockRejectedValue(failure), cancel: vi.fn(), releaseLock: vi.fn() }
       const writer = { write: stage === 'write' ? vi.fn().mockRejectedValue(failure) : vi.fn(), releaseLock: vi.fn() }
       const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
@@ -23,7 +26,7 @@ describe('serial port adapter', () => {
       const snapshot = diagnostics.snapshot()
       const report = JSON.parse(createDiagnosticReport(snapshot))
       expect(report.timeline.at(-1)).toMatchObject({ operation: 'begin', status: 'failed',
-        failure: { stage, name: 'NetworkError' }, measurements: { idleMs: 2400000, receivedBytes: 0 } })
+        failure: { stage, name }, measurements: { idleMs: 2400000, receivedBytes: 0 } })
       expect(JSON.stringify(report)).not.toMatch(/private-password|private-network/)
       expect(writer.write).toHaveBeenCalledTimes(1)
       expect(reader.read).toHaveBeenCalledTimes(stage === 'read' ? 1 : 0)

@@ -25,7 +25,8 @@ export function sanitizeProtocolFailure(input) {
   const failure = {}
   if (['encode', 'write', 'read', 'response', 'read-ended', 'timeout'].includes(input.stage)) failure.stage = input.stage
   if (['NetworkError', 'InvalidStateError', 'NotFoundError', 'NotAllowedError', 'SecurityError',
-    'AbortError', 'TimeoutError', 'UnknownError', 'TypeError', 'RangeError', 'Error', 'InstallerError'].includes(input.name)) failure.name = input.name
+    'AbortError', 'TimeoutError', 'UnknownError', 'TypeError', 'RangeError', 'Error', 'InstallerError',
+    'BufferOverrunError', 'BreakError', 'FramingError', 'ParityError'].includes(input.name)) failure.name = input.name
   return Object.keys(failure).length ? failure : undefined
 }
 
