@@ -22,6 +22,8 @@ esp_err_t wind_support_init(const char *directory, const char *new_device_id);
 void wind_support_record(wind_support_kind_t kind, esp_err_t result, unsigned stage,
                          const installed_configuration_t *configuration,
                          const wind_provider_diagnostics_t *forecast);
+// Retain reset/failure evidence before board hardware is available.
+void wind_support_record_recovery_boot(esp_err_t result, unsigned stage);
 void wind_support_record_refresh(const wind_app_status_t *status, unsigned last_stage);
 // sequence=0 returns identity, installed settings and the bounded history range.
 // Other requests return one immutable event, keeping USB frames below 16 KiB.

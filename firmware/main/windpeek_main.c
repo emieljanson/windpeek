@@ -666,7 +666,10 @@ void app_main(void)
     if (!hardware_profile_allows_panel()) {
         // Expose retained history without touching uninitialized panel/battery
         // hardware. Storage failure must not prevent USB recovery.
-        if (storage_init() == ESP_OK) (void)initialize_support_history();
+        if (storage_init() == ESP_OK && initialize_support_history())
+            wind_support_record_recovery_boot(
+                profile.driver_failure_latched ? profile.failure_error : ESP_OK,
+                profile.driver_failure_latched ? profile.failure_stage : 0);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
@@ -698,7 +701,8 @@ void app_main(void)
         // USB recovery must remain available even when the panel or its
         // controller is missing. A fatal check here would reboot forever
         // before the browser installer can reconnect.
-        if (storage_init() == ESP_OK) (void)initialize_support_history();
+        if (storage_init() == ESP_OK && initialize_support_history())
+            wind_support_record_recovery_boot(result, HARDWARE_DRIVER_STAGE_INITIALIZE);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }

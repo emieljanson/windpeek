@@ -45,6 +45,18 @@ TEST_F(SupportHistory, RetainsIdentitySettingsAndFailureAcrossReinitialization) 
     EXPECT_EQ(event.find("private-"), std::string::npos);
 }
 
+TEST_F(SupportHistory, RecoveryBootPreservesFailureAlongsideEarlierHistory) {
+    wind_support_record(WIND_SUPPORT_SETUP_FAILED, ESP_ERR_INVALID_ARG, 3, nullptr, nullptr);
+    ASSERT_EQ(wind_support_init(directory.c_str(), "ffffffffffffffffffffffffffffffff"), ESP_OK);
+    wind_support_record_recovery_boot(ESP_ERR_TIMEOUT, 1);
+    EXPECT_NE(read(1).find("setup-failed"), std::string::npos);
+    const auto boot = read(2);
+    EXPECT_NE(boot.find("\"kind\":\"boot\""), std::string::npos);
+    EXPECT_NE(boot.find("\"result\":263"), std::string::npos);
+    EXPECT_NE(boot.find("\"stage\":1"), std::string::npos);
+    EXPECT_NE(read(0).find("0123456789abcdef0123456789abcdef"), std::string::npos);
+}
+
 TEST_F(SupportHistory, BoundsHistoryAndIgnoresInterruptedWrites) {
     for (unsigned i = 0; i < 40; ++i) wind_support_record(WIND_SUPPORT_REFRESH_COMPLETE, ESP_OK, 4, nullptr, nullptr);
     std::ofstream(directory + "/support-08.json.tmp") << "broken";

@@ -168,7 +168,7 @@ esp_err_t wind_support_init(const char *directory, const char *new_device_id) {
 static esp_err_t record_event(wind_support_kind_t kind, esp_err_t result, unsigned stage,
                               const installed_configuration_t *configuration,
                               const wind_provider_diagnostics_t *forecast,
-                              const wind_app_status_t *refresh) {
+                              const wind_app_status_t *refresh, bool hardware_ready) {
     if (!s_ready || kind < WIND_SUPPORT_BOOT || kind > WIND_SUPPORT_REFRESH_FAILED) return ESP_ERR_INVALID_STATE;
     LOCK();
     if (s_newest == UINT32_MAX) { UNLOCK(); return ESP_ERR_INVALID_STATE; }
@@ -184,12 +184,16 @@ static esp_err_t record_event(wind_support_kind_t kind, esp_err_t result, unsign
     cJSON_AddNumberToObject(entry, "uptimeMs", (double)(esp_timer_get_time() / 1000));
     cJSON_AddNumberToObject(entry, "resetReason", esp_reset_reason());
     cJSON_AddNumberToObject(entry, "wakeReasons", (double)esp_sleep_get_wakeup_causes());
-    cJSON_AddNumberToObject(entry, "batteryPercent", board_hal_get_battery_percent());
-    cJSON_AddBoolToObject(entry, "usbPowered", board_hal_is_usb_connected());
     cJSON_AddBoolToObject(entry, "wifiConnected", wifi_manager_is_connected());
-    const epaper_panel_diagnostics_t panel = epaper_panel_diagnostics_get();
-    cJSON_AddNumberToObject(entry, "panelPhase", panel.phase);
-    cJSON_AddNumberToObject(entry, "panelWaitMs", panel.wait_ms);
+    if (hardware_ready) {
+        cJSON_AddNumberToObject(entry, "batteryPercent", board_hal_get_battery_percent());
+        cJSON_AddBoolToObject(entry, "usbPowered", board_hal_is_usb_connected());
+        const epaper_panel_diagnostics_t panel = epaper_panel_diagnostics_get();
+        cJSON_AddNumberToObject(entry, "panelPhase", panel.phase);
+        cJSON_AddNumberToObject(entry, "panelWaitMs", panel.wait_ms);
+    }
+#else
+    (void)hardware_ready;
 #endif
     if (forecast) {
         cJSON_AddNumberToObject(entry, "httpStatus", forecast->http_status);
@@ -214,7 +218,11 @@ static esp_err_t record_event(wind_support_kind_t kind, esp_err_t result, unsign
 void wind_support_record(wind_support_kind_t kind, esp_err_t result, unsigned stage,
                          const installed_configuration_t *configuration,
                          const wind_provider_diagnostics_t *forecast) {
-    (void)record_event(kind, result, stage, configuration, forecast, NULL);
+    (void)record_event(kind, result, stage, configuration, forecast, NULL, true);
+}
+
+void wind_support_record_recovery_boot(esp_err_t result, unsigned stage) {
+    (void)record_event(WIND_SUPPORT_BOOT, result, stage, NULL, NULL, NULL, false);
 }
 
 void wind_support_record_refresh(const wind_app_status_t *status, unsigned last_stage) {
@@ -226,7 +234,7 @@ void wind_support_record_refresh(const wind_app_status_t *status, unsigned last_
         (status->attempted_fetch && status->fetch_result != ESP_OK);
     (void)record_event(failed ? WIND_SUPPORT_REFRESH_FAILED : WIND_SUPPORT_REFRESH_COMPLETE,
         status->result, last_stage, have_config ? config : NULL,
-        status->attempted_fetch ? &status->forecast : NULL, status);
+        status->attempted_fetch ? &status->forecast : NULL, status, true);
     free(config);
 }
 

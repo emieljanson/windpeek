@@ -56,6 +56,10 @@ small identity file. Writes use a temporary file, flush/fsync and rename.
 Interrupted temporary files are ignored. Logging errors never replace the
 original operation result. Recovery boots that cannot mount persistent storage
 cannot supply a journal.
+Recovery boots record reset/wake metadata and any latched or initialization
+failure without reading uninitialized battery/panel hardware. Their boot-event
+`stage` is the hardware-driver stage; normal setup/refresh events use their own
+stage enums. Recovery timestamps may precede clock synchronization.
 
 The current installer erases storage on **every firmware change**. It captures
 available evidence before flashing and retains it under `beforeFirmwareErase`
