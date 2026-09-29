@@ -1,6 +1,6 @@
 import { createDiagnosticOutbox } from './diagnosticOutbox'
 import { filterDeviceEvidence } from './deviceEvidence'
-import { sanitizeDiagnosticText, sanitizeDeviceState } from './installerDiagnostics'
+import { sanitizeDiagnosticText, sanitizeDeviceState, sanitizeProtocolFailure } from './installerDiagnostics'
 
 const REFERENCE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const REFERENCE_PATTERN = /^WS-[0-9A-HJKMNP-TV-Z]{10}$/
@@ -24,7 +24,7 @@ const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
   'retryCount', 'entryCount', 'textBytes', 'baudRate',
   'requestTimeoutMs', 'receivedBytes', 'receivedChunks', 'discardedBytes',
-  'staleFrames', 'bufferedBytes', 'expectedFrameBytes',
+  'staleFrames', 'bufferedBytes', 'expectedFrameBytes', 'idleMs',
 ])
 
 function safeString(value, maxLength = 240) {
@@ -51,6 +51,8 @@ function filterTimeline(input) {
   if (!Array.isArray(input)) return []
   return input.slice(-100).map((candidate) => {
     const entry = pickScalars(candidate, ENTRY_FIELDS, 512)
+    const failure = sanitizeProtocolFailure(candidate?.failure)
+    if (failure) entry.failure = failure
     const deviceState = sanitizeDeviceState(candidate?.deviceState)
     if (deviceState) entry.deviceState = deviceState
     if (candidate?.measurements && typeof candidate.measurements === 'object') {

@@ -8,6 +8,23 @@ Crash evidence is separate from the bounded command timeline. State polling repl
 
 `hello` records the actual running firmware before the first `get_state`, including when that request fails or the firmware has just been upgraded. Existing firmware remains compatible: health fields are optional, and its existing panic output can still be decoded.
 
+## USB request evidence
+
+USB request failures also retain a fixed `failure.stage` (`encode`, `write`,
+`read`, `response`, `read-ended`, or `timeout`) and an allowlisted error name,
+including while credentials suppress free-form text. Unknown names and arbitrary
+error messages/stacks are excluded from this structured field. `idleMs` measures
+the wall-clock gap since opening the protocol or finishing its previous request;
+it does not establish whether the computer or device slept. These fields survive
+the collector and Sentry filters and appear in the downloadable report. They do
+not change retries, timeouts, connection recovery, or firmware sleep behavior.
+
+The September 28 WINDPEEK-D reports lack this evidence. Their USB failure cannot
+be attributed retrospectively to device sleep, a disconnected cable, or a host
+driver. Validate on hardware with a 40-minute pause at Wi-Fi entry, followed by
+setup submission; separately exercise host sleep and USB disconnection. Unit
+tests simulate stream failures and elapsed time, not actual device power policy.
+
 ## Numeric checkpoints
 
 | Stage | Operation reached |
