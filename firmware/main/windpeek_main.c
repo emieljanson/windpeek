@@ -33,6 +33,8 @@
 #include "wind_navigation.h"
 #include "wind_spots.h"
 #include "wind_installer_service.h"
+#include "wind_support.h"
+#include "esp_random.h"
 #include "wind_battery_policy.h"
 #include "esp_timer.h"
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
@@ -697,6 +699,14 @@ void app_main(void)
         ESP_LOGW(TAG, "RTC initialization failed: %s", esp_err_to_name(result));
     }
     (void) restore_clock_from_rtc();
+
+    uint8_t support_random[16];
+    char support_id[33];
+    esp_fill_random(support_random, sizeof(support_random));
+    for (size_t i = 0; i < sizeof(support_random); ++i)
+        snprintf(support_id + i * 2, 3, "%02x", support_random[i]);
+    if (storage_has_persistent_storage() && wind_support_init(FS_MOUNT_POINT, support_id) == ESP_OK)
+        wind_support_record(WIND_SUPPORT_BOOT, ESP_OK, 0, NULL, NULL);
 
     ESP_ERROR_CHECK(display_manager_init());
     ESP_ERROR_CHECK(power_manager_init());

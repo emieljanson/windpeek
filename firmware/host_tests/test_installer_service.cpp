@@ -140,6 +140,29 @@ std::string request(wind_installer_service_t *service, const char *json)
 }
 }
 
+TEST(InstallerServiceTest, DiagnosticsAreOptionalReadOnlyAndValidateSequence)
+{
+    FakeDevice device;
+    auto service = make_service(&device);
+    EXPECT_EQ(request(&service, R"({"command":"hello"})").find("diagnostics"), std::string::npos);
+    EXPECT_NE(request(&service, R"({"command":"get_diagnostics","sequence":0})").find("diagnostics_unavailable"), std::string::npos);
+    service.dependencies.read_diagnostics = [](void *, uint32_t sequence, char *out, size_t size) {
+        snprintf(out, size, "{\"status\":\"ok\",\"sequence\":%u}", sequence);
+        return ESP_OK;
+    };
+    EXPECT_NE(request(&service, R"({"command":"hello"})").find("\"diagnostics\""), std::string::npos);
+    device.async_apply = true;
+    service.dependencies.apply_state = apply_state;
+    EXPECT_NE(request(&service, R"({"command":"get_diagnostics","sequence":32})").find("\"sequence\":32"), std::string::npos);
+    for (auto value : {"-1", "0.5", "4294967296", "null", "\"1\""}) {
+        std::string json = std::string("{\"command\":\"get_diagnostics\",\"sequence\":") + value + "}";
+        char out[128];
+        EXPECT_EQ(wind_installer_service_handle_json(&service, json.c_str(), json.size(), out, sizeof(out)), ESP_ERR_INVALID_ARG);
+    }
+    EXPECT_EQ(device.commits, 0);
+    EXPECT_EQ(device.wifi_tests, 0);
+}
+
 TEST(InstallerServiceTest, ReportsNumericHealthWithoutConfigurationContents)
 {
     FakeDevice device;

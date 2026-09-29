@@ -1,5 +1,6 @@
 import { createDiagnosticOutbox } from './diagnosticOutbox'
 import { filterDeviceEvidence } from './deviceEvidence'
+import { sanitizeSupportReport } from './supportReport'
 import { sanitizeDiagnosticText, sanitizeDeviceState, sanitizeProtocolFailure } from './installerDiagnostics'
 
 const REFERENCE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
@@ -106,6 +107,7 @@ export function filterInstallerEvent(event) {
     tags: pickScalars(event.tags, TAG_FIELDS, 160),
     contexts: { installer: pickScalars(event.contexts?.installer, CONTEXT_FIELDS, 240) },
     extra: {
+      ...(event.extra?.support ? { support: sanitizeSupportReport(event.extra.support) } : {}),
       timeline: filterTimeline(event.extra?.timeline),
       ...(sanitizeDeviceState(event.extra?.firstDeviceFailure) ? { firstDeviceFailure: sanitizeDeviceState(event.extra.firstDeviceFailure) } : {}),
       ...(event.extra?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(event.extra.deviceEvidence) } : {}),
@@ -126,10 +128,11 @@ export function createDiagnosticReport(snapshot) {
   const filtered = filterInstallerEvent({
     tags: { 'windpeek.diagnostic': INSTALLER_MARKER },
     contexts: { installer: snapshot?.context },
-    extra: { timeline: snapshot?.entries, firstDeviceFailure: snapshot?.firstDeviceFailure,
+    extra: { support: snapshot?.support, timeline: snapshot?.entries, firstDeviceFailure: snapshot?.firstDeviceFailure,
       deviceEvidence: snapshot?.deviceEvidence, textBytes: snapshot?.textBytes },
   })
-  return JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra }, null, 2)
+  // Compact JSON leaves room for both histories in the 2 MiB Sentry envelope.
+  return JSON.stringify({ version: 1, context: filtered.contexts.installer, ...filtered.extra })
 }
 
 function createReference(randomBytes) {
@@ -254,8 +257,8 @@ export function createSentryReporter({
         release: release || undefined,
         environment,
         defaultIntegrations: false,
-        // extra.timeline[].measurements/deviceState must survive SDK normalization.
-        normalizeDepth: 6,
+        // Preserve nested per-spot settings in both current and pre-erase history.
+        normalizeDepth: 12,
         sendClientReports: false,
         enableLogs: false,
         enableMetrics: false,
@@ -352,6 +355,7 @@ export function createSentryReporter({
           tags,
           contexts: { installer: context },
           extra: {
+            ...(input.snapshot?.support ? { support: sanitizeSupportReport(input.snapshot.support) } : {}),
             timeline: filterTimeline(input.snapshot?.entries),
             ...(input.snapshot?.deviceEvidence ? { deviceEvidence: filterDeviceEvidence(input.snapshot.deviceEvidence) } : {}),
             ...(input.snapshot?.firstDeviceFailure ? { firstDeviceFailure: sanitizeDeviceState(input.snapshot.firstDeviceFailure) } : {}),
@@ -388,7 +392,7 @@ export function sanitizeQueuedDiagnostic(input) {
   if (!input || typeof input.occurrence !== 'string' || !input.occurrence.length || input.occurrence.length > 100) return null
   const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': INSTALLER_MARKER },
     contexts: { installer: input.snapshot?.context },
-    extra: { timeline: input.snapshot?.entries, firstDeviceFailure: input.snapshot?.firstDeviceFailure,
+    extra: { support: input.snapshot?.support, timeline: input.snapshot?.entries, firstDeviceFailure: input.snapshot?.firstDeviceFailure,
       deviceEvidence: input.snapshot?.deviceEvidence, textBytes: input.snapshot?.textBytes } })
   const error = safeError(input.error)
   return {
@@ -397,7 +401,7 @@ export function sanitizeQueuedDiagnostic(input) {
     error: { code: safeString(input.error?.code, 120), name: error.name,
       message: error.message,
       ...(typeof input.error?.stack === 'string' ? { stack: error.stack } : {}) },
-    snapshot: { context: event.contexts.installer, entries: event.extra.timeline,
+    snapshot: { support: event.extra.support, context: event.contexts.installer, entries: event.extra.timeline,
       firstDeviceFailure: event.extra.firstDeviceFailure, deviceEvidence: event.extra.deviceEvidence,
       textBytes: event.extra.textBytes },
   }

@@ -275,6 +275,7 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
         service->dependencies.get_hardware_profile(service->dependencies.context, &profile) == ESP_OK;
     const char *hardware_model = hardware_model_json_name(profile.effective_model);
     const char *stored_hardware_model = hardware_model_json_name(profile.stored_model);
+    const char *diagnostics = service->dependencies.read_diagnostics ? ",\"diagnostics\"" : "";
     const int written = has_hardware_profile
         ? snprintf(
               response, response_size,
@@ -282,11 +283,11 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
               "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
               "\"configuration\",\"render-verification\",\"clock-sync\",\"completion-ack\","
-              "\"hardware-profile\"],\"hardwareModel\":\"%s\","
+              "\"hardware-profile\"%s],\"hardwareModel\":\"%s\","
               "\"storedHardwareModel\":\"%s\",\"hardwareProfileRevision\":%" PRIu32 ","
               "\"safeBootOverride\":%s,\"driverFailureLatched\":%s}",
               WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION,
-              hardware_model, stored_hardware_model, profile.revision,
+              diagnostics, hardware_model, stored_hardware_model, profile.revision,
               profile.safe_boot_override ? "true" : "false",
               profile.driver_failure_latched ? "true" : "false")
         : snprintf(
@@ -294,8 +295,8 @@ static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
               "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\","
               "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
               "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
-              "\"configuration\",\"render-verification\",\"clock-sync\",\"completion-ack\"]}",
-              WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
+              "\"configuration\",\"render-verification\",\"clock-sync\",\"completion-ack\"%s]}",
+              WINDPEEK_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION, diagnostics);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -496,7 +497,8 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                !hardware_profile_allows_setup(service)) {
         result = write_response(response, response_size, "hardware_profile_required", NULL);
     } else if (apply_in_progress(service) && strcmp(command->valuestring, "hello") != 0 &&
-               strcmp(command->valuestring, "get_state") != 0) {
+               strcmp(command->valuestring, "get_state") != 0 &&
+               strcmp(command->valuestring, "get_diagnostics") != 0) {
         // The render/commit transaction owns the staged configuration and
         // credential buffers until it finishes. A second mutation cannot
         // safely cancel or replace those values mid-apply.
@@ -510,6 +512,18 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
         result = handle_hello(service, response, response_size);
     } else if (strcmp(command->valuestring, "get_state") == 0) {
         result = handle_state(service, response, response_size);
+    } else if (strcmp(command->valuestring, "get_diagnostics") == 0) {
+        const cJSON *sequence = cJSON_GetObjectItemCaseSensitive(request, "sequence");
+        if (!cJSON_IsNumber(sequence) || sequence->valuedouble < 0 ||
+            sequence->valuedouble > UINT32_MAX ||
+            sequence->valuedouble != (uint32_t)sequence->valuedouble) {
+            result = ESP_ERR_INVALID_ARG;
+        } else {
+            result = service->dependencies.read_diagnostics
+                ? service->dependencies.read_diagnostics(service->dependencies.context,
+                    (uint32_t)sequence->valuedouble, response, response_size)
+                : write_response(response, response_size, "diagnostics_unavailable", NULL);
+        }
     } else if (strcmp(command->valuestring, "set_hardware_profile") == 0) {
         result = handle_set_hardware_profile(service, request, response, response_size);
     } else if (strcmp(command->valuestring, "scan_networks") == 0) {

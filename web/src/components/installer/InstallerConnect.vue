@@ -26,6 +26,7 @@ defineEmits(['buy', 'connect'])
         <p>Connect your {{ deviceLabel }} with a USB data cable.</p>
       </template>
     </div>
+    <p v-if="!unsupportedReason" class="installer-message">If setup fails, a report is sent automatically with your selected locations, settings and recent device history. Wi-Fi names and passwords are excluded.</p>
     <div v-if="!unsupportedReason" class="installer-actions">
       <button
         v-if="!chooserCancelled || !alternateTransport"

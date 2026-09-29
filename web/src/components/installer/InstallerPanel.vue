@@ -215,7 +215,7 @@ onBeforeUnmount(() => { unsubscribe(); document.removeEventListener('keydown', h
           </div>
 
           <InstallerWifi v-else-if="displayPhase === 'wifi'" :networks="networks" :error="state.error?.message" :busy="wifiBusy || scanBusy" :scanning="scanBusy" :diagnostic-status="state.diagnosticStatus" :diagnostic-reference="state.diagnosticReference" :diagnostic-report="state.diagnosticReport" @submit="submitWifi" @rescan="scanNetworks" />
-          <InstallerComplete v-else-if="state.phase === 'complete'" @done="close" />
+          <InstallerComplete v-else-if="state.phase === 'complete'" :report="state.diagnosticReport" @done="close" />
 
           <div v-else-if="state.phase === 'verification-issue'" class="installer-step installer-step--error">
             <div class="installer-step__copy">

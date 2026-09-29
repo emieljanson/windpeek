@@ -70,6 +70,8 @@ typedef struct {
     /* Numeric ESP-IDF failure code only; never diagnostic text or credentials. */
     esp_err_t (*apply_error)(void *context);
     void (*health)(void *context, wind_installer_health_t *health);
+    esp_err_t (*read_diagnostics)(void *context, uint32_t sequence, char *response,
+                                  size_t response_size);
 } wind_installer_dependencies_t;
 
 typedef struct {

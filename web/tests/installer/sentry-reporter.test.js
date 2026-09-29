@@ -1,6 +1,53 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSentryReporter, createDiagnosticReport, filterInstallerEvent, sanitizeQueuedDiagnostic } from '../../src/installer/sentryReporter'
 
+it('keeps a full ten-spot current and pre-erase history within the report endpoint limit', () => {
+  const long = '漢'.repeat(64)
+  const spot = { version: 5, generation: 123456789, boardId: 'seeedstudio_reterminal_e1003',
+    deviceTimezone: 'America/New_York', forecastModel: long, digest: '0123456789abcdef',
+    spot: { id: long, name: long, latitude: -90, longitude: -180, timezone: 'America/New_York' },
+    display: { windSize: 'large', swellSize: 'large', swellModel: long, timeFormat: '24-hour', temperatureUnit: 'celsius',
+      showThreshold: true, threshold: 80, showWeather: true, showTemperature: true, showTide: true, showDedicatedFooter: true,
+      moduleOrder: ['wind', 'swell', 'weather', 'temperature', 'tide'] } }
+  const configuration = { ...spot, additionalSpots: Array(9).fill(spot) }
+  const support = { selectedConfiguration: configuration, installedConfiguration: configuration,
+    history: Array.from({ length: 32 }, (_, sequence) => ({ sequence, kind: 'setup-failed', result: 258,
+      firmwareVersion: long, timestamp: 1790192485, uptimeMs: 1000000, configuration })) }
+  const snapshot = { support: { ...support, beforeFirmwareErase: support }, entries: [] }
+  const attachment = createDiagnosticReport(snapshot)
+  const event = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: snapshot })
+  // Reserve 200 KiB for the existing timeline, exception and envelope headers.
+  expect(new TextEncoder().encode(attachment + JSON.stringify(event)).length).toBeLessThan(2 * 1024 * 1024 - 200 * 1024)
+})
+
+it('preserves settings and device history through download, queue and Sentry without credentials', async () => {
+  const configuration = { version: 5, boardId: 'seeedstudio_reterminal_e1002',
+    deviceTimezone: 'America/New_York', digest: '0123456789abcdef',
+    spot: { id: 'falmouth', name: 'Falmouth', latitude: 41.55, longitude: -70.61, timezone: 'America/New_York', password: 'hidden-spot-secret' },
+    forecastModel: 'best_match', display: { showTide: true, windSize: 'large', password: 'hidden-display-secret' },
+    ssid: 'hidden-network', password: 'hidden-password' }
+  const support = { capturedAt: 1790683200000, deviceId: '0123456789abcdef0123456789abcdef',
+    selectedConfiguration: configuration, installedConfiguration: configuration,
+    history: [{ sequence: 1, kind: 'setup-failed', result: 258, stage: 3,
+      timestamp: 1790192485, uptimeMs: 70945, firmwareVersion: 'dev-bfdc6973',
+      configuration, password: 'hidden-event-secret' }], rawConsole: 'hidden-console' }
+  const input = reportInput({ snapshot: { context: {}, entries: [], support } })
+  const downloaded = JSON.parse(createDiagnosticReport(input.snapshot))
+  expect(downloaded.support.selectedConfiguration.spot.name).toBe('Falmouth')
+  expect(downloaded.support.history[0].result).toBe(258)
+  expect(JSON.stringify(downloaded)).not.toContain('hidden-')
+  const queued = sanitizeQueuedDiagnostic(input)
+  expect(queued.snapshot.support).toEqual(downloaded.support)
+  const sdk = fakeSdk()
+  const reporter = createSentryReporter({ enabled: true, dsn: 'https://key@example.test/1', loadSentry: async () => sdk })
+  await reporter.report(queued)
+  const hint = sdk.captureException.mock.calls[0][1]
+  expect(hint.captureContext.extra.support).toEqual(downloaded.support)
+  expect(JSON.parse(hint.attachments[0].data).support).toEqual(downloaded.support)
+  const filtered = filterInstallerEvent({ tags: { 'windpeek.diagnostic': 'installer' }, extra: { support } })
+  expect(filtered.extra.support).toEqual(downloaded.support)
+})
+
 function fakeSdk({ statusCode = 200, sendError, flushResult = true } = {}) {
   let options
   let transport

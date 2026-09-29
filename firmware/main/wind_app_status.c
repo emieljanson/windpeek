@@ -1,6 +1,7 @@
 #include "wind_app_status.h"
 
 #ifdef ESP_PLATFORM
+#include "wind_support.h"
 #include "freertos/FreeRTOS.h"
 static portMUX_TYPE s_status_lock = portMUX_INITIALIZER_UNLOCKED;
 #define LOCK() portENTER_CRITICAL(&s_status_lock)
@@ -38,8 +39,16 @@ void wind_app_status_finish(esp_err_t result, esp_err_t fetch_result,
     };
     if (attempted_fetch && forecast) completed.forecast = *forecast;
     LOCK();
+#ifdef ESP_PLATFORM
+    const unsigned last_stage = s_status.stage;
+#endif
     s_status = completed;
     UNLOCK();
+#ifdef ESP_PLATFORM
+    // File writes must stay outside the status critical section. Logging is
+    // best-effort and never changes the refresh result.
+    wind_support_record_refresh(&completed, last_stage);
+#endif
 }
 
 void wind_app_status_get(wind_app_status_t *out)

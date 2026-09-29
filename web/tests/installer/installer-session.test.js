@@ -29,6 +29,72 @@ function e1001Configuration() {
 
 
 describe('installer session', () => {
+  it('does not turn successful setup into a failure when report creation is unavailable', async () => {
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => appProtocol(),
+      diagnostics: { snapshot() { throw new Error('Report unavailable') } } })
+    await session.connect()
+    expect(session.getState().phase).toBe('complete')
+    expect(session.getState().diagnosticReport).toBeNull()
+  })
+
+  it('never reinstalls healthy firmware after an optional history timeout', async () => {
+    const protocol = appProtocol()
+    const original = protocol.request.getMockImplementation()
+    let readerCancelled = false
+    protocol.open.mockImplementation(async () => { readerCancelled = false })
+    protocol.request.mockImplementation(async (command, values) => {
+      if (command === 'get_diagnostics') {
+        readerCancelled = true
+        throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Timeout')
+      }
+      if (readerCancelled) throw new Error('Reader closed')
+      const result = await original(command, values)
+      return command === 'hello' ? { ...result, capabilities: [...result.capabilities, 'diagnostics'] } : result
+    })
+    const partsLoader = vi.fn()
+    const session = createInstallerSession({ configuration, partsLoader, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+    await session.connect()
+    expect(session.getState().phase).toBe('complete')
+    expect(protocol.open).toHaveBeenLastCalledWith({ resetDevice: false })
+    expect(partsLoader).not.toHaveBeenCalled()
+    expect(JSON.parse(session.getState().diagnosticReport).support.historyStatus).toBe('unavailable')
+  })
+
+  it.each([false, true])('collects the final device history before reporting (failure=%s)', async (fail) => {
+    const protocol = appProtocol({ digest: 'old', wifiHealthy: false })
+    const original = protocol.request.getMockImplementation()
+    let applied = false
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'hello') {
+        const hello = await original(command, values, timeout)
+        return { ...hello, capabilities: [...hello.capabilities, 'diagnostics'] }
+      }
+      if (command === 'get_diagnostics') return values.sequence === 0
+        ? { status: 'ok', deviceId: '0123456789abcdef0123456789abcdef', oldestSequence: applied ? 1 : 0,
+          newestSequence: applied ? 1 : 0, configuration: { digest: applied && !fail ? 'wanted' : 'old' } }
+        : { status: 'ok', entry: { sequence: 1, kind: fail ? 'setup-failed' : 'setup-complete', result: fail ? 258 : 0 } }
+      if (command === 'apply_configuration') {
+        applied = true
+        if (fail) throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Setup failed')
+      }
+      return original(command, values, timeout)
+    })
+    const reporter = { report: vi.fn().mockResolvedValue({ status: 'failed' }) }
+    const session = createInstallerSession({ configuration, reporter, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+    await session.connect()
+    expect(session.getState().phase).toBe('wifi')
+    await session.submitWifi({ ssid: 'private-network', password: 'private-password' })
+    const report = JSON.parse(session.getState().diagnosticReport)
+    expect(report.support.history[0].kind).toBe(fail ? 'setup-failed' : 'setup-complete')
+    expect(report.support.selectedConfiguration.digest).toBe('wanted')
+    expect(session.getState().diagnosticReport).not.toContain('private-')
+    if (fail) expect(reporter.report.mock.calls[0][0].snapshot.support.history).toEqual(report.support.history)
+    else expect(session.getState().phase).toBe('complete')
+  })
+
   it.each(['install', 'reinstall', 'update-firmware'])('notifies once after verified %s, including reconnection', async (kind) => {
     const before = kind === 'install'
       ? { open: vi.fn().mockRejectedValue(new Error('no app')), close: vi.fn() }

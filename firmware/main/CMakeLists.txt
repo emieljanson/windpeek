@@ -45,6 +45,7 @@ set(WINDPEEK_SOURCES
     "wind_app.c"
     "wind_dashboard_data.c"
     "wind_app_status.c"
+    "wind_support.c"
     "wind_app_cycle.c"
     "wind_analytics.c"
 )
