@@ -2,6 +2,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from generate_installer_manifest import ManifestError, generate_installer_bundle, validate_manifest
@@ -50,6 +51,14 @@ class InstallerManifestTest(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_rejects_invalid_ota_sequences_before_writing_a_bundle(self):
+        for sequence in ["-1", "4294967296", "1.5", "release"]:
+            with self.subTest(sequence=sequence), patch.dict("os.environ", {"WINDPEEK_OTA_SEQUENCE": sequence}):
+                with self.assertRaises(ManifestError):
+                    generate_installer_bundle(self.build, self.partitions, self.output,
+                                              "v1.2.3", "seeedstudio_reterminal_e1002")
+                self.assertFalse(self.output.exists())
+
     def test_generates_reproducible_clean_and_preserving_sets(self):
         manifest_path = generate_installer_bundle(
             build_dir=self.build,
@@ -62,7 +71,7 @@ class InstallerManifestTest(unittest.TestCase):
         manifest = json.loads(first)
         self.assertEqual(manifest["firmwareLayoutVersion"], 1)
         self.assertEqual(manifest["flashSize"], 32 * 1024 * 1024)
-        self.assertEqual(manifest["configuration"], {"minimum": 5, "maximum": 5})
+        self.assertEqual(manifest["configuration"], {"minimum": 5, "maximum": 6})
         self.assertTrue(manifest["cleanInstall"]["eraseFlash"])
         self.assertEqual(
             [part["kind"] for part in manifest["cleanInstall"]["parts"]],
@@ -70,7 +79,7 @@ class InstallerManifestTest(unittest.TestCase):
         )
         self.assertEqual(
             [part["kind"] for part in manifest["preservingUpdate"]["parts"]],
-            ["boot-selection", "application"],
+            ["bootloader", "boot-selection", "application"],
         )
         for part in manifest["parts"]:
             published = manifest_path.parent / part["file"]

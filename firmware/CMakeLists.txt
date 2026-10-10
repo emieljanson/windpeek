@@ -30,6 +30,14 @@ message(STATUS "Firmware version: ${FIRMWARE_VERSION}")
 add_compile_options(-Wno-missing-field-initializers)
 add_compile_definitions(FIRMWARE_VERSION="${FIRMWARE_VERSION}")
 
+if(NOT DEFINED WINDPEEK_OTA_SEQUENCE)
+    set(WINDPEEK_OTA_SEQUENCE 0)
+endif()
+if(NOT WINDPEEK_OTA_SEQUENCE MATCHES "^[0-9]+$" OR WINDPEEK_OTA_SEQUENCE GREATER 4294967295)
+    message(FATAL_ERROR "WINDPEEK_OTA_SEQUENCE must be an unsigned release number")
+endif()
+add_compile_definitions(WINDPEEK_OTA_SEQUENCE=${WINDPEEK_OTA_SEQUENCE})
+
 # Generate partitions.csv by reading config from sdkconfig / defaults files.
 set(_config_files "")
 if(DEFINED SDKCONFIG_DEFAULTS)

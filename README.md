@@ -126,12 +126,17 @@ font. Check that licence before distributing firmware binaries.
 
 ## Firmware updates
 
-Reconnect the device over USB-C and open the browser installer. It chooses a
-configuration-only update or a clean firmware installation based on the connected
-device and release. Firmware updates erase stored settings and Wi-Fi; enter Wi-Fi
-again to finish setup. With current firmware, setup keeps Wi-Fi and actively
-fetches, renders and saves a forecast before reporting success, even when the
-settings already match.
+Firmware with OTA support checks for updates once a day during an existing
+forecast wake. It requires Wi-Fi and either USB power or at least 3800 mV battery
+voltage. It verifies the model, release sequence, manifest and application hashes,
+then writes only the inactive application partition. Settings and Wi-Fi remain
+stored. The rollback bootloader returns to the previous app if the new firmware
+crashes before confirming its first successful dashboard refresh.
+
+Devices running older firmware need one USB installation to gain OTA support.
+Compatible preserving USB updates include the rollback bootloader and application
+without erasing settings. A layout mismatch still requires a clean installation.
+The browser installer remains available for recovery.
 
 The upstream photo-frame application has been removed. Firmware builds only
 Windpeek for E1001/E1002 and E1003.

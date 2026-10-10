@@ -153,6 +153,19 @@ add_wind_test(wind_timezone_test test_wind_timezone.cpp)
 
 add_wind_test(wind_clock_test test_wind_clock.cpp ../main/wind_clock.c)
 
+add_wind_test(wind_ota_test test_wind_ota.cpp ../main/wind_ota.c ../main/wind_clock.c)
+target_link_libraries(wind_ota_test cjson)
+target_include_directories(wind_ota_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(ota_runtime_test test_ota_runtime.cpp runtime_ota.c ../main/wind_clock.c)
+target_include_directories(ota_runtime_test BEFORE PRIVATE ota_stubs ${cjson_SOURCE_DIR})
+target_link_libraries(ota_runtime_test cjson)
+
+add_wind_test(wind_device_errors_test test_wind_device_errors.cpp
+  ../main/wind_device_errors.c ../main/wind_clock.c)
+target_link_libraries(wind_device_errors_test cjson)
+target_include_directories(wind_device_errors_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
 add_wind_test(
   wind_analytics_test
   test_wind_analytics.cpp
@@ -333,6 +346,8 @@ add_wind_test(
   e1003_runtime_test
   test_e1003_runtime.cpp
   runtime_app.c
+  ../main/wind_device_errors.c
+  ../main/wind_clock.c
   runtime_swell.c
   ../main/wind_app_cycle.c
   ../main/wind_app_status.c

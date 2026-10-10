@@ -141,6 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WINDPEEK_POSTHOG_PROJECT_TOKEN: ${{ github.event_name != 'pull_request' && vars.WINDPEEK_POSTHOG_PROJECT_TOKEN || '' }}
+      WINDPEEK_OTA_SEQUENCE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -243,6 +244,7 @@ jobs:
             ( test "${{ github.event_name }}" = "pull_request" ||
             test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
             python3 build.py --board seeedstudio_reterminal_e100x
+            -DWINDPEEK_OTA_SEQUENCE='${{ github.run_number }}'
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}' &&
             python3 scripts/check_installer_stack.py build
 
@@ -278,6 +280,7 @@ jobs:
             ( test "${{ github.event_name }}" = "pull_request" ||
             test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
             python3 build.py --board seeedstudio_reterminal_e1003 --fullclean
+            -DWINDPEEK_OTA_SEQUENCE='${{ github.run_number }}'
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}' &&
             python3 scripts/check_installer_stack.py build
 

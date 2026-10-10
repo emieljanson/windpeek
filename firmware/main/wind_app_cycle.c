@@ -165,6 +165,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         }
     }
 
+    if (local.attempted_fetch && local.fetch_result != ESP_OK && app->config.report_error)
+        app->config.report_error(WIND_DEVICE_ERROR_FORECAST, local.fetch_result);
     local.freshness = wind_app_forecast_freshness(have_active ? &active : NULL, now);
     // Installation must prove the new configuration can fetch real data
     // before touching the panel. Ordinary offline refreshes may show cache.
@@ -181,6 +183,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     }
     uint8_t *bitmap = (uint8_t *)malloc(app->config.bitmap_size);
     if (!bitmap) {
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_RENDER, ESP_ERR_NO_MEM);
         return ESP_ERR_NO_MEM;
     }
     const bool refresh_failed = local.attempted_fetch && local.fetch_result != ESP_OK;
@@ -189,6 +193,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         refresh_failed, now, bitmap, app->config.bitmap_size);
     if (result != ESP_OK) {
         free(bitmap);
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_RENDER, result);
         if (outcome) {
             *outcome = local;
         }
@@ -210,11 +216,23 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         return ESP_OK;
     }
 
-    result =
-        app->config.display(app->config.io_context, bitmap, app->config.bitmap_size);
+    // A reset during the waveform must not leave the old frame marked valid.
+    result = wind_cache_panel_invalidate(app->config.panel_cache_path);
+    if (result == ESP_OK)
+        result = app->config.display(app->config.io_context, bitmap, app->config.bitmap_size);
     free(bitmap);
     if (result != ESP_OK) {
-        wind_cache_panel_invalidate(app->config.panel_cache_path);
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_DISPLAY, result);
+        // Share the existing one-shot forecast retry, persisted across sleep.
+        // A successful download does not mean the physical panel was updated.
+        // Never re-arm this from the retry itself or from setup/cache previews.
+        if (mode == REFRESH_DISPLAY && !retry_due &&
+            (due || coverage_refresh_due || initial_fetch_due || force_refresh)) {
+            wind_schedule_schedule_retry(&app->schedule, boundary,
+                                         now + FAILED_REFRESH_RETRY_SECONDS);
+            wind_schedule_state_store(app->config.schedule_path, &app->schedule);
+        }
         if (outcome) {
             *outcome = local;
         }

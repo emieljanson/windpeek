@@ -34,6 +34,21 @@ describe('firmware manifest', () => {
     expect(validateFirmwareManifest(manifest()).version).toBe('2.0.0')
   })
 
+  it('installs the rollback bootloader when enabling OTA without erasing settings', async () => {
+    const source = manifest()
+    source.otaProtocol = 1
+    expect(() => validateFirmwareManifest(source)).toThrow(/erase policy/i)
+    source.preservingUpdate.parts.unshift({ ...source.parts[0] })
+    expect(validateFirmwareManifest(source)).toBe(source)
+    const bundle = await loadFirmwareParts({
+      manifest: source, manifestUrl: new URL('https://example.test/firmware/manifest.json'),
+      mode: 'preservingUpdate', cryptoApi: webcrypto,
+      fetchFn: vi.fn(async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer })),
+    })
+    expect(bundle.eraseFlash).toBe(false)
+    expect(bundle.parts.map((part) => part.kind)).toEqual(['bootloader', 'boot-selection', 'application'])
+  })
+
   it('uses the shared E1002 release identity for E1001', () => {
     expect(installerReleaseBoardId(BOARD_IDS.E1001)).toBe(BOARD_IDS.E1002)
   })

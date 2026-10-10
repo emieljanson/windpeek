@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import re
 import shutil
 from pathlib import Path
@@ -136,10 +137,11 @@ def validate_manifest(
             if canonical.get(part.get("kind")) != part:
                 raise ManifestError("Write set does not match its checksummed flash part")
     if [part.get("kind") for part in update.get("parts", [])] != [
+        "bootloader",
         "boot-selection",
         "application",
     ]:
-        raise ManifestError("Preserving update must select and write one application")
+        raise ManifestError("Preserving update must install the rollback bootloader and one application")
     protected = [p for p in _partitions(partitions_path) if p["name"] in {"nvs", "storage"}]
     for part in update["parts"]:
         start, end = part["offset"], part["offset"] + part["size"]
@@ -160,6 +162,10 @@ def generate_installer_bundle(
     board_id: str,
     flat: bool = False,
 ) -> Path:
+    sequence_text = os.environ.get("WINDPEEK_OTA_SEQUENCE", "0")
+    if not re.fullmatch(r"[0-9]{1,10}", sequence_text) or int(sequence_text) > 0xFFFFFFFF:
+        raise ManifestError("OTA sequence must be an unsigned 32-bit release number")
+    sequence = int(sequence_text)
     build_dir = Path(build_dir)
     partitions_path = Path(partitions_path)
     output_dir = Path(output_dir)
@@ -210,12 +216,14 @@ def generate_installer_bundle(
         "firmwareLayoutVersion": FIRMWARE_LAYOUT_VERSION,
         "flashSize": flash_size,
         "protocol": {"minimum": 1, "maximum": 1},
-        "configuration": {"minimum": 5, "maximum": 5},
+        "configuration": {"minimum": 5, "maximum": 6},
+        "otaProtocol": 1,
+        "otaSequence": sequence,
         "parts": parts,
         "cleanInstall": {"eraseFlash": True, "parts": [dict(part) for part in parts]},
         "preservingUpdate": {
             "eraseFlash": False,
-            "parts": [dict(by_kind["boot-selection"]), dict(by_kind["application"])],
+            "parts": [dict(by_kind["bootloader"]), dict(by_kind["boot-selection"]), dict(by_kind["application"])],
         },
         "otaApplication": by_kind["application"]["file"],
     }

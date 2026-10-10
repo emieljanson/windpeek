@@ -294,6 +294,7 @@ static void send_init_sequence(void)
 // RESET -> INIT -> wait -> DTM -> DATA -> PON -> wait -> DRF -> wait -> POF -> wait -> DSLP
 static esp_err_t display_update_cycle(uint8_t *image, bool native_transport)
 {
+    epaper_panel_diagnostics_reset();
     esp_err_t result = ESP_OK;
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
