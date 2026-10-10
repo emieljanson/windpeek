@@ -269,6 +269,15 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
 
 test('shrinks expanded Advanced for installation and returns to collapsed settings', async ({ page }) => {
   await installFakeDevice(page)
+  // Exercise the real panel transitions without software 3D rendering starving
+  // Chromium's main thread on the shared CI runner.
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function getSettingsPanelContext(type, ...args) {
+      if (type === 'webgl' || type === 'webgl2') return null
+      return getContext.call(this, type, ...args)
+    }
+  })
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/?configure')
 
