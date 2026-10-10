@@ -173,6 +173,7 @@ TEST_F(OtaRuntime, BootSelectionFailureRestoresReleaseEligibility) {
     select_result=ESP_FAIL;
     wind_ota_maybe_update();
     EXPECT_EQ(switches,1); EXPECT_EQ(restarts,0); EXPECT_EQ(sequence,0u);
+    EXPECT_EQ(reports,1);
     select_result=ESP_OK; last_check=0;
     wind_ota_maybe_update();
     EXPECT_EQ(restarts,1); EXPECT_EQ(sequence,42u);
