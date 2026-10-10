@@ -189,11 +189,14 @@ static void busy_delay(void *context, uint32_t milliseconds)
 
 static esp_err_t wait_busy(epaper_panel_phase_t phase, const char *label)
 {
+    // A Spectra 6 refresh can exceed 40 seconds. Give the waveform time to
+    // finish before shutdown; retain the shorter limit for other commands.
+    const uint32_t timeout_ms = phase == EPAPER_PANEL_REFRESH ? 60000 : 40000;
     busy_delay(NULL, 10);
-    esp_err_t result = epaper_wait_busy_bounded(is_busy, busy_delay, NULL, 10, 40000);
+    esp_err_t result = epaper_wait_busy_bounded(is_busy, busy_delay, NULL, 10, timeout_ms);
     if (result == ESP_ERR_TIMEOUT) {
-        epaper_panel_diagnostics_timeout(phase, 40000, (uint32_t)gpio_get_level(g_cfg.pin_busy));
-        ESP_LOGW(TAG, "[%s] BUSY timeout after 40s", label);
+        epaper_panel_diagnostics_timeout(phase, timeout_ms, (uint32_t)gpio_get_level(g_cfg.pin_busy));
+        ESP_LOGW(TAG, "[%s] BUSY timeout after %lu ms", label, (unsigned long)timeout_ms);
     }
     return result;
 }
@@ -371,6 +374,7 @@ esp_err_t epaper_init(const epaper_config_t *cfg)
 
 esp_err_t epaper_clear(uint8_t *image, uint8_t color)
 {
+    epaper_panel_diagnostics_reset();
     if (!image) return ESP_ERR_INVALID_ARG;
     uint8_t packed = (color << 4) | color;
     memset(image, packed, EPD_BUF_SIZE);
@@ -383,6 +387,7 @@ esp_err_t epaper_clear(uint8_t *image, uint8_t color)
 
 esp_err_t epaper_display(uint8_t *image)
 {
+    epaper_panel_diagnostics_reset();
     if (!image) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -394,6 +399,7 @@ esp_err_t epaper_display(uint8_t *image)
 
 esp_err_t epaper_display_logical(const uint8_t *image, size_t image_size)
 {
+    epaper_panel_diagnostics_reset();
     if (!image) return ESP_ERR_INVALID_ARG;
     uint8_t *transport = heap_caps_malloc(EPAPER_E1002_TRANSPORT_BYTES,
                                           MALLOC_CAP_SPIRAM);

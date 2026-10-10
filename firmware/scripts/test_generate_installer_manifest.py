@@ -48,6 +48,15 @@ class InstallerManifestTest(unittest.TestCase):
         )
         self.output = self.root / "release"
 
+    def test_sequence_comes_from_built_firmware_and_rejects_mismatch(self):
+        (self.build / "windpeek-ota-sequence.txt").write_text("42\n")
+        with patch.dict("os.environ", {}, clear=True):
+            path = generate_installer_bundle(self.build, self.partitions, self.output, "test-42", "seeedstudio_reterminal_e1002")
+        self.assertEqual(json.loads(path.read_text())["otaSequence"], 42)
+        with patch.dict("os.environ", {"WINDPEEK_OTA_SEQUENCE": "43"}):
+            with self.assertRaises(ManifestError):
+                generate_installer_bundle(self.build, self.partitions, self.output, "test-43", "seeedstudio_reterminal_e1002")
+
     def tearDown(self):
         self.temp.cleanup()
 

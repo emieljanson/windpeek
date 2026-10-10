@@ -134,9 +134,10 @@ stored. The rollback bootloader returns to the previous app if the new firmware
 crashes before confirming its first successful dashboard refresh.
 
 Devices running older firmware need one USB installation to gain OTA support.
-Compatible preserving USB updates include the rollback bootloader and application
-without erasing settings. A layout mismatch still requires a clean installation.
-The browser installer remains available for recovery.
+The bundle includes a settings-preserving write set for compatible layouts, but
+the browser installer currently performs a clean installation: it erases settings
+and Wi-Fi credentials, which must be entered again. It also supplies the
+rollback-capable bootloader. A layout mismatch requires a clean installation.
 
 The upstream photo-frame application has been removed. Firmware builds only
 Windpeek for E1001/E1002 and E1003.

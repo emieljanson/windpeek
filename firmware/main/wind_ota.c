@@ -93,12 +93,17 @@ esp_err_t wind_ota_parse_manifest(const char *json, const char *board,
     return ESP_OK;
 }
 
+static bool ota_interval_elapsed(int64_t now, int64_t last_check)
+{
+    return last_check <= 0 || now < last_check || now - last_check >= 86400;
+}
+
 bool wind_ota_should_check(int64_t now, int64_t last_check, bool connected,
     bool installer_active, bool usb, int battery_mv)
 {
     return wind_clock_is_valid_unix(now) && connected && !installer_active &&
         (usb || battery_mv >= 3800) &&
-        (last_check <= 0 || now < last_check || now - last_check >= 86400);
+        ota_interval_elapsed(now, last_check);
 }
 
 #ifdef ESP_PLATFORM
@@ -215,9 +220,17 @@ static esp_err_t install_application(const char *url, const wind_ota_pointer_t *
     if (result == ESP_OK && psa_hash_setup(&sha, PSA_ALG_SHA_256) != PSA_SUCCESS) result = ESP_FAIL;
     size_t received = 0;
     int64_t deadline = esp_timer_get_time() + INT64_C(120000000);
+    int64_t next_power_check = 0;
     while (result == ESP_OK && received < release->size) {
         if (power_manager_is_installer_active() || esp_timer_get_time() >= deadline) {
             result = ESP_ERR_TIMEOUT; break;
+        }
+        const int64_t tick = esp_timer_get_time();
+        if (tick >= next_power_check) {
+            next_power_check = tick + INT64_C(5000000);
+            if (!board_hal_is_usb_connected() && board_hal_get_battery_voltage() < 3800) {
+                result = ESP_ERR_INVALID_STATE; break;
+            }
         }
         int count = esp_http_client_read(client, (char *)buffer, 4096);
         if (count <= 0 || received + count > release->size) {
@@ -248,7 +261,7 @@ static esp_err_t install_application(const char *url, const wind_ota_pointer_t *
         strncmp(description.project_name, "windpeek", sizeof(description.project_name)) != 0)
         return ESP_ERR_INVALID_RESPONSE;
     if (power_manager_is_installer_active()) return ESP_ERR_INVALID_STATE;
-    return esp_ota_set_boot_partition(partition);
+    return ESP_OK; // The caller persists the sequence before selecting this slot.
 }
 
 void wind_ota_maybe_update(void)
@@ -263,7 +276,7 @@ void wind_ota_maybe_update(void)
     uint32_t sequence = 0;
     esp_err_t result = nvs_get_i64(nvs, "last_check", &last_check);
     if (result != ESP_OK && result != ESP_ERR_NVS_NOT_FOUND) goto done;
-    if (!wind_ota_should_check(now, last_check, true, false, true, 0)) goto done;
+    if (!ota_interval_elapsed(now, last_check)) goto done;
     result = nvs_get_u32(nvs, "sequence", &sequence);
     if (result != ESP_OK && result != ESP_ERR_NVS_NOT_FOUND) goto done;
 #if WINDPEEK_OTA_SEQUENCE > 0
@@ -307,9 +320,12 @@ void wind_ota_maybe_update(void)
         ESP_LOGI(TAG, "Installing verified release %s in inactive partition", pointer.version);
         result = install_application(url, &pointer, &release, partition);
         if (result == ESP_OK) {
-            // Even if this write fails, the new binary's embedded sequence prevents downgrade.
-            (void)nvs_set_u32(nvs, "sequence", release.sequence);
-            (void)nvs_commit(nvs);
+            // Persist rollback suppression before boot selection. A storage
+            // failure must leave the running image selected.
+            result = nvs_set_u32(nvs, "sequence", release.sequence);
+            if (result == ESP_OK) result = nvs_commit(nvs);
+            if (result == ESP_OK) result = esp_ota_set_boot_partition(partition);
+            if (result != ESP_OK) goto done;
             nvs_close(nvs);
             ESP_LOGI(TAG, "OTA verified; restarting");
             esp_restart();

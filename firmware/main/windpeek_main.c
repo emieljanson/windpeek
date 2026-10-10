@@ -706,6 +706,7 @@ void app_main(void)
         // before the browser installer can reconnect.
         if (storage_init() == ESP_OK && initialize_support_history())
             wind_support_record_recovery_boot(result, HARDWARE_DRIVER_STAGE_INITIALIZE);
+        wind_ota_finish_boot(false);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }

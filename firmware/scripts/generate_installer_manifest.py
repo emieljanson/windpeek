@@ -162,7 +162,12 @@ def generate_installer_bundle(
     board_id: str,
     flat: bool = False,
 ) -> Path:
-    sequence_text = os.environ.get("WINDPEEK_OTA_SEQUENCE", "0")
+    sequence_path = Path(build_dir) / "windpeek-ota-sequence.txt"
+    embedded_sequence = sequence_path.read_text().strip() if sequence_path.exists() else None
+    configured_sequence = os.environ.get("WINDPEEK_OTA_SEQUENCE")
+    if embedded_sequence is not None and configured_sequence is not None and embedded_sequence != configured_sequence:
+        raise ManifestError("Manifest OTA sequence disagrees with the built firmware")
+    sequence_text = embedded_sequence if embedded_sequence is not None else configured_sequence or "0"
     if not re.fullmatch(r"[0-9]{1,10}", sequence_text) or int(sequence_text) > 0xFFFFFFFF:
         raise ManifestError("OTA sequence must be an unsigned 32-bit release number")
     sequence = int(sequence_text)

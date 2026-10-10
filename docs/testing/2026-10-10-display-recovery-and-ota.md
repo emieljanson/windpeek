@@ -26,7 +26,7 @@ incorrect pixels when the controller reports success.
 
 ## Automated verification
 
-- 383 firmware host tests passed, including interrupted drawing, persisted
+- Before the retry follow-up, 383 firmware host tests passed, including interrupted drawing, persisted
   retries, offline reporting, throttling, manifest validation and the actual OTA
   implementation compiled with controlled HTTP/flash/NVS dependencies.
 - 55 focused tests passed with AddressSanitizer and UndefinedBehaviorSanitizer.
@@ -119,3 +119,47 @@ were unchanged. Flash evidence: `/tmp/windpeek-usb-flash-retry.log`.
 Post-flash installer protocol confirmed `dev-screen-retry-e`, connected Wi-Fi,
 `render=valid`, refresh/fetch errors zero, HTTP 200, and the same configuration
 digest as before. Evidence: `/tmp/windpeek-retry-device-ready.log`.
+
+
+## E1002 refresh-duration investigation before publication
+
+A firsthand E1002 bench report published September 29, 2026 describes 30–44 second
+refreshes and a 40-second timeout cutting the wait short:
+https://www.hackster.io/melastmohican/driving-the-reterminal-e1002-7-3-color-e-paper-with-arduino-21070f
+Our ED2208 driver used that same 40-second limit. The refresh phase now allows
+60 seconds; reset, data and power transitions retain 40 seconds. Timeout logs
+and Sentry diagnostics report the applicable limit. This mitigates a specific,
+externally observed failure mode; it does not prove the original user's cause.
+The connected E1003 cannot validate this different E1002 panel controller.
+
+Other unresolved hypotheses: delayed/missing BUSY assertion can be accepted as
+success, SPI operates at 20 MHz versus Seeed_GFX's 10 MHz reference configuration,
+and a panel-supply dip can interrupt the waveform without an ESP reset. Normal
+work and light-sleep locks already protect refreshes from the ordinary sleep
+timer. None of these hypotheses is established by the supplied photos.
+
+Durable USB evidence summary: application MD5 `a7b7ab1fda0d646aa1938de6739cb407`;
+firmware `dev-screen-retry-e`; render `valid`; Wi-Fi `connected`; refresh/fetch
+errors `0`; HTTP `200`; uptime `105726` ms. Configuration digest matched the
+pre-flash value. The temporary logs are supplemental, not required for this record.
+
+A simulated 44-second refresh timed out with the old 40-second budget and
+completed with the new 60-second budget. A simulated 70-second busy signal
+still timed out at 60 seconds.
+
+### Release review follow-up
+
+- 391 host tests pass after adding cached-display and forced-redraw recovery,
+  invalid telemetry-record recovery, multi-chunk OTA, sequence persistence failure,
+  and declining-battery coverage. Firmware tooling: 14 tests; manifest validation:
+  15 web tests.
+- Telemetry releases its mutex during network delivery and caches whether each
+  stage has pending data, so concurrent display-error capture does not wait for
+  an HTTPS request and idle flushes do not repeatedly scan NVS.
+- Firmware artifacts carry the compiled OTA sequence into manifest generation;
+  production cache entries are scoped to the release run.
+- The browser USB installer still erases Wi-Fi/settings; the earlier physical
+  preservation check used the explicit preserving write set.
+
+- Full web suite: 887 tests pass. Focused app/reporting/OTA sanitizer suite:
+  63 tests pass. E1002 build and installer stack budgets pass.

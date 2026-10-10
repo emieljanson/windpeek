@@ -33,10 +33,11 @@ add_compile_definitions(FIRMWARE_VERSION="${FIRMWARE_VERSION}")
 if(NOT DEFINED WINDPEEK_OTA_SEQUENCE)
     set(WINDPEEK_OTA_SEQUENCE 0)
 endif()
-if(NOT WINDPEEK_OTA_SEQUENCE MATCHES "^[0-9]+$" OR WINDPEEK_OTA_SEQUENCE GREATER 4294967295)
+if(NOT WINDPEEK_OTA_SEQUENCE MATCHES "^(0|[1-9][0-9]*)$" OR WINDPEEK_OTA_SEQUENCE GREATER 4294967295)
     message(FATAL_ERROR "WINDPEEK_OTA_SEQUENCE must be an unsigned release number")
 endif()
 add_compile_definitions(WINDPEEK_OTA_SEQUENCE=${WINDPEEK_OTA_SEQUENCE})
+file(WRITE "${CMAKE_BINARY_DIR}/windpeek-ota-sequence.txt" "${WINDPEEK_OTA_SEQUENCE}\n")
 
 # Generate partitions.csv by reading config from sdkconfig / defaults files.
 set(_config_files "")

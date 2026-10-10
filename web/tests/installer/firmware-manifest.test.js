@@ -26,6 +26,14 @@ function manifest() {
 }
 
 describe('firmware manifest', () => {
+  it('rejects unknown OTA protocols instead of treating them as legacy', () => {
+    for (const protocol of [0, 2, '1', null]) {
+      const source = manifest()
+      source.otaProtocol = protocol
+      expect(() => validateFirmwareManifest(source)).toThrow(/OTA protocol/i)
+    }
+  })
+
   it('loads firmware relative to the deployed configurator', () => {
     expect(FIRMWARE_BASE_URL).toBe('./firmware/')
   })

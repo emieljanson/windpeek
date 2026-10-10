@@ -15,7 +15,8 @@ static std::map<std::string, Http> responses;
 static std::vector<std::string> requests;
 static std::string written;
 static int writes, switches, restarts, aborts, reports, confirms, rollbacks;
-static bool installer, pending_boot, storage_fails;
+static bool installer, pending_boot, storage_fails, sequence_store_fails, usb_power;
+static int battery_reads;
 static int64_t last_check;
 static uint32_t sequence;
 static const int64_t now = 1787544000;
@@ -28,8 +29,8 @@ time_t ota_test_time(time_t *out) { if(out) *out=now; return now; }
 int64_t esp_timer_get_time(void) { return now*1000000; }
 const char *esp_err_to_name(esp_err_t) { return "test-error"; }
 bool wifi_manager_is_connected(void) { return true; }
-bool board_hal_is_usb_connected(void) { return true; }
-int board_hal_get_battery_voltage(void) { return 4000; }
+bool board_hal_is_usb_connected(void) { return usb_power; }
+int board_hal_get_battery_voltage(void) { return ++battery_reads > 1 ? 3700 : 4000; }
 bool power_manager_is_installer_active(void) { return installer; }
 int esp_crt_bundle_attach(void *) { return 0; }
 void wind_device_errors_capture(wind_device_error_stage_t, esp_err_t) { ++reports; }
@@ -38,7 +39,7 @@ esp_err_t nvs_open(const char *, int, nvs_handle_t *out) { *out=1; return ESP_OK
 esp_err_t nvs_get_i64(nvs_handle_t, const char *, int64_t *out) { *out=last_check; return ESP_OK; }
 esp_err_t nvs_get_u32(nvs_handle_t, const char *, uint32_t *out) { *out=sequence; return ESP_OK; }
 esp_err_t nvs_set_i64(nvs_handle_t, const char *, int64_t value) { last_check=value; return ESP_OK; }
-esp_err_t nvs_set_u32(nvs_handle_t, const char *, uint32_t value) { sequence=value; return ESP_OK; }
+esp_err_t nvs_set_u32(nvs_handle_t, const char *, uint32_t value) { if(sequence_store_fails) return ESP_FAIL; sequence=value; return ESP_OK; }
 esp_err_t nvs_commit(nvs_handle_t) { return storage_fails ? ESP_FAIL : ESP_OK; }
 void nvs_close(nvs_handle_t) {}
 const esp_partition_t *esp_ota_get_running_partition(void) { return &running; }
@@ -100,14 +101,16 @@ protected:
     void SetUp() override {
         responses.clear(); requests.clear(); written.clear();
         writes=switches=restarts=aborts=reports=confirms=rollbacks=0;
-        installer=pending_boot=storage_fails=false; last_check=0; sequence=0;
+        installer=pending_boot=storage_fails=sequence_store_fails=false; usb_power=true; battery_reads=0; last_check=0; sequence=0;
         write_result=end_result=ESP_OK;
         candidate={}; strcpy(candidate.version,"dev-new"); strcpy(candidate.project_name,"windpeek");
-        responses[root+"new/app.bin"]={std::string(1000,'x')};
+        std::string image(10037, 0);
+        for (size_t i=0; i<image.size(); ++i) image[i]=static_cast<char>((i*37+i/251)%256);
+        responses[root+"new/app.bin"]={image};
         std::string manifest=std::string("{\"version\":\"dev-new\",\"schemaVersion\":1,\"firmwareLayoutVersion\":1,\"flashSize\":33554432,")+
             "\"otaProtocol\":1,\"otaSequence\":42,\"chipFamily\":\"ESP32-S3\",\"boardId\":\"seeedstudio_reterminal_e1002\","
             "\"configuration\":{\"minimum\":5,\"maximum\":6},\"otaApplication\":\"app.bin\",\"parts\":[{\"kind\":\"application\","
-            "\"file\":\"app.bin\",\"size\":1000,\"sha256\":\""+digest(responses[root+"new/app.bin"].body)+"\"}]}";
+            "\"file\":\"app.bin\",\"size\":10037,\"sha256\":\""+digest(responses[root+"new/app.bin"].body)+"\"}]}";
         responses[root+"new/manifest.json"]={manifest};
         refresh_pointer();
     }
@@ -117,7 +120,7 @@ protected:
     }
 };
 TEST_F(OtaRuntime, VerifiesDownloadsWritesInactiveSlotAndRestartsOnlyAfterSuccess) {
-    wind_ota_maybe_update(); EXPECT_EQ(writes,1); EXPECT_EQ(written,std::string(1000,'x'));
+    wind_ota_maybe_update(); EXPECT_EQ(writes,1); EXPECT_EQ(written,responses[root+"new/app.bin"].body);
     EXPECT_EQ(switches,1); EXPECT_EQ(restarts,1); EXPECT_EQ(sequence,42u); EXPECT_EQ(reports,0);
 }
 TEST_F(OtaRuntime, CorruptManifestNeverTouchesFlash) {
@@ -152,4 +155,16 @@ TEST_F(OtaRuntime, FirstBootHealthControlsConfirmationOrRollback) {
     wind_ota_finish_boot(false); EXPECT_EQ(rollbacks,0);
     pending_boot=true; wind_ota_finish_boot(true); EXPECT_EQ(confirms,1);
     wind_ota_finish_boot(false); EXPECT_EQ(rollbacks,1); EXPECT_EQ(reports,1);
+}
+
+TEST_F(OtaRuntime, SequencePersistenceFailureKeepsCurrentBootSelection) {
+    sequence_store_fails=true;
+    wind_ota_maybe_update();
+    EXPECT_EQ(writes,1); EXPECT_EQ(switches,0); EXPECT_EQ(restarts,0); EXPECT_EQ(reports,1);
+}
+TEST_F(OtaRuntime, FallingBatteryAbortsBeforeApplicationWrite) {
+    usb_power=false;
+    wind_ota_maybe_update();
+    EXPECT_EQ(writes,1); EXPECT_TRUE(written.empty()); EXPECT_EQ(aborts,1);
+    EXPECT_EQ(switches,0); EXPECT_EQ(restarts,0);
 }

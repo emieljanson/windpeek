@@ -112,3 +112,17 @@ TEST_F(DeviceErrors, EnvelopeIsValidJsonWithOnlyApprovedDiagnostics) {
     std::strcpy(reports.saved[2].error.firmware, "bad\"release");
     EXPECT_EQ(wind_device_error_envelope(WIND_DEVICE_ERROR_DISPLAY, &reports.saved[2], payload, sizeof(payload)), ESP_ERR_INVALID_ARG);
 }
+
+TEST_F(DeviceErrors, InvalidPersistedVersionDoesNotDisableFutureReports) {
+    reports.exists[WIND_DEVICE_ERROR_DISPLAY] = true;
+    reports.saved[WIND_DEVICE_ERROR_DISPLAY].version = 99;
+    ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, true), ESP_OK);
+    EXPECT_EQ(reports.sends, 1);
+    EXPECT_FALSE(reports.saved[WIND_DEVICE_ERROR_DISPLAY].pending);
+}
+TEST_F(DeviceErrors, InvalidPersistedTimestampDoesNotDisableFutureReports) {
+    ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, false), ESP_OK);
+    reports.saved[WIND_DEVICE_ERROR_DISPLAY].last_attempt = -1;
+    ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, true), ESP_OK);
+    EXPECT_EQ(reports.sends, 1);
+}

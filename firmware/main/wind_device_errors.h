@@ -18,7 +18,7 @@ typedef enum {
     WIND_DEVICE_ERROR_COUNT,
 } wind_device_error_stage_t;
 
-// Fixed, numeric diagnostics only: never credentials, location, or log text.
+// Numeric diagnostics and validated firmware/board labels only: never credentials, location, or log text.
 typedef struct {
     int32_t error;
     uint32_t panel_phase;
@@ -49,6 +49,7 @@ typedef struct {
 } wind_device_error_dependencies_t;
 
 // At most one pending report per stage; at most one send per stage per hour.
+// Backward clock corrections reset the rate-limit window.
 // Persist before sending so reset/offline/retry cannot cause a report storm.
 esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *dependencies,
     wind_device_error_stage_t stage, const wind_device_error_t *error,

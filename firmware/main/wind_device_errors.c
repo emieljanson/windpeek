@@ -66,10 +66,14 @@ esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *deps,
         return ESP_ERR_INVALID_ARG;
     wind_device_error_state_t state = {0};
     esp_err_t result = deps->load(deps->context, stage, &state);
-    if (result == ESP_ERR_NOT_FOUND) state.version = REPORT_STATE_VERSION;
-    else if (result != ESP_OK) return result;
-    if (state.version != REPORT_STATE_VERSION || state.last_attempt < 0)
-        return ESP_ERR_INVALID_STATE;
+    if (result != ESP_OK && result != ESP_ERR_NOT_FOUND &&
+        result != ESP_ERR_INVALID_SIZE) return result;
+    if (result != ESP_OK || state.version != REPORT_STATE_VERSION || state.last_attempt < 0) {
+        memset(&state, 0, sizeof(state));
+        state.version = REPORT_STATE_VERSION;
+        result = deps->store(deps->context, stage, &state);
+        if (result != ESP_OK) return result;
+    }
     // A backwards clock does not permanently disable reporting.
     bool quiet = state.last_attempt > 0 && now >= state.last_attempt &&
                  now - state.last_attempt < REPORT_INTERVAL_SECONDS;
@@ -114,6 +118,9 @@ esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *deps,
 #endif
 
 static SemaphoreHandle_t report_mutex;
+static bool flushing;
+static bool stage_loaded[WIND_DEVICE_ERROR_COUNT];
+static bool stage_pending[WIND_DEVICE_ERROR_COUNT];
 static portMUX_TYPE init_lock = portMUX_INITIALIZER_UNLOCKED;
 
 static bool lock_reports(void)
@@ -148,8 +155,13 @@ static esp_err_t load_report(void *context, wind_device_error_stage_t stage,
     result = nvs_get_blob(handle, stages[stage], state, &size);
     nvs_close(handle);
     if (result == ESP_ERR_NVS_NOT_FOUND) return ESP_ERR_NOT_FOUND;
+    if (result == ESP_ERR_NVS_INVALID_LENGTH || result == ESP_ERR_NVS_TYPE_MISMATCH)
+        return ESP_ERR_INVALID_SIZE;
     if (result != ESP_OK) return result;
-    return size == sizeof(*state) ? ESP_OK : ESP_ERR_INVALID_SIZE;
+    if (size != sizeof(*state)) return ESP_ERR_INVALID_SIZE;
+    stage_loaded[stage] = true;
+    stage_pending[stage] = state->pending;
+    return ESP_OK;
 }
 
 static esp_err_t store_report(void *context, wind_device_error_stage_t stage,
@@ -162,6 +174,10 @@ static esp_err_t store_report(void *context, wind_device_error_stage_t stage,
     result = nvs_set_blob(handle, stages[stage], state, sizeof(*state));
     if (result == ESP_OK) result = nvs_commit(handle);
     nvs_close(handle);
+    if (result == ESP_OK) {
+        stage_loaded[stage] = true;
+        stage_pending[stage] = state->pending;
+    }
     return result;
 }
 
@@ -192,8 +208,19 @@ static esp_err_t send_report(void *context, wind_device_error_stage_t stage,
     return status >= 200 && status < 300 ? ESP_OK : ESP_FAIL;
 }
 
+static esp_err_t send_without_lock(void *context, wind_device_error_stage_t stage,
+                                   const wind_device_error_state_t *state)
+{
+    // State and the delivery deadline are already persisted. Captures can queue
+    // other stages while the network is slow; only one flush may send at a time.
+    xSemaphoreGive(report_mutex);
+    esp_err_t result = send_report(context, stage, state);
+    xSemaphoreTake(report_mutex, portMAX_DELAY);
+    return result;
+}
+
 static const wind_device_error_dependencies_t dependencies = {
-    .load = load_report, .store = store_report, .random_u32 = random_word, .send = send_report,
+    .load = load_report, .store = store_report, .random_u32 = random_word, .send = send_without_lock,
 };
 
 void wind_device_errors_capture(wind_device_error_stage_t stage, esp_err_t error)
@@ -224,8 +251,15 @@ void wind_device_errors_capture(wind_device_error_stage_t stage, esp_err_t error
 void wind_device_errors_flush(void)
 {
     if (!wifi_manager_is_connected() || !lock_reports()) return;
+    if (flushing) {
+        xSemaphoreGive(report_mutex);
+        return;
+    }
+    flushing = true;
     for (int stage = 0; stage < WIND_DEVICE_ERROR_COUNT; ++stage)
-        (void)wind_device_error_run(&dependencies, stage, NULL, time(NULL), true);
+        if (!stage_loaded[stage] || stage_pending[stage])
+            (void)wind_device_error_run(&dependencies, stage, NULL, time(NULL), true);
+    flushing = false;
     xSemaphoreGive(report_mutex);
 }
 #else

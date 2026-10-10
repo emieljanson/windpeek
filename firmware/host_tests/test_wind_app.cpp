@@ -772,6 +772,8 @@ TEST(WindAppDiagnostics, ExposesBootFailureIndependentlyOfInstallerApply)
 
 TEST_F(WindAppTest, ReportsDownloadAndPanelFailuresEvenWhenCacheCanRender)
 {
+    auto forecast = app_forecast(1787543900);
+    ASSERT_EQ(wind_cache_store(fake.forecast_path.c_str(), &forecast), ESP_OK);
     fake.fetch_result = ESP_ERR_TIMEOUT;
     fake.display_result = ESP_FAIL;
     wind_app_outcome_t outcome{};
@@ -792,4 +794,32 @@ TEST_F(WindAppTest, ReportsRenderFailureWithoutCallingThePanel)
     EXPECT_EQ(reported_errors[0].first, WIND_DEVICE_ERROR_RENDER);
     EXPECT_EQ(reported_errors[0].second, ESP_ERR_NO_MEM);
     EXPECT_EQ(fake.displays, 0);
+}
+
+TEST_F(WindAppTest, CachedPanelFailureGetsBothBoundedRecoveryAttempts)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_show_cached(&app, now, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 30);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 10, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 30);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 30, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 300);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 300, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(fake.fetches, 0);
+}
+
+TEST_F(WindAppTest, ForcedPanelFailureBetweenBoundariesGetsRecovery)
+{
+    const int64_t now = 1787544000;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_OK);
+    app.force_display = true;
+    fake.display_result = ESP_FAIL;
+    ASSERT_EQ(wind_app_run(&app, false, now + 10, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 40);
+    EXPECT_EQ(app.schedule.final_retry_at, now + 310);
 }

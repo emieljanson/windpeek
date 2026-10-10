@@ -176,8 +176,8 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       # Only main can populate production firmware. Tags and manual runs rebuild.
-      # No prefix fallback: reuse requires identical firmware and shared inputs.
-      - name: Restore unchanged production firmware
+      # Never reuse an older run sequence: a source rollback must still update devices.
+      - name: Restore firmware from this release attempt
         id: firmware-cache
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/cache@v5
@@ -186,7 +186,7 @@ jobs:
             release
             site-firmware
             release-debug
-          key: production-firmware-v1-${{ runner.os }}-${{ steps.firmware-config.outputs.digest }}-${{ hashFiles('firmware/**', 'contracts/**', 'shared/**', '.github/**') }}
+          key: production-firmware-v2-${{ github.run_number }}-${{ runner.os }}-${{ steps.firmware-config.outputs.digest }}-${{ hashFiles('firmware/**', 'contracts/**', 'shared/**', '.github/**') }}
 
       - name: Install host test dependencies
         run: |

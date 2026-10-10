@@ -845,6 +845,7 @@ static uint64_t quick_overview_configuration(void) {
 }
 
 static bool show_quick_spot(wind_spot_runtime_t *runtime) {
+    if (clear_panel_confirmation_unlocked() != ESP_OK) return false;
     if (!wind_quick_spot_show(runtime, s_focused_date, s_overview_configuration))
         return false;
     (void)clear_panel_confirmation_unlocked();
@@ -853,6 +854,7 @@ static bool show_quick_spot(wind_spot_runtime_t *runtime) {
 }
 
 static bool show_quick_overview(size_t page) {
+    if (clear_panel_confirmation_unlocked() != ESP_OK) return false;
     time_t now;
     time(&now);
     if (!wind_quick_overview_show(s_spots, wind_spots_count(),

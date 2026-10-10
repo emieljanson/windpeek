@@ -67,6 +67,9 @@ export function validateFirmwareManifest(manifest, expectedBoardId = BOARD_ID) {
     })
     assertNoOverlap(set.parts)
   }
+  if (manifest.otaProtocol !== undefined && manifest.otaProtocol !== 1) {
+    fail('The firmware OTA protocol is unsupported.')
+  }
   const preservingKinds = manifest.otaProtocol === 1
     ? 'bootloader,boot-selection,application'
     : 'boot-selection,application'
