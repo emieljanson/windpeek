@@ -161,6 +161,7 @@ void wind_schedule_schedule_retry(wind_schedule_state_t *state, int64_t boundary
     }
     state->retry_boundary = boundary;
     state->retry_at = retry_at;
+    state->final_retry_at = 0;
 }
 
 void wind_schedule_consume_retry(wind_schedule_state_t *state)
@@ -170,6 +171,7 @@ void wind_schedule_consume_retry(wind_schedule_state_t *state)
     }
     state->retry_boundary = 0;
     state->retry_at = 0;
+    state->final_retry_at = 0;
 }
 
 esp_err_t wind_schedule_state_load_scoped(const char *path, const char *spot_id,
@@ -184,7 +186,7 @@ esp_err_t wind_schedule_state_load_scoped(const char *path, const char *spot_id,
         initialize_scope(out_state, spot_id, timezone);
         return ESP_ERR_NOT_FOUND;
     }
-    schedule_record_t record;
+    schedule_record_t record = {0};
     bool ok = fread(&record, 1, sizeof(record), file) == sizeof(record) && fgetc(file) == EOF;
     fclose(file);
     uint32_t expected = checksum_bytes(&record.state, sizeof(record.state));

@@ -29,6 +29,7 @@
 #include "storage.h"
 #include "wifi_manager.h"
 #include "wind_app.h"
+#include "wind_ota.h"
 #include "wind_clock.h"
 #include "wind_navigation.h"
 #include "wind_spots.h"
@@ -623,6 +624,8 @@ static void dashboard_task(void *argument)
             if (result != ESP_OK) {
                 ESP_LOGW(TAG, "Scheduled forecast refresh failed: %s", esp_err_to_name(result));
             }
+            // A broken forecast or display must still be able to receive a fix.
+            wind_ota_maybe_update();
             power_manager_work_end();
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
             if (result == ESP_OK) start_quick_frames_task();
@@ -694,6 +697,10 @@ void app_main(void)
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "Display hardware initialization failed: %s",
                  esp_err_to_name(result));
+        wind_device_errors_capture(WIND_DEVICE_ERROR_RUNTIME, result);
+        // Rollback must run before latching a panel failure shared with the
+        // previous image. If rollback returns, retain normal USB recovery.
+        wind_ota_finish_boot(false);
         if (profile.stored_model != HARDWARE_MODEL_UNKNOWN) {
             (void) hardware_profile_record_driver_failure(
                 profile.stored_model, HARDWARE_DRIVER_STAGE_INITIALIZE, result);
@@ -718,6 +725,11 @@ void app_main(void)
         ESP_LOGW(TAG, "RTC initialization failed: %s", esp_err_to_name(result));
     }
     (void) restore_clock_from_rtc();
+
+    const esp_reset_reason_t reset = esp_reset_reason();
+    if (reset == ESP_RST_PANIC || reset == ESP_RST_INT_WDT || reset == ESP_RST_TASK_WDT ||
+        reset == ESP_RST_WDT || reset == ESP_RST_BROWNOUT)
+        wind_device_errors_capture(WIND_DEVICE_ERROR_RUNTIME, ESP_FAIL);
 
     if (initialize_support_history())
         wind_support_record(WIND_SUPPORT_BOOT, ESP_OK, 0, NULL, NULL);
@@ -827,6 +839,8 @@ void app_main(void)
         }
     }
 #endif
+    wind_ota_finish_boot(result == ESP_OK);
+    wind_ota_maybe_update();
     power_manager_work_end();
     if (result != ESP_OK) {
         ESP_LOGW(TAG, "Dashboard refresh completed with error: %s", esp_err_to_name(result));

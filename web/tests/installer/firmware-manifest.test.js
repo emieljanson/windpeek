@@ -26,12 +26,35 @@ function manifest() {
 }
 
 describe('firmware manifest', () => {
+  it('rejects unknown OTA protocols instead of treating them as legacy', () => {
+    for (const protocol of [0, 2, '1', null]) {
+      const source = manifest()
+      source.otaProtocol = protocol
+      expect(() => validateFirmwareManifest(source)).toThrow(/OTA protocol/i)
+    }
+  })
+
   it('loads firmware relative to the deployed configurator', () => {
     expect(FIRMWARE_BASE_URL).toBe('./firmware/')
   })
 
   it('accepts the exact E1002 release contract', () => {
     expect(validateFirmwareManifest(manifest()).version).toBe('2.0.0')
+  })
+
+  it('installs the rollback bootloader when enabling OTA without erasing settings', async () => {
+    const source = manifest()
+    source.otaProtocol = 1
+    expect(() => validateFirmwareManifest(source)).toThrow(/erase policy/i)
+    source.preservingUpdate.parts.unshift({ ...source.parts[0] })
+    expect(validateFirmwareManifest(source)).toBe(source)
+    const bundle = await loadFirmwareParts({
+      manifest: source, manifestUrl: new URL('https://example.test/firmware/manifest.json'),
+      mode: 'preservingUpdate', cryptoApi: webcrypto,
+      fetchFn: vi.fn(async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer })),
+    })
+    expect(bundle.eraseFlash).toBe(false)
+    expect(bundle.parts.map((part) => part.kind)).toEqual(['bootloader', 'boot-selection', 'application'])
   })
 
   it('uses the shared E1002 release identity for E1001', () => {

@@ -9,6 +9,7 @@
 #include "wind_cache.h"
 #include "wind_provider.h"
 #include "wind_schedule.h"
+#include "wind_device_errors.h"
 #include "installed_configuration.h"
 
 #ifdef __cplusplus
@@ -42,6 +43,7 @@ typedef struct {
     wind_app_render_fn render;
     wind_app_display_fn display;
     void *io_context;
+    void (*report_error)(wind_device_error_stage_t stage, esp_err_t error);
 } wind_app_config_t;
 
 typedef struct {

@@ -48,6 +48,8 @@ set(WINDPEEK_SOURCES
     "wind_support.c"
     "wind_app_cycle.c"
     "wind_analytics.c"
+    "wind_device_errors.c"
+    "wind_ota.c"
 )
 
 if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003)
@@ -60,6 +62,7 @@ set(WINDPEEK_PRIV_REQUIRES
     epaper
     epaper_src
     esp_app_format
+    app_update
     esp_driver_gpio
     esp_driver_ledc
     esp_driver_uart

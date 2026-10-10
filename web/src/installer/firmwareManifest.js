@@ -67,8 +67,14 @@ export function validateFirmwareManifest(manifest, expectedBoardId = BOARD_ID) {
     })
     assertNoOverlap(set.parts)
   }
+  if (manifest.otaProtocol !== undefined && manifest.otaProtocol !== 1) {
+    fail('The firmware OTA protocol is unsupported.')
+  }
+  const preservingKinds = manifest.otaProtocol === 1
+    ? 'bootloader,boot-selection,application'
+    : 'boot-selection,application'
   if (manifest.cleanInstall.eraseFlash !== true || manifest.preservingUpdate.eraseFlash !== false ||
-      manifest.preservingUpdate.parts.map((part) => part.kind).join(',') !== 'boot-selection,application') {
+      manifest.preservingUpdate.parts.map((part) => part.kind).join(',') !== preservingKinds) {
     fail('The firmware erase policy is unsafe.')
   }
   return manifest

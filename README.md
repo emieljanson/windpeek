@@ -12,9 +12,9 @@ Owner instructions are in [`docs/setup.md`](docs/setup.md), USB recovery in
 [`docs/release.md`](docs/release.md).
 
 Every push to `main` builds the configurator and deploys it with the universal
-E1001/E1002 and E1003 firmware bundles. Firmware builds are reused when their
-source and build inputs match the production cache, retaining the original
-firmware version. Cache misses rebuild both targets for the current commit.
+E1001/E1002 and E1003 firmware bundles. Each new workflow run rebuilds firmware
+with a new OTA sequence, including source rollbacks. Only reruns of that same
+workflow run can reuse cached firmware when all build inputs match.
 Tagged releases (`v*`) additionally publish the application and browser-installer
 files as a GitHub Release. The bundle is generated from ESP-IDF's
 `flasher_args.json`, contains separate checksummed flash parts, and exposes
@@ -126,12 +126,18 @@ font. Check that licence before distributing firmware binaries.
 
 ## Firmware updates
 
-Reconnect the device over USB-C and open the browser installer. It chooses a
-configuration-only update or a clean firmware installation based on the connected
-device and release. Firmware updates erase stored settings and Wi-Fi; enter Wi-Fi
-again to finish setup. With current firmware, setup keeps Wi-Fi and actively
-fetches, renders and saves a forecast before reporting success, even when the
-settings already match.
+Firmware with OTA support checks for updates once a day during an existing
+forecast wake. It requires Wi-Fi and either USB power or at least 3800 mV battery
+voltage. It verifies the model, release sequence, manifest and application hashes,
+then writes only the inactive application partition. Settings and Wi-Fi remain
+stored. The rollback bootloader returns to the previous app if the new firmware
+crashes before confirming its first successful dashboard refresh.
+
+Devices running older firmware need one USB installation to gain OTA support.
+The bundle includes a settings-preserving write set for compatible layouts, but
+the browser installer currently performs a clean installation: it erases settings
+and Wi-Fi credentials, which must be entered again. It also supplies the
+rollback-capable bootloader. A layout mismatch requires a clean installation.
 
 The upstream photo-frame application has been removed. Firmware builds only
 Windpeek for E1001/E1002 and E1003.

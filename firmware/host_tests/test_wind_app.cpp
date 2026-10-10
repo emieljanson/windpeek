@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 extern "C" {
 #include "wind_app.h"
@@ -43,9 +44,12 @@ static std::string read_wind_app_source()
 
 struct FakeIo {
     std::string forecast_path;
+    std::string panel_path;
+    bool confirmation_existed_during_display = false;
     wind_cache_identity_t identity{"edam", "Europe/Amsterdam", "knmi_seamless"};
     esp_err_t fetch_result = ESP_OK;
     esp_err_t display_result = ESP_OK;
+    esp_err_t render_result = ESP_OK;
     int fetches = 0;
     int renders = 0;
     int displays = 0;
@@ -111,13 +115,18 @@ static esp_err_t fake_render(void *context, const wind_forecast_t *forecast,
     fake->cache_was_published_before_render =
         forecast && wind_cache_load(fake->forecast_path.c_str(), &fake->identity, &persisted) == ESP_OK;
     std::memset(bitmap, static_cast<int>(freshness) + 1 + (refresh_failed ? 8 : 0), bitmap_size);
-    return ESP_OK;
+    return fake->render_result;
 }
+
+static std::vector<std::pair<wind_device_error_stage_t, esp_err_t>> reported_errors;
+static void report_error(wind_device_error_stage_t stage, esp_err_t error)
+{ reported_errors.emplace_back(stage, error); }
 
 static esp_err_t fake_display(void *context, const uint8_t *bitmap, size_t bitmap_size)
 {
     auto *fake = static_cast<FakeIo *>(context);
     ++fake->displays;
+    fake->confirmation_existed_during_display = std::filesystem::exists(fake->panel_path);
     EXPECT_NE(bitmap, nullptr);
     EXPECT_GT(bitmap_size, 0u);
     return fake->display_result;
@@ -132,8 +141,10 @@ class WindAppTest : public testing::Test {
              testing::UnitTest::GetInstance()->current_test_info()->name());
         std::filesystem::remove_all(root);
         std::filesystem::create_directories(root);
+        reported_errors.clear();
         fake.forecast_path = (root / "forecast").string();
         panel_storage = panel_path();
+        fake.panel_path = panel_storage;
         schedule_storage = schedule_path();
         initialize_app(1);
     }
@@ -150,6 +161,7 @@ class WindAppTest : public testing::Test {
             .render = fake_render,
             .display = fake_display,
             .io_context = &fake,
+            .report_error = report_error,
         };
         ASSERT_EQ(wind_app_init(&app, &config), ESP_OK);
     }
@@ -182,6 +194,17 @@ TEST_F(WindAppTest, SuppressesIdenticalConfirmedBitmap)
     ASSERT_EQ(wind_app_run(&app, false, 1787544060, &second), ESP_OK);
     EXPECT_TRUE(second.display_unchanged);
     EXPECT_EQ(fake.displays, 1);
+}
+
+TEST_F(WindAppTest, ClearsPreviousConfirmationBeforeHardwareWrite)
+{
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, true, 1787544000, &outcome), ESP_OK);
+    ASSERT_TRUE(std::filesystem::exists(panel_storage));
+    app.force_display = true;
+    ASSERT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_OK);
+    EXPECT_FALSE(fake.confirmation_existed_during_display);
+    EXPECT_TRUE(std::filesystem::exists(panel_storage));
 }
 
 TEST_F(WindAppTest, PrefetchUpdatesCacheWithoutRenderingOrDisplaying)
@@ -300,6 +323,91 @@ TEST_F(WindAppTest, FailedDisplayInvalidatesConfirmationForRetry)
     wind_app_outcome_t retry;
     EXPECT_EQ(wind_app_run(&app, false, 1787544060, &retry), ESP_OK);
     EXPECT_TRUE(retry.displayed);
+}
+
+TEST_F(WindAppTest, FailedScheduledDisplayRetriesAfterThirtySecondsAndFiveMinutesAcrossReboots)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_ERR_TIMEOUT);
+    initialize_app(1); // Deep sleep loses RAM; the wake must be persisted.
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_ERR_TIMEOUT);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 30), now + 300);
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_ERR_TIMEOUT);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 300),
+              wind_schedule_next_boundary(fake.identity.timezone, now + 300));
+}
+
+TEST_F(WindAppTest, ScheduledDisplayRecoveryConfirmsPanelAndStopsRetrying)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
+    fake.display_result = ESP_OK;
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.displayed);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    ASSERT_EQ(wind_app_run(&app, false, now + 360, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.display_unchanged);
+    EXPECT_EQ(fake.displays, 2);
+}
+
+TEST_F(WindAppTest, DownloadAndDisplayFailureShareBoundedRetryBudget)
+{
+    const int64_t now = 1787544000;
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
+    fake.fetch_result = ESP_OK;
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 30), now + 300);
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+}
+
+TEST_F(WindAppTest, LateDisplayRetryDoesNotStartAnotherFiveMinuteWindow)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_app_run(&app, false, now + 120, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 120), now + 300);
+    fake.display_result = ESP_OK;
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.displayed);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(app.schedule.final_retry_at, 0);
+}
+
+TEST_F(WindAppTest, MissedDisplayRetriesDoNotRunBackToBack)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_app_run(&app, false, now + 360, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(app.schedule.final_retry_at, 0);
 }
 
 TEST_F(WindAppTest, FirstBootFailureRendersUnavailableWithoutFabricatedForecast)
@@ -660,4 +768,70 @@ TEST(WindAppDiagnostics, ExposesBootFailureIndependentlyOfInstallerApply)
     wind_app_status_finish(ESP_OK, ESP_OK, true, true, nullptr);
     wind_app_status_get(&status);
     EXPECT_EQ(status.stage, WIND_REFRESH_COMPLETE);
+}
+
+TEST_F(WindAppTest, ReportsDownloadAndPanelFailuresEvenWhenCacheCanRender)
+{
+    auto forecast = app_forecast(1787543900);
+    ASSERT_EQ(wind_cache_store(fake.forecast_path.c_str(), &forecast), ESP_OK);
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    EXPECT_EQ(wind_app_run(&app, false, 1787544000, &outcome), ESP_FAIL);
+    ASSERT_EQ(reported_errors.size(), 2u);
+    EXPECT_EQ(reported_errors[0].first, WIND_DEVICE_ERROR_FORECAST);
+    EXPECT_EQ(reported_errors[0].second, ESP_ERR_TIMEOUT);
+    EXPECT_EQ(reported_errors[1].first, WIND_DEVICE_ERROR_DISPLAY);
+    EXPECT_EQ(reported_errors[1].second, ESP_FAIL);
+}
+
+TEST_F(WindAppTest, ReportsRenderFailureWithoutCallingThePanel)
+{
+    fake.render_result = ESP_ERR_NO_MEM;
+    wind_app_outcome_t outcome{};
+    EXPECT_EQ(wind_app_run(&app, false, 1787544000, &outcome), ESP_ERR_NO_MEM);
+    ASSERT_EQ(reported_errors.size(), 1u);
+    EXPECT_EQ(reported_errors[0].first, WIND_DEVICE_ERROR_RENDER);
+    EXPECT_EQ(reported_errors[0].second, ESP_ERR_NO_MEM);
+    EXPECT_EQ(fake.displays, 0);
+}
+
+TEST_F(WindAppTest, CachedPanelFailureGetsBothBoundedRecoveryAttempts)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_show_cached(&app, now, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 30);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 10, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 30);
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 300);
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(fake.fetches, 2);
+}
+
+TEST_F(WindAppTest, ForcedPanelFailureBetweenBoundariesGetsRecovery)
+{
+    const int64_t now = 1787544000;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_OK);
+    app.force_display = true;
+    fake.display_result = ESP_FAIL;
+    ASSERT_EQ(wind_app_run(&app, false, now + 10, &outcome), ESP_FAIL);
+    EXPECT_EQ(app.schedule.retry_at, now + 40);
+    EXPECT_EQ(app.schedule.final_retry_at, now + 310);
+}
+
+TEST_F(WindAppTest, CachedNavigationLeavesForecastRetryForFetchingPath)
+{
+    const int64_t now = 1787544000;
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_OK);
+    ASSERT_EQ(app.schedule.retry_at, now + 300);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 300, &outcome), ESP_OK);
+    EXPECT_EQ(app.schedule.retry_at, now + 300);
+    EXPECT_EQ(fake.fetches, 1);
 }

@@ -16,9 +16,16 @@
 #include "wind_app_internal.h"
 #include "wind_overview.h"
 #include "wind_timezone.h"
+#include "wind_device_errors.h"
 
 static const char *TAG = "wind_quick_cache";
 static atomic_uint s_temporary_sequence;
+
+static bool show_packed(uint8_t *packed) {
+    esp_err_t result = epaper_display(packed);
+    wind_device_errors_capture(WIND_DEVICE_ERROR_DISPLAY, result);
+    return result == ESP_OK;
+}
 
 static gzFile open_packed(const char *path, const char *mode) {
     gzFile file = gzopen(path, mode);
@@ -175,7 +182,7 @@ bool wind_quick_spot_show(const wind_spot_runtime_t *runtime,
     uint8_t *packed = read_packed(path, &stored, sizeof(stored));
     if (!packed) return false;
     const bool exact = memcmp(&stored, &expected, sizeof(stored)) == 0;
-    const bool shown = exact && epaper_display(packed) == ESP_OK;
+    const bool shown = exact && show_packed(packed);
     free(packed);
     if (shown) {
         ESP_LOGI(TAG, "Quick frame for %s including cache read: %lld ms", runtime->spot->id,
@@ -287,7 +294,7 @@ bool wind_quick_overview_show(const wind_spot_runtime_t *spots, size_t spot_coun
     if (!packed) return false;
     const wind_quick_overview_header_t expected = wind_quick_overview_identity(
         spots, spot_count, configuration_digest, page, now);
-    const bool shown = overview_matches(&actual, &expected) && epaper_display(packed) == ESP_OK;
+    const bool shown = overview_matches(&actual, &expected) && show_packed(packed);
     free(packed);
     if (shown) {
         ESP_LOGI(TAG, "Quick overview %u including cache read: %lld ms",

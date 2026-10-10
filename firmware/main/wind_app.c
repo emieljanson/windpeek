@@ -561,7 +561,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     return result;
 }
 
-static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
+static esp_err_t display_dashboard_impl(void *context, const uint8_t *bitmap,
                                    size_t bitmap_size) {
     const wind_renderer_display_t display = active_renderer_display();
     if (!bitmap || bitmap_size != active_renderer_bitmap_size()) {
@@ -596,6 +596,15 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
     if (write_dashboard_preview(bitmap, bitmap_size, display) != ESP_OK)
         ESP_LOGW(TAG, "Could not publish dashboard preview");
     return ESP_OK;
+}
+
+static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
+                                   size_t bitmap_size) {
+    esp_err_t result = display_dashboard_impl(context, bitmap, bitmap_size);
+    // Prepared screens and battery previews also bypass the scheduled cycle.
+    if (result != ESP_OK)
+        wind_device_errors_capture(WIND_DEVICE_ERROR_DISPLAY, result);
+    return result;
 }
 
 esp_err_t wind_app_show_battery_empty(void) {
@@ -757,7 +766,8 @@ static esp_err_t ensure_ready(void) {
             .render_signature = current_render_signature(),
             .bitmap_size = active_renderer_bitmap_size(),
             .render = render_dashboard,
-            .display = display_dashboard,
+            .display = display_dashboard_impl, // The cycle reports its own errors.
+            .report_error = wind_device_errors_capture,
             .io_context = runtime,
         };
         esp_err_t result = wind_app_init(&runtime->app, &config);
@@ -835,6 +845,7 @@ static uint64_t quick_overview_configuration(void) {
 }
 
 static bool show_quick_spot(wind_spot_runtime_t *runtime) {
+    if (clear_panel_confirmation_unlocked() != ESP_OK) return false;
     if (!wind_quick_spot_show(runtime, s_focused_date, s_overview_configuration))
         return false;
     (void)clear_panel_confirmation_unlocked();
@@ -843,6 +854,7 @@ static bool show_quick_spot(wind_spot_runtime_t *runtime) {
 }
 
 static bool show_quick_overview(size_t page) {
+    if (clear_panel_confirmation_unlocked() != ESP_OK) return false;
     time_t now;
     time(&now);
     if (!wind_quick_overview_show(s_spots, wind_spots_count(),
@@ -1138,6 +1150,7 @@ esp_err_t wind_app_refresh(bool force_refresh) {
     wind_app_outcome_t outcome = {0};
     esp_err_t result = wind_app_refresh_unlocked(force_refresh, &outcome);
     xSemaphoreGive(s_runtime_lock);
+    wind_device_errors_flush();
     if (outcome.published_forecast) {
         time_t now;
         time(&now);
@@ -1191,6 +1204,7 @@ static esp_err_t navigate(int direction, bool absolute) {
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
 #endif
     if (outcome.displayed) s_force_next_display = false;
+    s_last_render_succeeded = result == ESP_OK;
     if (result == ESP_OK) {
         set_displayed_view(false, 0);
         s_selected_index = target;
@@ -1208,6 +1222,7 @@ static esp_err_t navigate(int direction, bool absolute) {
     }
     xSemaphoreGive(s_app_lock);
     xSemaphoreGive(s_runtime_lock);
+    wind_device_errors_flush();
     if (outcome.published_forecast) {
         const esp_err_t analytics_result = wind_analytics_maybe_send(now);
         if (analytics_result != ESP_OK) {
@@ -1656,6 +1671,7 @@ static esp_err_t prefetch_spots_unlocked(bool all, bool force) {
         (void)render_overview_unlocked(overview_page(), OVERVIEW_INTERACTIVE, false);
     }
     xSemaphoreGive(s_runtime_lock);
+    wind_device_errors_flush();
     if (published) {
         time_t now;
         time(&now);

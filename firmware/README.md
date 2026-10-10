@@ -47,6 +47,51 @@ with aged batteries and low temperatures. A sudden power loss can still prevent
 the final refresh; a failed attempt is not retried until recovery. The UI has
 native black/white encoding for E1001, E1002, and E1003.
 
+## Display recovery and device diagnostics
+
+A panel write clears its old confirmation before touching the hardware, so a
+reset during the waveform cannot leave a partial image marked valid. A failed
+automatic panel write schedules a retry after 30 seconds and, if that fails,
+a final retry five minutes after the original failure. Successful recovery
+cancels the remaining attempt. Download-only failures retain their single
+five-minute retry; combined failures share the display retry budget. After the
+final failure the device waits for the next ordinary forecast boundary. The
+retry budget survives deep sleep. Schedule schema 4 resets older scheduling
+records once on upgrade; installed settings and forecast caches are preserved. This handles reported panel errors, not a visually incorrect
+image that the controller reports as successful.
+
+Forecast, rendering, display and OTA failures are reported directly to the
+existing Windpeek Sentry project. Panic, watchdog and brownout resets are recorded
+on the next boot. A fixed NVS slot per category retains the first pending event
+offline. Each category normally attempts delivery at most once per hour, including after
+resets; a backwards clock correction resets that interval. Delivery occurs during existing connected work, without extra wakeups;
+failed delivery retains the same event ID. Early boot events without a valid
+clock use Sentry's receipt time.
+
+Reports contain firmware, board, numeric error/reset reason, USB/battery state,
+battery voltage, panel timeout step, wait duration and BUSY pin level. They contain no location, Wi-Fi
+credentials, raw logs or stable device identifier. Fatal failures before the
+reporting path runs can only be inferred from the next boot's reset reason.
+
+## Automatic firmware updates
+
+OTA uses the site's existing `latest.json` and immutable installer manifest.
+Only manifests with `otaProtocol: 1` and a positive `otaSequence` are eligible.
+CI embeds its monotonically increasing workflow run number in both the firmware
+and manifest. Local bundles default to sequence zero and are not advertised as
+automatic updates. Model, layout, configuration compatibility, file size and
+SHA-256 are checked before selecting the inactive app for boot. All production
+downloads use the certificate-verified HTTPS origin without redirects.
+
+Checks run once per day with connected Wi-Fi and USB or battery >=3800 mV,
+outside installer activity. Interrupted/invalid downloads leave the current boot
+selection intact. OTA preserves settings and never erases NVS or storage, nor rewrites the
+partition table or bootloader. It persists its own NVS update bookkeeping.
+The initial USB update supplies the rollback-enabled bootloader. The first
+successful dashboard refresh confirms a new OTA app; failure rolls it back.
+After rollback, the same crashed release is not retried. Downloads rejected
+before boot selection may be retried at the next daily check.
+
 ## Build and test
 
 ```sh

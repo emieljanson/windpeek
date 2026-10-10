@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define WIND_SCHEDULE_SCHEMA_VERSION 3u
+#define WIND_SCHEDULE_SCHEMA_VERSION 4u
 #define WIND_SCHEDULE_BOUNDARY_COUNT 5
 #define WIND_SCHEDULE_SPOT_ID_MAX 32
 #define WIND_SCHEDULE_TIMEZONE_MAX 40
@@ -23,6 +23,7 @@ typedef struct {
     int64_t last_satisfied_boundary;
     int64_t retry_boundary;
     int64_t retry_at;
+    int64_t final_retry_at;
 } wind_schedule_state_t;
 
 esp_err_t wind_schedule_state_set_scope(wind_schedule_state_t *state, const char *spot_id,

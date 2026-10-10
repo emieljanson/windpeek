@@ -66,7 +66,7 @@ const configureHref = configuratorLink()
           </details>
           <details>
             <summary>What does Windpeek need after installation?</summary>
-            <p>Only Wi-Fi for forecast updates and occasional charging. It needs no Windpeek account or subscription. Firmware updates are installed again over USB.</p>
+            <p>Only Wi-Fi for forecast and firmware updates, plus occasional charging. It needs no Windpeek account or subscription. Older firmware needs one USB update to enable automatic updates.</p>
           </details>
           <details>
             <summary>How can I help Windpeek?</summary>

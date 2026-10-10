@@ -10,6 +10,7 @@
 #include "wind_timezone.h"
 
 static const int64_t FAILED_REFRESH_RETRY_SECONDS = 5 * 60;
+static const int64_t FAILED_DISPLAY_FAST_RETRY_SECONDS = 30;
 
 wind_freshness_t wind_app_forecast_freshness(const wind_forecast_t *forecast, int64_t now) {
     if (!forecast) {
@@ -100,8 +101,10 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     bool pending_retry_due =
         wind_schedule_retry_is_due(&app->schedule, (time_t)now, &retry_boundary);
     // A regular boundary supersedes a missed retry. Treat this as a fresh
-    // scheduled attempt so a transient failure still earns its own one retry.
+    // scheduled attempt with its own bounded recovery attempts.
     bool retry_due = pending_retry_due && !due;
+    const int64_t final_retry_at = retry_due && app->schedule.final_retry_at > now
+        ? app->schedule.final_retry_at : 0;
     bool initial_fetch_due = !have_active && app->schedule.last_attempted_boundary == 0;
     const bool may_fetch = mode != DISPLAY_CACHED && mode != DISPLAY_PREFETCHED;
     if (may_fetch && (force_refresh || due || coverage_refresh_due || retry_due ||
@@ -126,6 +129,10 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         if (retry_due) {
             boundary = retry_boundary;
             wind_schedule_consume_retry(&app->schedule);
+            // Persist the remaining attempt before doing work: a reset must not
+            // replenish the retry budget or lose the last recovery opportunity.
+            if (final_retry_at > 0)
+                wind_schedule_schedule_retry(&app->schedule, boundary, final_retry_at);
             if (wind_schedule_state_store(app->config.schedule_path, &app->schedule) !=
                 ESP_OK) {
                 if (outcome) {
@@ -150,7 +157,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
                 local.published_forecast = true;
                 app->coverage_refresh_attempted = false;
                 app->coverage_refresh_cache_retrieved_at = 0;
-                wind_schedule_consume_retry(&app->schedule);
+                if (mode != REFRESH_DISPLAY || final_retry_at == 0)
+                    wind_schedule_consume_retry(&app->schedule);
                 wind_schedule_mark_satisfied(&app->schedule, boundary);
                 wind_schedule_state_store(app->config.schedule_path, &app->schedule);
             }
@@ -165,6 +173,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         }
     }
 
+    if (local.attempted_fetch && local.fetch_result != ESP_OK && app->config.report_error)
+        app->config.report_error(WIND_DEVICE_ERROR_FORECAST, local.fetch_result);
     local.freshness = wind_app_forecast_freshness(have_active ? &active : NULL, now);
     // Installation must prove the new configuration can fetch real data
     // before touching the panel. Ordinary offline refreshes may show cache.
@@ -181,6 +191,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     }
     uint8_t *bitmap = (uint8_t *)malloc(app->config.bitmap_size);
     if (!bitmap) {
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_RENDER, ESP_ERR_NO_MEM);
         return ESP_ERR_NO_MEM;
     }
     const bool refresh_failed = local.attempted_fetch && local.fetch_result != ESP_OK;
@@ -189,6 +201,8 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         refresh_failed, now, bitmap, app->config.bitmap_size);
     if (result != ESP_OK) {
         free(bitmap);
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_RENDER, result);
         if (outcome) {
             *outcome = local;
         }
@@ -202,6 +216,10 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
                               app->config.render_signature,
                               &confirmed_hash) == ESP_OK &&
         hash == confirmed_hash) {
+        if (may_fetch && final_retry_at > 0 && !refresh_failed) {
+            wind_schedule_consume_retry(&app->schedule);
+            wind_schedule_state_store(app->config.schedule_path, &app->schedule);
+        }
         local.display_unchanged = true;
         free(bitmap);
         if (outcome) {
@@ -210,11 +228,29 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         return ESP_OK;
     }
 
-    result =
-        app->config.display(app->config.io_context, bitmap, app->config.bitmap_size);
+    // A reset during the waveform must not leave the old frame marked valid.
+    result = wind_cache_panel_invalidate(app->config.panel_cache_path);
+    if (result == ESP_OK)
+        result = app->config.display(app->config.io_context, bitmap, app->config.bitmap_size);
     free(bitmap);
     if (result != ESP_OK) {
-        wind_cache_panel_invalidate(app->config.panel_cache_path);
+        if (app->config.report_error)
+            app->config.report_error(WIND_DEVICE_ERROR_DISPLAY, result);
+        // Display failures get a fast retry and one final attempt at five
+        // minutes from the original failure, sharing the forecast retry budget.
+        if (mode != VERIFY_SETUP && (may_fetch || app->schedule.retry_at == 0)) {
+            if (retry_due && final_retry_at > 0) {
+                wind_schedule_schedule_retry(&app->schedule, boundary, final_retry_at);
+            } else if (!retry_due &&
+                       (due || force_refresh || (app->schedule.retry_at == 0 &&
+                         (coverage_refresh_due || initial_fetch_due || app->force_display || !may_fetch)))) {
+                if (due) wind_schedule_mark_attempted(&app->schedule, boundary);
+                wind_schedule_schedule_retry(&app->schedule, boundary,
+                                             now + FAILED_DISPLAY_FAST_RETRY_SECONDS);
+                app->schedule.final_retry_at = now + FAILED_REFRESH_RETRY_SECONDS;
+            }
+            wind_schedule_state_store(app->config.schedule_path, &app->schedule);
+        }
         if (outcome) {
             *outcome = local;
         }
@@ -223,6 +259,10 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     result = wind_cache_panel_confirm(app->config.panel_cache_path,
                                       app->config.render_signature, hash);
     if (result == ESP_OK) {
+        if (may_fetch && final_retry_at > 0 && !refresh_failed) {
+            wind_schedule_consume_retry(&app->schedule);
+            wind_schedule_state_store(app->config.schedule_path, &app->schedule);
+        }
         local.displayed = true;
         app->force_display = false;
     }
