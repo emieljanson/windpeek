@@ -325,14 +325,17 @@ TEST_F(WindAppTest, FailedDisplayInvalidatesConfirmationForRetry)
     EXPECT_TRUE(retry.displayed);
 }
 
-TEST_F(WindAppTest, FailedScheduledDisplayWakesOnceAfterFiveMinutesAcrossReboots)
+TEST_F(WindAppTest, FailedScheduledDisplayRetriesAfterThirtySecondsAndFiveMinutesAcrossReboots)
 {
     const int64_t now = 1787544000;
     fake.display_result = ESP_ERR_TIMEOUT;
     wind_app_outcome_t outcome{};
     ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_ERR_TIMEOUT);
     initialize_app(1); // Deep sleep loses RAM; the wake must be persisted.
-    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 300);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_ERR_TIMEOUT);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 30), now + 300);
     ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_ERR_TIMEOUT);
     initialize_app(1);
     EXPECT_EQ(app.schedule.retry_at, 0);
@@ -347,9 +350,9 @@ TEST_F(WindAppTest, ScheduledDisplayRecoveryConfirmsPanelAndStopsRetrying)
     wind_app_outcome_t outcome{};
     ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
     initialize_app(1);
-    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 300);
+    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
     fake.display_result = ESP_OK;
-    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_OK);
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_OK);
     EXPECT_TRUE(outcome.displayed);
     initialize_app(1);
     EXPECT_EQ(app.schedule.retry_at, 0);
@@ -358,7 +361,7 @@ TEST_F(WindAppTest, ScheduledDisplayRecoveryConfirmsPanelAndStopsRetrying)
     EXPECT_EQ(fake.displays, 2);
 }
 
-TEST_F(WindAppTest, DownloadAndDisplayFailureShareOneRetryBudget)
+TEST_F(WindAppTest, DownloadAndDisplayFailureShareBoundedRetryBudget)
 {
     const int64_t now = 1787544000;
     fake.fetch_result = ESP_ERR_TIMEOUT;
@@ -366,11 +369,45 @@ TEST_F(WindAppTest, DownloadAndDisplayFailureShareOneRetryBudget)
     wind_app_outcome_t outcome{};
     ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
     initialize_app(1);
-    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 300);
+    ASSERT_EQ(wind_schedule_next_attempt(&app.schedule, now), now + 30);
     fake.fetch_result = ESP_OK;
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 30), now + 300);
     ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_FAIL);
     initialize_app(1);
     EXPECT_EQ(app.schedule.retry_at, 0);
+}
+
+TEST_F(WindAppTest, LateDisplayRetryDoesNotStartAnotherFiveMinuteWindow)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_app_run(&app, false, now + 120, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(wind_schedule_next_attempt(&app.schedule, now + 120), now + 300);
+    fake.display_result = ESP_OK;
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.displayed);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(app.schedule.final_retry_at, 0);
+}
+
+TEST_F(WindAppTest, MissedDisplayRetriesDoNotRunBackToBack)
+{
+    const int64_t now = 1787544000;
+    fake.display_result = ESP_FAIL;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_FAIL);
+    initialize_app(1);
+    ASSERT_EQ(wind_app_run(&app, false, now + 360, &outcome), ESP_FAIL);
+    initialize_app(1);
+    EXPECT_EQ(app.schedule.retry_at, 0);
+    EXPECT_EQ(app.schedule.final_retry_at, 0);
 }
 
 TEST_F(WindAppTest, FirstBootFailureRendersUnavailableWithoutFabricatedForecast)

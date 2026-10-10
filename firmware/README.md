@@ -51,10 +51,13 @@ native black/white encoding for E1001, E1002, and E1003.
 
 A panel write clears its old confirmation before touching the hardware, so a
 reset during the waveform cannot leave a partial image marked valid. A failed
-automatic panel write schedules
-one retry five minutes later. Download and display failures share that retry;
-a second failure waits until the next ordinary forecast boundary. The retry
-survives deep sleep. This handles reported panel errors, not a visually incorrect
+automatic panel write schedules a retry after 30 seconds and, if that fails,
+a final retry five minutes after the original failure. Successful recovery
+cancels the remaining attempt. Download-only failures retain their single
+five-minute retry; combined failures share the display retry budget. After the
+final failure the device waits for the next ordinary forecast boundary. The
+retry budget survives deep sleep. Schedule schema 4 resets older scheduling
+records once on upgrade; installed settings and forecast caches are preserved. This handles reported panel errors, not a visually incorrect
 image that the controller reports as successful.
 
 Forecast, rendering, display and OTA failures are reported directly to the

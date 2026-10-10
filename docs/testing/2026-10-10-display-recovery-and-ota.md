@@ -86,3 +86,36 @@ No subagents were used. The review tightened the manifest's array and sequence
 validation, removed duplicate reporting on scheduled writes, and included direct
 prepared-screen writes. Unrelated battery-investigation edits in the original
 working directory were left untouched.
+
+
+## Follow-up: faster display recovery
+
+Requested after the initial implementation: retry display failures sooner, then
+once more at five minutes. Display failures now schedule recovery at +30 seconds
+and +300 seconds from the original cycle timestamp. The last attempt remains
+anchored to that timestamp even when the first retry runs late. If both deadlines
+were missed, only one recovery runs. A regular forecast boundary supersedes the
+old retry budget. Download-only failures still get one five-minute retry.
+
+The remaining attempt is persisted before the fast retry begins and retained
+through the physical panel write. A successful fetch and display cancel it;
+a second display failure consumes the budget. Schedule schema 4 rejects and
+reinitializes older scheduling records on upgrade, triggering an ordinary fresh
+cycle while preserving installation settings and forecast caches.
+
+Validation: the three changed regression tests failed against the previous
+implementation, then passed. The full host suite passes all 385 tests, including
+new late-wake/final-success and missed-deadline regressions. E1003 firmware build
+`dev-screen-retry-e` (OTA sequence 5) passes. Reviewed the retry budget, persisted
+state, successful recovery, and normal-boundary supersession in the scoped diff.
+The timing policy is verified with host tests; the original visual fault has not
+been reproduced on hardware.
+
+The 37 WindApp tests also pass under AddressSanitizer and UndefinedBehaviorSanitizer.
+Installed the follow-up by USB into the verified active OTA slot. Application
+MD5 matched after writing; partition table, NVS/settings and boot selector hashes
+were unchanged. Flash evidence: `/tmp/windpeek-usb-flash-retry.log`.
+
+Post-flash installer protocol confirmed `dev-screen-retry-e`, connected Wi-Fi,
+`render=valid`, refresh/fetch errors zero, HTTP 200, and the same configuration
+digest as before. Evidence: `/tmp/windpeek-retry-device-ready.log`.
