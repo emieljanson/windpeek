@@ -1204,6 +1204,7 @@ static esp_err_t navigate(int direction, bool absolute) {
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
 #endif
     if (outcome.displayed) s_force_next_display = false;
+    s_last_render_succeeded = result == ESP_OK;
     if (result == ESP_OK) {
         set_displayed_view(false, 0);
         s_selected_index = target;

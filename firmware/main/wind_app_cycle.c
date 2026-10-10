@@ -189,16 +189,6 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
         }
         return ESP_OK;
     }
-    // Cached navigation can fail too. Consume an existing recovery attempt
-    // before touching the panel, just as the fetching path does.
-    if (!may_fetch && retry_due) {
-        boundary = retry_boundary;
-        wind_schedule_consume_retry(&app->schedule);
-        if (final_retry_at > 0)
-            wind_schedule_schedule_retry(&app->schedule, boundary, final_retry_at);
-        if (wind_schedule_state_store(app->config.schedule_path, &app->schedule) != ESP_OK)
-            return ESP_FAIL;
-    }
     uint8_t *bitmap = (uint8_t *)malloc(app->config.bitmap_size);
     if (!bitmap) {
         if (app->config.report_error)
@@ -226,7 +216,7 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
                               app->config.render_signature,
                               &confirmed_hash) == ESP_OK &&
         hash == confirmed_hash) {
-        if (final_retry_at > 0 && !refresh_failed) {
+        if (may_fetch && final_retry_at > 0 && !refresh_failed) {
             wind_schedule_consume_retry(&app->schedule);
             wind_schedule_state_store(app->config.schedule_path, &app->schedule);
         }
@@ -248,7 +238,7 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
             app->config.report_error(WIND_DEVICE_ERROR_DISPLAY, result);
         // Display failures get a fast retry and one final attempt at five
         // minutes from the original failure, sharing the forecast retry budget.
-        if (mode != VERIFY_SETUP) {
+        if (mode != VERIFY_SETUP && (may_fetch || app->schedule.retry_at == 0)) {
             if (retry_due && final_retry_at > 0) {
                 wind_schedule_schedule_retry(&app->schedule, boundary, final_retry_at);
             } else if (!retry_due &&
@@ -269,7 +259,7 @@ static esp_err_t run_internal(wind_app_t *app, refresh_mode_t mode,
     result = wind_cache_panel_confirm(app->config.panel_cache_path,
                                       app->config.render_signature, hash);
     if (result == ESP_OK) {
-        if (final_retry_at > 0 && !refresh_failed) {
+        if (may_fetch && final_retry_at > 0 && !refresh_failed) {
             wind_schedule_consume_retry(&app->schedule);
             wind_schedule_state_store(app->config.schedule_path, &app->schedule);
         }

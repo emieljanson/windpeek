@@ -324,7 +324,15 @@ void wind_ota_maybe_update(void)
             // failure must leave the running image selected.
             result = nvs_set_u32(nvs, "sequence", release.sequence);
             if (result == ESP_OK) result = nvs_commit(nvs);
-            if (result == ESP_OK) result = esp_ota_set_boot_partition(partition);
+            if (result == ESP_OK) {
+                result = esp_ota_set_boot_partition(partition);
+                if (result != ESP_OK) {
+                    // No reboot was requested. Restore eligibility for a later
+                    // attempt; a storage failure remains fail-closed.
+                    if (nvs_set_u32(nvs, "sequence", sequence) == ESP_OK)
+                        (void)nvs_commit(nvs);
+                }
+            }
             if (result != ESP_OK) goto done;
             nvs_close(nvs);
             ESP_LOGI(TAG, "OTA verified; restarting");

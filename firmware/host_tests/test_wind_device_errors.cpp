@@ -10,6 +10,7 @@ struct Reports {
     wind_device_error_state_t saved[WIND_DEVICE_ERROR_COUNT]{};
     bool exists[WIND_DEVICE_ERROR_COUNT]{};
     int sends = 0;
+    int stores = 0;
     bool fail_store = false;
     esp_err_t send_result = ESP_OK;
     std::string sent_id;
@@ -22,6 +23,7 @@ static esp_err_t load(void *context, wind_device_error_stage_t stage, wind_devic
 static esp_err_t store(void *context, wind_device_error_stage_t stage, const wind_device_error_state_t *state) {
     auto &reports = *static_cast<Reports *>(context);
     if (reports.fail_store) return ESP_FAIL;
+    ++reports.stores;
     reports.saved[stage] = *state;
     reports.exists[stage] = true;
     return ESP_OK;
@@ -125,4 +127,10 @@ TEST_F(DeviceErrors, InvalidPersistedTimestampDoesNotDisableFutureReports) {
     reports.saved[WIND_DEVICE_ERROR_DISPLAY].last_attempt = -1;
     ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, true), ESP_OK);
     EXPECT_EQ(reports.sends, 1);
+}
+
+TEST_F(DeviceErrors, FirstOfflineCapturePersistsThePendingErrorInOneCommit) {
+    ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, false), ESP_OK);
+    EXPECT_EQ(reports.stores, 1);
+    EXPECT_TRUE(reports.saved[WIND_DEVICE_ERROR_DISPLAY].pending);
 }

@@ -805,11 +805,11 @@ TEST_F(WindAppTest, CachedPanelFailureGetsBothBoundedRecoveryAttempts)
     EXPECT_EQ(app.schedule.retry_at, now + 30);
     ASSERT_EQ(wind_app_show_cached(&app, now + 10, &outcome), ESP_FAIL);
     EXPECT_EQ(app.schedule.retry_at, now + 30);
-    ASSERT_EQ(wind_app_show_cached(&app, now + 30, &outcome), ESP_FAIL);
+    ASSERT_EQ(wind_app_run(&app, false, now + 30, &outcome), ESP_FAIL);
     EXPECT_EQ(app.schedule.retry_at, now + 300);
-    ASSERT_EQ(wind_app_show_cached(&app, now + 300, &outcome), ESP_FAIL);
+    ASSERT_EQ(wind_app_run(&app, false, now + 300, &outcome), ESP_FAIL);
     EXPECT_EQ(app.schedule.retry_at, 0);
-    EXPECT_EQ(fake.fetches, 0);
+    EXPECT_EQ(fake.fetches, 2);
 }
 
 TEST_F(WindAppTest, ForcedPanelFailureBetweenBoundariesGetsRecovery)
@@ -822,4 +822,16 @@ TEST_F(WindAppTest, ForcedPanelFailureBetweenBoundariesGetsRecovery)
     ASSERT_EQ(wind_app_run(&app, false, now + 10, &outcome), ESP_FAIL);
     EXPECT_EQ(app.schedule.retry_at, now + 40);
     EXPECT_EQ(app.schedule.final_retry_at, now + 310);
+}
+
+TEST_F(WindAppTest, CachedNavigationLeavesForecastRetryForFetchingPath)
+{
+    const int64_t now = 1787544000;
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_run(&app, false, now, &outcome), ESP_OK);
+    ASSERT_EQ(app.schedule.retry_at, now + 300);
+    ASSERT_EQ(wind_app_show_cached(&app, now + 300, &outcome), ESP_OK);
+    EXPECT_EQ(app.schedule.retry_at, now + 300);
+    EXPECT_EQ(fake.fetches, 1);
 }

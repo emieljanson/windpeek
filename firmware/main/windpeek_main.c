@@ -697,6 +697,10 @@ void app_main(void)
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "Display hardware initialization failed: %s",
                  esp_err_to_name(result));
+        wind_device_errors_capture(WIND_DEVICE_ERROR_RUNTIME, result);
+        // Rollback must run before latching a panel failure shared with the
+        // previous image. If rollback returns, retain normal USB recovery.
+        wind_ota_finish_boot(false);
         if (profile.stored_model != HARDWARE_MODEL_UNKNOWN) {
             (void) hardware_profile_record_driver_failure(
                 profile.stored_model, HARDWARE_DRIVER_STAGE_INITIALIZE, result);
@@ -706,7 +710,6 @@ void app_main(void)
         // before the browser installer can reconnect.
         if (storage_init() == ESP_OK && initialize_support_history())
             wind_support_record_recovery_boot(result, HARDWARE_DRIVER_STAGE_INITIALIZE);
-        wind_ota_finish_boot(false);
         ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }

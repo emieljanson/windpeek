@@ -20,7 +20,7 @@ static int battery_reads;
 static int64_t last_check;
 static uint32_t sequence;
 static const int64_t now = 1787544000;
-static esp_err_t write_result, end_result;
+static esp_err_t write_result, end_result, select_result;
 static esp_app_desc_t current = {"dev-old", "windpeek"};
 static esp_app_desc_t candidate;
 static const esp_partition_t running = {0x20000, 0x380000}, inactive = {0x3a0000, 0x380000};
@@ -54,7 +54,7 @@ esp_err_t esp_ota_end(esp_ota_handle_t) { return end_result; }
 esp_err_t esp_ota_abort(esp_ota_handle_t) { ++aborts; return ESP_OK; }
 esp_err_t esp_ota_get_partition_description(const esp_partition_t *, esp_app_desc_t *out) { *out=candidate; return ESP_OK; }
 esp_err_t esp_ota_set_boot_partition(const esp_partition_t *part) {
-    EXPECT_EQ(part->address, inactive.address); ++switches; return ESP_OK;
+    EXPECT_EQ(part->address, inactive.address); ++switches; return select_result;
 }
 esp_err_t esp_ota_get_state_partition(const esp_partition_t *, esp_ota_img_states_t *out) {
     *out=pending_boot ? ESP_OTA_IMG_PENDING_VERIFY : ESP_OTA_IMG_UNDEFINED; return ESP_OK;
@@ -102,7 +102,7 @@ protected:
         responses.clear(); requests.clear(); written.clear();
         writes=switches=restarts=aborts=reports=confirms=rollbacks=0;
         installer=pending_boot=storage_fails=sequence_store_fails=false; usb_power=true; battery_reads=0; last_check=0; sequence=0;
-        write_result=end_result=ESP_OK;
+        write_result=end_result=select_result=ESP_OK;
         candidate={}; strcpy(candidate.version,"dev-new"); strcpy(candidate.project_name,"windpeek");
         std::string image(10037, 0);
         for (size_t i=0; i<image.size(); ++i) image[i]=static_cast<char>((i*37+i/251)%256);
@@ -167,4 +167,13 @@ TEST_F(OtaRuntime, FallingBatteryAbortsBeforeApplicationWrite) {
     wind_ota_maybe_update();
     EXPECT_EQ(writes,1); EXPECT_TRUE(written.empty()); EXPECT_EQ(aborts,1);
     EXPECT_EQ(switches,0); EXPECT_EQ(restarts,0);
+}
+
+TEST_F(OtaRuntime, BootSelectionFailureRestoresReleaseEligibility) {
+    select_result=ESP_FAIL;
+    wind_ota_maybe_update();
+    EXPECT_EQ(switches,1); EXPECT_EQ(restarts,0); EXPECT_EQ(sequence,0u);
+    select_result=ESP_OK; last_check=0;
+    wind_ota_maybe_update();
+    EXPECT_EQ(restarts,1); EXPECT_EQ(sequence,42u);
 }

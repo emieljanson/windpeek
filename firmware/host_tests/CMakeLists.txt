@@ -161,6 +161,9 @@ add_wind_test(ota_runtime_test test_ota_runtime.cpp runtime_ota.c ../main/wind_c
 target_include_directories(ota_runtime_test BEFORE PRIVATE ota_stubs ${cjson_SOURCE_DIR})
 target_link_libraries(ota_runtime_test cjson)
 
+add_wind_test(device_errors_runtime_test test_device_errors_runtime.cpp runtime_device_errors.c ../main/wind_clock.c)
+target_include_directories(device_errors_runtime_test BEFORE PRIVATE ota_stubs ../components/epaper/include)
+
 add_wind_test(wind_device_errors_test test_wind_device_errors.cpp
   ../main/wind_device_errors.c ../main/wind_clock.c)
 target_link_libraries(wind_device_errors_test cjson)

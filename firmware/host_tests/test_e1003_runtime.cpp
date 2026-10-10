@@ -436,6 +436,7 @@ TEST_F(E1003Runtime, CorruptQuickFrameFallsBackToForecastWithoutWifi) {
     ASSERT_EQ(wind_app_select_spot(1), ESP_OK);
     EXPECT_GT(renders, previous_renders);
     EXPECT_EQ(panel, expected);
+    EXPECT_TRUE(wind_app_last_render_succeeded());
 }
 
 TEST_F(E1003Runtime, ReinstallInvalidatesOldScreensAndPreservesPerSpotPreferences) {

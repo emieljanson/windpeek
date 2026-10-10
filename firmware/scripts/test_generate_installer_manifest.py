@@ -61,7 +61,7 @@ class InstallerManifestTest(unittest.TestCase):
         self.temp.cleanup()
 
     def test_rejects_invalid_ota_sequences_before_writing_a_bundle(self):
-        for sequence in ["-1", "4294967296", "1.5", "release"]:
+        for sequence in ["", "-1", "4294967296", "1.5", "release"]:
             with self.subTest(sequence=sequence), patch.dict("os.environ", {"WINDPEEK_OTA_SEQUENCE": sequence}):
                 with self.assertRaises(ManifestError):
                     generate_installer_bundle(self.build, self.partitions, self.output,

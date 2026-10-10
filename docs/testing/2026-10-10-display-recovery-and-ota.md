@@ -163,3 +163,18 @@ still timed out at 60 seconds.
 
 - Full web suite: 887 tests pass. Focused app/reporting/OTA sanitizer suite:
   63 tests pass. E1002 build and installer stack budgets pass.
+
+### Final recovery review
+
+- 397 host tests and 100 focused sanitizer tests pass. The new ESP_PLATFORM
+  reporting harness exercises the real mutex/flush coordinator, pending-state
+  cache and malformed-record recovery. A report captured for an already-visited
+  stage remains durable until the next connected flush; delivery is one bounded
+  pass, not an unbounded network drain.
+- Cached navigation preserves pending forecast retries for the fetching path.
+  A failed OTA slot selection restores the previous eligible sequence when NVS
+  remains writable. Board initialization rollback runs before persisting the
+  shared panel-failure latch, so the previous firmware can initialize the panel.
+- The installer layout test timed out under software 3D rendering in CI. Its
+  fixture now disables WebGL, retaining the actual panel transitions and all
+  layout assertions. The previously failing shard then passed in 2m24s.

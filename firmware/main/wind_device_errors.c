@@ -68,11 +68,10 @@ esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *deps,
     esp_err_t result = deps->load(deps->context, stage, &state);
     if (result != ESP_OK && result != ESP_ERR_NOT_FOUND &&
         result != ESP_ERR_INVALID_SIZE) return result;
-    if (result != ESP_OK || state.version != REPORT_STATE_VERSION || state.last_attempt < 0) {
+    const bool reset_record = result != ESP_OK || state.version != REPORT_STATE_VERSION || state.last_attempt < 0;
+    if (reset_record) {
         memset(&state, 0, sizeof(state));
         state.version = REPORT_STATE_VERSION;
-        result = deps->store(deps->context, stage, &state);
-        if (result != ESP_OK) return result;
     }
     // A backwards clock does not permanently disable reporting.
     bool quiet = state.last_attempt > 0 && now >= state.last_attempt &&
@@ -86,6 +85,10 @@ esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *deps,
         snprintf(state.event_id, sizeof(state.event_id), "%08lx%08lx%08lx%08lx",
             (unsigned long)words[0], (unsigned long)words[1],
             (unsigned long)words[2], (unsigned long)words[3]);
+        result = deps->store(deps->context, stage, &state);
+        if (result != ESP_OK) return result;
+    }
+    if (reset_record && !state.pending) {
         result = deps->store(deps->context, stage, &state);
         if (result != ESP_OK) return result;
     }
@@ -159,7 +162,7 @@ static esp_err_t load_report(void *context, wind_device_error_stage_t stage,
         return ESP_ERR_INVALID_SIZE;
     if (result != ESP_OK) return result;
     if (size != sizeof(*state)) return ESP_ERR_INVALID_SIZE;
-    stage_loaded[stage] = true;
+    stage_loaded[stage] = state->version == REPORT_STATE_VERSION && state->last_attempt >= 0;
     stage_pending[stage] = state->pending;
     return ESP_OK;
 }

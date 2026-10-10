@@ -10,6 +10,12 @@ extern "C" {
 #define WIFI_MANAGER_H
 #define ESP_ERR_NVS_NOT_FOUND 0x1102
 #define NVS_READWRITE 1
+#define NVS_READONLY 0
+#define ESP_ERR_NVS_INVALID_LENGTH 0x110c
+#define ESP_ERR_NVS_TYPE_MISMATCH 0x1103
+#define HTTP_METHOD_POST 1
+uint32_t esp_random(void);
+int esp_reset_reason(void);
 #define PSA_SUCCESS 0
 #define PSA_ALG_SHA_256 1
 #define PSA_HASH_OPERATION_INIT {0}
@@ -27,6 +33,8 @@ esp_err_t nvs_set_i64(nvs_handle_t, const char *, int64_t);
 esp_err_t nvs_set_u32(nvs_handle_t, const char *, uint32_t);
 esp_err_t nvs_commit(nvs_handle_t);
 void nvs_close(nvs_handle_t);
+esp_err_t nvs_get_blob(nvs_handle_t, const char *, void *, size_t *);
+esp_err_t nvs_set_blob(nvs_handle_t, const char *, const void *, size_t);
 typedef struct { uint32_t address; uint32_t size; } esp_partition_t;
 typedef struct { char version[32]; char project_name[32]; } esp_app_desc_t;
 typedef int esp_ota_handle_t;
@@ -51,12 +59,16 @@ int esp_crt_bundle_attach(void *);
 typedef struct Http *esp_http_client_handle_t;
 typedef struct {
     const char *url;
+    int method;
     int timeout_ms;
     int (*crt_bundle_attach)(void *);
     bool disable_auto_redirect;
     int buffer_size;
 } esp_http_client_config_t;
 esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *);
+esp_err_t esp_http_client_set_header(esp_http_client_handle_t, const char *, const char *);
+esp_err_t esp_http_client_set_post_field(esp_http_client_handle_t, const char *, int);
+esp_err_t esp_http_client_perform(esp_http_client_handle_t);
 esp_err_t esp_http_client_open(esp_http_client_handle_t, int);
 int64_t esp_http_client_fetch_headers(esp_http_client_handle_t);
 int esp_http_client_get_status_code(esp_http_client_handle_t);
