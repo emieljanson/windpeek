@@ -4,10 +4,13 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "esp_err.h"
+#include "wind_provider.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define WIND_DEVICE_ERROR_ENVELOPE_SIZE 1536
 
 typedef enum {
     WIND_DEVICE_ERROR_FORECAST,
@@ -29,6 +32,8 @@ typedef struct {
     uint32_t reset_reason;
     char firmware[64];
     char board[48];
+    wind_provider_diagnostics_t forecast;
+    bool has_forecast_diagnostics;
 } wind_device_error_t;
 
 typedef struct {

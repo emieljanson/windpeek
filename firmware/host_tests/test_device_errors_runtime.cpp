@@ -8,14 +8,20 @@ extern "C" {
 #include "ota_platform.h"
 #include "wind_device_errors.h"
 #include "epaper.h"
+#include "open_meteo_knmi_provider.h"
 void reports_test_reset(void);
+size_t reports_test_legacy_state_size(void);
+void reports_test_make_legacy(void *, const wind_device_error_state_t *);
 }
 namespace {
 std::map<std::string, std::vector<uint8_t>> records;
 int reads, sends;
+wind_provider_diagnostics_t forecast;
+std::string payload;
 std::function<void()> during_send;
 }
 extern "C" {
+void open_meteo_knmi_get_diagnostics(wind_provider_diagnostics_t *out) { *out=forecast; }
 time_t ota_test_time(time_t *out) { const time_t now=1787544000; if(out) *out=now; return now; }
 bool wifi_manager_is_connected(void) { return true; }
 bool board_hal_is_usb_connected(void) { return true; }
@@ -41,7 +47,7 @@ esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *) 
     return reinterpret_cast<esp_http_client_handle_t>(1);
 }
 esp_err_t esp_http_client_set_header(esp_http_client_handle_t, const char *, const char *) { return ESP_OK; }
-esp_err_t esp_http_client_set_post_field(esp_http_client_handle_t, const char *, int) { return ESP_OK; }
+esp_err_t esp_http_client_set_post_field(esp_http_client_handle_t, const char *data, int length) { payload.assign(data,length); return ESP_OK; }
 esp_err_t esp_http_client_perform(esp_http_client_handle_t) {
     ++sends;
     if(during_send) { auto callback=std::move(during_send); during_send=nullptr; callback(); }
@@ -52,7 +58,7 @@ esp_err_t esp_http_client_cleanup(esp_http_client_handle_t) { return ESP_OK; }
 }
 class DeviceErrorsRuntime : public testing::Test {
 protected:
- void SetUp() override { reports_test_reset(); records.clear(); reads=sends=0; during_send=nullptr; }
+ void SetUp() override { reports_test_reset(); records.clear(); reads=sends=0; during_send=nullptr; forecast={}; payload.clear(); }
  void TearDown() override { reports_test_reset(); }
 };
 TEST_F(DeviceErrorsRuntime, EmptyStagesAreLoadedOnlyOnceAndCaptureReactivatesThem) {
@@ -77,4 +83,63 @@ TEST_F(DeviceErrorsRuntime, OversizedPersistedRecordRecoversOnCapture) {
     records["display"]=std::vector<uint8_t>(sizeof(wind_device_error_state_t)+1);
     wind_device_errors_capture(WIND_DEVICE_ERROR_DISPLAY,ESP_FAIL);
     wind_device_errors_flush(); EXPECT_EQ(sends,1);
+}
+
+TEST_F(DeviceErrorsRuntime, ForecastFailureRetainsNetworkDetailsUntilDelivery) {
+    forecast={ESP_OK, 429, ESP_ERR_NOT_FINISHED, 123, false, false};
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    // A later request and restart must not overwrite the original failure details.
+    forecast={ESP_ERR_TIMEOUT, 0, ESP_ERR_NOT_FINISHED, 0, false, false};
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    reports_test_reset();
+    wind_device_errors_flush();
+    EXPECT_EQ(sends,1);
+    EXPECT_NE(payload.find("\"forecast_http_status\":429"),std::string::npos);
+    EXPECT_NE(payload.find("\"forecast_transport_error\":0"),std::string::npos);
+    EXPECT_NE(payload.find("\"forecast_response_bytes\":123"),std::string::npos);
+}
+
+TEST_F(DeviceErrorsRuntime, ForecastTransportAndSizeFailuresKeepTheirDetails) {
+    forecast={ESP_ERR_TIMEOUT, 0, ESP_ERR_NOT_FINISHED, 16384, true, false};
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    wind_device_errors_flush();
+    EXPECT_NE(payload.find("\"forecast_transport_error\":"+std::to_string(ESP_ERR_TIMEOUT)),std::string::npos);
+    EXPECT_NE(payload.find("\"forecast_response_too_large\":true"),std::string::npos);
+    EXPECT_NE(payload.find("\"forecast_allocation_failed\":false"),std::string::npos);
+}
+TEST_F(DeviceErrorsRuntime, DisplayFailuresDoNotIncludeStaleForecastDetails) {
+    forecast={ESP_OK, 429, ESP_ERR_NOT_FINISHED, 123, false, false};
+    wind_device_errors_capture(WIND_DEVICE_ERROR_DISPLAY, ESP_FAIL);
+    wind_device_errors_flush();
+    EXPECT_EQ(payload.find("forecast_http_status"),std::string::npos);
+}
+
+TEST_F(DeviceErrorsRuntime, FirmwareUpgradePreservesQueuedLegacyEventWithoutInventingDiagnostics) {
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    auto &record=records["forecast"];
+    wind_device_error_state_t current;
+    std::memcpy(&current, record.data(), sizeof(current));
+    record.resize(reports_test_legacy_state_size());
+    reports_test_make_legacy(record.data(), &current);
+    reports_test_reset();
+    wind_device_errors_flush();
+    EXPECT_EQ(sends,1);
+    EXPECT_EQ(payload.find("forecast_http_status"),std::string::npos);
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    wind_device_errors_flush();
+    EXPECT_EQ(sends,1); // Delivery establishes the hourly rate limit.
+}
+
+TEST_F(DeviceErrorsRuntime, FirmwareUpgradeRetainsLegacyDeliveryRateLimit) {
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    auto &record=records["forecast"];
+    wind_device_error_state_t current;
+    std::memcpy(&current, record.data(), sizeof(current));
+    current.last_attempt=ota_test_time(nullptr)-300;
+    record.resize(reports_test_legacy_state_size());
+    reports_test_make_legacy(record.data(), &current);
+    reports_test_reset();
+    wind_device_errors_flush();
+    EXPECT_EQ(sends,0);
+    EXPECT_TRUE(payload.empty());
 }
