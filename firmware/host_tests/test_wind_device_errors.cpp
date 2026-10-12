@@ -91,7 +91,7 @@ TEST_F(DeviceErrors, SuccessIsIgnoredButEarlyBootFailureWaitsForValidClock) {
 }
 TEST_F(DeviceErrors, EnvelopeIsValidJsonWithOnlyApprovedDiagnostics) {
     ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_DISPLAY, &error, now, false), ESP_OK);
-    char payload[1536];
+    char payload[WIND_DEVICE_ERROR_ENVELOPE_SIZE];
     ASSERT_EQ(wind_device_error_envelope(WIND_DEVICE_ERROR_DISPLAY, &reports.saved[2], payload, sizeof(payload)), ESP_OK);
     std::string envelope(payload);
     auto first = envelope.find('\n');
@@ -141,7 +141,7 @@ TEST_F(DeviceErrors, ForecastEnvelopeIsValidJsonAndFitsTheDeliveryBuffer) {
     std::memset(error.firmware, 'a', sizeof(error.firmware)-1);
     std::memset(error.board, 'b', sizeof(error.board)-1);
     ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_FORECAST, &error, now, false), ESP_OK);
-    char payload[1536];
+    char payload[WIND_DEVICE_ERROR_ENVELOPE_SIZE];
     ASSERT_EQ(wind_device_error_envelope(WIND_DEVICE_ERROR_FORECAST,
         &reports.saved[WIND_DEVICE_ERROR_FORECAST], payload, sizeof(payload)), ESP_OK);
     std::string envelope(payload);

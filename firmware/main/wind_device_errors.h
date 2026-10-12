@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+#define WIND_DEVICE_ERROR_ENVELOPE_SIZE 1536
+
 typedef enum {
     WIND_DEVICE_ERROR_FORECAST,
     WIND_DEVICE_ERROR_RENDER,

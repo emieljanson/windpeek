@@ -90,6 +90,7 @@ TEST_F(DeviceErrorsRuntime, ForecastFailureRetainsNetworkDetailsUntilDelivery) {
     wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
     // A later request and restart must not overwrite the original failure details.
     forecast={ESP_ERR_TIMEOUT, 0, ESP_ERR_NOT_FINISHED, 0, false, false};
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
     reports_test_reset();
     wind_device_errors_flush();
     EXPECT_EQ(sends,1);
@@ -126,5 +127,19 @@ TEST_F(DeviceErrorsRuntime, FirmwareUpgradePreservesQueuedLegacyEventWithoutInve
     EXPECT_EQ(payload.find("forecast_http_status"),std::string::npos);
     wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
     wind_device_errors_flush();
-    EXPECT_EQ(sends,1); // The migrated hourly rate limit is retained.
+    EXPECT_EQ(sends,1); // Delivery establishes the hourly rate limit.
+}
+
+TEST_F(DeviceErrorsRuntime, FirmwareUpgradeRetainsLegacyDeliveryRateLimit) {
+    wind_device_errors_capture(WIND_DEVICE_ERROR_FORECAST, ESP_FAIL);
+    auto &record=records["forecast"];
+    wind_device_error_state_t current;
+    std::memcpy(&current, record.data(), sizeof(current));
+    current.last_attempt=ota_test_time(nullptr)-300;
+    record.resize(reports_test_legacy_state_size());
+    reports_test_make_legacy(record.data(), &current);
+    reports_test_reset();
+    wind_device_errors_flush();
+    EXPECT_EQ(sends,0);
+    EXPECT_TRUE(payload.empty());
 }

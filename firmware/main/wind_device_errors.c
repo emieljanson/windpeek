@@ -175,6 +175,7 @@ typedef struct {
     } error;
 } wind_device_error_state_v1_t;
 
+// The new size_t member can add alignment padding on a 64-bit host.
 _Static_assert(offsetof(wind_device_error_t, forecast) >=
                sizeof(((wind_device_error_state_v1_t *)0)->error), "Persisted diagnostics overlap");
 
@@ -239,7 +240,7 @@ static esp_err_t send_report(void *context, wind_device_error_stage_t stage,
                             const wind_device_error_state_t *state)
 {
     (void)context;
-    char envelope[1536];
+    char envelope[WIND_DEVICE_ERROR_ENVELOPE_SIZE];
     esp_err_t result = wind_device_error_envelope(stage, state, envelope, sizeof(envelope));
     if (result != ESP_OK) return result;
     esp_http_client_config_t config = {
