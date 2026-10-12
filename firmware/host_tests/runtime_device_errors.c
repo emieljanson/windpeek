@@ -16,3 +16,14 @@ void reports_test_reset(void) {
     memset(stage_loaded, 0, sizeof(stage_loaded));
     memset(stage_pending, 0, sizeof(stage_pending));
 }
+
+size_t reports_test_legacy_state_size(void) { return sizeof(wind_device_error_state_v1_t); }
+void reports_test_make_legacy(void *out, const wind_device_error_state_t *state) {
+    wind_device_error_state_v1_t legacy = {
+        .version = 1, .pending = state->pending,
+        .occurred_at = state->occurred_at, .last_attempt = state->last_attempt,
+    };
+    memcpy(legacy.event_id, state->event_id, sizeof(legacy.event_id));
+    memcpy(&legacy.error, &state->error, sizeof(legacy.error));
+    memcpy(out, &legacy, sizeof(legacy));
+}

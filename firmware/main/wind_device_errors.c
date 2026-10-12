@@ -5,7 +5,7 @@
 #include "wind_clock.h"
 
 #define REPORT_INTERVAL_SECONDS 3600
-#define REPORT_STATE_VERSION 1u
+#define REPORT_STATE_VERSION 2u
 #define SENTRY_DSN "https://8318e5c198b76f64d99701b0bab4a216@o4511992329535488.ingest.de.sentry.io/4511992357584976"
 #define SENTRY_ENVELOPE_URL "https://o4511992329535488.ingest.de.sentry.io/api/4511992357584976/envelope/"
 
@@ -36,6 +36,17 @@ esp_err_t wind_device_error_envelope(wind_device_error_stage_t stage,
     char timestamp[64] = "";
     if (wind_clock_is_valid_unix(state->occurred_at))
         snprintf(timestamp, sizeof(timestamp), "\"timestamp\":%lld,", (long long)state->occurred_at);
+    char forecast[320] = "";
+    if (stage == WIND_DEVICE_ERROR_FORECAST && error->has_forecast_diagnostics) {
+        snprintf(forecast, sizeof(forecast),
+            ",\"forecast_transport_error\":%d,\"forecast_http_status\":%d,"
+            "\"forecast_parse_error\":%d,\"forecast_response_bytes\":%lu,"
+            "\"forecast_response_too_large\":%s,\"forecast_allocation_failed\":%s",
+            error->forecast.perform_result, error->forecast.http_status,
+            error->forecast.parse_result, (unsigned long)error->forecast.response_length,
+            error->forecast.too_large ? "true" : "false",
+            error->forecast.allocation_failed ? "true" : "false");
+    }
     // One JSON event per envelope; newline-delimited per Sentry's envelope protocol.
     int written = snprintf(output, size,
         "{\"event_id\":\"%s\",\"dsn\":\"" SENTRY_DSN "\"}\n"
@@ -46,14 +57,14 @@ esp_err_t wind_device_error_envelope(wind_device_error_stage_t stage,
         "\"fingerprint\":[\"windpeek-device\",\"%s\",\"%s\",\"%ld\",\"%lu\"],"
         "\"tags\":{\"source\":\"device\",\"stage\":\"%s\",\"board\":\"%s\",\"power\":\"%s\"},"
         "\"extra\":{\"error_code\":%ld,\"panel_phase\":%lu,\"panel_wait_ms\":%lu,"
-        "\"panel_busy_level\":%lu,\"battery_mv\":%ld,\"reset_reason\":%lu}}\n",
+        "\"panel_busy_level\":%lu,\"battery_mv\":%ld,\"reset_reason\":%lu%s}}\n",
         state->event_id, state->event_id, timestamp,
         error->firmware, stages[stage], stages[stage], error->board,
         (long)error->error, (unsigned long)error->panel_phase,
         stages[stage], error->board, error->usb ? "usb" : "battery",
         (long)error->error, (unsigned long)error->panel_phase,
         (unsigned long)error->panel_wait_ms, (unsigned long)error->panel_busy_level,
-        (long)error->battery_mv, (unsigned long)error->reset_reason);
+        (long)error->battery_mv, (unsigned long)error->reset_reason, forecast);
     return written > 0 && (size_t)written < size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -115,6 +126,7 @@ esp_err_t wind_device_error_run(const wind_device_error_dependencies_t *deps,
 #include "nvs.h"
 #include "wifi_manager.h"
 #include "installed_configuration.h"
+#include "open_meteo_knmi_provider.h"
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev-unknown"
@@ -146,6 +158,26 @@ static bool lock_reports(void)
     return xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE;
 }
 
+// Version 1 is already stored on devices. Preserve queued events and rate limits
+// when upgrading; these records have no forecast diagnostics to attach.
+typedef struct {
+    uint32_t version;
+    bool pending;
+    int64_t occurred_at, last_attempt;
+    char event_id[33];
+    struct {
+        int32_t error;
+        uint32_t panel_phase, panel_wait_ms, panel_busy_level;
+        int32_t battery_mv;
+        bool usb;
+        uint32_t reset_reason;
+        char firmware[64], board[48];
+    } error;
+} wind_device_error_state_v1_t;
+
+_Static_assert(offsetof(wind_device_error_t, forecast) >=
+               sizeof(((wind_device_error_state_v1_t *)0)->error), "Persisted diagnostics overlap");
+
 static esp_err_t load_report(void *context, wind_device_error_stage_t stage,
                             wind_device_error_state_t *state)
 {
@@ -154,14 +186,31 @@ static esp_err_t load_report(void *context, wind_device_error_stage_t stage,
     esp_err_t result = nvs_open("device_errors", NVS_READONLY, &handle);
     if (result == ESP_ERR_NVS_NOT_FOUND) return ESP_ERR_NOT_FOUND;
     if (result != ESP_OK) return result;
-    size_t size = sizeof(*state);
-    result = nvs_get_blob(handle, stages[stage], state, &size);
+    union {
+        wind_device_error_state_t current;
+        wind_device_error_state_v1_t legacy;
+    } stored = {0};
+    size_t size = sizeof(stored);
+    result = nvs_get_blob(handle, stages[stage], &stored, &size);
     nvs_close(handle);
     if (result == ESP_ERR_NVS_NOT_FOUND) return ESP_ERR_NOT_FOUND;
     if (result == ESP_ERR_NVS_INVALID_LENGTH || result == ESP_ERR_NVS_TYPE_MISMATCH)
         return ESP_ERR_INVALID_SIZE;
     if (result != ESP_OK) return result;
-    if (size != sizeof(*state)) return ESP_ERR_INVALID_SIZE;
+    if (size == sizeof(wind_device_error_state_v1_t) && stored.legacy.version == 1u) {
+        *state = (wind_device_error_state_t){
+            .version = REPORT_STATE_VERSION,
+            .pending = stored.legacy.pending,
+            .occurred_at = stored.legacy.occurred_at,
+            .last_attempt = stored.legacy.last_attempt,
+        };
+        memcpy(state->event_id, stored.legacy.event_id, sizeof(state->event_id));
+        memcpy(&state->error, &stored.legacy.error, sizeof(stored.legacy.error));
+    } else if (size == sizeof(*state)) {
+        *state = stored.current;
+    } else {
+        return ESP_ERR_INVALID_SIZE;
+    }
     stage_loaded[stage] = state->version == REPORT_STATE_VERSION && state->last_attempt >= 0;
     stage_pending[stage] = state->pending;
     return ESP_OK;
@@ -237,6 +286,10 @@ void wind_device_errors_capture(wind_device_error_stage_t stage, esp_err_t error
         .firmware = FIRMWARE_VERSION,
         .board = WINDPEEK_BOARD_ID,
     };
+    if (stage == WIND_DEVICE_ERROR_FORECAST) {
+        open_meteo_knmi_get_diagnostics(&report.forecast);
+        report.has_forecast_diagnostics = true;
+    }
     if (stage == WIND_DEVICE_ERROR_DISPLAY) {
         const epaper_panel_diagnostics_t panel = epaper_panel_diagnostics_get();
         report.panel_phase = panel.phase;

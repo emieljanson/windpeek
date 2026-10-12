@@ -134,3 +134,29 @@ TEST_F(DeviceErrors, FirstOfflineCapturePersistsThePendingErrorInOneCommit) {
     EXPECT_EQ(reports.stores, 1);
     EXPECT_TRUE(reports.saved[WIND_DEVICE_ERROR_DISPLAY].pending);
 }
+
+TEST_F(DeviceErrors, ForecastEnvelopeIsValidJsonAndFitsTheDeliveryBuffer) {
+    error.has_forecast_diagnostics=true;
+    error.forecast={ESP_ERR_TIMEOUT, 503, ESP_ERR_NOT_FINISHED, 16384, true, false};
+    std::memset(error.firmware, 'a', sizeof(error.firmware)-1);
+    std::memset(error.board, 'b', sizeof(error.board)-1);
+    ASSERT_EQ(wind_device_error_run(&deps, WIND_DEVICE_ERROR_FORECAST, &error, now, false), ESP_OK);
+    char payload[1536];
+    ASSERT_EQ(wind_device_error_envelope(WIND_DEVICE_ERROR_FORECAST,
+        &reports.saved[WIND_DEVICE_ERROR_FORECAST], payload, sizeof(payload)), ESP_OK);
+    std::string envelope(payload);
+    auto second=envelope.find('\n',envelope.find('\n')+1);
+    cJSON *event=cJSON_Parse(envelope.substr(second+1).c_str());
+    ASSERT_NE(event,nullptr);
+    auto *extra=cJSON_GetObjectItem(event,"extra");
+    ASSERT_NE(extra,nullptr);
+    EXPECT_EQ(cJSON_GetArraySize(extra),12);
+    auto *status=cJSON_GetObjectItem(extra,"forecast_http_status");
+    ASSERT_TRUE(cJSON_IsNumber(status));
+    EXPECT_EQ(status->valueint,503);
+    auto *parse=cJSON_GetObjectItem(extra,"forecast_parse_error");
+    ASSERT_TRUE(cJSON_IsNumber(parse));
+    EXPECT_EQ(parse->valueint,ESP_ERR_NOT_FINISHED);
+    EXPECT_TRUE(cJSON_IsTrue(cJSON_GetObjectItem(extra,"forecast_response_too_large")));
+    cJSON_Delete(event);
+}
