@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
+#include <cstring>
 
 extern "C" {
 #include "wind_schedule.h"
@@ -22,6 +24,49 @@ static time_t local_time(int year, int month, int day, int hour, int minute)
 }
 
 class WindScheduleTest : public testing::Test {};
+
+TEST_F(WindScheduleTest, PreservesScheduledRetriesWhenUpgradingShortIdentifiers) {
+    struct PreviousRecord {
+        uint32_t magic;
+        struct {
+            uint32_t schema_version;
+            char spot_id[32];
+            char timezone[40];
+            int64_t last_attempted_boundary, last_satisfied_boundary;
+            int64_t retry_boundary, retry_at, final_retry_at;
+        } state;
+        uint32_t checksum;
+    } previous{};
+    previous.magic = 0x574E4453u;
+    previous.state.schema_version = 4;
+    strcpy(previous.state.spot_id, "edam");
+    strcpy(previous.state.timezone, TIMEZONE);
+    previous.state.last_attempted_boundary = 1787544000;
+    previous.state.last_satisfied_boundary = 1787530000;
+    previous.state.retry_boundary = 1787544000;
+    previous.state.retry_at = 1787544030;
+    previous.state.final_retry_at = 1787544300;
+    uint32_t checksum = 2166136261u;
+    const auto *bytes = reinterpret_cast<const uint8_t *>(&previous.state);
+    for (size_t i = 0; i < sizeof(previous.state); ++i) checksum = (checksum ^ bytes[i]) * 16777619u;
+    previous.checksum = checksum;
+    const auto path = std::filesystem::temp_directory_path() / "windpeek-upgrade-schedule.cache";
+    std::ofstream file(path, std::ios::binary);
+    file.write(reinterpret_cast<const char *>(&previous), sizeof(previous));
+    file.close();
+    wind_schedule_state_t state{};
+    ASSERT_EQ(wind_schedule_state_load_scoped(path.c_str(), "edam", TIMEZONE, &state), ESP_OK);
+    EXPECT_EQ(state.schema_version, WIND_SCHEDULE_SCHEMA_VERSION);
+    EXPECT_EQ(state.last_attempted_boundary, previous.state.last_attempted_boundary);
+    EXPECT_EQ(state.last_satisfied_boundary, previous.state.last_satisfied_boundary);
+    EXPECT_EQ(state.retry_boundary, previous.state.retry_boundary);
+    EXPECT_EQ(state.retry_at, previous.state.retry_at);
+    EXPECT_EQ(state.final_retry_at, previous.state.final_retry_at);
+    ASSERT_EQ(wind_schedule_state_store(path.c_str(), &state), ESP_OK);
+    ASSERT_EQ(wind_schedule_state_load_scoped(path.c_str(), "edam", TIMEZONE, &state), ESP_OK);
+    EXPECT_EQ(state.final_retry_at, previous.state.final_retry_at);
+    std::filesystem::remove(path);
+}
 
 TEST_F(WindScheduleTest, SelectsAllFixedBoundariesAndNextBoundary)
 {

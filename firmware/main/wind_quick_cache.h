@@ -26,7 +26,7 @@ typedef struct {
     int32_t freshness;
     int32_t battery_percent;
     int32_t swell_from_future;
-    char spot_id[48];
+    char spot_id[WIND_FORECAST_SPOT_ID_MAX];
     char focused_date[WIND_FORECAST_DATE_LENGTH];
     char first_date[WIND_FORECAST_DATE_LENGTH];
     char local_date[WIND_FORECAST_DATE_LENGTH];

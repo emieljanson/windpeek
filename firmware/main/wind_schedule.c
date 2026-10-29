@@ -19,6 +19,21 @@ typedef struct {
     uint32_t checksum;
 } schedule_record_t;
 
+typedef struct {
+    uint32_t magic;
+    struct {
+        uint32_t schema_version;
+        char spot_id[32];
+        char timezone[40];
+        int64_t last_attempted_boundary;
+        int64_t last_satisfied_boundary;
+        int64_t retry_boundary;
+        int64_t retry_at;
+        int64_t final_retry_at;
+    } state;
+    uint32_t checksum;
+} previous_schedule_record_t;
+
 static uint32_t checksum_bytes(const void *data, size_t length)
 {
     const uint8_t *bytes = (const uint8_t *) data;
@@ -192,8 +207,25 @@ esp_err_t wind_schedule_state_load_scoped(const char *path, const char *spot_id,
     uint32_t expected = checksum_bytes(&record.state, sizeof(record.state));
     if (!ok || record.magic != 0x574E4453u || record.checksum != expected ||
         record.state.schema_version != WIND_SCHEDULE_SCHEMA_VERSION) {
-        initialize_scope(out_state, spot_id, timezone);
-        return ESP_ERR_INVALID_CRC;
+        previous_schedule_record_t previous = {0};
+        file = fopen(path, "rb");
+        if (!file) return ESP_ERR_NOT_FOUND;
+        ok = fread(&previous, 1, sizeof(previous), file) == sizeof(previous) && fgetc(file) == EOF;
+        fclose(file);
+        if (!ok || previous.magic != 0x574E4453u || previous.state.schema_version != 4u ||
+            previous.checksum != checksum_bytes(&previous.state, sizeof(previous.state)) ||
+            previous.state.spot_id[0] == '\0' || previous.state.timezone[0] == '\0' ||
+            !memchr(previous.state.spot_id, '\0', sizeof(previous.state.spot_id)) ||
+            !memchr(previous.state.timezone, '\0', sizeof(previous.state.timezone))) {
+            initialize_scope(out_state, spot_id, timezone);
+            return ESP_ERR_INVALID_CRC;
+        }
+        initialize_scope(&record.state, previous.state.spot_id, previous.state.timezone);
+        record.state.last_attempted_boundary = previous.state.last_attempted_boundary;
+        record.state.last_satisfied_boundary = previous.state.last_satisfied_boundary;
+        record.state.retry_boundary = previous.state.retry_boundary;
+        record.state.retry_at = previous.state.retry_at;
+        record.state.final_retry_at = previous.state.final_retry_at;
     }
     if (!wind_schedule_state_matches_scope(&record.state, spot_id, timezone)) {
         initialize_scope(out_state, spot_id, timezone);

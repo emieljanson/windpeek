@@ -81,6 +81,17 @@ TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
     EXPECT_EQ(forecast.days[0].samples[0].temperature_tenths_c, -24);
 }
 
+TEST(WindProvider, KeepsFullLengthInstalledSpotIdentifiersWhenParsingForecasts) {
+    const std::string id(64, 'a');
+    auto provider_config = config();
+    provider_config.spot_id = id.c_str();
+    const auto json = fixture();
+    wind_forecast_t forecast;
+    ASSERT_EQ(open_meteo_knmi_parse_json(&provider_config, json.data(), json.size(),
+        1787544000, "2026-08-24", &forecast), ESP_OK);
+    EXPECT_STREQ(forecast.spot_id, id.c_str());
+}
+
 TEST(WindProvider, KeepsTemperatureIndependentWhenOneValueIsNull)
 {
     auto config = ::config();

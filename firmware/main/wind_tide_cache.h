@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define WIND_TIDE_CACHE_SCHEMA_VERSION 2u
+#define WIND_TIDE_CACHE_SCHEMA_VERSION 3u
 
 typedef struct {
     const char *spot_id;

@@ -130,36 +130,61 @@ TEST_F(WindCacheTest, RetainsHourlyDataAcrossReload) {
 }
 
 TEST_F(WindCacheTest, MigratesPreviousCacheWithoutDiscardingOfflineForecast) {
+    struct PreviousForecast {
+        uint32_t schema_version;
+        char spot_id[32], spot_name[64];
+        double latitude, longitude;
+        char timezone[40], provider[24], model[32];
+        int64_t retrieved_at;
+        wind_forecast_day_t days[WIND_FORECAST_DAY_COUNT];
+        wind_forecast_sample_t hourly[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_HOURLY_COUNT];
+    };
     struct OldRecord {
         uint32_t magic, schema, render, payload;
         uint64_t generation;
         uint32_t checksum;
-        alignas(wind_forecast_t) uint8_t forecast[offsetof(wind_forecast_t, hourly)];
-    } old{};
-    auto forecast = cache_forecast();
-    forecast.schema_version = 3;
-    old.magic=0x574E4446u; old.schema=4; old.render=WIND_RENDER_COMPAT_VERSION;
-    old.payload=sizeof(old.forecast); old.generation=3;
-    std::memcpy(old.forecast, &forecast, sizeof(old.forecast));
-    uint32_t crc=0xffffffffu;
-    const auto *bytes = reinterpret_cast<const uint8_t *>(&old);
-    for (size_t i=0;i<sizeof(old);++i) {
-        crc ^= bytes[i];
-        for (int bit=0;bit<8;++bit) crc=(crc>>1)^(0xedb88320u & (uint32_t)-(int32_t)(crc&1));
+        PreviousForecast forecast;
+    };
+    for (bool hourly : {false, true}) {
+        SCOPED_TRACE(hourly ? "schema 5 with hourly data" : "schema 4 without hourly data");
+        OldRecord old{};
+        const auto forecast = cache_forecast();
+        old.forecast.schema_version = hourly ? 4 : 3;
+        strcpy(old.forecast.spot_id, forecast.spot_id);
+        strcpy(old.forecast.spot_name, forecast.spot_name);
+        old.forecast.latitude = forecast.latitude;
+        old.forecast.longitude = forecast.longitude;
+        strcpy(old.forecast.timezone, forecast.timezone);
+        strcpy(old.forecast.provider, forecast.provider);
+        strcpy(old.forecast.model, forecast.model);
+        old.forecast.retrieved_at = forecast.retrieved_at;
+        memcpy(old.forecast.days, forecast.days, sizeof(forecast.days));
+        if (hourly) old.forecast.hourly[0][0] = forecast.days[0].samples[0];
+        old.magic=0x574E4446u; old.schema=hourly ? 5 : 4; old.render=WIND_RENDER_COMPAT_VERSION;
+        old.payload=hourly ? sizeof(old.forecast) : offsetof(PreviousForecast, hourly);
+        old.generation=3;
+        const size_t old_size = offsetof(OldRecord, forecast) + old.payload;
+        uint32_t crc=0xffffffffu;
+        const auto *bytes = reinterpret_cast<const uint8_t *>(&old);
+        for (size_t i=0;i<old_size;++i) {
+            crc ^= bytes[i];
+            for (int bit=0;bit<8;++bit) crc=(crc>>1)^(0xedb88320u & (uint32_t)-(int32_t)(crc&1));
+        }
+        old.checksum=~crc;
+        const auto path=(root/(hourly ? "old-hourly.cache" : "old.cache")).string();
+        std::ofstream file(path+".a",std::ios::binary);
+        file.write(reinterpret_cast<const char *>(&old),old_size); file.close();
+        wind_cache_identity_t identity={"edam","Europe/Amsterdam","knmi_seamless"};
+        wind_forecast_t loaded{};
+        ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
+        EXPECT_EQ(loaded.schema_version,WIND_FORECAST_SCHEMA_VERSION);
+        EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
+        EXPECT_EQ(loaded.hourly[0][0].timestamp, hourly ? forecast.days[0].samples[0].timestamp : 0);
+        EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
+        ASSERT_EQ(wind_cache_store(path.c_str(),&loaded),ESP_OK);
+        loaded = {};
+        ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
+        EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
+        EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
     }
-    old.checksum=~crc;
-    const auto path=(root/"old.cache").string();
-    std::ofstream file(path+".a",std::ios::binary);
-    file.write(reinterpret_cast<const char *>(&old),sizeof(old)); file.close();
-    wind_cache_identity_t identity={"edam","Europe/Amsterdam","knmi_seamless"};
-    wind_forecast_t loaded{};
-    ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
-    EXPECT_EQ(loaded.schema_version,WIND_FORECAST_SCHEMA_VERSION);
-    EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
-    EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
-    ASSERT_EQ(wind_cache_store(path.c_str(),&loaded),ESP_OK);
-    loaded = {};
-    ASSERT_EQ(wind_cache_load(path.c_str(),&identity,&loaded),ESP_OK);
-    EXPECT_EQ(loaded.days[0].samples[0].wind_knots,12);
-    EXPECT_EQ(loaded.hourly[0][1].timestamp,0);
 }
