@@ -472,6 +472,31 @@ TEST_F(E1003Runtime, FailedInstallKeepsPreviousConfigurationUsable) {
     EXPECT_EQ(last_dashboard.state, WIND_RENDERER_FRESH);
 }
 
+TEST_F(E1003Runtime, PersonalSpotIdentifiersDoNotBlockSetupBeforeFetching) {
+    auto candidate = config;
+    strcpy(candidate.spot.id, "personal-uitgeest-00000-00000");
+    strcpy(candidate.additional_spots[0].spot.id, "personal-wijk-aan-zee-00000-00000");
+    ASSERT_TRUE(installed_configuration_validate(&candidate));
+    EXPECT_EQ(wind_app_preview_configuration(&candidate, nullptr), ESP_OK);
+    EXPECT_EQ(fetches[candidate.spot.id], 1);
+}
+
+TEST_F(E1003Runtime, FullLengthSpotIdentifiersSurviveSetupRefreshAndCachedNavigation) {
+    strcpy(config.spot.id, std::string(64, 'a').c_str());
+    strcpy(config.additional_spots[0].spot.id, std::string(64, 'b').c_str());
+    ASSERT_TRUE(installed_configuration_validate(&config));
+    ASSERT_EQ(installed_configuration_promote_setup(&config, "test", "test-only"), ESP_OK);
+    ASSERT_EQ(wind_app_activate_configuration(&config), ESP_OK);
+    install();
+    ASSERT_EQ(wind_app_select_spot(1), ESP_OK);
+    online = false;
+    reboot();
+    ASSERT_EQ(wind_app_start(), ESP_OK);
+    ASSERT_EQ(wind_app_select_spot(0), ESP_OK);
+    ASSERT_EQ(wind_app_select_spot(1), ESP_OK);
+    EXPECT_EQ(last_dashboard.state, WIND_RENDERER_FRESH);
+}
+
 TEST_F(E1003Runtime, SwellAgeInvalidatesQuickFrameEvenWhenWindIsStillFresh) {
     config.display.wind_size = 0;
     config.display.swell_size = 2;

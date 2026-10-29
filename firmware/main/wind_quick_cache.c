@@ -103,7 +103,7 @@ bool wind_quick_spot_capture(const wind_spot_runtime_t *runtime,
     if (!runtime || !forecast || !focused_date || !header) return false;
     memset(header, 0, sizeof(*header));
     header->magic = UINT32_C(0x57514631);
-    header->version = 9;
+    header->version = 10;
     header->render_signature = runtime->app.config.render_signature;
     header->configuration_digest = configuration_digest;
     header->forecast_at = forecast->retrieved_at;

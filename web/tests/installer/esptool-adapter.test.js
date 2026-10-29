@@ -3,6 +3,25 @@ import { createEsptoolAdapter } from '../../src/installer/esptoolAdapter'
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 
 describe('esptool adapter', () => {
+  it('offers reconnection when both bootloader connection attempts time out', async () => {
+    const connectionError = new Error('Failed to connect with the device')
+    const disconnect = vi.fn().mockResolvedValue(undefined)
+    class Transport { disconnect = disconnect }
+    class ESPLoader {
+      main = vi.fn().mockRejectedValue(connectionError)
+    }
+    const adapter = createEsptoolAdapter({ moduleLoader: async () => ({ Transport, ESPLoader }) })
+
+    await expect(adapter.identify({})).rejects.toMatchObject({
+      code: INSTALLER_ERROR_CODES.CONNECTION_LOST,
+      message: 'Could not connect to the device. Reconnect it and try again.',
+      recoverable: true,
+      safeToDisconnect: true,
+      cause: connectionError,
+    })
+    expect(disconnect).toHaveBeenCalledTimes(2)
+  })
+
   it('enters the bootloader, verifies writes with MD5, resets and disconnects', async () => {
     const diagnostics = { record: vi.fn() }
     const disconnect = vi.fn().mockResolvedValue(undefined)

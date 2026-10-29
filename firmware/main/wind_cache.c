@@ -15,6 +15,31 @@ typedef struct {
     wind_forecast_t forecast;
 } forecast_record_t;
 
+// Schemas 4 and 5 used 32-byte IDs. Keep their layout fixed for offline upgrades.
+typedef struct {
+    uint32_t schema_version;
+    char spot_id[32];
+    char spot_name[64];
+    double latitude;
+    double longitude;
+    char timezone[40];
+    char provider[24];
+    char model[32];
+    int64_t retrieved_at;
+    wind_forecast_day_t days[WIND_FORECAST_DAY_COUNT];
+    wind_forecast_sample_t hourly[WIND_FORECAST_DAY_COUNT][WIND_FORECAST_HOURLY_COUNT];
+} previous_forecast_t;
+
+typedef struct {
+    uint32_t magic;
+    uint32_t cache_schema;
+    uint32_t render_version;
+    uint32_t payload_size;
+    uint64_t generation;
+    uint32_t checksum;
+    previous_forecast_t forecast;
+} previous_record_t;
+
 typedef struct {
     int64_t timestamp;
     uint8_t local_hour;
@@ -30,7 +55,7 @@ typedef struct {
 
 typedef struct {
     uint32_t schema_version;
-    char spot_id[WIND_FORECAST_SPOT_ID_MAX];
+    char spot_id[32];
     char spot_name[WIND_FORECAST_SPOT_NAME_MAX];
     double latitude;
     double longitude;
@@ -104,7 +129,7 @@ static void migrate_legacy_forecast(const legacy_forecast_t *legacy,
                                     wind_forecast_t *forecast)
 {
     wind_forecast_clear(forecast);
-    memcpy(forecast->spot_id, legacy->spot_id, sizeof(forecast->spot_id));
+    memcpy(forecast->spot_id, legacy->spot_id, sizeof(legacy->spot_id));
     memcpy(forecast->spot_name, legacy->spot_name, sizeof(forecast->spot_name));
     forecast->latitude = legacy->latitude;
     forecast->longitude = legacy->longitude;
@@ -151,41 +176,55 @@ static esp_err_t read_forecast_record(const char *path, const wind_cache_identit
     if (!file) {
         return ESP_ERR_NOT_FOUND;
     }
-    forecast_record_t record;
-    bool ok = fread(&record, 1, sizeof(record), file) == sizeof(record) && fgetc(file) == EOF;
+    forecast_record_t *record = out_record;
+    bool ok = fread(record, 1, sizeof(*record), file) == sizeof(*record) && fgetc(file) == EOF;
     fclose(file);
-    if (ok && record.magic == 0x574E4446u &&
-        record.cache_schema == WIND_CACHE_SCHEMA_VERSION &&
-        record.render_version == WIND_RENDER_COMPAT_VERSION &&
-        record.payload_size == sizeof(record.forecast) && record.generation > 0 &&
-        record.checksum == forecast_record_checksum(&record) &&
-        wind_forecast_validate(&record.forecast)) {
-        if (!identity_matches(&record.forecast, identity)) return ESP_ERR_INVALID_STATE;
-        *out_record = record;
+    if (ok && record->magic == 0x574E4446u &&
+        record->cache_schema == WIND_CACHE_SCHEMA_VERSION &&
+        record->render_version == WIND_RENDER_COMPAT_VERSION &&
+        record->payload_size == sizeof(record->forecast) && record->generation > 0 &&
+        record->checksum == forecast_record_checksum(record) &&
+        wind_forecast_validate(&record->forecast)) {
+        if (!identity_matches(&record->forecast, identity)) return ESP_ERR_INVALID_STATE;
         return ESP_OK;
     }
 
-    /* Schema 4 stored the same prefix, before hourly observations were added.
-       Validate its original byte length and CRC before migrating in memory. */
-    const size_t old_payload = offsetof(wind_forecast_t, hourly);
-    const size_t old_size = offsetof(forecast_record_t, forecast) + old_payload;
-    memset(&record, 0, sizeof(record));
+    previous_record_t previous = {0};
     file = fopen(path, "rb");
     if (!file) return ESP_ERR_NOT_FOUND;
-    bool old_ok = fread(&record, 1, old_size, file) == old_size && fgetc(file) == EOF;
+    size_t old_size = fread(&previous, 1, sizeof(previous), file);
+    bool old_ok = fgetc(file) == EOF;
     fclose(file);
-    uint32_t old_checksum = record.checksum;
-    record.checksum = 0;
-    if (old_ok && record.magic == 0x574E4446u && record.cache_schema == 4u &&
-        record.render_version == WIND_RENDER_COMPAT_VERSION && record.generation > 0 &&
-        record.payload_size == old_payload && record.forecast.schema_version == 3u &&
-        old_checksum == checksum_bytes(&record, old_size)) {
-        record.forecast.schema_version = WIND_FORECAST_SCHEMA_VERSION;
-        record.cache_schema = WIND_CACHE_SCHEMA_VERSION;
-        record.payload_size = sizeof(record.forecast);
-        if (!wind_forecast_validate(&record.forecast)) return ESP_ERR_INVALID_CRC;
-        if (!identity_matches(&record.forecast, identity)) return ESP_ERR_INVALID_STATE;
-        *out_record = record;
+    const bool hourly = previous.cache_schema == 5u;
+    const size_t old_payload = hourly ? sizeof(previous.forecast)
+                                      : offsetof(previous_forecast_t, hourly);
+    uint32_t old_checksum = previous.checksum;
+    previous.checksum = 0;
+    if (old_ok && old_size == offsetof(previous_record_t, forecast) + old_payload &&
+        previous.magic == 0x574E4446u && (hourly || previous.cache_schema == 4u) &&
+        previous.render_version == WIND_RENDER_COMPAT_VERSION && previous.generation > 0 &&
+        previous.payload_size == old_payload && previous.forecast.schema_version == (hourly ? 4u : 3u) &&
+        memchr(previous.forecast.spot_id, '\0', sizeof(previous.forecast.spot_id)) &&
+        old_checksum == checksum_bytes(&previous, old_size)) {
+        memset(record, 0, sizeof(*record));
+        record->magic = previous.magic;
+        record->cache_schema = WIND_CACHE_SCHEMA_VERSION;
+        record->render_version = previous.render_version;
+        record->generation = previous.generation;
+        record->payload_size = sizeof(record->forecast);
+        wind_forecast_clear(&record->forecast);
+        memcpy(record->forecast.spot_id, previous.forecast.spot_id, sizeof(previous.forecast.spot_id));
+        memcpy(record->forecast.spot_name, previous.forecast.spot_name, sizeof(previous.forecast.spot_name));
+        record->forecast.latitude = previous.forecast.latitude;
+        record->forecast.longitude = previous.forecast.longitude;
+        memcpy(record->forecast.timezone, previous.forecast.timezone, sizeof(previous.forecast.timezone));
+        memcpy(record->forecast.provider, previous.forecast.provider, sizeof(previous.forecast.provider));
+        memcpy(record->forecast.model, previous.forecast.model, sizeof(previous.forecast.model));
+        record->forecast.retrieved_at = previous.forecast.retrieved_at;
+        memcpy(record->forecast.days, previous.forecast.days, sizeof(record->forecast.days));
+        memcpy(record->forecast.hourly, previous.forecast.hourly, sizeof(record->forecast.hourly));
+        if (!wind_forecast_validate(&record->forecast)) return ESP_ERR_INVALID_CRC;
+        if (!identity_matches(&record->forecast, identity)) return ESP_ERR_INVALID_STATE;
         return ESP_OK;
     }
 

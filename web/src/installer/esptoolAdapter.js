@@ -61,7 +61,8 @@ export function createEsptoolAdapter({
           transport: identity.transport,
         }
       } catch (error) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This device is not supported.', { cause: error })
+        throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST,
+          'Could not connect to the device. Reconnect it and try again.', { cause: error })
       }
     },
     async flash({ loader, transport, bundle, onProgress = () => {} }) {
