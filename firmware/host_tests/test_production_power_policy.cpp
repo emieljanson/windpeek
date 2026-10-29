@@ -162,3 +162,13 @@ TEST(BatteryReserve, PersistsBeforeRenderingAndNeverRetriesAnAttempt)
         }
     }
 }
+
+TEST(ProductionPowerPolicy, TouchCannotWakeOrBlockBatterySleep)
+{
+    const std::string power_source = read_source(WIND_POWER_SOURCE);
+    EXPECT_EQ(power_source.find("esp_sleep_enable_ext0_wakeup("), std::string::npos);
+    EXPECT_EQ(power_source.find("gpio_get_level(BOARD_HAL_TOUCH_INT)"), std::string::npos);
+    EXPECT_NE(power_source.find("esp_sleep_enable_ext1_wakeup(wakeup_mask"), std::string::npos);
+    EXPECT_NE(power_source.find("esp_sleep_enable_timer_wakeup("), std::string::npos);
+    EXPECT_EQ(AUTO_SLEEP_TIMEOUT_SEC, 120);
+}
