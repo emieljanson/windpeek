@@ -23,4 +23,4 @@ These images were rendered from the release source with the previously captured 
 - Review fixes cover C linkage, chronological hourly validation, migrated-cache data, retained redraw state, failed gesture-status recovery and the debug sleep override.
 - Inline review preserved the release's runtime locking, navigation wake notifications and repeated spot-limit feedback.
 
-Physical touch, gesture wake, sleep current and on-device memory remain unverified in this release session. The separate [double-tap wake checklist](e1003-touch-doze.md) records the hardware checks.
+Physical touch, button wake, sleep current and on-device memory remain unverified in this release session. The separate [button-only wake checklist](e1003-touch-doze.md) records the hardware checks.

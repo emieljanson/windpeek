@@ -19,7 +19,6 @@
 
 #include "board_hal.h"
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-#include "board_touch.h"
 #endif
 #include "config.h"
 #include "config_manager.h"
@@ -310,11 +309,6 @@ bool power_manager_work_active(void) { return __atomic_load_n(&active_work,__ATO
 void power_manager_enter_sleep(void)
 {
     if (power_manager_work_active() && !battery_empty) return;
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    /* Let the input task consume a pending contact before arming touch wake. */
-    if (!battery_empty && board_hal_touch_available() &&
-        gpio_get_level(BOARD_HAL_TOUCH_INT) == board_hal_touch_wake_level()) return;
-#endif
     // External power means the device is available for the browser installer
     // and live dashboard updates. A timer wake must not put it back to sleep
     // when the user plugged in USB while it was waking.
@@ -388,15 +382,6 @@ void power_manager_enter_sleep(void)
     if (wakeup_mask != 0) {
         esp_sleep_enable_ext1_wakeup(wakeup_mask, ESP_EXT1_WAKEUP_ANY_LOW);
     }
-
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-    if (!battery_empty && board_hal_touch_available()) {
-        (void)board_hal_touch_prepare_sleep();
-        /* Doze uses active HIGH; an unsupported controller retains normal polarity. */
-        if (board_hal_touch_available())
-            esp_sleep_enable_ext0_wakeup(BOARD_HAL_TOUCH_INT, board_hal_touch_wake_level());
-    }
-#endif
 
     // Stop WiFi cleanly before deep sleep so the MAC/PHY drains pending
     // state and the modem domain transitions through a normal teardown

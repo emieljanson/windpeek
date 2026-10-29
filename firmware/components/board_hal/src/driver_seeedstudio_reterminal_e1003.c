@@ -76,6 +76,8 @@ esp_err_t board_hal_init(void)
     const bool probe_sd = !interactive_wake || s_sd_absent_marker != SD_ABSENT_MARKER;
 #endif
 
+    (void)board_hal_touch_prepare_sleep();
+
     // Release any pad holds latched by the previous deep-sleep cycle.
     gpio_hold_dis(BOARD_HAL_LED_PIN);
     gpio_hold_dis(BOARD_HAL_BAT_EN_PIN);
@@ -195,7 +197,8 @@ esp_err_t board_hal_init(void)
     };
     esp_err_t i2c_ret = i2c_new_master_bus(&i2c_bus_config, &i2c_bus);
     if (i2c_ret == ESP_OK) {
-        touch_init();
+        if (esp_sleep_get_wakeup_causes() & (1u << ESP_SLEEP_WAKEUP_EXT1))
+            (void)board_hal_touch_enable();
         if (sensor_init(i2c_bus) == ESP_OK) {
             ESP_LOGI(TAG, "SHT40 sensor initialized");
             // Feed the live panel temperature to the IT8951 so it selects the
@@ -224,6 +227,7 @@ esp_err_t board_hal_init(void)
 esp_err_t board_hal_prepare_for_sleep(void)
 {
     ESP_LOGI(TAG, "Preparing reTerminal E1003 for sleep");
+    (void)board_hal_touch_prepare_sleep();
 
     if (sensor_is_available()) {
         sensor_sleep();
