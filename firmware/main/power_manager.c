@@ -18,8 +18,6 @@
 #endif
 
 #include "board_hal.h"
-#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
-#endif
 #include "config.h"
 #include "config_manager.h"
 #include "debug_log.h"
