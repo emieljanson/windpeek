@@ -160,11 +160,13 @@ Additional presses during that refresh are ignored; release a held button
 before pressing it again.
 The chevrons have separate 46×46 logical touch targets around 34×34 artwork.
 
-The GT911 driver uses the existing I2C bus. Touch can wake the E1003; the current
-overview page survives deep sleep and resets when its configuration changes.
-On battery, use two separate taps within about 1.5 seconds to wake by touch.
-That is the GT911's longest double-tap interval; the physical buttons also wake
-the device and give an immediate click while the e-ink image catches up.
+Press a physical button to wake the E1003 and activate touch. On battery, the
+device returns to deep sleep after two minutes without interaction, with the
+GT911 held in reset. Taps and swipes cannot wake it. Scheduled forecast refreshes
+keep touch disabled; a button press also enables touch after a cold boot or timer
+wake while connected to USB. The current overview page survives deep sleep and
+resets when its configuration changes. Physical buttons retain their navigation
+actions and give an immediate click while the e-ink image catches up.
 Rendering and fetching suppress idle sleep. Cached forecasts remain usable
 offline; missing forecast samples render as unavailable.
 
