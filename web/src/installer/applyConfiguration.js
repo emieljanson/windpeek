@@ -1,4 +1,4 @@
-import { InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
+import { InstallerError, INSTALLER_ERROR_CODES, throwIfHardwareUnavailable } from './installerErrors'
 
 // Includes the device's failed candidate connection and restoration of saved Wi-Fi.
 const WIFI_TIMEOUT_MS = 105000
@@ -97,11 +97,7 @@ export async function applyConfiguration({
     }
     const begun = await protocol.request('begin', { unixTime, ...(completionAck ? { completionAck: true } : {}) })
     if (!isCurrent()) return false
-    if (begun.status === 'hardware_unavailable') {
-      recordFailure({ applyError: begun.code })
-      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
-        'The display could not initialize. Reconnect your device and try again.')
-    }
+    throwIfHardwareUnavailable(begun, recordFailure)
     if (begun.status !== 'ready') {
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE,
         begun.status === 'clock_rejected' ? 'Windpeek could not set its clock from this computer.'

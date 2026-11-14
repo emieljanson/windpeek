@@ -13,7 +13,7 @@ import {
   CONFIGURATION_VERSION,
   installedConfigurationDigest,
 } from '../config/configuration'
-import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
+import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES, throwIfHardwareUnavailable } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { createDiagnosticReport, installerSentryReporter } from './sentryReporter'
@@ -429,6 +429,7 @@ export function createInstallerSession({
     try {
       const previousError = state.error
       const response = await protocol.request('scan_networks', {}, 45000)
+      throwIfHardwareUnavailable(response, failureReporting.recordVerificationFailure)
       if (scanAttempt === attempt && state.phase === 'wifi' && state.error === previousError &&
           previousError?.operation === 'scan_networks') update({ error: null })
       return Array.isArray(response.networks) ? response.networks : []

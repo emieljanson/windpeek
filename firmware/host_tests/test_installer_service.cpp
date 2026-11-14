@@ -713,10 +713,10 @@ TEST(InstallerServiceTest, HardwareFailureRejectsEverySetupCommandWithoutSideEff
         EXPECT_NE(response.find("hardware_unavailable"), std::string::npos) << command;
         EXPECT_NE(response.find("264"), std::string::npos) << command;
         EXPECT_FALSE(service.wake_lock_held) << command;
-        EXPECT_EQ(fake.clock, 0);
-        EXPECT_EQ(fake.wifi_tests, 0);
-        EXPECT_EQ(fake.commits, 0);
-        EXPECT_EQ(fake.renders, 0);
-        EXPECT_FALSE(service.candidate_staged);
+        EXPECT_EQ(fake.clock, 0) << command;
+        EXPECT_EQ(fake.wifi_tests, 0) << command;
+        EXPECT_EQ(fake.commits, 0) << command;
+        EXPECT_EQ(fake.renders, 0) << command;
+        EXPECT_FALSE(service.candidate_staged) << command;
     }
 }
