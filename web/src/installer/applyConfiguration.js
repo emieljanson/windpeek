@@ -98,8 +98,9 @@ export async function applyConfiguration({
     const begun = await protocol.request('begin', { unixTime, ...(completionAck ? { completionAck: true } : {}) })
     if (!isCurrent()) return false
     if (begun.status === 'hardware_unavailable') {
+      recordFailure({ applyError: begun.code })
       throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
-        'The display could not initialize. Check that you selected the correct device model, then reconnect.')
+        'The display could not initialize. Reconnect your device and try again.')
     }
     if (begun.status !== 'ready') {
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE,

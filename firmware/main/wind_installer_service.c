@@ -493,6 +493,13 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
     esp_err_t result = ESP_OK;
     if (!cJSON_IsString(command)) {
         result = ESP_ERR_INVALID_ARG;
+    } else if (service->dependencies.hardware_initialization_error != ESP_OK &&
+               (strcmp(command->valuestring, "begin") == 0 ||
+                command_requires_hardware_profile(command->valuestring))) {
+        const int written = snprintf(response, response_size,
+            "{\"status\":\"hardware_unavailable\",\"code\":%d}",
+            service->dependencies.hardware_initialization_error);
+        result = written >= 0 && (size_t)written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
     } else if (command_requires_hardware_profile(command->valuestring) &&
                !hardware_profile_allows_setup(service)) {
         result = write_response(response, response_size, "hardware_profile_required", NULL);
@@ -532,12 +539,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                                        response_size)
                      : write_response(response, response_size, "scan_unavailable", NULL);
     } else if (strcmp(command->valuestring, "begin") == 0) {
-        if (service->dependencies.hardware_initialization_error != ESP_OK) {
-            const int written = snprintf(response, response_size,
-                "{\"status\":\"hardware_unavailable\",\"code\":%d}",
-                service->dependencies.hardware_initialization_error);
-            result = written >= 0 && (size_t)written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
-        } else if (set_clock_from_request(service, request) != ESP_OK) {
+        if (set_clock_from_request(service, request) != ESP_OK) {
             result = write_response(response, response_size, "clock_rejected", NULL);
         } else {
             service->completion_ack_required = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(request, "completionAck"));

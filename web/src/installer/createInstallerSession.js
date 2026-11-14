@@ -193,12 +193,14 @@ export function createInstallerSession({
     }
   }
 
-  async function resetStaleRememberedPort(expectedAttempt) {
+  async function resetStaleRememberedPort(expectedAttempt, error) {
     rememberedInstallerPorts.delete(transport === 'webusb' ? navigatorApi.usb : navigatorApi.serial)
     await releaseConnections({ clearDevice: true })
     if (!isCurrent(expectedAttempt)) return state
     // Device permission prompts require a fresh click after a slow failed probe.
-    update({ ...INITIAL_STATE })
+    update({ ...INITIAL_STATE, phase: 'reconnect',
+      error: asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST,
+        'The USB connection could not be restored. Select your device again.') })
     return state
   }
 
@@ -362,7 +364,7 @@ export function createInstallerSession({
         throw releaseResult.reason
       }
       if (probeResult.status === 'rejected') {
-        if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt)
+        if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt, probeResult.reason)
         throw probeResult.reason
       }
       const loadedRelease = releaseResult.value
@@ -378,7 +380,7 @@ export function createInstallerSession({
         try {
           identity = await esptool.identify(port)
         } catch (error) {
-          if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt)
+          if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt, error)
           throw error
         }
         if (currentAttempt !== attempt) {

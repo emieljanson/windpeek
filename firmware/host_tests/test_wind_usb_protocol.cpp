@@ -242,7 +242,7 @@ TEST(WindUsbProtocolTest, TruncatedHeaderPreservesFollowingSessionMagic) {
     ASSERT_EQ(frames.payloads, (std::vector<std::string>{hello}));
 }
 
-TEST(WindUsbProtocolTest, ConsoleRemainsQuietUntilAMaximumResponseCanDrainAt115200Baud)
+TEST(WindUsbProtocolTest, TxTimeoutCoversMaximumFrameWireTimeAt115200Baud)
 {
     // UART 8N1 uses ten bits for each byte, including start and stop bits.
     const uint64_t wire_ms = (WIND_USB_MAX_FRAME_SIZE * 10ull * 1000 + 115199) / 115200;

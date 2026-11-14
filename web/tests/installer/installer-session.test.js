@@ -642,8 +642,10 @@ describe('installer session', () => {
     await secondSession.connect()
 
     expect(requestPort).not.toHaveBeenCalled()
-    expect(secondSession.getState().phase).toBe('ready')
-    await secondSession.connect()
+    expect(secondSession.getState()).toMatchObject({ phase: 'reconnect', error: {
+      code: INSTALLER_ERROR_CODES.CONNECTION_LOST, cause: { message: 'device disconnected' },
+    } })
+    await secondSession.reconnect()
     expect(requestPort).toHaveBeenCalledOnce()
     expect(secondSession.getState().phase).toBe('complete')
   })
@@ -776,11 +778,16 @@ describe('installer session', () => {
       if (command === 'begin') return { status: 'hardware_unavailable', code: 264 }
       return originalRequest(command, values, timeout)
     })
-    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+    const diagnostics = createInstallerDiagnostics()
+    const session = createInstallerSession({ configuration, diagnostics, requestPort: async () => ({}),
       releaseLoader: async () => release, protocolFactory: () => protocol })
     await session.connect()
     expect(session.getState().error?.message).toMatch(/display.*initialize/i)
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(diagnostics.snapshot().entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'verification', deviceState: { applyError: 264 } }),
+    ]))
+    expect(session.getState().error?.message).not.toMatch(/correct device model/i)
   })
 
   it('stops before USB setup when the browser clock is unusable', async () => {

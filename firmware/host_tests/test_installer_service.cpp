@@ -702,14 +702,21 @@ TEST(InstallerServiceTest, MissingApplyStateKeepsUnconfirmedUsbSetupAwake)
     EXPECT_FALSE(service.wake_lock_held);
 }
 
-TEST(InstallerServiceTest, HardwareFailureIsReportedBeforeClockOrConfiguration)
+TEST(InstallerServiceTest, HardwareFailureRejectsEverySetupCommandWithoutSideEffects)
 {
-    FakeDevice fake;
-    auto service = make_service(&fake);
-    service.dependencies.hardware_initialization_error = ESP_ERR_INVALID_RESPONSE;
-    const auto response = request(&service, R"({"command":"begin","unixTime":1787932800})");
-    EXPECT_NE(response.find("hardware_unavailable"), std::string::npos);
-    EXPECT_NE(response.find("264"), std::string::npos);
-    EXPECT_FALSE(service.wake_lock_held);
-    EXPECT_EQ(fake.clock, 0);
+    for (const char *command : {"begin", "stage_configuration", "test_wifi", "apply_configuration", "scan_networks"}) {
+        FakeDevice fake;
+        auto service = make_service(&fake);
+        service.dependencies.hardware_initialization_error = ESP_ERR_INVALID_RESPONSE;
+        const auto response = request(&service, (std::string("{\"command\":\"") + command +
+            "\",\"unixTime\":1787932800}").c_str());
+        EXPECT_NE(response.find("hardware_unavailable"), std::string::npos) << command;
+        EXPECT_NE(response.find("264"), std::string::npos) << command;
+        EXPECT_FALSE(service.wake_lock_held) << command;
+        EXPECT_EQ(fake.clock, 0);
+        EXPECT_EQ(fake.wifi_tests, 0);
+        EXPECT_EQ(fake.commits, 0);
+        EXPECT_EQ(fake.renders, 0);
+        EXPECT_FALSE(service.candidate_staged);
+    }
 }
