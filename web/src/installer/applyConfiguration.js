@@ -97,6 +97,10 @@ export async function applyConfiguration({
     }
     const begun = await protocol.request('begin', { unixTime, ...(completionAck ? { completionAck: true } : {}) })
     if (!isCurrent()) return false
+    if (begun.status === 'hardware_unavailable') {
+      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+        'The display could not initialize. Check that you selected the correct device model, then reconnect.')
+    }
     if (begun.status !== 'ready') {
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE,
         begun.status === 'clock_rejected' ? 'Windpeek could not set its clock from this computer.'

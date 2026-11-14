@@ -608,7 +608,7 @@ describe('installer session', () => {
     expect(secondSession.getState().phase).toBe('ready')
   })
 
-  it('falls back to the chooser when a remembered granted port is stale', async () => {
+  it('waits for a fresh user click before reopening the chooser after a stale port', async () => {
     const stalePort = { id: 'stale-port' }
     const freshPort = { id: 'fresh-port' }
     const serial = { getPorts: vi.fn(async () => [stalePort]) }
@@ -641,6 +641,9 @@ describe('installer session', () => {
 
     await secondSession.connect()
 
+    expect(requestPort).not.toHaveBeenCalled()
+    expect(secondSession.getState().phase).toBe('ready')
+    await secondSession.connect()
     expect(requestPort).toHaveBeenCalledOnce()
     expect(secondSession.getState().phase).toBe('complete')
   })
@@ -763,6 +766,20 @@ describe('installer session', () => {
     await session.connect()
 
     expect(session.getState()).toMatchObject({ phase: 'error' })
+    expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+  })
+
+  it('reports display initialization failure before configuration instead of a clock error', async () => {
+    const protocol = appProtocol({ digest: 'old' })
+    const originalRequest = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'begin') return { status: 'hardware_unavailable', code: 264 }
+      return originalRequest(command, values, timeout)
+    })
+    const session = createInstallerSession({ configuration, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+    await session.connect()
+    expect(session.getState().error?.message).toMatch(/display.*initialize/i)
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
   })
 

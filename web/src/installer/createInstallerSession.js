@@ -193,11 +193,13 @@ export function createInstallerSession({
     }
   }
 
-  async function retryChooserAfterStaleRememberedPort(expectedAttempt) {
+  async function resetStaleRememberedPort(expectedAttempt) {
     rememberedInstallerPorts.delete(transport === 'webusb' ? navigatorApi.usb : navigatorApi.serial)
     await releaseConnections({ clearDevice: true })
     if (!isCurrent(expectedAttempt)) return state
-    return connect(transport)
+    // Device permission prompts require a fresh click after a slow failed probe.
+    update({ ...INITIAL_STATE })
+    return state
   }
 
   async function inspectApp(candidate) {
@@ -360,7 +362,7 @@ export function createInstallerSession({
         throw releaseResult.reason
       }
       if (probeResult.status === 'rejected') {
-        if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+        if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt)
         throw probeResult.reason
       }
       const loadedRelease = releaseResult.value
@@ -376,7 +378,7 @@ export function createInstallerSession({
         try {
           identity = await esptool.identify(port)
         } catch (error) {
-          if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+          if (usingRememberedPort) return resetStaleRememberedPort(currentAttempt)
           throw error
         }
         if (currentAttempt !== attempt) {

@@ -446,7 +446,7 @@ static void physical_frame(const wind_usb_frame_t *frame, void *context)
     // The apply task can spend tens of seconds rendering without servicing the
     // installer UART. Make sure the small `applying` acknowledgement has
     // physically left the UART before that work is allowed to start.
-    const esp_err_t transmit_result = uart_wait_tx_done(UART_NUM_0, pdMS_TO_TICKS(100));
+    const esp_err_t transmit_result = uart_wait_tx_done(UART_NUM_0, pdMS_TO_TICKS(WIND_USB_TX_TIMEOUT_MS));
     esp_log_set_level_master(previous_log_level);
     funlockfile(stdout);
     if (installer->service.apply_start_pending) {
@@ -498,7 +498,8 @@ static void installer_usb_task(void *argument)
     }
 }
 
-esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void))
+esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void),
+                                       esp_err_t hardware_initialization_error)
 {
     if (s_apply_task) return ESP_ERR_INVALID_STATE;
     esp_err_t result = ESP_OK;
@@ -518,6 +519,7 @@ esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void))
     wind_usb_parser_init(&s_physical_installer->parser);
     const wind_installer_dependencies_t dependencies = {
         .context = s_physical_installer,
+        .hardware_initialization_error = hardware_initialization_error,
         .test_wifi = physical_test_wifi,
         .render_candidate = physical_render,
         .commit = physical_commit,

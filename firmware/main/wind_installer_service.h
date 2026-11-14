@@ -53,6 +53,7 @@ typedef esp_err_t (*wind_installer_select_hardware_profile_fn)(
 
 typedef struct {
     void *context;
+    esp_err_t hardware_initialization_error;
     wind_installer_test_wifi_fn test_wifi;
     wind_installer_render_fn render_candidate;
     wind_installer_commit_fn commit;
@@ -102,7 +103,8 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
     wind_installer_service_t *service, bool response_transmitted);
 
 #ifdef ESP_PLATFORM
-esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void));
+esp_err_t wind_installer_service_start(void (*on_configuration_installed)(void),
+                                       esp_err_t hardware_initialization_error);
 #endif
 
 #ifdef __cplusplus

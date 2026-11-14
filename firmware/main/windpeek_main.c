@@ -653,7 +653,8 @@ void app_main(void)
             wind_support_record_recovery_boot(
                 profile.driver_failure_latched ? profile.failure_error : ESP_OK,
                 profile.driver_failure_latched ? profile.failure_stage : 0);
-        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
+        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed,
+            profile.driver_failure_latched ? profile.failure_error : ESP_OK));
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
         } else if (profile.driver_failure_latched) {
@@ -690,7 +691,7 @@ void app_main(void)
         // before the browser installer can reconnect.
         if (storage_init() == ESP_OK && initialize_support_history())
             wind_support_record_recovery_boot(result, HARDWARE_DRIVER_STAGE_INITIALIZE);
-        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
+        ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed, result));
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
@@ -717,7 +718,7 @@ void app_main(void)
     s_battery_lock = xSemaphoreCreateMutex();
     ESP_ERROR_CHECK(s_battery_lock ? ESP_OK : ESP_ERR_NO_MEM);
     while (!battery_allows_work()) vTaskDelay(pdMS_TO_TICKS(100));
-    ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed));
+    ESP_ERROR_CHECK(wind_installer_service_start(configuration_installed, ESP_OK));
 
     power_manager_work_begin();
     const bool first_setup = !installed_configuration_has_setup();

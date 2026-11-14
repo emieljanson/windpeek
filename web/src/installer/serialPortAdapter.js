@@ -316,7 +316,7 @@ export function createSerialProtocol(port, {
         } catch (error) {
           // Reading status is safe to repeat. A single damaged USB frame should
           // not interrupt an otherwise successful installation.
-          if (command !== 'get_state' || !error?.corruptFrame) throw error
+          if (!['get_state', 'get_diagnostics'].includes(command) || !error?.corruptFrame) throw error
           return performRequest(command, values, requestedTimeout)
         }
       })

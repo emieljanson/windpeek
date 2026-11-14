@@ -17,6 +17,8 @@ extern "C" {
 #define WIND_USB_MAX_PAYLOAD 16384u
 #define WIND_USB_MAX_FRAME_SIZE (WIND_USB_HEADER_SIZE + WIND_USB_MAX_PAYLOAD)
 #define WIND_USB_PARTIAL_TIMEOUT_MS 3000u
+// Maximum frame takes 1425 ms at the installer UART rate (115200, 8N1).
+#define WIND_USB_TX_TIMEOUT_MS 2000u
 
 typedef enum {
     WIND_USB_MESSAGE_REQUEST = 1,
