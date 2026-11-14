@@ -105,6 +105,25 @@ describe('installer inspector panel', () => {
     expect(wrapper.emitted('close')).toBeUndefined()
   })
 
+  it('shows reconnect after a stale remembered port without claiming the chooser was cancelled', async () => {
+    const session = fakeSession()
+    session.isDemo = true
+    session.connect.mockImplementation(async () => {
+      const state = { phase: 'reconnect', safeToDisconnect: true,
+        error: { message: 'Close other Windpeek tabs or serial tools, then try again.' } }
+      session.emit(state)
+      return state
+    })
+    mountPanel(session)
+    await wrapper.get('.installer-primary').trigger('click')
+    await vi.waitFor(() => expect(wrapper.get('h2').text()).toBe('Reconnect your device'))
+    expect(wrapper.text()).toContain('Close other Windpeek tabs')
+    expect(wrapper.text()).not.toContain('No device was selected')
+    expect(wrapper.text()).not.toContain('Device not listed?')
+    await wrapper.get('.installer-primary').trigger('click')
+    expect(session.reconnect).toHaveBeenCalledOnce()
+  })
+
   it('keeps one icon grid mounted while step content changes around it', async () => {
     const session = fakeSession()
     mountPanel(session)

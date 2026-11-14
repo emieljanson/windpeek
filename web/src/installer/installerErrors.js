@@ -30,3 +30,10 @@ export function asInstallerError(error, fallbackCode, fallbackMessage, options =
   if (error instanceof InstallerError) return error
   return new InstallerError(fallbackCode, fallbackMessage, { ...options, cause: error })
 }
+
+export function throwIfHardwareUnavailable(response, recordFailure) {
+  if (response.status !== 'hardware_unavailable') return
+  recordFailure({ applyError: response.code })
+  throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED,
+    'The display could not initialize. Reconnect your device and try again.')
+}

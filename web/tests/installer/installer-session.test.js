@@ -608,7 +608,7 @@ describe('installer session', () => {
     expect(secondSession.getState().phase).toBe('ready')
   })
 
-  it('falls back to the chooser when a remembered granted port is stale', async () => {
+  it('waits for a fresh user click before reopening the chooser after a stale port', async () => {
     const stalePort = { id: 'stale-port' }
     const freshPort = { id: 'fresh-port' }
     const serial = { getPorts: vi.fn(async () => [stalePort]) }
@@ -641,6 +641,11 @@ describe('installer session', () => {
 
     await secondSession.connect()
 
+    expect(requestPort).not.toHaveBeenCalled()
+    expect(secondSession.getState()).toMatchObject({ phase: 'reconnect', error: {
+      code: INSTALLER_ERROR_CODES.CONNECTION_LOST, cause: { message: 'device disconnected' },
+    } })
+    await secondSession.reconnect()
     expect(requestPort).toHaveBeenCalledOnce()
     expect(secondSession.getState().phase).toBe('complete')
   })
@@ -764,6 +769,44 @@ describe('installer session', () => {
 
     expect(session.getState()).toMatchObject({ phase: 'error' })
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+  })
+
+  it('reports display initialization failure before configuration instead of a clock error', async () => {
+    const protocol = appProtocol({ digest: 'old' })
+    const originalRequest = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'begin') return { status: 'hardware_unavailable', code: 264 }
+      return originalRequest(command, values, timeout)
+    })
+    const diagnostics = createInstallerDiagnostics()
+    const session = createInstallerSession({ configuration, diagnostics, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+    await session.connect()
+    expect(session.getState().error?.message).toMatch(/display.*initialize/i)
+    expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+    expect(diagnostics.snapshot().entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'verification', deviceState: { applyError: 264 } }),
+    ]))
+    expect(session.getState().error?.message).not.toMatch(/correct device model/i)
+  })
+
+  it('shows the display initialization failure when scanning instead of an empty network list', async () => {
+    const protocol = appProtocol({ digest: 'old', wifiHealthy: false })
+    const original = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'scan_networks') return { status: 'hardware_unavailable', code: 264 }
+      return original(command, values, timeout)
+    })
+    const diagnostics = createInstallerDiagnostics()
+    const session = createInstallerSession({ configuration, diagnostics, requestPort: async () => ({}),
+      releaseLoader: async () => release, protocolFactory: () => protocol })
+    await session.connect()
+    expect(session.getState().phase).toBe('wifi')
+    await expect(session.scanNetworks()).rejects.toMatchObject({ message: expect.stringMatching(/display.*initialize/i) })
+    expect(session.getState().error?.message).toMatch(/display.*initialize/i)
+    expect(diagnostics.snapshot().entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'verification', deviceState: { applyError: 264 } }),
+    ]))
   })
 
   it('stops before USB setup when the browser clock is unusable', async () => {

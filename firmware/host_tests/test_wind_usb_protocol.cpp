@@ -241,3 +241,11 @@ TEST(WindUsbProtocolTest, TruncatedHeaderPreservesFollowingSessionMagic) {
     EXPECT_EQ(result.delivered_frames, 1u);
     ASSERT_EQ(frames.payloads, (std::vector<std::string>{hello}));
 }
+
+TEST(WindUsbProtocolTest, TxTimeoutCoversMaximumFrameWireTimeAt115200Baud)
+{
+    // UART 8N1 uses ten bits for each byte, including start and stop bits.
+    const uint64_t wire_ms = (WIND_USB_MAX_FRAME_SIZE * 10ull * 1000 + 115199) / 115200;
+    EXPECT_GT(WIND_USB_TX_TIMEOUT_MS, wire_ms);
+    EXPECT_LT(WIND_USB_TX_TIMEOUT_MS, 5000u); // Browser diagnostics deadline.
+}

@@ -58,7 +58,7 @@ describe('serial port adapter', () => {
     await protocol.close()
   })
 
-  it('retries one corrupt status response without interrupting installation', async () => {
+  it.each(['get_state', 'get_diagnostics'])('retries one corrupt %s response without interrupting installation', async (command) => {
     const chunks = []
     const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })), cancel: vi.fn(), releaseLock: vi.fn() }
     const writer = { write: vi.fn(async (bytes) => {
@@ -70,10 +70,59 @@ describe('serial port adapter', () => {
     const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
     const protocol = createSerialProtocol(port, { timeoutMs: 10 })
     await protocol.open()
-    await expect(protocol.request('get_state')).resolves.toEqual({ status: 'ok' })
+    await expect(protocol.request(command, { sequence: 17 })).resolves.toEqual({ status: 'ok' })
     expect(writer.write).toHaveBeenCalledTimes(2)
     await protocol.close()
   })
+  it('recovers a fragmented large diagnostics frame containing interleaved console bytes', async () => {
+    const chunks = []
+    const payload = { status: 'ok', entry: { sequence: 17, padding: 'x'.repeat(1500) } }
+    const commands = []
+    const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })),
+      cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { write: vi.fn(async (bytes) => {
+      const request = decodeProtocolFrame(bytes)
+      commands.push(request.payload)
+      const frame = encodeProtocolFrame({ requestId: request.requestId, messageType: 2, payload })
+      const noise = new TextEncoder().encode('I (123) wifi: connected\r\n')
+      const response = commands.length === 1
+        ? new Uint8Array([...frame.slice(0, 1200), ...noise, ...frame.slice(1200)]) : frame
+      for (let offset = 0; offset < response.length; offset += 19)
+        chunks.push(response.slice(offset, offset + 19))
+    }), releaseLock: vi.fn() }
+    const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader },
+      writable: { getWriter: () => writer } }
+    const protocol = createSerialProtocol(port)
+    await protocol.open()
+    await expect(protocol.request('get_diagnostics', { sequence: 17 })).resolves.toEqual(payload)
+    expect(commands).toEqual([{ command: 'get_diagnostics', sequence: 17 }, { command: 'get_diagnostics', sequence: 17 }])
+    expect(port.open).toHaveBeenCalledOnce()
+    await protocol.close()
+  })
+
+  it.each([['get_diagnostics', 2], ['begin', 1], ['stage_configuration', 1], ['apply_configuration', 1]])(
+    'bounds corrupt-response retries for %s to %s writes', async (command, count) => {
+      const chunks = []
+      const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })),
+        cancel: vi.fn(), releaseLock: vi.fn() }
+      const writer = { write: vi.fn(async (bytes) => {
+        const request = decodeProtocolFrame(bytes)
+        const response = encodeProtocolFrame({ requestId: request.requestId, messageType: 2, payload: { status: 'ok' } })
+        response[response.length - 1] ^= 1
+        chunks.push(response)
+      }), releaseLock: vi.fn() }
+      const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader },
+        writable: { getWriter: () => writer } }
+      const protocol = createSerialProtocol(port, { timeoutMs: 10 })
+      await protocol.open()
+      await expect(protocol.request(command, { sequence: 17 })).rejects.toMatchObject({ corruptFrame: true })
+      expect(writer.write).toHaveBeenCalledTimes(count)
+      for (const [bytes] of writer.write.mock.calls)
+        expect(decodeProtocolFrame(bytes).payload).toEqual({ command, sequence: 17 })
+      await protocol.close()
+    },
+  )
+
   it('normalizes a failed USB adapter import as a device access error', async () => {
     vi.doMock('esptool-js', () => { throw new Error('Unable to load adapter') })
     try {
